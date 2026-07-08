@@ -3,26 +3,21 @@
  *
  * 策略：Map 产出的 excerpt.text（逐字摘录）→ 后端在章节正文里定位 offset
  *   1. 精确匹配 indexOf
- *   2. 模糊匹配：归一化空白/全半角标点后匹配
+ *   2. 模糊匹配：归一化（剥离所有标点/空白/符号）后匹配
  *   3. 仍失败 → offset = null，matchedBy = 'none'
  *
- * spike 已验证此逻辑。
+ * 归一化采用「剥离」而非「全角转半角」：逐字摘录常与原文存在标点差异
+ * （摘录插入/省略逗号、句号等）。仅做等价字符替换救不了「多/少一个标点」，
+ * 剥离所有 Unicode 标点与符号后比对，才能容忍这类差异。
+ *
+ * 注：模糊匹配返回的 offset 是归一化串中的位置（近似），非原文精确偏移。
+ * 设计文档第 186 行接受模糊 offset 为「近似 offset」。
  */
 import type { Excerpt, RawExcerpt } from '../types.ts';
 
 function normalize(s: string): string {
-  const map: Record<string, string> = {
-    '\uFF0C': ',', '\u3002': '.', '\uFF01': '!', '\uFF1F': '?',
-    '\uFF1B': ';', '\uFF1A': ':', '\u201C': '"', '\u201D': '"',
-    '\u2018': "'", '\u2019': "'", '\uFF08': '(', '\uFF09': ')',
-    '\u3010': '[', '\u3011': ']', '\u300A': '<', '\u300B': '>',
-    '\u3001': ',',
-  };
-  let out = s.replace(/\s+/g, '');
-  for (const [from, to] of Object.entries(map)) {
-    out = out.split(from).join(to);
-  }
-  return out;
+  // 剥离所有空白、标点（P）、符号（S），只保留字母数字与 CJK 等字符
+  return s.replace(/[\s\p{P}\p{S}]/gu, '');
 }
 
 /** 在给定章节正文中回链一条 excerpt，补 offset + matchedBy */
