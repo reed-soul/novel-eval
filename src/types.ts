@@ -146,18 +146,70 @@ export interface Suggestion {
   excerptRef?: ExcerptRef | null;
 }
 
+// ─── 小说元信息（CLI intake，对标燃点「填基本信息」）────────────
+
+export interface NovelMetadata {
+  genre: string;
+  targetAudience: string;
+  platform?: string;
+}
+
+// ─── R5 市场对标 ───────────────────────────────────────────────────
+
+export interface MarketComparable {
+  title: string;
+  similarity: number;
+  matchReason: string;
+  differentiation: string;
+  referenceNote: string;
+}
+
+export interface MarketBenchmark {
+  positioning: string;
+  audienceFit: number;
+  comparables: MarketComparable[];
+  disclaimer: string;
+}
+
+// ─── 改稿对比 ─────────────────────────────────────────────────────
+
+export interface DimensionDelta {
+  baseline: number;
+  current: number;
+  delta: number;
+}
+
+export interface CompareResult {
+  baseline: { taskId: string; title: string; overall: number; grade: string; completedAt: string };
+  current: { taskId: string; title: string; overall: number; grade: string; completedAt: string };
+  dimensionDeltas: Record<DimensionKey, DimensionDelta>;
+  overallDelta: number;
+  suggestionsAdded: string[];
+  suggestionsRemoved: string[];
+}
+
 // ─── 评估结果（最终 JSON）──────────────────────────────────────────
 
 export interface EvaluationResult {
   schemaVersion: string;
-  novel: { title: string; author: string; totalChapters: number; wordCount: number };
+  novel: {
+    title: string;
+    author: string;
+    totalChapters: number;
+    wordCount: number;
+    genre?: string;
+    targetAudience?: string;
+    platform?: string;
+  };
   overall: { totalScore: number; grade: string };
   dimensions: Record<DimensionKey, DimensionScore>;
   chapters: Chapter[];
   characters: Character[];
   emotionalCurve: EmotionalPoint[];
-  excerpts: Excerpt[];  // 全局展平的所有 excerpts（便于前端检索）
+  excerpts: Excerpt[];
   suggestions: Suggestion[];
+  marketBenchmark?: MarketBenchmark | null;
+  baselineTaskId?: string;
   task: {
     id: string;
     error: string | null;

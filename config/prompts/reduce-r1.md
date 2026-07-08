@@ -19,7 +19,10 @@
       "role": "主角/配角/反派/...（一句话定位）",
       "arc": "人物弧光简述（可选）",
       "firstAppearance": "ch001",
-      "keyChapters": ["ch001", "ch004"]
+      "keyChapters": ["ch001", "ch004"],
+      "relationships": [
+        {"target": "另一角色名", "type": "母子/恋人/对手", "strength": 80}
+      ]
     }
   ]
 }
@@ -32,3 +35,4 @@
 - 只保留**有名字**的角色（匿名过场角色如"出租车司机"不列）
 - firstAppearance 用最早出场的章节 id
 - keyChapters 列出该角色有重要戏份的章节（≤5 个）
+- **relationships**：主要角色之间的重要关系，strength 0-100；无明确关系可不填或空数组

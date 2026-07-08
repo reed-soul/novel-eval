@@ -59,3 +59,8 @@
 
 ### 评估权重（profile: {PROFILE}）
 {WEIGHTS}
+
+### 作品元信息
+类型：{GENRE}
+目标受众：{AUDIENCE}
+发行平台：{PLATFORM}

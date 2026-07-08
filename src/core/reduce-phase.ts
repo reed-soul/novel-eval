@@ -1,29 +1,32 @@
 /**
- * Reduce 阶段：全局分析 Pipeline（对齐设计文档 v2.2 第三章）
+ * Reduce 阶段：全局分析 Pipeline
  *
- * R1 人物归一化 → R2 五维评分 → R3 情绪曲线 → R4 改进建议
- * 每个子调用独立 prompt、独立 schema、独立重试。
+ * R1 人物归一化 → R2 五维评分 → R3 情绪曲线 → R4 改进建议 → R5 市场对标
  */
 import type { AIAgentAdapter } from '../engine/interface.ts';
-import { callWithValidation, type SchemaSpec } from '../engine/json-validator.ts';
+import { callWithValidation, type SchemaSpec, type FieldSpec } from '../engine/json-validator.ts';
 import { loadPrompt } from '../engine/bigmodel.ts';
 import type {
   Chapter, Character, DimensionKey, DimensionScore, EmotionalPoint,
-  Excerpt, Suggestion, TokenUsage, DimensionKey as DK,
+  MarketBenchmark, NovelMetadata, Suggestion, TokenUsage,
 } from '../types.ts';
 import { DIMENSION_KEYS } from '../types.ts';
+
+const MARKET_DISCLAIMER =
+  '本对标基于模型推断与公开认知，非实时市场数据，不构成投资建议。';
 
 export interface ReducePhaseResult {
   dimensions: Record<DimensionKey, DimensionScore>;
   characters: Character[];
   emotionalCurve: EmotionalPoint[];
   suggestions: Suggestion[];
+  marketBenchmark: MarketBenchmark | null;
   usage: TokenUsage;
-  failures: string[];  // 非致命失败的子调用
+  failures: string[];
 }
 
 export interface ReduceProgressCallback {
-  (step: 'r1' | 'r2' | 'r3' | 'r4', status: 'ok' | 'failed'): void;
+  (step: 'r1' | 'r2' | 'r3' | 'r4' | 'r5', status: 'ok' | 'failed'): void;
 }
 
 const zeroUsage: TokenUsage = { inputTokens: 0, outputTokens: 0, costRmb: 0, model: '', durationMs: 0 };
@@ -33,17 +36,16 @@ export async function runReducePhase(
   chapters: Chapter[],
   weights: Record<DimensionKey, number>,
   profileName: string,
+  metadata: NovelMetadata,
   onProgress?: ReduceProgressCallback,
 ): Promise<ReducePhaseResult> {
   const totalUsage: TokenUsage = { ...zeroUsage };
   const failures: string[] = [];
 
-  // 构造各章摘要块（R1/R2/R4 共用）
   const chaptersBlock = chapters.map((c) =>
     `【${c.id} ${c.title}】张力=${c.emotionalTension}\n  摘要: ${c.summary}\n  事件: ${c.keyEvents.map((e, i) => `${i + 1}.${e}`).join(' ')}\n  角色: ${c.characters.join('、')}`,
   ).join('\n\n');
 
-  // 构造 excerpts 清单（R2/R4 用，带 index 供指针引用）
   const excerptsBlock = chapters.flatMap((c) =>
     c.excerpts.map((e, i) =>
       `[${c.id}#${i}] dim=${e.dimension} | ${e.text}（${e.reason}）`,
@@ -55,6 +57,13 @@ export async function runReducePhase(
     `${c.id}: ${c.characters.join('、')}`,
   ).join('\n');
   const r1Prompt = loadPrompt('reduce-r1').replace('{CHAPTERS}', r1CharactersBlock);
+  const relationshipItemSpec: FieldSpec = {
+    type: 'object', fields: {
+      target: { type: 'string', required: true },
+      type: { type: 'string', required: true },
+      strength: { type: 'number', min: 0, max: 100, integer: true, required: true },
+    },
+  };
   const r1Schema: SchemaSpec = {
     characters: {
       type: 'array', required: true,
@@ -66,6 +75,7 @@ export async function runReducePhase(
           arc: { type: 'string' },
           firstAppearance: { type: 'string' },
           keyChapters: { type: 'array', itemSpec: { type: 'string' } },
+          relationships: { type: 'array', itemSpec: relationshipItemSpec },
         },
       },
     },
@@ -73,7 +83,7 @@ export async function runReducePhase(
   const r1 = await callWithValidation<{ characters: Character[] }>(engine, r1Prompt, {
     systemPrompt: '你是人物谱系编辑。只输出 JSON。',
     outputSchema: { type: 'object' },
-    temperature: 0.3, maxTokens: 3000, timeoutMs: 120_000,
+    temperature: 0.3, maxTokens: 4000, timeoutMs: 120_000,
     schema: r1Schema, maxAttempts: 3,
   });
   addUsage(totalUsage, r1.totalUsage);
@@ -81,19 +91,21 @@ export async function runReducePhase(
   if (!r1.ok) failures.push('R1 人物归一化失败');
   onProgress?.('r1', r1.ok ? 'ok' : 'failed');
 
-  // 构造人物列表块（R2/R4 用）
   const charactersBlock = characters.map((c) =>
     `${c.name}（${c.role}）${c.aliases?.length ? `别名:${c.aliases.join('/')}` : ''}`,
   ).join('、');
 
-  // ─── R2 五维评分（价值核心，致命）────────────────────────
+  // ─── R2 五维评分（致命）────────────────────────────────
   const weightsBlock = Object.entries(weights).map(([k, v]) => `${k}: ${v}`).join('  ');
   const r2Prompt = loadPrompt('reduce-r2')
     .replace('{CHAPTERS}', chaptersBlock)
     .replace('{EXCERPTS}', excerptsBlock)
     .replace('{CHARACTERS}', charactersBlock)
     .replace('{PROFILE}', profileName)
-    .replace('{WEIGHTS}', weightsBlock);
+    .replace('{WEIGHTS}', weightsBlock)
+    .replace('{GENRE}', metadata.genre)
+    .replace('{AUDIENCE}', metadata.targetAudience)
+    .replace('{PLATFORM}', metadata.platform ?? '未指定');
   const r2Schema: SchemaSpec = {
     dimensions: {
       type: 'object', required: true, fields: Object.fromEntries(
@@ -121,7 +133,7 @@ export async function runReducePhase(
   onProgress?.('r2', 'ok');
   const dimensions = r2.data.dimensions;
 
-  // ─── R3 情绪曲线（与 R1 无依赖，但顺序执行简化）──────────
+  // ─── R3 情绪曲线 ─────────────────────────────────────────
   const curveInput = chapters.map((c) => `${c.id}: ${c.emotionalTension}`).join('\n');
   const r3Prompt = loadPrompt('reduce-r3').replace('{CURVE}', curveInput);
   const r3Schema: SchemaSpec = {
@@ -179,7 +191,46 @@ export async function runReducePhase(
   if (!r4.ok) failures.push('R4 改进建议失败');
   onProgress?.('r4', r4.ok ? 'ok' : 'failed');
 
-  return { dimensions, characters, emotionalCurve, suggestions, usage: totalUsage, failures };
+  // ─── R5 市场对标（非致命）──────────────────────────────
+  const marketDim = dimensions.marketPotential;
+  const r5Prompt = loadPrompt('reduce-r5')
+    .replace('{GENRE}', metadata.genre)
+    .replace('{AUDIENCE}', metadata.targetAudience)
+    .replace('{PLATFORM}', metadata.platform ?? '未指定')
+    .replace('{MARKET_SCORE}', String(marketDim?.score ?? 0))
+    .replace('{MARKET_ANALYSIS}', marketDim?.analysis ?? '')
+    .replace('{CHAPTERS}', chaptersBlock.slice(0, 8000));
+  const comparableItemSpec: FieldSpec = {
+    type: 'object', fields: {
+      title: { type: 'string', required: true },
+      similarity: { type: 'number', min: 0, max: 100, integer: true, required: true },
+      matchReason: { type: 'string', required: true },
+      differentiation: { type: 'string', required: true },
+      referenceNote: { type: 'string', required: true },
+    },
+  };
+  const r5Schema: SchemaSpec = {
+    positioning: { type: 'string', required: true },
+    audienceFit: { type: 'number', min: 0, max: 100, integer: true, required: true },
+    comparables: { type: 'array', min: 1, max: 5, required: true, itemSpec: comparableItemSpec },
+    disclaimer: { type: 'string', required: true },
+  };
+  const r5 = await callWithValidation<MarketBenchmark>(engine, r5Prompt, {
+    systemPrompt: '你是出版市场分析师。只输出 JSON。禁止编造票房排名销量。',
+    outputSchema: { type: 'object' },
+    temperature: 0.4, maxTokens: 3000, timeoutMs: 120_000,
+    schema: r5Schema, maxAttempts: 3,
+  });
+  addUsage(totalUsage, r5.totalUsage);
+  let marketBenchmark: MarketBenchmark | null = null;
+  if (r5.ok && r5.data) {
+    marketBenchmark = { ...r5.data, disclaimer: r5.data.disclaimer || MARKET_DISCLAIMER };
+  } else {
+    failures.push('R5 市场对标失败');
+  }
+  onProgress?.('r5', r5.ok ? 'ok' : 'failed');
+
+  return { dimensions, characters, emotionalCurve, suggestions, marketBenchmark, usage: totalUsage, failures };
 }
 
 function addUsage(total: TokenUsage, add: TokenUsage): void {
