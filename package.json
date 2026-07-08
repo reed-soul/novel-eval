@@ -1,0 +1,27 @@
+{
+  "name": "novel-eval",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "AI 驱动的小说五维结构化评估系统",
+  "scripts": {
+    "eval": "tsx src/index.ts evaluate",
+    "typecheck": "tsc --noEmit",
+    "spike:map": "tsx spike/run-map.ts",
+    "spike:reduce": "tsx spike/run-reduce-r2.ts",
+    "spike:all": "tsx spike/run-all.ts"
+  },
+  "bin": {
+    "novel-eval": "src/index.ts"
+  },
+  "dependencies": {
+    "chardet": "^2.2.0",
+    "iconv-lite": "^0.7.3",
+    "js-yaml": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

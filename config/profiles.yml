@@ -1,0 +1,25 @@
+# 评估模式 preset（对齐设计文档 v2.2 第二章）
+profiles:
+  default:
+    weights:
+      storyStructure: 0.25
+      characterization: 0.25
+      writingQuality: 0.15
+      emotionalResonance: 0.20
+      marketPotential: 0.15
+
+  revision:   # 改稿模式：市场潜力权重降低，文笔和结构权重提升
+    weights:
+      storyStructure: 0.30
+      characterization: 0.25
+      writingQuality: 0.25
+      emotionalResonance: 0.15
+      marketPotential: 0.05
+
+  submission: # 投稿模式：市场潜力权重提升
+    weights:
+      storyStructure: 0.20
+      characterization: 0.20
+      writingQuality: 0.15
+      emotionalResonance: 0.15
+      marketPotential: 0.30

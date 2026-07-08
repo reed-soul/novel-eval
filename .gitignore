@@ -10,6 +10,9 @@ node_modules/
 .DS_Store
 Thumbs.db
 
+# Editor
+.zcode/
+
 # Environment
 .env
 .env.local
@@ -17,3 +20,12 @@ Thumbs.db
 # Output
 dist/
 *.log
+
+# Runtime data (设计文档 data/ 是运行时数据目录，含上传文件/结果/报告；版权样本不入库)
+data/
+
+# Spike 输出（含真实 LLM 响应、token/费用记录，可能含摘录片段）
+spike/output/
+
+# Dependencies (spike 本地安装)
+spike/node_modules/

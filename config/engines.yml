@@ -1,0 +1,14 @@
+# AI 引擎配置（v2.2：GLM 为默认引擎）
+default: bigmodel
+fallback: claude-code
+
+bigmodel:
+  baseUrl: https://open.bigmodel.cn/api/anthropic
+  model: glm-5.2
+  maxBudgetRmb: 10
+  perChapterMaxBudgetRmb: 0.1
+
+claude-code:
+  model: claude-sonnet-4-20250514
+  maxBudgetRmb: 5
+  allowedTools: [Read, Glob, Grep]
