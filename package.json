@@ -3,10 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "packageManager": "pnpm@10.32.1",
   "description": "AI 驱动的小说五维结构化评估系统",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=10"
+  },
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "eval": "tsx src/index.ts evaluate",
     "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/**/*.test.ts",
+    "test:unit": "tsx --test tests/unit/**/*.test.ts",
+    "test:integration": "tsx --test tests/integration/**/*.test.ts",
     "spike:map": "tsx spike/run-map.ts",
     "spike:reduce": "tsx spike/run-reduce-r2.ts",
     "spike:all": "tsx spike/run-all.ts"
