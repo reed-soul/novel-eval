@@ -1,36 +1,27 @@
 {
   "name": "novel-eval",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "packageManager": "pnpm@10.32.1",
-  "description": "AI 驱动的小说五维结构化评估系统",
+  "description": "AI 驱动的中文网文写作与评估 monorepo",
   "engines": {
     "node": ">=20",
     "pnpm": ">=10"
   },
   "scripts": {
     "preinstall": "npx only-allow pnpm",
-    "eval": "tsx src/index.ts evaluate",
-    "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/**/*.test.ts",
-    "test:unit": "tsx --test tests/unit/**/*.test.ts",
-    "test:integration": "tsx --test tests/integration/**/*.test.ts",
-    "spike:map": "tsx spike/run-map.ts",
-    "spike:reduce": "tsx spike/run-reduce-r2.ts",
-    "spike:all": "tsx spike/run-all.ts"
-  },
-  "bin": {
-    "novel-eval": "src/index.ts"
-  },
-  "dependencies": {
-    "chardet": "^2.2.0",
-    "iconv-lite": "^0.7.3",
-    "js-yaml": "^5.2.1"
+    "eval": "tsx packages/eval/src/index.ts evaluate",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "test:unit": "pnpm -r test:unit"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["better-sqlite3", "esbuild"]
   }
 }
