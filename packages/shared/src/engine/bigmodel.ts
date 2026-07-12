@@ -46,7 +46,8 @@ export class BigModelAdapter implements AIAgentAdapter {
     const body: Record<string, unknown> = {
       model,
       max_tokens: options.maxTokens ?? 8192,
-      temperature: options.temperature ?? 0.3,
+      // GLM 端要求 temperature 小数点后不超过 2 位，防御性 round（避免浮点精度如 0.30000000000000004）
+      temperature: Math.round((options.temperature ?? 0.3) * 100) / 100,
       system: options.enableCache
         ? [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }]
         : systemPrompt,

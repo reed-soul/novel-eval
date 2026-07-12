@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 /**
- * Novel Writer CLI — 写作模块入口（阶段 2 M1）
+ * Novel Writer CLI — 写作模块入口（阶段 2）
  *
- *   novel-eval write init   --title ... --genre ... --audience ... --topic ...
- *   novel-eval write status <projectId>
+ *   novel-eval write init     --title ... --genre ... --audience ... --topic ...
+ *   novel-eval write outline  <projectId> [--chapters N]
+ *   novel-eval write chapter  <projectId> --number N | --from A --to B | --all
+ *   novel-eval write status   <projectId>
  *   novel-eval write list
- *
- * M1 只实现 init（生成 bible）、status（查看项目）、list（列出项目）。
- * M2 起增加 outline / chapter 命令；M3 增加 auto 命令。
  */
 import { createEngine, type AIAgentAdapter } from '@novel-eval/shared';
 import { loadWriterConfig } from './config.ts';
@@ -15,6 +14,11 @@ import { loadEnv } from './load-env.ts';
 import { openDb, closeDb, writerDataDir } from './db.ts';
 import { createProject, getProject, listProjects, updateProjectStatus, type Project } from './project.ts';
 import { generateBible } from './bible/generator.ts';
+import { generateBlueprint } from './chapter/blueprint.ts';
+import { generateChapter, generateRange } from './chapter/generator.ts';
+import { getBibleForChapter } from './chapter/store.ts';
+import { getAllOutlines, countOutlines, countChapters, getChapter } from './chapter/store.ts';
+import type { CharacterDynamic } from './bible/types.ts';
 import * as readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 
@@ -27,12 +31,28 @@ interface InitArgs {
   yes?: boolean;
 }
 
+interface OutlineArgs {
+  command: 'outline';
+  projectId: string;
+  chapters?: number;
+  yes?: boolean;
+}
+
+interface ChapterArgs {
+  command: 'chapter';
+  projectId: string;
+  number?: number;
+  from?: number;
+  to?: number;
+  all?: boolean;
+}
+
 interface StatusArgs {
   command: 'status';
   projectId: string;
 }
 
-type CliArgs = InitArgs | StatusArgs | { command: 'list' } | { command: 'help' };
+type CliArgs = InitArgs | OutlineArgs | ChapterArgs | StatusArgs | { command: 'list' } | { command: 'help' };
 
 function parseArgs(argv: string[]): CliArgs {
   // argv = [node, script, ('write'), ('--'), command, ...rest]
@@ -49,6 +69,30 @@ function parseArgs(argv: string[]): CliArgs {
     const projectId = rest.find((a) => !a.startsWith('--'));
     if (!projectId) return { command: 'help' };
     return { command: 'status', projectId };
+  }
+
+  if (cmd === 'outline') {
+    const projectId = rest.find((a) => !a.startsWith('--'));
+    if (!projectId) return { command: 'help' };
+    const args: OutlineArgs = { command: 'outline', projectId };
+    for (let i = 0; i < rest.length; i++) {
+      if (rest[i] === '--chapters') args.chapters = parseInt(rest[++i], 10);
+      else if (rest[i] === '-y' || rest[i] === '--yes') args.yes = true;
+    }
+    return args;
+  }
+
+  if (cmd === 'chapter') {
+    const projectId = rest.find((a) => !a.startsWith('--'));
+    if (!projectId) return { command: 'help' };
+    const args: ChapterArgs = { command: 'chapter', projectId };
+    for (let i = 0; i < rest.length; i++) {
+      if (rest[i] === '--number') args.number = parseInt(rest[++i], 10);
+      else if (rest[i] === '--from') args.from = parseInt(rest[++i], 10);
+      else if (rest[i] === '--to') args.to = parseInt(rest[++i], 10);
+      else if (rest[i] === '--all') args.all = true;
+    }
+    return args;
   }
 
   if (cmd === 'init') {
@@ -68,25 +112,36 @@ function parseArgs(argv: string[]): CliArgs {
 }
 
 function printHelp(): void {
-  console.log(`Novel Writer — AI 驱动的小说写作工具（M1：bible 生成）
+  console.log(`Novel Writer — AI 驱动的小说写作工具
 
 用法：
-  novel-eval write init   --title <书名> --genre <类型> --audience <受众> --topic <主题>
-  novel-eval write status <projectId>
+  novel-eval write init     --title <书名> --genre <类型> --audience <受众> --topic <主题>
+  novel-eval write outline  <projectId> [--chapters N]
+  novel-eval write chapter  <projectId> --number N | --from A --to B | --all
+  novel-eval write status   <projectId>
   novel-eval write list
 
-init 选项（全部必填）：
+init（创建项目 + 生成 bible 设定集）：
   --title <书名>      书名
-  --genre <类型>      小说类型（如「玄幻」「都市言情」「悬疑」）
-  --audience <受众>   目标受众（如「青年男性」「青年女性」）
-  --topic <主题>      核心创意/主题（一句话描述你想写的故事）
+  --genre <类型>      小说类型（如「玄幻」「科幻」「悬疑」）
+  --audience <受众>   目标受众
+  --topic <主题>      核心创意（一句话描述）
   -y, --yes           跳过确认屏
 
-示例：
-  novel-eval write init --title "无尽星海" --genre 科幻 --audience 青年男性 \\
-    --topic "一个失忆的星际探险者在废弃殖民地醒来，发现自己是唯一幸存者"
+outline（把 bible 拆成章节蓝图）：
+  <projectId>         write init 返回的项目 ID
+  --chapters <N>      目标章数（默认 50）
 
-注意：M1 只生成 bible（设定集）。章节生成（write chapter）在 M2 实现。`);
+chapter（按蓝图生成章节正文）：
+  --number <N>        生成第 N 章
+  --from <A> --to <B> 生成第 A 到 B 章
+  --all               生成全部章节
+
+示例：
+  novel-eval write init --title "星海残响" --genre 科幻 --audience 青年男性 \\
+    --topic "失忆探险者在废弃殖民地醒来" -y
+  novel-eval write outline <projectId> --chapters 30
+  novel-eval write chapter <projectId> --from 1 --to 5`);
 }
 
 async function confirmProceed(message: string): Promise<boolean> {
@@ -201,6 +256,115 @@ function printProject(p: Project, db: ReturnType<typeof openDb>): void {
     console.log(`    情节架构：${bibleRow.plot_architecture ? '✓' : '✗'}`);
     console.log(`    设定全文：${bibleRow.full_text ? bibleRow.full_text.length + ' 字' : '✗'}`);
   }
+  // M2：章节进度
+  const outlineN = countOutlines(db, p.id);
+  const chapterN = countChapters(db, p.id);
+  if (outlineN > 0) {
+    console.log(`\n  章节：蓝图 ${outlineN} 章 · 已写 ${chapterN} 章`);
+    if (chapterN > 0) {
+      const last = getChapter(db, p.id, chapterN);
+      if (last) console.log(`    最新：第 ${last.number} 章《${last.title}》${last.wordCount} 字`);
+    }
+  }
+}
+
+async function runOutline(args: OutlineArgs): Promise<void> {
+  const config = loadWriterConfig();
+  const db = openDb();
+  try {
+    const project = getProject(db, args.projectId);
+    if (!project) { console.error(`未找到项目：${args.projectId}`); process.exit(1); }
+
+    const { plotArchitecture, characterState: _ } = getBibleForChapter(db, args.projectId);
+    void _;
+    // 读 character_dynamics（蓝图生成需要角色列表）
+    const bibleRow = db.prepare('SELECT character_dynamics FROM bible WHERE project_id = ?').get(args.projectId) as
+      | { character_dynamics: string | null } | undefined;
+    if (!bibleRow?.character_dynamics) {
+      console.error('bible 未完成，无法生成蓝图。请先运行 write init。');
+      process.exit(1);
+    }
+    const characters = (JSON.parse(bibleRow.character_dynamics) as { characters: CharacterDynamic[] }).characters;
+    const totalChapters = args.chapters ?? config.generation.defaultChapters;
+
+    const existing = countOutlines(db, args.projectId);
+    console.log(`Novel Writer — 生成章节蓝图\n  项目：${project.title}（${args.projectId}）`);
+    console.log(`  目标：${totalChapters} 章${existing ? `（已有 ${existing} 章，将跳过）` : ''}\n`);
+
+    if (!args.yes && existing === 0) {
+      const ok = await confirmProceed('将生成章节蓝图（两层拆分，约 ¥0.03）');
+      if (!ok) { console.log('已取消'); return; }
+    }
+
+    const engine: AIAgentAdapter = createEngine(config.engine);
+    const { outlines, usage } = await generateBlueprint({
+      engine, db, projectId: args.projectId,
+      plot: plotArchitecture, characters, totalChapters,
+      onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
+    });
+
+    updateProjectStatus(db, args.projectId, 'outlining');
+    console.log('\n✓ 章节蓝图生成完成');
+    console.log(`  章节数：${outlines.length}`);
+    console.log(`  费用：¥${usage.costRmb.toFixed(4)}`);
+    // 列出各幕分布
+    const byAct = { 1: 0, 2: 0, 3: 0 };
+    for (const o of outlines) byAct[o.act]++;
+    console.log(`  分布：第一幕 ${byAct[1]} 章 / 第二幕 ${byAct[2]} 章 / 第三幕 ${byAct[3]} 章`);
+    console.log(`\n下一步：novel-eval write chapter ${args.projectId} --from 1 --to 3`);
+  } finally {
+    closeDb(db);
+  }
+}
+
+async function runChapter(args: ChapterArgs): Promise<void> {
+  const config = loadWriterConfig();
+  const db = openDb();
+  try {
+    const project = getProject(db, args.projectId);
+    if (!project) { console.error(`未找到项目：${args.projectId}`); process.exit(1); }
+
+    const outlineCount = countOutlines(db, args.projectId);
+    if (outlineCount === 0) {
+      console.error('还没有章节蓝图，请先运行 write outline。');
+      process.exit(1);
+    }
+
+    // 确定范围
+    let from: number, to: number;
+    if (args.all) { from = 1; to = outlineCount; }
+    else if (args.number !== undefined) { from = args.number; to = args.number; }
+    else if (args.from !== undefined && args.to !== undefined) { from = args.from; to = args.to; }
+    else { console.error('请指定 --number N 或 --from A --to B 或 --all'); process.exit(1); }
+
+    console.log(`Novel Writer — 生成章节\n  项目：${project.title}（${args.projectId}）`);
+    console.log(`  范围：第 ${from}-${to} 章（每章约 ${config.generation.chapterWordCount} 字）\n`);
+
+    updateProjectStatus(db, args.projectId, 'writing');
+    const engine: AIAgentAdapter = createEngine(config.engine);
+    const results = await generateRange({
+      engine, db, projectId: args.projectId,
+      from, to, wordCount: config.generation.chapterWordCount,
+      onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
+    });
+
+    const totalCost = results.reduce((s, r) => s + r.usage.costRmb, 0);
+    const totalWords = results.reduce((s, r) => s + r.wordCount, 0);
+    console.log(`\n✓ 章节生成完成`);
+    console.log(`  生成：${results.length} 章 · ${totalWords} 字`);
+    console.log(`  费用：¥${totalCost.toFixed(4)}`);
+    // 写出 txt（方便阅读）
+    if (results.length > 0) {
+      const { writeFileSync } = await import('node:fs');
+      const { resolve } = await import('node:path');
+      const outPath = resolve(writerDataDir(), `${args.projectId}-ch${from}-${to}.txt`);
+      const text = results.map((r) => `第${r.number}章 ${r.title}\n\n${r.content}`).join('\n\n\n');
+      writeFileSync(outPath, text, 'utf-8');
+      console.log(`  导出：${outPath}`);
+    }
+  } finally {
+    closeDb(db);
+  }
 }
 
 async function main(): Promise<void> {
@@ -209,6 +373,8 @@ async function main(): Promise<void> {
   if (args.command === 'help') { printHelp(); return; }
   if (args.command === 'list') { runList(); return; }
   if (args.command === 'status') { runStatus(args); return; }
+  if (args.command === 'outline') { await runOutline(args); return; }
+  if (args.command === 'chapter') { await runChapter(args); return; }
   await runInit(args);
 }
 
