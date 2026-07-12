@@ -9,6 +9,11 @@ import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { openDb, closeDb, loadWriterConfig } from '@novel-eval/writer';
 import { loadEnv } from '@novel-eval/writer';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const DIST_DIR = resolve(__dirname, '..', 'dist');  // packages/web/dist/
 
 // 路由模块
 import { projectRoutes } from './routes/projects.ts';
@@ -43,9 +48,19 @@ app.get('/api/config', (c) => c.json({
 }));
 
 // 静态文件（生产模式：Vite 构建后的 dist/）
-app.use('/*', serveStatic({ root: './dist' }));
-// SPA fallback：非 /api 路径都返回 index.html
-app.get('/*', serveStatic({ root: './dist', path: 'index.html' }));
+// serveStatic 的 root 相对于 cwd，用绝对路径避免定位错误
+app.use('/assets/*', serveStatic({ root: DIST_DIR }));
+app.use('/*', serveStatic({ root: DIST_DIR }));
+// SPA fallback：非 /api 且非静态文件的路径返回 index.html
+import { readFileSync } from 'node:fs';
+app.get('/*', (c) => {
+  try {
+    const html = readFileSync(resolve(DIST_DIR, 'index.html'), 'utf-8');
+    return c.html(html);
+  } catch {
+    return c.text('前端未构建，请先运行 pnpm web:build', 404);
+  }
+});
 
 const port = 3000;
 console.log(`Novel Eval Web — http://localhost:${port}`);
