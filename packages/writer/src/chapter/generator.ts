@@ -164,6 +164,9 @@ async function generateOnce(
     temperature: CHAPTER_TEMPERATURE,
     maxTokens: Math.ceil(wordCount * 2.5),
     timeoutMs: STEP_TIMEOUT_MS,
+    // 关闭推理过程：蓝图已提供结构，thinking 会挤占 output 预算导致正文截断。
+    // DeepSeek 默认输出 thinking block；智谱端忽略此字段。
+    disableThinking: true,
   });
   addUsage(totalUsage, res.usage);
 

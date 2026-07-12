@@ -15,6 +15,9 @@ export interface RunOptions {
   timeoutMs?: number;
   outputSchema?: object;
   enableCache?: boolean;
+  /** 关闭模型推理过程（thinking）。结构化输出（JSON）场景建议开启，
+   *  避免推理 token 干扰输出预算和 JSON 解析。DeepSeek 支持，智谱忽略此字段。*/
+  disableThinking?: boolean;
 }
 
 export interface CallResult {

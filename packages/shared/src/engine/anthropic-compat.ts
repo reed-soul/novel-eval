@@ -74,6 +74,12 @@ export abstract class AnthropicCompatAdapter implements AIAgentAdapter {
       notes.push('sent output_schema（兼容层不强制，须后端校验）');
     }
 
+    // 关闭推理过程（DeepSeek pro/flash 默认输出 thinking block，会占用 output token 预算；
+    // 结构化输出场景需要关闭以保证 JSON 完整性。智谱端忽略此字段。）
+    if (options.disableThinking) {
+      body.thinking = { type: 'disabled' };
+    }
+
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? 180_000);
 

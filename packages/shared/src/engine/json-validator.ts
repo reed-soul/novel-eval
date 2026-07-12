@@ -120,6 +120,11 @@ export async function callWithValidation<T>(
 
     const { text, usage } = await engine.run(prompt, {
       ...options,
+      // 结构化输出场景关闭模型推理过程（thinking）：
+      // 1. 避免 thinking token 挤占 output 预算导致 JSON 被截断
+      // 2. thinking 的自由联想会干扰 JSON 格式的严格性
+      // DeepSeek pro/flash 默认输出 thinking block，这里统一关闭；智谱端忽略此字段。
+      disableThinking: true,
       // 重试时降温；round 到 2 位小数避免浮点精度（如 0.4-0.1=0.30000000000000004）触发 GLM 端 temperature 校验
       temperature: attempt === 1 ? options.temperature : Math.round(Math.max(0.1, (options.temperature ?? 0.3) - 0.1) * 100) / 100,
     });
