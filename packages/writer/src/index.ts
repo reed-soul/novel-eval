@@ -45,6 +45,20 @@ interface ChapterArgs {
   from?: number;
   to?: number;
   all?: boolean;
+  maxRevise?: number;       // 质量门槛：最大重写次数
+  passGrade?: string;       // 质量门槛：通过等级
+}
+
+interface AutoArgs {
+  command: 'auto';
+  title: string;
+  genre: string;
+  audience: string;
+  topic: string;
+  chapters: number;
+  maxRevise?: number;
+  passGrade?: string;
+  yes?: boolean;
 }
 
 interface StatusArgs {
@@ -52,7 +66,7 @@ interface StatusArgs {
   projectId: string;
 }
 
-type CliArgs = InitArgs | OutlineArgs | ChapterArgs | StatusArgs | { command: 'list' } | { command: 'help' };
+type CliArgs = InitArgs | OutlineArgs | ChapterArgs | AutoArgs | StatusArgs | { command: 'list' } | { command: 'help' };
 
 function parseArgs(argv: string[]): CliArgs {
   // argv = [node, script, ('write'), ('--'), command, ...rest]
@@ -91,6 +105,23 @@ function parseArgs(argv: string[]): CliArgs {
       else if (rest[i] === '--from') args.from = parseInt(rest[++i], 10);
       else if (rest[i] === '--to') args.to = parseInt(rest[++i], 10);
       else if (rest[i] === '--all') args.all = true;
+      else if (rest[i] === '--max-revise') args.maxRevise = parseInt(rest[++i], 10);
+      else if (rest[i] === '--pass-grade') args.passGrade = rest[++i];
+    }
+    return args;
+  }
+
+  if (cmd === 'auto') {
+    const args: AutoArgs = { command: 'auto', title: '', genre: '', audience: '', topic: '', chapters: 30 };
+    for (let i = 0; i < rest.length; i++) {
+      if (rest[i] === '--title') args.title = rest[++i];
+      else if (rest[i] === '--genre') args.genre = rest[++i];
+      else if (rest[i] === '--audience') args.audience = rest[++i];
+      else if (rest[i] === '--topic') args.topic = rest[++i];
+      else if (rest[i] === '--chapters') args.chapters = parseInt(rest[++i], 10);
+      else if (rest[i] === '--max-revise') args.maxRevise = parseInt(rest[++i], 10);
+      else if (rest[i] === '--pass-grade') args.passGrade = rest[++i];
+      else if (rest[i] === '-y' || rest[i] === '--yes') args.yes = true;
     }
     return args;
   }
@@ -117,15 +148,13 @@ function printHelp(): void {
 用法：
   novel-eval write init     --title <书名> --genre <类型> --audience <受众> --topic <主题>
   novel-eval write outline  <projectId> [--chapters N]
-  novel-eval write chapter  <projectId> --number N | --from A --to B | --all
+  novel-eval write chapter  <projectId> --number N | --from A --to B | --all [--max-revise N]
+  novel-eval write auto     --title ... --genre ... --audience ... --topic ... --chapters N
   novel-eval write status   <projectId>
   novel-eval write list
 
 init（创建项目 + 生成 bible 设定集）：
-  --title <书名>      书名
-  --genre <类型>      小说类型（如「玄幻」「科幻」「悬疑」）
-  --audience <受众>   目标受众
-  --topic <主题>      核心创意（一句话描述）
+  --title/--genre/--audience/--topic   必填
   -y, --yes           跳过确认屏
 
 outline（把 bible 拆成章节蓝图）：
@@ -136,12 +165,17 @@ chapter（按蓝图生成章节正文）：
   --number <N>        生成第 N 章
   --from <A> --to <B> 生成第 A 到 B 章
   --all               生成全部章节
+  --max-revise <N>    启用质量门槛，最大重写次数（默认不启用）
+
+auto（全自动：bible → 蓝图 → 章节 + 质量门槛）：
+  --title/--genre/--audience/--topic   必填
+  --chapters <N>      目标章数（默认 30）
+  --max-revise <N>    质量门槛重写上限（默认 2）
+  -y, --yes           跳过确认屏
 
 示例：
-  novel-eval write init --title "星海残响" --genre 科幻 --audience 青年男性 \\
-    --topic "失忆探险者在废弃殖民地醒来" -y
-  novel-eval write outline <projectId> --chapters 30
-  novel-eval write chapter <projectId> --from 1 --to 5`);
+  novel-eval write auto --title "星海残响" --genre 科幻 --audience 青年男性 \\
+    --topic "失忆探险者在废弃殖民地醒来" --chapters 12 -y`);
 }
 
 async function confirmProceed(message: string): Promise<boolean> {
@@ -338,13 +372,20 @@ async function runChapter(args: ChapterArgs): Promise<void> {
     else { console.error('请指定 --number N 或 --from A --to B 或 --all'); process.exit(1); }
 
     console.log(`Novel Writer — 生成章节\n  项目：${project.title}（${args.projectId}）`);
-    console.log(`  范围：第 ${from}-${to} 章（每章约 ${config.generation.chapterWordCount} 字）\n`);
+    console.log(`  范围：第 ${from}-${to} 章（每章约 ${config.generation.chapterWordCount} 字）`);
+    const useGate = args.maxRevise !== undefined;
+    if (useGate) console.log(`  质量门槛：启用（maxRevise=${args.maxRevise ?? 2}）`);
+    console.log('');
 
     updateProjectStatus(db, args.projectId, 'writing');
     const engine: AIAgentAdapter = createEngine(config.engine);
     const results = await generateRange({
       engine, db, projectId: args.projectId,
       from, to, wordCount: config.generation.chapterWordCount,
+      qualityGate: useGate ? {
+        metadata: { genre: project.genre, targetAudience: project.audience },
+        maxRevise: args.maxRevise ?? 2,
+      } : undefined,
       onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
     });
 
@@ -367,6 +408,80 @@ async function runChapter(args: ChapterArgs): Promise<void> {
   }
 }
 
+async function runAuto(args: AutoArgs): Promise<void> {
+  // 校验必填
+  const missing: string[] = [];
+  if (!args.title) missing.push('--title');
+  if (!args.genre) missing.push('--genre');
+  if (!args.audience) missing.push('--audience');
+  if (!args.topic) missing.push('--topic');
+  if (missing.length) { console.error(`错误：缺少必填参数：${missing.join(', ')}`); process.exit(1); }
+
+  const config = loadWriterConfig();
+  console.log('Novel Writer — 全自动生成\n');
+  console.log(`  书名：${args.title} · ${args.genre} · ${args.audience}`);
+  console.log(`  主题：${args.topic}`);
+  console.log(`  目标：${args.chapters} 章 · 每章约 ${config.generation.chapterWordCount} 字`);
+  console.log(`  质量门槛：启用（maxRevise=${args.maxRevise ?? 2}）`);
+  console.log(`  引擎：${config.engineName}（${config.engine.model}）`);
+  console.log('');
+
+  if (!args.yes) {
+    const ok = await confirmProceed(`将全自动生成（bible + 蓝图 + ${args.chapters} 章正文 + 质量门槛），预估 ¥${(args.chapters * 0.05).toFixed(1)}-${(args.chapters * 0.08).toFixed(1)}`);
+    if (!ok) { console.log('已取消'); return; }
+  }
+
+  const db = openDb();
+  try {
+    const engine: AIAgentAdapter = createEngine(config.engine);
+    const log = (step: string, msg: string) => console.log(`  [${step}] ${msg}`);
+
+    // 1. bible
+    console.log('\n── 阶段 1：bible 生成 ──');
+    const project = createProject(db, { title: args.title, genre: args.genre, audience: args.audience, topic: args.topic });
+    const { bible, usage: bibleUsage } = await generateBible({
+      engine, db, projectId: project.id, topic: args.topic, genre: args.genre, audience: args.audience, onProgress: log,
+    });
+    updateProjectStatus(db, project.id, 'bible_done');
+    console.log(`✓ bible 完成（${bible.characterDynamics.length} 角色 / ${bible.plotArchitecture.foreshadows.length} 伏笔 / ¥${bibleUsage.costRmb.toFixed(4)}）`);
+
+    // 2. outline
+    console.log('\n── 阶段 2：章节蓝图 ──');
+    const { outlines, usage: outlineUsage } = await generateBlueprint({
+      engine, db, projectId: project.id, plot: bible.plotArchitecture, characters: bible.characterDynamics, totalChapters: args.chapters, onProgress: log,
+    });
+    updateProjectStatus(db, project.id, 'outlining');
+    console.log(`✓ 蓝图完成（${outlines.length} 章 / ¥${outlineUsage.costRmb.toFixed(4)}）`);
+
+    // 3. chapter（带质量门槛）
+    console.log('\n── 阶段 3：章节生成（带质量门槛）──');
+    updateProjectStatus(db, project.id, 'writing');
+    const results = await generateRange({
+      engine, db, projectId: project.id, from: 1, to: outlines.length,
+      wordCount: config.generation.chapterWordCount,
+      qualityGate: { metadata: { genre: args.genre, targetAudience: args.audience }, maxRevise: args.maxRevise ?? 2 },
+      onProgress: log,
+    });
+    updateProjectStatus(db, project.id, 'completed');
+
+    const totalCost = bibleUsage.costRmb + outlineUsage.costRmb + results.reduce((s, r) => s + r.usage.costRmb, 0);
+    const totalWords = results.reduce((s, r) => s + r.wordCount, 0);
+    console.log(`\n✓ 全自动生成完成`);
+    console.log(`  生成：${results.length} 章 · ${totalWords} 字`);
+    console.log(`  总费用：¥${totalCost.toFixed(4)}`);
+    console.log(`  项目 ID：${project.id}`);
+    // 导出 txt
+    const { writeFileSync } = await import('node:fs');
+    const { resolve } = await import('node:path');
+    const outPath = resolve(writerDataDir(), `${project.id}-full.txt`);
+    const text = results.map((r) => `第${r.number}章 ${r.title}\n\n${r.content}`).join('\n\n\n');
+    writeFileSync(outPath, text, 'utf-8');
+    console.log(`  导出：${outPath}`);
+  } finally {
+    closeDb(db);
+  }
+}
+
 async function main(): Promise<void> {
   loadEnv();
   const args = parseArgs(process.argv);
@@ -375,6 +490,7 @@ async function main(): Promise<void> {
   if (args.command === 'status') { runStatus(args); return; }
   if (args.command === 'outline') { await runOutline(args); return; }
   if (args.command === 'chapter') { await runChapter(args); return; }
+  if (args.command === 'auto') { await runAuto(args); return; }
   await runInit(args);
 }
 

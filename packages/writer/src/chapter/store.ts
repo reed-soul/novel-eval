@@ -142,6 +142,14 @@ export function getChapter(db: DB, projectId: string, number: number): ChapterCo
   };
 }
 
+/** 删除章节（revise 重写前调用，清除 checkpoint）*/
+export function deleteChapter(db: DB, projectId: string, number: number): void {
+  db.prepare('DELETE FROM chapter WHERE project_id = ? AND number = ?').run(projectId, number);
+  // 重置 outline 状态为 pending
+  db.prepare('UPDATE chapter_outline SET status = ? WHERE project_id = ? AND number = ?')
+    .run('pending', projectId, number);
+}
+
 export function getRecentChapters(db: DB, projectId: string, beforeNumber: number, count: number): ChapterContent[] {
   const rows = db.prepare(
     `SELECT * FROM chapter WHERE project_id = ? AND number < ? ORDER BY number DESC LIMIT ?`,

@@ -47,6 +47,9 @@ importers:
 
   packages/writer:
     dependencies:
+      '@novel-eval/eval':
+        specifier: workspace:*
+        version: link:../eval
       '@novel-eval/shared':
         specifier: workspace:*
         version: link:../shared
