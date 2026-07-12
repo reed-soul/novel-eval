@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, type Project, type ChapterListItem } from '../api/client.ts';
+import { ProgressPanel } from '../components/ProgressPanel.tsx';
 
 export function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -8,8 +9,12 @@ export function ProjectDetail() {
   const [chapters, setChapters] = useState<ChapterListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [genFrom, setGenFrom] = useState(1);
+  const [genTo, setGenTo] = useState(5);
+  const [useGate, setUseGate] = useState(true);
 
-  useEffect(() => {
+  const reload = () => {
     if (!id) return;
     Promise.all([
       api<Project>(`/projects/${id}`),
@@ -18,7 +23,33 @@ export function ProjectDetail() {
       .then(([p, c]) => { setProject(p); setChapters(c.chapters); })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [id]);
+  };
+
+  useEffect(reload, [id]);
+
+  const startBible = async () => {
+    const res = await fetch(`/api/projects/${id}/bible/generate`, { method: 'POST' });
+    const data = await res.json();
+    if (data.jobId) setJobId(data.jobId);
+  };
+
+  const startOutline = async () => {
+    const res = await fetch(`/api/projects/${id}/outline/generate`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chapters: 12 }),
+    });
+    const data = await res.json();
+    if (data.jobId) setJobId(data.jobId);
+  };
+
+  const startChapters = async () => {
+    const res = await fetch(`/api/projects/${id}/chapters/generate`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: genFrom, to: genTo, qualityGate: useGate, maxRevise: 1 }),
+    });
+    const data = await res.json();
+    if (data.jobId) setJobId(data.jobId);
+  };
 
   if (loading) return <div className="container loading">加载中...</div>;
   if (error) return <div className="container error">错误：{error}</div>;
@@ -44,6 +75,27 @@ export function ProjectDetail() {
         <p style={{ lineHeight: 1.7 }}>{project.topic}</p>
       </div>
 
+      {/* 生成操作 */}
+      <div className="card">
+        <h2>生成操作</h2>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <button className="btn btn-primary" onClick={startBible}>📖 生成 Bible</button>
+          <button className="btn btn-primary" onClick={startOutline}>📋 生成蓝图（12章）</button>
+        </div>
+        <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 14 }}>生成章节：</span>
+          <input type="number" value={genFrom} onChange={(e) => setGenFrom(parseInt(e.target.value) || 1)} style={{ width: 60, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)' }} />
+          <span>到</span>
+          <input type="number" value={genTo} onChange={(e) => setGenTo(parseInt(e.target.value) || 1)} style={{ width: 60, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)' }} />
+          <label style={{ fontSize: 14 }}>
+            <input type="checkbox" checked={useGate} onChange={(e) => setUseGate(e.target.checked)} /> 质量门槛
+          </label>
+          <button className="btn btn-primary" onClick={startChapters}>✍️ 生成</button>
+        </div>
+      </div>
+
+      {jobId && <ProgressPanel jobId={jobId} onDone={reload} />}
+
       {chapters.length > 0 && (
         <div className="card">
           <h2>章节进度（{writtenCount}/{chapters.length}）</h2>
@@ -56,11 +108,6 @@ export function ProjectDetail() {
                 </div>
               </Link>
             ))}
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 8 }}>
-            <span style={{ display: 'inline-block', width: 12, height: 12, background: 'var(--green)', borderRadius: 3, marginRight: 4 }} />已写
-            <span style={{ display: 'inline-block', width: 12, height: 12, background: 'var(--border)', borderRadius: 3, margin: '0 4px 0 12px' }} />未写
-            <span style={{ marginLeft: 16 }}>左色条：蓝=第一幕 / 橙=第二幕 / 红=第三幕</span>
           </div>
         </div>
       )}

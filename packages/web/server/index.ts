@@ -16,6 +16,8 @@ import { bibleRoutes } from './routes/bible.ts';
 import { chapterRoutes } from './routes/chapters.ts';
 import { outlineRoutes } from './routes/outlines.ts';
 import { narrativeRoutes } from './routes/narrative.ts';
+import { generateRoutes } from './routes/generate.ts';
+import { editRoutes } from './routes/edit.ts';
 
 loadEnv();
 const db = openDb();
@@ -23,12 +25,15 @@ const config = loadWriterConfig();
 
 const app = new Hono();
 
-// API 路由
+// API 路由（只读）
 app.route('/api/projects', projectRoutes(db));
 app.route('/api/projects', bibleRoutes(db));
 app.route('/api/projects', chapterRoutes(db));
 app.route('/api/projects', outlineRoutes(db));
 app.route('/api/projects', narrativeRoutes(db));
+// 生成 + 编辑路由（POST/PUT + SSE）
+app.route('/api/projects', generateRoutes(db, config.engine));
+app.route('/api/projects', editRoutes(db));
 
 // 配置端点
 app.get('/api/config', (c) => c.json({
