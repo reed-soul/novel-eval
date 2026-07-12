@@ -13,6 +13,9 @@
     "preinstall": "npx only-allow pnpm",
     "eval": "tsx packages/eval/src/index.ts evaluate",
     "write": "tsx packages/writer/src/index.ts write",
+    "web": "tsx packages/web/server/index.ts",
+    "web:dev": "pnpm --filter @novel-eval/web dev",
+    "web:build": "pnpm --filter @novel-eval/web build",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "test:unit": "pnpm -r test:unit"

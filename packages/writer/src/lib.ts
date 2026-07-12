@@ -4,6 +4,7 @@
  * CLI 入口在 src/index.ts（由根 package.json 的 writer script 直接跑）。
  */
 export { loadWriterConfig, type WriterConfig, type GenerationConfig } from './config.ts';
+export { loadEnv } from './load-env.ts';
 export { openDb, closeDb, writerDataDir, type DB } from './db.ts';
 export {
   createProject, getProject, listProjects, updateProjectStatus,
@@ -15,6 +16,12 @@ export { generateChapter, generateRange, type GenerateChapterOptions, type Gener
 export { finalizeChapter, type FinalizeOptions, type FinalizeResult } from './chapter/finalizer.ts';
 export { assessChapterQuality, type QualityGateResult } from './chapter/quality-gate.ts';
 export { detectRepetition, type RepetitionReport } from './chapter/repetition.ts';
+// store 读写函数（Web 后端 + CLI 共用）
+export {
+  saveOutlines, getOutline, getAllOutlines, countOutlines, markOutlineWritten,
+  saveChapter, getChapter, getRecentChapters, countChapters, deleteChapter,
+  getNarrativeState, saveNarrativeState, getBibleForChapter, updateCharacterState,
+} from './chapter/store.ts';
 export type { ChapterOutline, ChapterContent, NarrativeState, Beat, ArcSummary, OpenForeshadow } from './chapter/types.ts';
 export type {
   Bible, CoreSeed, CharacterDynamic, CharacterDrives, CharacterArc,

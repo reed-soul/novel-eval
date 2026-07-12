@@ -1,0 +1,31 @@
+{
+  "name": "@novel-eval/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "tsx server/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/**/*.test.ts",
+    "test:unit": "tsx --test tests/unit/**/*.test.ts"
+  },
+  "dependencies": {
+    "@novel-eval/shared": "workspace:*",
+    "@novel-eval/writer": "workspace:*",
+    "@novel-eval/eval": "workspace:*",
+    "hono": "^4.6.0",
+    "@hono/node-server": "^1.13.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "react-router-dom": "^6.26.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "vite": "^5.4.0"
+  }
+}
