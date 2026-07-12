@@ -57,6 +57,50 @@ function migrate(db: DB): void {
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
+
+    -- M2：章节蓝图（每行一章）
+    CREATE TABLE IF NOT EXISTS chapter_outline (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL REFERENCES project(id),
+      number INTEGER NOT NULL,
+      title TEXT,
+      act INTEGER NOT NULL,
+      beat TEXT,
+      role TEXT,
+      purpose TEXT,
+      suspense_level INTEGER,
+      foreshadowing TEXT,
+      twist_level INTEGER,
+      summary TEXT,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      UNIQUE(project_id, number)
+    );
+
+    -- M2：章节正文
+    CREATE TABLE IF NOT EXISTS chapter (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL REFERENCES project(id),
+      number INTEGER NOT NULL,
+      outline_id TEXT REFERENCES chapter_outline(id),
+      title TEXT,
+      content TEXT NOT NULL,
+      word_count INTEGER,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      UNIQUE(project_id, number)
+    );
+
+    -- M2：叙事状态（滚动摘要 + 伏笔追踪，每项目一行）
+    CREATE TABLE IF NOT EXISTS narrative_state (
+      project_id TEXT PRIMARY KEY REFERENCES project(id),
+      macro_summary TEXT,
+      open_foreshadows TEXT,
+      arc_summaries TEXT,
+      up_to_chapter INTEGER NOT NULL DEFAULT 0,
+      updated_at TEXT NOT NULL
+    );
   `);
 }
 

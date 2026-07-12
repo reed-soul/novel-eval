@@ -120,7 +120,8 @@ export async function callWithValidation<T>(
 
     const { text, usage } = await engine.run(prompt, {
       ...options,
-      temperature: attempt === 1 ? options.temperature : Math.max(0.1, (options.temperature ?? 0.3) - 0.1),
+      // 重试时降温；round 到 2 位小数避免浮点精度（如 0.4-0.1=0.30000000000000004）触发 GLM 端 temperature 校验
+      temperature: attempt === 1 ? options.temperature : Math.round(Math.max(0.1, (options.temperature ?? 0.3) - 0.1) * 100) / 100,
     });
 
     totalUsage = {
