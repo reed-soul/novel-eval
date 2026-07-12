@@ -26,26 +26,28 @@ const ARC_INTERVAL = 10;  // 每 10 章固化一份 arcSummary
 // ─── summary 更新的 schema（输出 macroSummary + openForeshadows）────────
 
 const SUMMARY_SCHEMA: SchemaSpec = {
-  macroSummary: { type: 'string', min: 50, max: 2000, required: true },
+  macroSummary: { type: 'string', min: 20, max: 2000, required: true },
   openForeshadows: {
     type: 'array', itemSpec: {
       type: 'object', fields: {
-        description: { type: 'string', min: 5, required: true },
-        setupChapter: { type: 'number', min: 1, integer: true, required: true },
-        resolveChapter: { type: 'number', min: 0, integer: true },
+        description: { type: 'string', min: 3, required: true },
+        setupChapter: { type: 'number', min: 0, integer: true, required: true },
+        // resolveChapter 可能为 null（未回收），schema 不强制校验它
       },
     },
   },
 };
 
-// ─── characterState 重写的 schema（复用 M1 结构）──────────────────
+// ─── characterState 重写的 schema（复用 M1 结构，放宽容错）────────
+// 注意：status 不设 required（LLM 偶尔省略未出场角色的 status）；
+// 数组字段不设 required（LLM 偶尔输出 null 而非 []，validateField 对 null 非必填直接跳过）
 
 const STATE_ENTRY_SCHEMA = {
   type: 'object' as const, fields: {
     name: { type: 'string' as const, required: true },
     items: { type: 'array' as const, itemSpec: { type: 'string' as const } },
     abilities: { type: 'array' as const, itemSpec: { type: 'string' as const } },
-    status: { type: 'string' as const, required: true },
+    status: { type: 'string' as const },
     relationships: { type: 'array' as const, itemSpec: { type: 'string' as const } },
     events: { type: 'array' as const, itemSpec: { type: 'string' as const } },
   },
@@ -118,11 +120,15 @@ export async function finalizeChapter(opts: FinalizeOptions): Promise<FinalizeRe
   let openForeshadows: OpenForeshadow[] = oldNarrative?.openForeshadows ?? [];
   if (summaryRes.ok && summaryRes.data) {
     macroSummary = summaryRes.data.macroSummary;
-    openForeshadows = summaryRes.data.openForeshadows.map((f) => ({
-      description: f.description,
-      setupChapter: f.setupChapter,
-      resolveChapter: f.resolveChapter ?? null,
-    }));
+    // 容错：openForeshadows 可能为 null/undefined（LLM 偶尔省略）
+    const rawForeshadows = summaryRes.data.openForeshadows ?? [];
+    openForeshadows = Array.isArray(rawForeshadows)
+      ? rawForeshadows.map((f) => ({
+          description: f.description,
+          setupChapter: f.setupChapter,
+          resolveChapter: f.resolveChapter ?? null,
+        }))
+      : oldNarrative?.openForeshadows ?? [];
     addUsage(totalUsage, summaryRes.totalUsage);
   } else {
     onProgress?.(`finalize:${chapterNumber}`, `⚠ 宏观主线更新失败，保留旧值`);
@@ -130,7 +136,17 @@ export async function finalizeChapter(opts: FinalizeOptions): Promise<FinalizeRe
 
   // ─── 处理 characterState 结果 ────────────────────────────────────
   if (stateRes.ok && stateRes.data) {
-    const newState: CharacterState = { characters: stateRes.data.characters };
+    // 容错：LLM 偶尔输出 null 而非 []，补成空数组
+    const newState: CharacterState = {
+      characters: stateRes.data.characters.map((c) => ({
+        name: c.name,
+        items: c.items ?? [],
+        abilities: c.abilities ?? [],
+        status: c.status ?? '未知',
+        relationships: c.relationships ?? [],
+        events: c.events ?? [],
+      })),
+    };
     updateCharacterState(db, projectId, newState);
     addUsage(totalUsage, stateRes.totalUsage);
   } else {
