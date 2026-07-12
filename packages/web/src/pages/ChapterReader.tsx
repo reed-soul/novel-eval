@@ -7,15 +7,35 @@ export function ChapterReader() {
   const [chapter, setChapter] = useState<ChapterDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [editing, setEditing] = useState(false);
+  const [editContent, setEditContent] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  const load = () => {
     if (!id || !n) return;
     setLoading(true);
     api<ChapterDetail>(`/projects/${id}/chapters/${n}`)
-      .then(setChapter)
+      .then((ch) => { setChapter(ch); setEditContent(ch.content ?? ''); })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [id, n]);
+  };
+
+  useEffect(load, [id, n]);
+
+  const saveEdit = async () => {
+    if (!id || !n || !chapter) return;
+    setSaving(true);
+    const res = await fetch(`/api/projects/${id}/chapters/${n}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: editContent }),
+    });
+    const data = await res.json();
+    setSaving(false);
+    if (data.error) { setError(data.error); return; }
+    setEditing(false);
+    load();  // 重新加载
+  };
 
   if (loading) return <div className="container loading">加载中...</div>;
   if (error) return <div className="container error">错误：{error}</div>;
@@ -44,8 +64,24 @@ export function ChapterReader() {
         </dl>
       </div>
 
-      {chapter.content ? (
+      {editing ? (
         <div className="card">
+          <h2>编辑正文</h2>
+          <textarea
+            value={editContent}
+            onChange={(e) => setEditContent(e.target.value)}
+            style={{ width: '100%', minHeight: '400px', fontFamily: 'inherit', fontSize: 15, lineHeight: 1.9, padding: 12, border: '1px solid var(--border)', borderRadius: 8 }}
+          />
+          <div style={{ marginTop: 12, display: 'flex', gap: 12 }}>
+            <button className="btn btn-primary" onClick={saveEdit} disabled={saving}>{saving ? '保存中...' : '保存'}</button>
+            <button className="btn" onClick={() => { setEditing(false); setEditContent(chapter.content ?? ''); }}>取消</button>
+          </div>
+        </div>
+      ) : chapter.content ? (
+        <div className="card">
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+            <button className="btn" onClick={() => setEditing(true)}>✏️ 编辑</button>
+          </div>
           <div className="chapter-content">{chapter.content}</div>
         </div>
       ) : (
