@@ -11,8 +11,10 @@ export {
 } from './project.ts';
 export { generateBible, type GenerateBibleOptions, type GenerateBibleResult } from './bible/generator.ts';
 export { generateBlueprint, type GenerateBlueprintOptions, type GenerateBlueprintResult } from './chapter/blueprint.ts';
-export { generateChapter, generateRange, type GenerateChapterOptions, type GenerateChapterResult } from './chapter/generator.ts';
+export { generateChapter, generateRange, type GenerateChapterOptions, type GenerateChapterResult, type QualityGateConfig } from './chapter/generator.ts';
 export { finalizeChapter, type FinalizeOptions, type FinalizeResult } from './chapter/finalizer.ts';
+export { assessChapterQuality, type QualityGateResult } from './chapter/quality-gate.ts';
+export { detectRepetition, type RepetitionReport } from './chapter/repetition.ts';
 export type { ChapterOutline, ChapterContent, NarrativeState, Beat, ArcSummary, OpenForeshadow } from './chapter/types.ts';
 export type {
   Bible, CoreSeed, CharacterDynamic, CharacterDrives, CharacterArc,

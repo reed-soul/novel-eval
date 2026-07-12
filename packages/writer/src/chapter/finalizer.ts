@@ -26,7 +26,7 @@ const ARC_INTERVAL = 10;  // 每 10 章固化一份 arcSummary
 // ─── summary 更新的 schema（输出 macroSummary + openForeshadows）────────
 
 const SUMMARY_SCHEMA: SchemaSpec = {
-  macroSummary: { type: 'string', min: 50, required: true },
+  macroSummary: { type: 'string', min: 50, max: 2000, required: true },
   openForeshadows: {
     type: 'array', itemSpec: {
       type: 'object', fields: {

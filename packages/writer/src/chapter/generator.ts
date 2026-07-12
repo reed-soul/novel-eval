@@ -17,13 +17,15 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { AIAgentAdapter } from '@novel-eval/shared';
 import { loadPrompt, addUsage, zeroUsage, countChars } from '@novel-eval/shared';
+import type { NovelMetadata, TokenUsage } from '@novel-eval/shared';
 import type { DB } from '../db.ts';
-import type { ChapterOutline } from './types.ts';
+import type { ChapterOutline, ChapterContent } from './types.ts';
 import {
   getOutline, getChapter, getRecentChapters, saveChapter, markOutlineWritten,
-  getNarrativeState, getBibleForChapter,
+  getNarrativeState, getBibleForChapter, deleteChapter,
 } from './store.ts';
 import { finalizeChapter } from './finalizer.ts';
+import { assessChapterQuality, type QualityGateResult } from './quality-gate.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROMPTS_DIR = resolve(__dirname, 'prompts');
@@ -34,12 +36,20 @@ const RECENT_WINDOW = 5;          // 最近 N 章原文注入窗口
 
 // ─── 单章生成 ────────────────────────────────────────────────────
 
+/** 质量门槛配置（有则启用写-评-改循环）*/
+export interface QualityGateConfig {
+  metadata: NovelMetadata;
+  profile?: string;
+  maxRevise: number;           // 最大重写次数（默认 2）
+}
+
 export interface GenerateChapterOptions {
   engine: AIAgentAdapter;
   db: DB;
   projectId: string;
   number: number;
   wordCount: number;            // 目标字数
+  qualityGate?: QualityGateConfig;  // 有则启用质量门槛，无则保持 M2 行为
   onProgress?: (step: string, msg: string) => void;
 }
 
@@ -48,16 +58,17 @@ export interface GenerateChapterResult {
   title: string;
   content: string;
   wordCount: number;
-  usage: import('@novel-eval/shared').TokenUsage;
+  usage: TokenUsage;
+  qualityGate?: QualityGateResult;  // 质量门槛结果（启用时）
 }
 
 export async function generateChapter(opts: GenerateChapterOptions): Promise<GenerateChapterResult> {
-  const { engine, db, projectId, number, wordCount, onProgress } = opts;
-  const totalUsage = { ...zeroUsage };
+  const { engine, db, projectId, number, wordCount, qualityGate, onProgress } = opts;
+  const totalUsage: TokenUsage = { ...zeroUsage };
 
-  // Checkpoint：已存在则跳过
+  // Checkpoint：已存在则跳过（无质量门槛时）
   const existing = getChapter(db, projectId, number);
-  if (existing) {
+  if (existing && !qualityGate) {
     onProgress?.(`chapter:${number}`, `（已完成，跳过）`);
     return {
       number: existing.number, title: existing.title,
@@ -65,58 +76,140 @@ export async function generateChapter(opts: GenerateChapterOptions): Promise<Gen
     };
   }
 
-  // 1. 读本章蓝图
+  // 读本章蓝图
   const outline = getOutline(db, projectId, number);
   if (!outline) throw new Error(`找不到第 ${number} 章的蓝图，请先运行 write outline`);
 
-  // 2. 组装 prompt
-  onProgress?.(`chapter:${number}`, `生成第 ${number} 章《${outline.title}》...`);
-  const prompt = await buildChapterPrompt(db, projectId, outline, wordCount);
+  // ─── 无质量门槛：M2 原始流程 ────────────────────────────────────
+  if (!qualityGate) {
+    const result = await generateOnce(engine, db, projectId, outline, wordCount, undefined, onProgress, totalUsage);
+    await finalizeAndSave(engine, db, projectId, outline, result.content, result.wordCount, onProgress, totalUsage);
+    return { number, title: outline.title, content: result.content, wordCount: result.wordCount, usage: totalUsage };
+  }
 
-  // 3. LLM 生成正文
+  // ─── 有质量门槛：写-评-改循环 ──────────────────────────────────
+  const maxAttempts = qualityGate.maxRevise + 1;
+  let lastGate: QualityGateResult | undefined;
+  let revisionFeedback: string | undefined;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    // 如有旧章（revise 重写场景），先删
+    if (attempt > 1) {
+      deleteChapter(db, projectId, number);
+      onProgress?.(`chapter:${number}`, `重写（第 ${attempt} 次，max ${maxAttempts}）...`);
+    } else {
+      onProgress?.(`chapter:${number}`, `生成第 ${number} 章《${outline.title}》...`);
+    }
+
+    // 生成正文
+    const gen = await generateOnce(engine, db, projectId, outline, wordCount, revisionFeedback, onProgress, totalUsage);
+
+    // 暂存（质量门槛评估需要读 DB 里的章节）
+    saveChapter(db, projectId, number, {
+      outlineId: outline.id, title: outline.title, content: gen.content, wordCount: gen.wordCount,
+    });
+
+    // 质量门槛评估
+    const gateRes = await assessChapterQuality({
+      engine, db, projectId,
+      chapter: { id: '', projectId, number, outlineId: outline.id, title: outline.title, content: gen.content, wordCount: gen.wordCount, createdAt: '', updatedAt: '' },
+      metadata: qualityGate.metadata, profile: qualityGate.profile,
+      onProgress: (msg) => onProgress?.(`gate:${number}`, msg),
+    });
+    addUsage(totalUsage, gateRes.usage);
+    lastGate = { verdict: gateRes.verdict, reason: gateRes.reason, score: gateRes.score, grade: gateRes.grade, feedback: gateRes.feedback, repetition: gateRes.repetition };
+
+    onProgress?.(`chapter:${number}`, `质量门槛：${gateRes.verdict.toUpperCase()} — ${gateRes.reason}`);
+
+    if (gateRes.verdict === 'pass') {
+      markOutlineWritten(db, projectId, number);
+      // finalizer 更新叙事状态
+      const finRes = await finalizeChapter({
+        engine, db, projectId, chapterNumber: number,
+        chapterTitle: outline.title, chapterContent: gen.content, onProgress,
+      });
+      addUsage(totalUsage, finRes.usage);
+      return { number, title: outline.title, content: gen.content, wordCount: gen.wordCount, usage: totalUsage, qualityGate: lastGate };
+    }
+
+    if (gateRes.verdict === 'block') {
+      deleteChapter(db, projectId, number);  // 不留不合格的章
+      throw new Error(`第 ${number} 章被质量门槛 block：${gateRes.reason}`);
+    }
+
+    // revise：构造反馈，下一轮注入
+    revisionFeedback = gateRes.feedback;
+  }
+
+  // 达上限仍不 pass
+  deleteChapter(db, projectId, number);
+  throw new Error(`第 ${number} 章重写 ${qualityGate.maxRevise} 次后仍未通过质量门槛：${lastGate?.reason}`);
+}
+
+/** 单次生成（不含质量门槛）*/
+async function generateOnce(
+  engine: AIAgentAdapter, db: DB, projectId: string,
+  outline: ChapterOutline, wordCount: number,
+  revisionFeedback: string | undefined,
+  onProgress: ((s: string, m: string) => void) | undefined,
+  totalUsage: TokenUsage,
+): Promise<{ content: string; wordCount: number }> {
+  const prompt = await buildChapterPrompt(db, projectId, outline, wordCount, revisionFeedback);
+  const systemPrompt = revisionFeedback
+    ? '你是畅销小说作家。针对评审意见改进重写。直接输出正文，不要任何解释、标题或元说明。'
+    : '你是畅销小说作家。直接输出正文，不要任何解释、标题或元说明。';
+
   const res = await engine.run(prompt, {
-    systemPrompt: '你是畅销小说作家。直接输出正文，不要任何解释、标题或元说明。',
+    systemPrompt,
     temperature: CHAPTER_TEMPERATURE,
-    maxTokens: Math.ceil(wordCount * 2.5),  // 中文约 1 字 ≈ 1.5-2 token，留余量
+    maxTokens: Math.ceil(wordCount * 2.5),
     timeoutMs: STEP_TIMEOUT_MS,
   });
   addUsage(totalUsage, res.usage);
 
-  // 4. 清理正文（去可能的标题重复/markdown 包裹）
   const content = cleanChapterContent(res.text, outline.title);
   const actualWordCount = countChars(content);
 
   if (content.trim().length === 0) {
-    throw new Error(`第 ${number} 章生成失败：正文为空`);
+    throw new Error(`第 ${outline.number} 章生成失败：正文为空`);
   }
   if (actualWordCount < wordCount * 0.4) {
-    onProgress?.(`chapter:${number}`, `⚠ 字数偏少（${actualWordCount}/${wordCount}），M3 将加扩写`);
+    onProgress?.(`chapter:${outline.number}`, `⚠ 字数偏少（${actualWordCount}/${wordCount}）`);
   }
 
-  // 5. 写入 chapter 表（checkpoint）
-  saveChapter(db, projectId, number, {
-    outlineId: outline.id, title: outline.title, content, wordCount: actualWordCount,
-  });
-  markOutlineWritten(db, projectId, number);
-  onProgress?.(`chapter:${number}`, `✓ ${actualWordCount} 字`);
+  return { content, wordCount: actualWordCount };
+}
 
-  // 6. finalizer 更新叙事状态
+/** finalizer + 保存（无质量门槛路径用）*/
+async function finalizeAndSave(
+  engine: AIAgentAdapter, db: DB, projectId: string,
+  outline: ChapterOutline, content: string, wordCount: number,
+  onProgress: ((s: string, m: string) => void) | undefined,
+  totalUsage: TokenUsage,
+): Promise<void> {
+  saveChapter(db, projectId, outline.number, {
+    outlineId: outline.id, title: outline.title, content, wordCount,
+  });
+  markOutlineWritten(db, projectId, outline.number);
+  onProgress?.(`chapter:${outline.number}`, `✓ ${wordCount} 字`);
   const finRes = await finalizeChapter({
-    engine, db, projectId, chapterNumber: number,
+    engine, db, projectId, chapterNumber: outline.number,
     chapterTitle: outline.title, chapterContent: content, onProgress,
   });
   addUsage(totalUsage, finRes.usage);
-
-  return { number, title: outline.title, content, wordCount: actualWordCount, usage: totalUsage };
 }
 
 // ─── 上下文组装 ──────────────────────────────────────────────────
 
 async function buildChapterPrompt(
   db: DB, projectId: string, outline: ChapterOutline, wordCount: number,
+  revisionFeedback?: string,
 ): Promise<string> {
   const { fullText, characterState } = getBibleForChapter(db, projectId);
   const nextOutline = getOutline(db, projectId, outline.number + 1);
+  const feedbackSection = revisionFeedback
+    ? `\n\n【评审反馈（针对以下意见改进重写）】\n${revisionFeedback}`
+    : '';
 
   // 第一章：简化路径（只注入 bible + 本章蓝图）
   if (outline.number === 1) {
@@ -130,7 +223,7 @@ async function buildChapterPrompt(
       .replace('{FORESHADOWING}', outline.foreshadowing || '（本章无显式伏笔操作）')
       .replace('{TWIST}', String(outline.twistLevel))
       .replace('{SUMMARY}', outline.summary)
-      .replace('{WORD_COUNT}', String(wordCount));
+      .replace('{WORD_COUNT}', String(wordCount)) + feedbackSection;
   }
 
   // 后续章：注入全部上下文
@@ -164,7 +257,7 @@ async function buildChapterPrompt(
     .replace('{NEXT_NUMBER}', String(outline.number + 1))
     .replace('{NEXT_TITLE}', nextOutline?.title ?? '（最终章）')
     .replace('{NEXT_SUMMARY}', nextOutline?.summary ?? '本章为最终章，无需预告下一章')
-    .replace('{WORD_COUNT}', String(wordCount));
+    .replace('{WORD_COUNT}', String(wordCount)) + feedbackSection;
 
   return prompt;
 }
@@ -202,6 +295,7 @@ export interface GenerateRangeOptions {
   from: number;
   to: number;
   wordCount: number;
+  qualityGate?: QualityGateConfig;
   onProgress?: (step: string, msg: string) => void;
 }
 
@@ -211,7 +305,7 @@ export async function generateRange(opts: GenerateRangeOptions): Promise<Generat
     const r = await generateChapter({
       engine: opts.engine, db: opts.db,
       projectId: opts.projectId, number: n, wordCount: opts.wordCount,
-      onProgress: opts.onProgress,
+      qualityGate: opts.qualityGate, onProgress: opts.onProgress,
     });
     results.push(r);
   }

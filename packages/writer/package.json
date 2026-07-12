@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@novel-eval/shared": "workspace:*",
+    "@novel-eval/eval": "workspace:*",
     "better-sqlite3": "^11.0.0"
   },
   "devDependencies": {
