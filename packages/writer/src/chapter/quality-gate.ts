@@ -18,10 +18,10 @@ import { detectRepetition } from './repetition.ts';
 import { getRecentChapters } from './store.ts';
 
 const RECENT_WINDOW = 5;
-const PASS_GRADE = 'A';      // grade ≥ A（80 分）pass — 番茄签约质量线
-const PASS_MIN_SCORE = 78;   // 即使 grade=A，总分 < 78 也不 pass（防止刚好卡线）
-const MIN_DIM_SCORE = 70;    // 任何关键维度低于 70 → revise
-const BLOCK_GRADE = 'C';     // grade C 或 D → block（低质量章节不留）
+const PASS_GRADE = 'B';        // grade ≥ B（70 分）
+const PASS_MIN_SCORE = 75;     // 总分 ≥ 75 才 pass（B 级上半段，番茄签约线）
+const MIN_DIM_SCORE = 65;      // 任何关键维度低于 65 → revise
+const BLOCK_GRADE = 'C';       // grade C 或 D → block（低质量章节不留）
 
 export interface QualityGateResult {
   verdict: 'pass' | 'revise' | 'block';
