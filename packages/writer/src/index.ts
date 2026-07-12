@@ -11,6 +11,7 @@
  */
 import { createEngine, type AIAgentAdapter } from '@novel-eval/shared';
 import { loadWriterConfig } from './config.ts';
+import { loadEnv } from './load-env.ts';
 import { openDb, closeDb, writerDataDir } from './db.ts';
 import { createProject, getProject, listProjects, updateProjectStatus, type Project } from './project.ts';
 import { generateBible } from './bible/generator.ts';
@@ -34,9 +35,10 @@ interface StatusArgs {
 type CliArgs = InitArgs | StatusArgs | { command: 'list' } | { command: 'help' };
 
 function parseArgs(argv: string[]): CliArgs {
-  const [, , , command, ...rest] = argv;
-  // 兼容 `write init` 和直接 `init`（根 script 传 write 子命令）
-  const cmd = command === 'write' ? rest.shift() : command;
+  // argv = [node, script, ('write'), ('--'), command, ...rest]
+  // drop 前两个（node + script），再丢掉 'write' 子命令和 '--' 分隔符（pnpm 转发时保留）
+  const positional = argv.slice(2).filter((a) => a !== 'write' && a !== '--');
+  const [cmd, ...rest] = positional;
   if (!cmd || cmd === 'help' || cmd === '--help' || cmd === '-h') {
     return { command: 'help' };
   }
@@ -202,6 +204,7 @@ function printProject(p: Project, db: ReturnType<typeof openDb>): void {
 }
 
 async function main(): Promise<void> {
+  loadEnv();
   const args = parseArgs(process.argv);
   if (args.command === 'help') { printHelp(); return; }
   if (args.command === 'list') { runList(); return; }
