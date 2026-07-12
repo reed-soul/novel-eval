@@ -12,6 +12,7 @@
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "eval": "tsx packages/eval/src/index.ts evaluate",
+    "write": "tsx packages/writer/src/index.ts write",
     "typecheck": "pnpm -r typecheck",
     "test": "pnpm -r test",
     "test:unit": "pnpm -r test:unit"

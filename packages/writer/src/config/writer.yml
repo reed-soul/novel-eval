@@ -1,0 +1,6 @@
+# 写作模块配置（阶段 2 M1：bible 生成）
+generation:
+  defaultChapters: 50          # 默认章节数（M2 起用）
+  chapterWordCount: 2500       # 每章目标字数（M2 起用）
+  temperature: 0.7             # 章节生成温度（创意类）
+  bibleTemperature: 0.5        # bible 生成温度（结构类，更稳）
