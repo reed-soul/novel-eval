@@ -5,7 +5,9 @@
  */
 // 引擎
 export type { AIAgentAdapter, CallResult, RunOptions } from './engine/interface.ts';
+export { AnthropicCompatAdapter } from './engine/anthropic-compat.ts';
 export { BigModelAdapter } from './engine/bigmodel.ts';
+export { DeepSeekAdapter } from './engine/deepseek.ts';
 export { createEngine } from './engine/factory.ts';
 export {
   callWithValidation,
@@ -47,6 +49,7 @@ export { addUsage, zeroUsage } from './usage.ts';
 export type {
   TokenUsage,
   EngineConfig,
+  EngineProvider,
   NovelMetadata,
   ChapterKind,
   ChapterInput,

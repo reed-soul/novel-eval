@@ -22,11 +22,13 @@ export interface GenerationConfig {
 export interface WriterConfig {
   engine: EngineConfig;
   engineName: string;
+  /** 全部引擎表（供 Web 端切换）*/
+  engines: Record<string, EngineConfig>;
   generation: GenerationConfig;
 }
 
 export function loadWriterConfig(): WriterConfig {
-  const { engine, engineName } = loadEngineConfig(SHARED_CONFIG_DIR);
+  const { engine, engineName, engines } = loadEngineConfig(SHARED_CONFIG_DIR);
   const raw = loadYaml<{ generation: Partial<GenerationConfig> }>(
     resolve(WRITER_CONFIG_DIR, 'writer.yml'),
   );
@@ -36,5 +38,5 @@ export function loadWriterConfig(): WriterConfig {
     temperature: raw.generation?.temperature ?? 0.7,
     bibleTemperature: raw.generation?.bibleTemperature ?? 0.5,
   };
-  return { engine, engineName, generation };
+  return { engine, engineName, engines, generation };
 }

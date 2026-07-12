@@ -23,10 +23,13 @@ import { outlineRoutes } from './routes/outlines.ts';
 import { narrativeRoutes } from './routes/narrative.ts';
 import { generateRoutes } from './routes/generate.ts';
 import { editRoutes } from './routes/edit.ts';
+import { configRoutes } from './routes/config.ts';
+import { EngineRegistry } from './engine-registry.ts';
 
 loadEnv();
 const db = openDb();
 const config = loadWriterConfig();
+const registry = new EngineRegistry(config.engines, config.engineName);
 
 const app = new Hono();
 
@@ -37,14 +40,17 @@ app.route('/api/projects', chapterRoutes(db));
 app.route('/api/projects', outlineRoutes(db));
 app.route('/api/projects', narrativeRoutes(db));
 // 生成 + 编辑路由（POST/PUT + SSE）
-app.route('/api/projects', generateRoutes(db, config.engine));
+app.route('/api/projects', generateRoutes(db, registry));
 app.route('/api/projects', editRoutes(db));
+// 引擎配置路由（切换引擎/模型/注入 key）
+app.route('/api/config', configRoutes(registry));
 
-// 配置端点
+// 配置端点（兼容旧前端，扩展 engines 信息）
 app.get('/api/config', (c) => c.json({
-  engine: config.engineName,
-  model: config.engine.model,
+  engine: registry.getActiveName(),
+  model: registry.getActiveConfig().model,
   generation: config.generation,
+  engines: registry.listEngines(),
 }));
 
 // 静态文件（生产模式：Vite 构建后的 dist/）

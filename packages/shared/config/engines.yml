@@ -1,15 +1,18 @@
-# AI 引擎配置（v2.2：GLM 为默认引擎）
+# AI 引擎配置（v2.2：支持 GLM + DeepSeek 多引擎）
 # eval 和 writer 共用同一引擎配置。
+# default 指定启动时使用哪个引擎；可在 Web 端运行时切换。
 default: bigmodel
-fallback: claude-code
 
 bigmodel:
+  provider: bigmodel
   baseUrl: https://open.bigmodel.cn/api/anthropic
   model: glm-5.2
   maxBudgetRmb: 10
   perChapterMaxBudgetRmb: 0.1
 
-claude-code:
-  model: claude-sonnet-4-20250514
-  maxBudgetRmb: 5
-  allowedTools: [Read, Glob, Grep]
+deepseek:
+  provider: deepseek
+  baseUrl: https://api.deepseek.com/anthropic
+  model: deepseek-v4-pro
+  maxBudgetRmb: 10
+  perChapterMaxBudgetRmb: 0.15

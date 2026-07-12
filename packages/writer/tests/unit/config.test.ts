@@ -14,6 +14,15 @@ describe('loadWriterConfig', () => {
     assert.ok(config.generation);
   });
 
+  it('engines 表含 bigmodel 和 deepseek', () => {
+    const config = loadWriterConfig();
+    assert.ok(config.engines);
+    assert.ok(config.engines.bigmodel, '应含 bigmodel');
+    assert.ok(config.engines.deepseek, '应含 deepseek');
+    assert.equal(config.engines.deepseek.provider, 'deepseek');
+    assert.equal(config.engines.deepseek.model, 'deepseek-v4-pro');
+  });
+
   it('generation 配置含默认章节数与温度', () => {
     const config = loadWriterConfig();
     assert.equal(config.generation.defaultChapters, 50);

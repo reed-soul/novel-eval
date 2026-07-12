@@ -21,7 +21,10 @@ export function ProjectList() {
     <div className="container">
       <div className="header">
         <h1>📚 写作项目</h1>
-        <Link to="/projects/new"><button className="btn btn-primary">✍️ 新建项目</button></Link>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Link to="/settings"><button className="btn">⚙️ 模型配置</button></Link>
+          <Link to="/projects/new"><button className="btn btn-primary">✍️ 新建项目</button></Link>
+        </div>
       </div>
       {projects.length === 0 ? (
         <div className="empty">暂无项目。用 CLI 创建：<code>pnpm write -- init ...</code></div>

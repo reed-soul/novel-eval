@@ -17,7 +17,12 @@ export interface TokenUsage {
 
 // ─── 引擎配置 ─────────────────────────────────────────────────────
 
+/** 引擎提供商标识，用于工厂选择 adapter */
+export type EngineProvider = 'bigmodel' | 'deepseek';
+
 export interface EngineConfig {
+  /** 提供商（决定用哪个 adapter）*/
+  provider: EngineProvider;
   baseUrl: string;
   model: string;
   maxBudgetRmb: number;

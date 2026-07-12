@@ -44,3 +44,17 @@ export interface BibleRaw {
   plotArchitecture: { act1: unknown; act2: unknown; act3: unknown; foreshadows: unknown[] } | null;
   fullText: string | null;
 }
+
+// ─── 引擎配置 ─────────────────────────────────────────────────────
+
+export interface EngineInfo {
+  name: string;
+  provider: 'bigmodel' | 'deepseek';
+  model: string;
+  hasKey: boolean;
+}
+
+export interface EngineConfigResponse {
+  engines: EngineInfo[];
+  active: string;
+}

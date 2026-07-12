@@ -11,8 +11,7 @@
  */
 import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
-import type { AIAgentAdapter, NovelMetadata, EngineConfig } from '@novel-eval/shared';
-import { createEngine } from '@novel-eval/shared';
+import type { NovelMetadata } from '@novel-eval/shared';
 import {
   type DB, loadWriterConfig,
   createProject, getProject, updateProjectStatus,
@@ -21,10 +20,10 @@ import {
   type CharacterDynamic,
 } from '@novel-eval/writer';
 import { createJob, getJob } from '../jobs.ts';
+import type { EngineRegistry } from '../engine-registry.ts';
 
-export function generateRoutes(db: DB, engineConfig: EngineConfig) {
+export function generateRoutes(db: DB, registry: EngineRegistry) {
   const app = new Hono();
-  const engine: AIAgentAdapter = createEngine(engineConfig);
 
   // ─── 新建项目（可选同时生成 bible）──────────────────────────────
   app.post('/', async (c) => {
@@ -41,7 +40,7 @@ export function generateRoutes(db: DB, engineConfig: EngineConfig) {
     // 同时生成 bible
     const jobId = createJob('bible', async (onProgress) => {
       const { bible, usage } = await generateBible({
-        engine, db, projectId: project.id,
+        engine: registry.getEngine(), db, projectId: project.id,
         topic: body.topic, genre: body.genre, audience: body.audience, onProgress,
       });
       updateProjectStatus(db, project.id, 'bible_done');
@@ -50,7 +49,7 @@ export function generateRoutes(db: DB, engineConfig: EngineConfig) {
     return c.json({ project, jobId });
   });
 
-  // ─── 生成 bible ────────────────────────────────────────────────
+  // ─── 生成 bible ────────────────────────────────────────────────────
   app.post('/:id/bible/generate', async (c) => {
     const id = c.req.param('id');
     const project = getProject(db, id);
@@ -58,7 +57,7 @@ export function generateRoutes(db: DB, engineConfig: EngineConfig) {
 
     const jobId = createJob('bible', async (onProgress) => {
       const { bible, usage } = await generateBible({
-        engine, db, projectId: id,
+        engine: registry.getEngine(), db, projectId: id,
         topic: project.topic, genre: project.genre, audience: project.audience, onProgress,
       });
       updateProjectStatus(db, id, 'bible_done');
@@ -67,7 +66,7 @@ export function generateRoutes(db: DB, engineConfig: EngineConfig) {
     return c.json({ jobId });
   });
 
-  // ─── 生成蓝图 ──────────────────────────────────────────────────
+  // ─── 生成蓝图 ──────────────────────────────────────────────────────
   app.post('/:id/outline/generate', async (c) => {
     const id = c.req.param('id');
     const project = getProject(db, id);
@@ -85,7 +84,7 @@ export function generateRoutes(db: DB, engineConfig: EngineConfig) {
 
     const jobId = createJob('outline', async (onProgress) => {
       const { outlines, usage } = await generateBlueprint({
-        engine, db, projectId: id, plot: plotArchitecture, characters, totalChapters, onProgress,
+        engine: registry.getEngine(), db, projectId: id, plot: plotArchitecture, characters, totalChapters, onProgress,
       });
       updateProjectStatus(db, id, 'outlining');
       return { chapters: outlines.length, usage };
@@ -93,7 +92,7 @@ export function generateRoutes(db: DB, engineConfig: EngineConfig) {
     return c.json({ jobId });
   });
 
-  // ─── 生成章节 ──────────────────────────────────────────────────
+  // ─── 生成章节 ──────────────────────────────────────────────────────
   app.post('/:id/chapters/generate', async (c) => {
     const id = c.req.param('id');
     const project = getProject(db, id);
@@ -107,7 +106,7 @@ export function generateRoutes(db: DB, engineConfig: EngineConfig) {
     const jobId = createJob('chapter', async (onProgress) => {
       updateProjectStatus(db, id, 'writing');
       const results = await generateRange({
-        engine, db, projectId: id, from: body.from, to: body.to,
+        engine: registry.getEngine(), db, projectId: id, from: body.from, to: body.to,
         wordCount: config.generation.chapterWordCount,
         qualityGate: body.qualityGate ? { metadata, maxRevise: body.maxRevise ?? 2 } : undefined,
         onProgress,
