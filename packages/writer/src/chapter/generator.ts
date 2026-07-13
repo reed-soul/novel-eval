@@ -22,9 +22,10 @@ import type { DB } from '../db.ts';
 import type { ChapterOutline, ChapterContent } from './types.ts';
 import {
   getOutline, getChapter, getRecentChapters, saveChapter, markOutlineWritten,
-  getNarrativeState, getBibleForChapter, deleteChapter,
+  getNarrativeState, getBibleForChapter, deleteChapter, countOutlines,
 } from './store.ts';
 import { finalizeChapter } from './finalizer.ts';
+import { classifyChapter, buildLessonPrompt, aggregateLessons } from './lesson-aggregator.ts';
 import { assessChapterQuality, type QualityGateResult } from './quality-gate.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -218,6 +219,11 @@ async function buildChapterPrompt(
     ? `\n\n【评审反馈（针对以下意见改进重写）】\n${revisionFeedback}`
     : '';
 
+  // 经验注入：根据章节类型查询历史评估中积累的经验
+  const totalChapters = countOutlines(db, projectId);
+  const pattern = classifyChapter(outline, totalChapters);
+  const lessonSection = buildLessonPrompt(db, projectId, pattern);
+
   // 注：bible 全文（fullText）不再拼进 user prompt，改由 generateOnce 放入 systemPrompt
   // 走 prompt 缓存（跨章稳定）。模板里的 {BIBLE} 占位已移除。
 
@@ -232,7 +238,7 @@ async function buildChapterPrompt(
       .replace('{FORESHADOWING}', outline.foreshadowing || '（本章无显式伏笔操作）')
       .replace('{TWIST}', String(outline.twistLevel))
       .replace('{SUMMARY}', outline.summary)
-      .replace('{WORD_COUNT}', String(wordCount)) + feedbackSection;
+      .replace('{WORD_COUNT}', String(wordCount)) + feedbackSection + lessonSection;
     return { userPrompt, bible: fullText };
   }
 
@@ -266,7 +272,7 @@ async function buildChapterPrompt(
     .replace('{NEXT_NUMBER}', String(outline.number + 1))
     .replace('{NEXT_TITLE}', nextOutline?.title ?? '（最终章）')
     .replace('{NEXT_SUMMARY}', nextOutline?.summary ?? '本章为最终章，无需预告下一章')
-    .replace('{WORD_COUNT}', String(wordCount)) + feedbackSection;
+    .replace('{WORD_COUNT}', String(wordCount)) + feedbackSection + lessonSection;
 
   return { userPrompt, bible: fullText };
 }
@@ -356,6 +362,14 @@ export async function generateRange(opts: GenerateRangeOptions): Promise<Generat
     });
     opts.control?.onChapterComplete?.(n);
     results.push(r);
+
+    // 每 10 章聚合一次经验（写入 lesson_learned，供后续章节 prompt 注入）
+    if (n % 10 === 0) {
+      try {
+        const lessonCount = aggregateLessons(opts.db, opts.projectId);
+        if (lessonCount > 0) opts.onProgress?.('lesson', `经验聚合完成：${lessonCount} 条`);
+      } catch { /* 聚合失败不阻塞写作 */ }
+    }
   }
   return results;
 }

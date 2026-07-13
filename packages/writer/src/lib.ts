@@ -17,6 +17,7 @@ export { finalizeChapter, type FinalizeOptions, type FinalizeResult } from './ch
 export { ensureChapterConsistency, type ConsistencyResult } from './chapter/consistency.ts';
 export { assessChapterQuality, type QualityGateResult } from './chapter/quality-gate.ts';
 export { detectRepetition, type RepetitionReport } from './chapter/repetition.ts';
+export { aggregateLessons, buildLessonPrompt, classifyChapter, type ChapterPattern } from './chapter/lesson-aggregator.ts';
 // store 读写函数（Web 后端 + CLI 共用）
 export {
   saveOutlines, getOutline, getAllOutlines, countOutlines, markOutlineWritten,
