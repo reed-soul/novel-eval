@@ -24,16 +24,19 @@ let tempRoot: string;
 beforeEach(() => { origCwd = process.cwd(); tempRoot = mkdtempSync(join(tmpdir(), 'gen-')); process.chdir(tempRoot); });
 afterEach(() => { process.chdir(origCwd); rmSync(tempRoot, { recursive: true, force: true }); });
 
-/** mock engine：正文返回 chapterText，finalizer 的两次调用返回合法 JSON */
-function mockEngine(chapterText: string, summaryResp?: string, stateResp?: string): AIAgentAdapter & { prompts: string[] } {
+/** mock engine：正文返回 chapterText，finalizer 的两次调用返回合法 JSON。
+ *  同时记录 user prompt 与 systemPrompt（bible 现走 systemPrompt 缓存）。*/
+function mockEngine(chapterText: string, summaryResp?: string, stateResp?: string): AIAgentAdapter & { prompts: string[]; systemPrompts: string[] } {
   const prompts: string[] = [];
+  const systemPrompts: string[] = [];
   let call = 0;
   const defState = JSON.stringify({ characters: [{ name: '李川', items: [], abilities: [], status: '健康', relationships: [], events: [] }] });
   const defSummary = JSON.stringify({ macroSummary: '前情摘要更新后的内容，描述主线推进。', openForeshadows: [] });
   return {
-    name: 'mock', prompts,
-    async run(prompt: string, _o: RunOptions): Promise<CallResult> {
+    name: 'mock', prompts, systemPrompts,
+    async run(prompt: string, o: RunOptions): Promise<CallResult> {
       prompts.push(prompt);
+      systemPrompts.push(o.systemPrompt ?? '');
       call++;
       // 第 1 次是正文生成，后续是 finalizer 的 summary + state
       const text = call === 1 ? chapterText : (call === 2 ? (summaryResp ?? defSummary) : (stateResp ?? defState));
@@ -78,7 +81,7 @@ describe('generateChapter', () => {
     closeDb(db);
   });
 
-  it('第一章 prompt 含 bible 全文但不含「最近章节原文」', async () => {
+  it('第一章 systemPrompt 含 bible 全文（走缓存），user prompt 不含「最近章节原文」', async () => {
     const db = openDb();
     const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
     seedBible(db, p.id);
@@ -88,8 +91,10 @@ describe('generateChapter', () => {
     const engine = mockEngine('正文内容。'.repeat(50));
 
     await generateChapter({ engine, db, projectId: p.id, number: 1, wordCount: 500 });
-    const firstPrompt = engine.prompts[0];
-    assert.ok(firstPrompt.includes('设定全文'), '第一章应含 bible');
+    // bible 全文现走 systemPrompt（enableCache），不再在 user prompt 里
+    const firstSystem = engine.systemPrompts[0];
+    assert.ok(firstSystem.includes('设定全文'), '第一章 systemPrompt 应含 bible');
+    assert.ok(!engine.prompts[0].includes('设定全文'), '第一章 user prompt 不应含 bible（已移入 system）');
     closeDb(db);
   });
 

@@ -43,10 +43,11 @@ export async function assessChapters(opts: AssessOptions): Promise<AssessResult>
   const mapResult = await runMapPhase(engine, chapters);
   addUsage(totalUsage, mapResult.usage);
 
-  // Reduce：R1→R2→R3→R4→R5
-  onProgress?.('评估 Reduce：R1→R2→R3→R4→R5...');
+  // Reduce：单章质量门槛走 lite 模式（跳过 R3 情绪曲线 / R5 市场对标——单章路径不消费）
+  onProgress?.('评估 Reduce：R1→R2→R4（lite）...');
   const reduceResult = await runReducePhase(
     engine, mapResult.chapters, config.profile.weights, profileName, metadata,
+    undefined, 'lite',
   );
   addUsage(totalUsage, reduceResult.usage);
 

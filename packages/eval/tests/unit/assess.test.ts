@@ -2,19 +2,24 @@
  * assessChapters 单测（内存版评估，mock engine）
  *
  * 验证 assessChapters 串起 map + reduce + 聚合，返回五维分数 + 等级。
+ * assess 走 lite 模式（跳过 R3/R5），故 reduce 只跑 R1→R2→R4。
+ *
+ * mock engine 按 systemPrompt 关键词路由响应（不依赖调用顺序，
+ * 以兼容 reduce-phase 的 R1‖R3 / R4‖R5 并行调度）。
  */
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import type { AIAgentAdapter, CallResult, RunOptions } from '@novel-eval/shared';
 import { assessChapters } from '../../src/assess.ts';
 
-/** mock engine：按调用顺序返回预设响应（map 响应 + reduce 的 R1-R5 响应）*/
-function mockEngine(responses: string[]): AIAgentAdapter {
-  let i = 0;
+/** mock engine：按 systemPrompt 关键词路由预设响应（顺序无关，兼容并行调度）*/
+function mockEngine(routes: { systemContains: string; response: string }[], fallback = '{}'): AIAgentAdapter {
   return {
     name: 'mock',
-    async run(_p: string, _o: RunOptions): Promise<CallResult> {
-      const text = responses[i++] ?? '{}';
+    async run(_p: string, o: RunOptions): Promise<CallResult> {
+      const sys = o.systemPrompt ?? '';
+      const hit = routes.find((r) => sys.includes(r.systemContains));
+      const text = hit ? hit.response : fallback;
       return { text, usage: { inputTokens: 100, outputTokens: 50, costRmb: 0.001, model: 'mock', durationMs: 1 }, notes: [] };
     },
     async isAvailable() { return true; },
@@ -66,8 +71,14 @@ const R5_RESP = JSON.stringify({
 });
 
 describe('assessChapters', () => {
-  it('串联 map+reduce，返回五维分数+等级+suggestions', async () => {
-    const engine = mockEngine([MAP_RESP, R1_RESP, R2_RESP, R3_RESP, R4_RESP, R5_RESP]);
+  it('串联 map+reduce（lite：R1→R2→R4），返回五维分数+等级+suggestions', async () => {
+    // assess 走 lite 模式：reduce 只跑 R1/R2/R4，不跑 R3/R5
+    const engine = mockEngine([
+      { systemContains: '逐章细读', response: MAP_RESP },   // map
+      { systemContains: '人物谱系', response: R1_RESP },     // R1
+      { systemContains: '小说总编', response: R2_RESP },     // R2
+      { systemContains: '改稿指导', response: R4_RESP },     // R4
+    ]);
     const result = await assessChapters({
       engine,
       chapters: [{ id: 'ch001', title: '苏醒', content: '正文内容...' }],
@@ -85,7 +96,11 @@ describe('assessChapters', () => {
 
   it('R2 失败时抛错（致命步骤）', async () => {
     // R2 返回不合法 JSON（缺 dimensions）
-    const engine = mockEngine([MAP_RESP, R1_RESP, JSON.stringify({ wrong: true })]);
+    const engine = mockEngine([
+      { systemContains: '逐章细读', response: MAP_RESP },
+      { systemContains: '人物谱系', response: R1_RESP },
+      { systemContains: '小说总编', response: JSON.stringify({ wrong: true }) },
+    ]);
     await assert.rejects(
       assessChapters({
         engine,

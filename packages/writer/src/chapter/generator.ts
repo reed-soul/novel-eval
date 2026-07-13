@@ -154,16 +154,21 @@ async function generateOnce(
   onProgress: ((s: string, m: string) => void) | undefined,
   totalUsage: TokenUsage,
 ): Promise<{ content: string; wordCount: number }> {
-  const prompt = await buildChapterPrompt(db, projectId, outline, wordCount, revisionFeedback);
-  const systemPrompt = revisionFeedback
+  const { userPrompt, bible } = await buildChapterPrompt(db, projectId, outline, wordCount, revisionFeedback);
+  // systemPrompt = 角色指令 + bible 全文。bible 跨章稳定，走 prompt 缓存（enableCache），
+  // 避免每章 ~9 次调用都重发数千~上万字设定。
+  const roleInstruction = revisionFeedback
     ? '你是畅销小说作家。针对评审意见改进重写。直接输出正文，不要任何解释、标题或元说明。'
     : '你是畅销小说作家。直接输出正文，不要任何解释、标题或元说明。';
+  const systemPrompt = `${roleInstruction}\n\n【小说设定】\n${bible}`;
 
-  const res = await engine.run(prompt, {
+  const res = await engine.run(userPrompt, {
     systemPrompt,
     temperature: CHAPTER_TEMPERATURE,
     maxTokens: Math.ceil(wordCount * 2.5),
     timeoutMs: STEP_TIMEOUT_MS,
+    // 启用 prompt 缓存：bible 全文在 systemPrompt 里跨章稳定，命中后大幅降低重复发送成本。
+    enableCache: true,
     // 关闭推理过程：蓝图已提供结构，thinking 会挤占 output 预算导致正文截断。
     // DeepSeek 默认输出 thinking block；智谱端忽略此字段。
     disableThinking: true,
@@ -207,17 +212,19 @@ async function finalizeAndSave(
 async function buildChapterPrompt(
   db: DB, projectId: string, outline: ChapterOutline, wordCount: number,
   revisionFeedback?: string,
-): Promise<string> {
+): Promise<{ userPrompt: string; bible: string }> {
   const { fullText, characterState } = getBibleForChapter(db, projectId);
   const nextOutline = getOutline(db, projectId, outline.number + 1);
   const feedbackSection = revisionFeedback
     ? `\n\n【评审反馈（针对以下意见改进重写）】\n${revisionFeedback}`
     : '';
 
-  // 第一章：简化路径（只注入 bible + 本章蓝图）
+  // 注：bible 全文（fullText）不再拼进 user prompt，改由 generateOnce 放入 systemPrompt
+  // 走 prompt 缓存（跨章稳定）。模板里的 {BIBLE} 占位已移除。
+
+  // 第一章：简化路径（只注入本章蓝图）
   if (outline.number === 1) {
-    return loadPrompt('chapter-first', PROMPTS_DIR)
-      .replace('{BIBLE}', fullText)
+    const userPrompt = loadPrompt('chapter-first', PROMPTS_DIR)
       .replace('{NUMBER}', String(outline.number))
       .replace('{TITLE}', outline.title)
       .replace('{ROLE}', outline.role)
@@ -227,9 +234,10 @@ async function buildChapterPrompt(
       .replace('{TWIST}', String(outline.twistLevel))
       .replace('{SUMMARY}', outline.summary)
       .replace('{WORD_COUNT}', String(wordCount)) + feedbackSection;
+    return { userPrompt, bible: fullText };
   }
 
-  // 后续章：注入全部上下文
+  // 后续章：注入全部上下文（不含 bible，bible 在 systemPrompt）
   const narrative = getNarrativeState(db, projectId);
   const recent = getRecentChapters(db, projectId, outline.number, RECENT_WINDOW);
   const macroSummary = narrative?.macroSummary ?? '（尚无前情摘要）';
@@ -243,8 +251,7 @@ async function buildChapterPrompt(
     `${c.name}：[${c.items.join('、')}] 能力[${c.abilities.join('、')}] 状态：${c.status} 事件[${c.events.join('；')}]`,
   ).join('\n');
 
-  const prompt = loadPrompt('chapter-next', PROMPTS_DIR)
-    .replace('{BIBLE}', fullText)
+  const userPrompt = loadPrompt('chapter-next', PROMPTS_DIR)
     .replace('{MACRO_SUMMARY}', macroSummary)
     .replace('{OPEN_FORESHADOWS}', openForeshadows)
     .replace('{CHARACTER_STATE}', stateText)
@@ -262,7 +269,7 @@ async function buildChapterPrompt(
     .replace('{NEXT_SUMMARY}', nextOutline?.summary ?? '本章为最终章，无需预告下一章')
     .replace('{WORD_COUNT}', String(wordCount)) + feedbackSection;
 
-  return prompt;
+  return { userPrompt, bible: fullText };
 }
 
 /** 清理 LLM 输出：去标题重复、去 markdown 包裹、去首尾空白 */

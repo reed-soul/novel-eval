@@ -99,6 +99,7 @@ export async function finalizeChapter(opts: FinalizeOptions): Promise<FinalizeRe
         systemPrompt: '你是小说连贯性编辑。只输出 JSON。',
         temperature: FINALIZE_TEMPERATURE, maxTokens: 3000, timeoutMs: STEP_TIMEOUT_MS,
         schema: SUMMARY_SCHEMA, maxAttempts: 3,
+        enableCache: true,
       },
     ),
     // 2. characterState 重写
@@ -111,6 +112,7 @@ export async function finalizeChapter(opts: FinalizeOptions): Promise<FinalizeRe
         systemPrompt: '你是小说连贯性编辑。只输出 JSON。',
         temperature: FINALIZE_TEMPERATURE, maxTokens: 2500, timeoutMs: STEP_TIMEOUT_MS,
         schema: STATE_SCHEMA, maxAttempts: 3,
+        enableCache: true,
       },
     ),
   ]);
@@ -131,7 +133,7 @@ export async function finalizeChapter(opts: FinalizeOptions): Promise<FinalizeRe
       : oldNarrative?.openForeshadows ?? [];
     addUsage(totalUsage, summaryRes.totalUsage);
   } else {
-    onProgress?.(`finalize:${chapterNumber}`, `⚠ 宏观主线更新失败，保留旧值`);
+    onProgress?.(`finalize:${chapterNumber}`, `⚠ 宏观主线更新失败，保留旧值（${summaryRes.errors.join('; ').slice(0, 120)}）`);
   }
 
   // ─── 处理 characterState 结果 ────────────────────────────────────
@@ -150,7 +152,7 @@ export async function finalizeChapter(opts: FinalizeOptions): Promise<FinalizeRe
     updateCharacterState(db, projectId, newState);
     addUsage(totalUsage, stateRes.totalUsage);
   } else {
-    onProgress?.(`finalize:${chapterNumber}`, `⚠ 角色状态更新失败，保留旧值`);
+    onProgress?.(`finalize:${chapterNumber}`, `⚠ 角色状态更新失败，保留旧值（${stateRes.errors.join('; ').slice(0, 120)}）`);
   }
 
   // ─── arcSummary 固化（每 ARC_INTERVAL 章一份）──────────────────

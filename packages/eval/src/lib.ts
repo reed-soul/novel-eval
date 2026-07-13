@@ -10,7 +10,7 @@ export { evaluate, type EvaluateOptions, type EvaluateResult } from './evaluator
 export { assessChapters, type AssessOptions, type AssessResult } from './assess.ts';
 // 可独立调用的阶段函数
 export { runMapPhase, type MapPhaseResult, type MapProgressCallback } from './map-phase.ts';
-export { runReducePhase, type ReducePhaseResult, type ReduceProgressCallback } from './reduce-phase.ts';
+export { runReducePhase, type ReducePhaseResult, type ReduceProgressCallback, type ReduceMode } from './reduce-phase.ts';
 // 配置 + 聚合
 export { loadConfig, computeOverall, lookupGrade, type AppConfig } from './config.ts';
 // 类型
