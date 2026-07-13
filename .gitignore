@@ -23,11 +23,24 @@ Thumbs.db
 dist/
 *.log
 
-# Runtime data (设计文档 data/ 是运行时数据目录，含上传文件/结果/报告；版权样本不入库)
+# Runtime data (data/ 是运行时数据目录：writer.db、reports、版权样本等，不入库)
 data/
+# 例外：README 演示用的评估示例样本（项目原创，版权自有）
+!data/
+data/*
+!data/spike-samples/
+data/spike-samples/*
+!data/spike-samples/sample-novel.txt
 
 # Spike 输出（含真实 LLM 响应、token/费用记录，可能含摘录片段）
 spike/output/
 
 # Dependencies (spike 本地安装)
 spike/node_modules/
+
+# 例外：评估示例样本（README 演示用，版权自有）
+!data/
+data/*
+!data/spike-samples/
+data/spike-samples/*
+!data/spike-samples/sample-novel.txt
