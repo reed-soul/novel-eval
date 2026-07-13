@@ -56,8 +56,23 @@ export interface WriterConfig {
   repetition: RepetitionConfig;
 }
 
-export function loadWriterConfig(): WriterConfig {
-  const { engine, engineName, engines } = loadEngineConfig(SHARED_CONFIG_DIR);
+export function loadWriterConfig(override?: { engine?: string }): WriterConfig {
+  const { engine: defaultEngine, engineName: defaultEngineName, engines } = loadEngineConfig(SHARED_CONFIG_DIR);
+
+  // CLI --engine 覆盖：从 engines 表查指定引擎；未指定时走 engines.yml 的 default
+  let engine = defaultEngine;
+  let engineName = defaultEngineName;
+  if (override?.engine) {
+    const requested = override.engine;
+    const matched = engines[requested];
+    if (!matched) {
+      const available = Object.keys(engines).join(' | ');
+      throw new Error(`未知引擎 "${requested}"。可用引擎：${available}`);
+    }
+    engine = matched;
+    engineName = requested;
+  }
+
   const raw = loadYaml<{
     generation?: Partial<{
       defaultChapters: number; chapterWordCount: number; recentWindow: number; arcInterval: number;

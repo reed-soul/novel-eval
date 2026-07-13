@@ -30,6 +30,7 @@ interface InitArgs {
   audience: string;
   topic: string;
   yes?: boolean;
+  engine?: string;          // 覆盖 engines.yml 默认引擎
 }
 
 interface OutlineArgs {
@@ -37,6 +38,7 @@ interface OutlineArgs {
   projectId: string;
   chapters?: number;
   yes?: boolean;
+  engine?: string;
 }
 
 interface ChapterArgs {
@@ -48,6 +50,7 @@ interface ChapterArgs {
   all?: boolean;
   maxRevise?: number;       // 质量门槛：最大重写次数
   passGrade?: string;       // 质量门槛：通过等级
+  engine?: string;
 }
 
 interface AutoArgs {
@@ -60,6 +63,7 @@ interface AutoArgs {
   maxRevise?: number;
   passGrade?: string;
   yes?: boolean;
+  engine?: string;
 }
 
 interface StatusArgs {
@@ -71,6 +75,7 @@ interface ResumeArgs {
   command: 'resume';
   projectId: string;
   maxRevise?: number;       // 可选：续写时启用质量门槛
+  engine?: string;
 }
 
 type CliArgs = InitArgs | OutlineArgs | ChapterArgs | AutoArgs | StatusArgs | ResumeArgs | { command: 'list' } | { command: 'help' };
@@ -98,6 +103,7 @@ function parseArgs(argv: string[]): CliArgs {
     const args: ResumeArgs = { command: 'resume', projectId };
     for (let i = 0; i < rest.length; i++) {
       if (rest[i] === '--max-revise') args.maxRevise = parseInt(rest[++i], 10);
+      else if (rest[i] === '--engine') args.engine = rest[++i];
     }
     return args;
   }
@@ -108,6 +114,7 @@ function parseArgs(argv: string[]): CliArgs {
     const args: OutlineArgs = { command: 'outline', projectId };
     for (let i = 0; i < rest.length; i++) {
       if (rest[i] === '--chapters') args.chapters = parseInt(rest[++i], 10);
+      else if (rest[i] === '--engine') args.engine = rest[++i];
       else if (rest[i] === '-y' || rest[i] === '--yes') args.yes = true;
     }
     return args;
@@ -124,6 +131,7 @@ function parseArgs(argv: string[]): CliArgs {
       else if (rest[i] === '--all') args.all = true;
       else if (rest[i] === '--max-revise') args.maxRevise = parseInt(rest[++i], 10);
       else if (rest[i] === '--pass-grade') args.passGrade = rest[++i];
+      else if (rest[i] === '--engine') args.engine = rest[++i];
     }
     return args;
   }
@@ -138,6 +146,7 @@ function parseArgs(argv: string[]): CliArgs {
       else if (rest[i] === '--chapters') args.chapters = parseInt(rest[++i], 10);
       else if (rest[i] === '--max-revise') args.maxRevise = parseInt(rest[++i], 10);
       else if (rest[i] === '--pass-grade') args.passGrade = rest[++i];
+      else if (rest[i] === '--engine') args.engine = rest[++i];
       else if (rest[i] === '-y' || rest[i] === '--yes') args.yes = true;
     }
     return args;
@@ -151,6 +160,7 @@ function parseArgs(argv: string[]): CliArgs {
       else if (a === '--genre') args.genre = rest[++i];
       else if (a === '--audience') args.audience = rest[++i];
       else if (a === '--topic') args.topic = rest[++i];
+      else if (a === '--engine') args.engine = rest[++i];
       else if (a === '-y' || a === '--yes') args.yes = true;
     }
     return args;
@@ -196,9 +206,14 @@ auto（全自动：bible → 蓝图 → 章节 + 质量门槛）：
   --max-revise <N>    质量门槛重写上限（默认 2）
   -y, --yes           跳过确认屏
 
+通用选项（适用于 init/outline/chapter/resume/auto）：
+  --engine <name>     指定引擎覆盖 engines.yml 默认值（如 bigmodel | deepseek）
+                      不传则读 engines.yml 的 default
+
 示例：
   novel-eval write auto --title "星海残响" --genre 科幻 --audience 青年男性 \\
-    --topic "失忆探险者在废弃殖民地醒来" --chapters 12 -y`);
+    --topic "失忆探险者在废弃殖民地醒来" --chapters 12 -y
+  ANTHROPIC_AUTH_TOKEN=<key> novel-eval write auto --engine bigmodel --title "..." ... -y`);
 }
 
 async function confirmProceed(message: string): Promise<boolean> {
@@ -221,7 +236,7 @@ async function runInit(args: InitArgs): Promise<void> {
     process.exit(1);
   }
 
-  const config = loadWriterConfig();
+  const config = loadWriterConfig(args.engine ? { engine: args.engine } : undefined);
   console.log('Novel Writer — 初始化写作项目\n');
   console.log(`  书名：${args.title}`);
   console.log(`  类型：${args.genre} · 受众：${args.audience}`);
@@ -326,7 +341,7 @@ function printProject(p: Project, db: ReturnType<typeof openDb>): void {
 }
 
 async function runOutline(args: OutlineArgs): Promise<void> {
-  const config = loadWriterConfig();
+  const config = loadWriterConfig(args.engine ? { engine: args.engine } : undefined);
   const db = openDb();
   try {
     const project = getProject(db, args.projectId);
@@ -375,7 +390,7 @@ async function runOutline(args: OutlineArgs): Promise<void> {
 }
 
 async function runChapter(args: ChapterArgs): Promise<void> {
-  const config = loadWriterConfig();
+  const config = loadWriterConfig(args.engine ? { engine: args.engine } : undefined);
   const db = openDb();
   try {
     const project = getProject(db, args.projectId);
@@ -432,7 +447,7 @@ async function runChapter(args: ChapterArgs): Promise<void> {
 }
 
 async function runResume(args: ResumeArgs): Promise<void> {
-  const config = loadWriterConfig();
+  const config = loadWriterConfig(args.engine ? { engine: args.engine } : undefined);
   const db = openDb();
   try {
     const project = getProject(db, args.projectId);
@@ -518,7 +533,7 @@ async function runAuto(args: AutoArgs): Promise<void> {
   if (!args.topic) missing.push('--topic');
   if (missing.length) { console.error(`错误：缺少必填参数：${missing.join(', ')}`); process.exit(1); }
 
-  const config = loadWriterConfig();
+  const config = loadWriterConfig(args.engine ? { engine: args.engine } : undefined);
   console.log('Novel Writer — 全自动生成\n');
   console.log(`  书名：${args.title} · ${args.genre} · ${args.audience}`);
   console.log(`  主题：${args.topic}`);

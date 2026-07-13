@@ -34,4 +34,18 @@ describe('loadWriterConfig', () => {
     assert.equal(config.qualityGate.blockGrade, 'D');
     assert.equal(config.repetition.shingleSize, 8);
   });
+
+  it('override.engine 指定 bigmodel 时覆盖默认引擎', () => {
+    const config = loadWriterConfig({ engine: 'bigmodel' });
+    assert.equal(config.engineName, 'bigmodel');
+    assert.equal(config.engine.provider, 'bigmodel');
+    assert.equal(config.engine.model, 'glm-5.2');
+  });
+
+  it('override.engine 传未知引擎时抛错并列出可用引擎', () => {
+    assert.throws(
+      () => loadWriterConfig({ engine: 'bigmode' }),
+      /未知引擎 "bigmode"[\s\S]*可用引擎：[\s\S]*bigmodel[\s\S]*deepseek/,
+    );
+  });
 });

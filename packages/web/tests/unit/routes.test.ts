@@ -106,4 +106,33 @@ describe('API 路由', () => {
     const { status } = await fetchJson(app, '/api/projects/nonexistent-id');
     assert.equal(status, 404);
   });
+
+  it('GET /api/projects/:id/export 导出项目（txt / zip）', async () => {
+    const p = createProject(db, { title: '测试导出书', genre: 'g', audience: 'a', topic: 't' });
+    saveOutlines(db, p.id, [
+      { number: 1, title: '第一章 启程', act: 1, beat: 'p', role: 'r', purpose: 'p', suspenseLevel: 5, foreshadowing: 'f', twistLevel: 1, summary: '大纲A' },
+      { number: 2, title: '第二章 到达', act: 1, beat: 'p', role: 'r', purpose: 'p', suspenseLevel: 5, foreshadowing: 'f', twistLevel: 1, summary: '大纲B' },
+    ]);
+    saveChapter(db, p.id, 1, { title: '第一章 启程', content: '内容一', wordCount: 10 });
+    saveChapter(db, p.id, 2, { title: '第二章 到达', content: '内容二', wordCount: 10 });
+
+    const app = testApp(db);
+    
+    // Test merge-txt
+    const resTxt = await app.fetch(new Request(`http://test/api/projects/${p.id}/export?format=merge-txt`));
+    assert.equal(resTxt.status, 200);
+    assert.equal(resTxt.headers.get('Content-Type')?.split(';')[0], 'text/plain');
+    const txt = await resTxt.text();
+    assert.ok(txt.includes('测试导出书'));
+    assert.ok(txt.includes('第一章 启程'));
+    assert.ok(txt.includes('内容一'));
+    assert.ok(txt.includes('内容二'));
+
+    // Test zip-txt
+    const resZip = await app.fetch(new Request(`http://test/api/projects/${p.id}/export?format=zip-txt`));
+    assert.equal(resZip.status, 200);
+    assert.equal(resZip.headers.get('Content-Type'), 'application/zip');
+    const zipBuf = await resZip.arrayBuffer();
+    assert.ok(zipBuf.byteLength > 100);
+  });
 });

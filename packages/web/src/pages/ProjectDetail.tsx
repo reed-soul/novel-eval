@@ -18,6 +18,27 @@ export function ProjectDetail() {
   const [genFrom, setGenFrom] = useState(1);
   const [genTo, setGenTo] = useState(5);
   const [useGate, setUseGate] = useState(true);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportFormat, setExportFormat] = useState<'merge-txt' | 'merge-md' | 'zip-txt'>('merge-txt');
+  const [includeMeta, setIncludeMeta] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = () => {
+    setExporting(true);
+    try {
+      const url = `/api/projects/${id}/export?format=${exportFormat}&includeMeta=${includeMeta}`;
+      const link = document.createElement('a');
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setShowExportModal(false);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const reload = () => {
     if (!id) return;
@@ -177,8 +198,11 @@ export function ProjectDetail() {
       )}
 
       <div className="card">
-        <h2>设定与状态</h2>
-        <Link to={`/projects/${id}/state`} className="btn btn-primary">查看 Bible 与叙事状态 →</Link>
+        <h2>设定与输出</h2>
+        <div style={{ display: 'flex', gap: 12 }}>
+          <Link to={`/projects/${id}/state`} className="btn btn-primary">查看 Bible 与叙事状态 →</Link>
+          <button className="btn btn-primary" onClick={() => setShowExportModal(true)}>📤 导出小说 →</button>
+        </div>
       </div>
 
       {id && (
@@ -194,6 +218,72 @@ export function ProjectDetail() {
           <Link to={`/projects/${id}/chapters/${project.lastChapter.number}`}>
             第 {project.lastChapter.number} 章《{project.lastChapter.title}》— {project.lastChapter.wordCount} 字 →
           </Link>
+        </div>
+      )}
+
+      {showExportModal && (
+        <div className="modal-overlay" onClick={() => setShowExportModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>导出小说: 《{project.title}》</h3>
+              <button className="modal-close" onClick={() => setShowExportModal(false)}>&times;</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label>选择导出格式 (Format)</label>
+                <div className="radio-group">
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      name="format"
+                      value="merge-txt"
+                      checked={exportFormat === 'merge-txt'}
+                      onChange={() => setExportFormat('merge-txt')}
+                    />
+                    合并为一个文本文件 (.txt) — 适合自读/备份
+                  </label>
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      name="format"
+                      value="merge-md"
+                      checked={exportFormat === 'merge-md'}
+                      onChange={() => setExportFormat('merge-md')}
+                    />
+                    合并为一个 Markdown 文件 (.md) — 适合编辑排版
+                  </label>
+                  <label className="radio-label">
+                    <input
+                      type="radio"
+                      name="format"
+                      value="zip-txt"
+                      checked={exportFormat === 'zip-txt'}
+                      onChange={() => setExportFormat('zip-txt')}
+                    />
+                    分章导出为压缩包 (.zip) — 方便发布到番茄/起点等平台
+                  </label>
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginTop: 20 }}>
+                <label>附加选项 (Options)</label>
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={includeMeta}
+                    onChange={(e) => setIncludeMeta(e.target.checked)}
+                  />
+                  在正文前附带每章大纲 (Chapter Outline)
+                </label>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn" onClick={() => setShowExportModal(false)}>取消</button>
+              <button className="btn btn-primary" onClick={handleExport} disabled={exporting}>
+                {exporting ? '正在导出...' : '确认导出'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

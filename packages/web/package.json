@@ -13,16 +13,18 @@
     "test:unit": "tsx --test tests/unit/**/*.test.ts"
   },
   "dependencies": {
+    "@hono/node-server": "^1.13.0",
+    "@novel-eval/eval": "workspace:*",
     "@novel-eval/shared": "workspace:*",
     "@novel-eval/writer": "workspace:*",
-    "@novel-eval/eval": "workspace:*",
     "hono": "^4.6.0",
-    "@hono/node-server": "^1.13.0",
+    "jszip": "^3.10.1",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-router-dom": "^6.26.0"
   },
   "devDependencies": {
+    "@types/jszip": "^3.4.1",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.0",
