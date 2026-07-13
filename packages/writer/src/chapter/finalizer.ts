@@ -19,9 +19,7 @@ import { getBibleForChapter, updateCharacterState, getNarrativeState, saveNarrat
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROMPTS_DIR = resolve(__dirname, 'prompts');
 
-const FINALIZE_TEMPERATURE = 0.4;
-const STEP_TIMEOUT_MS = 120_000;
-const ARC_INTERVAL = 10;  // 每 10 章固化一份 arcSummary
+import { getRuntimeConfig } from '../runtime-config.ts';
 
 // ─── summary 更新的 schema（输出 macroSummary + openForeshadows）────────
 
@@ -97,7 +95,7 @@ export async function finalizeChapter(opts: FinalizeOptions): Promise<FinalizeRe
         .replace('{OPEN_FORESHADOWS}', openForeshadowsText),
       {
         systemPrompt: '你是小说连贯性编辑。只输出 JSON。',
-        temperature: FINALIZE_TEMPERATURE, maxTokens: 3000, timeoutMs: STEP_TIMEOUT_MS,
+        temperature: getRuntimeConfig().generation.temperatures.finalize, maxTokens: 3000, timeoutMs: getRuntimeConfig().generation.timeouts.finalizeMs,
         schema: SUMMARY_SCHEMA, maxAttempts: 3,
         enableCache: true,
       },
@@ -110,7 +108,7 @@ export async function finalizeChapter(opts: FinalizeOptions): Promise<FinalizeRe
         .replace('{CHAPTER_TEXT}', `第${chapterNumber}章《${chapterTitle}》\n${chapterContent.slice(0, 8000)}`),
       {
         systemPrompt: '你是小说连贯性编辑。只输出 JSON。',
-        temperature: FINALIZE_TEMPERATURE, maxTokens: 2500, timeoutMs: STEP_TIMEOUT_MS,
+        temperature: getRuntimeConfig().generation.temperatures.finalize, maxTokens: 2500, timeoutMs: getRuntimeConfig().generation.timeouts.finalizeMs,
         schema: STATE_SCHEMA, maxAttempts: 3,
         enableCache: true,
       },
@@ -157,7 +155,7 @@ export async function finalizeChapter(opts: FinalizeOptions): Promise<FinalizeRe
 
   // ─── arcSummary 固化（每 ARC_INTERVAL 章一份）──────────────────
   const arcSummaries: ArcSummary[] = oldNarrative?.arcSummaries ?? [];
-  if (chapterNumber > 0 && chapterNumber % ARC_INTERVAL === 0) {
+  if (chapterNumber > 0 && chapterNumber % getRuntimeConfig().generation.arcInterval === 0) {
     arcSummaries.push({ upToChapter: chapterNumber, content: macroSummary.slice(0, 800) });
     onProgress?.(`finalize:${chapterNumber}`, `固化第${chapterNumber}章卷摘要`);
   }

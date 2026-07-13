@@ -1,6 +1,33 @@
-# 写作模块配置（阶段 2 M1：bible 生成）
+# 写作模块配置 — 全部可调参数集中于此，无需改代码
+# 改完重启服务即生效。
+
 generation:
-  defaultChapters: 50          # 默认章节数（M2 起用）
-  chapterWordCount: 2500       # 每章目标字数（M2 起用）
-  temperature: 0.7             # 章节生成温度（创意类）
-  bibleTemperature: 0.5        # bible 生成温度（结构类，更稳）
+  defaultChapters: 50          # 默认章节数
+  chapterWordCount: 2500       # 每章目标字数
+  recentWindow: 5              # 最近 N 章原文注入窗口
+  arcInterval: 10              # 每 N 章固化一次 arcSummary
+
+  temperatures:                # 各阶段温度（消除代码内常量遮蔽）
+    chapter: 0.7               # 章节正文（创意类，偏高）
+    blueprint: 0.5             # 蓝图（结构类，偏稳）
+    finalize: 0.4              # 定稿摘要/状态更新（精确类，偏低）
+    bible: 0.5                 # bible 生成（结构类）
+
+  timeouts:                    # 各阶段超时（毫秒）
+    chapterMs: 300000          # 单章正文 5 分钟
+    blueprintMs: 180000        # 蓝图步骤 3 分钟
+    finalizeMs: 120000         # 定稿 2 分钟
+    bibleMs: 120000            # bible 步骤 2 分钟
+
+qualityGate:                   # 质量门槛判定阈值
+  passGrade: B                 # 等级 ≥ 此值才 pass（S/A/B/C/D）
+  passMinScore: 75             # 总分 ≥ 此值才 pass
+  minDimScore: 65              # 任一维度低于此值 → revise
+  blockGrade: C                # 等级 ≥ blockGrade 的（C/D）直接 block
+
+repetition:                    # 防重复检测参数
+  shingleSize: 8               # k-shingle 粒度（字符数）
+  withinMild: 0.15             # 章内重复率 > 此值 → mild（revise）
+  withinSevere: 0.30           # 章内重复率 > 此值 → severe（block）
+  crossMild: 0.25              # 跨章 Jaccard > 此值 → mild
+  crossSevere: 0.50            # 跨章 Jaccard > 此值 → severe

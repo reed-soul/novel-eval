@@ -16,12 +16,26 @@ import type { DB } from '../db.ts';
 import type { ChapterContent } from './types.ts';
 import { detectRepetition } from './repetition.ts';
 import { getRecentChapters, saveEvalHistory } from './store.ts';
+import { getRuntimeConfig } from '../runtime-config.ts';
 
 const RECENT_WINDOW = 5;
-const PASS_GRADE = 'B';        // grade ≥ B（70 分）
-const PASS_MIN_SCORE = 75;     // 总分 ≥ 75 才 pass（B 级上半段，番茄签约线）
-const MIN_DIM_SCORE = 65;      // 任何关键维度低于 65 → revise
-const BLOCK_GRADE = 'C';       // grade C 或 D → block（低质量章节不留）
+
+// 质量门槛阈值从 writer.yml 加载（config.qualityGate），不再硬编码。
+// 保留 fallback 默认值（与 config 的默认值一致）。
+const FALLBACK_PASS_GRADE = 'B';
+const FALLBACK_PASS_MIN_SCORE = 75;
+const FALLBACK_MIN_DIM_SCORE = 65;
+const FALLBACK_BLOCK_GRADE = 'C';
+
+function gateConfig() {
+  const cfg = getRuntimeConfig().qualityGate;
+  return {
+    PASS_GRADE: cfg.passGrade,
+    PASS_MIN_SCORE: cfg.passMinScore,
+    MIN_DIM_SCORE: cfg.minDimScore,
+    BLOCK_GRADE: cfg.blockGrade,
+  };
+}
 
 export interface QualityGateResult {
   verdict: 'pass' | 'revise' | 'block';
@@ -100,19 +114,20 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
   const { totalScore, grade, dimensions, suggestions } = assessResult;
 
   // ─── 3. 判定 ────────────────────────────────────────────────────
+  const gc = gateConfig();
   const gradeOrder = ['S', 'A', 'B', 'C', 'D'];
-  const gradeOk = gradeOrder.indexOf(grade) <= gradeOrder.indexOf(PASS_GRADE);
-  const scoreOk = totalScore >= PASS_MIN_SCORE;
+  const gradeOk = gradeOrder.indexOf(grade) <= gradeOrder.indexOf(gc.PASS_GRADE);
+  const scoreOk = totalScore >= gc.PASS_MIN_SCORE;
 
   // 找低分维度
   const lowDims = Object.entries(dimensions)
-    .filter(([, d]) => d.score < MIN_DIM_SCORE)
+    .filter(([, d]) => d.score < gc.MIN_DIM_SCORE)
     .map(([k, d]) => `${DIMENSION_LABELS[k as DimensionKey] ?? k}（${d.score}）`);
 
   const hasRepetition = rep.verdict === 'mild';
 
-  // block：grade C 或 D（低质量章节不留）
-  const blockOrder = gradeOrder.indexOf(BLOCK_GRADE);
+  // block：grade ≥ BLOCK_GRADE（C/D 直接淘汰）
+  const blockOrder = gradeOrder.indexOf(gc.BLOCK_GRADE);
   if (gradeOrder.indexOf(grade) >= blockOrder) {
     persistEval({
       verdict: 'block', score: totalScore, grade, dimensions, suggestions,
@@ -120,7 +135,7 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
     });
     return {
       verdict: 'block',
-      reason: `等级 ${grade}（${totalScore} 分）低于 ${BLOCK_GRADE} 线`,
+      reason: `等级 ${grade}（${totalScore} 分）低于 ${gc.BLOCK_GRADE} 线`,
       score: totalScore, grade,
       feedback: buildFeedback(suggestions.map((s) => s.content), lowDims, dimensions, rep.hotspots),
       repetition: { within: rep.withinChapter, cross: rep.crossChapter, verdict: rep.verdict },
@@ -144,8 +159,8 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
 
   // revise
   const reasons: string[] = [];
-  if (!gradeOk) reasons.push(`等级 ${grade}（${totalScore}）低于 ${PASS_GRADE}`);
-  if (!scoreOk) reasons.push(`总分 ${totalScore} 低于 ${PASS_MIN_SCORE}`);
+  if (!gradeOk) reasons.push(`等级 ${grade}（${totalScore}）低于 ${gc.PASS_GRADE}`);
+  if (!scoreOk) reasons.push(`总分 ${totalScore} 低于 ${gc.PASS_MIN_SCORE}`);
   if (lowDims.length) reasons.push(`低分维度：${lowDims.join('、')}`);
   if (hasRepetition) reasons.push(`重复率偏高：章内 ${(rep.withinChapter * 100).toFixed(1)}%`);
 

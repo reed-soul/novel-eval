@@ -30,9 +30,7 @@ import { assessChapterQuality, type QualityGateResult } from './quality-gate.ts'
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROMPTS_DIR = resolve(__dirname, 'prompts');
 
-const CHAPTER_TEMPERATURE = 0.7;
-const STEP_TIMEOUT_MS = 300_000;  // 单章正文生成可能较长，给 5 分钟
-const RECENT_WINDOW = 5;          // 最近 N 章原文注入窗口
+import { getRuntimeConfig } from '../runtime-config.ts';
 
 // ─── 单章生成 ────────────────────────────────────────────────────
 
@@ -165,9 +163,9 @@ async function generateOnce(
 
   const res = await engine.run(userPrompt, {
     systemPrompt,
-    temperature: CHAPTER_TEMPERATURE,
+    temperature: getRuntimeConfig().generation.temperatures.chapter,
     maxTokens: Math.ceil(wordCount * 2.5),
-    timeoutMs: STEP_TIMEOUT_MS,
+    timeoutMs: getRuntimeConfig().generation.timeouts.chapterMs,
     // 启用 prompt 缓存：bible 全文在 systemPrompt 里跨章稳定，命中后大幅降低重复发送成本。
     enableCache: true,
     // 关闭推理过程：蓝图已提供结构，thinking 会挤占 output 预算导致正文截断。
@@ -240,7 +238,7 @@ async function buildChapterPrompt(
 
   // 后续章：注入全部上下文（不含 bible，bible 在 systemPrompt）
   const narrative = getNarrativeState(db, projectId);
-  const recent = getRecentChapters(db, projectId, outline.number, RECENT_WINDOW);
+  const recent = getRecentChapters(db, projectId, outline.number, getRuntimeConfig().generation.recentWindow);
   const macroSummary = narrative?.macroSummary ?? '（尚无前情摘要）';
   const openForeshadows = narrative && narrative.openForeshadows.length
     ? narrative.openForeshadows.map((f) => `第${f.setupChapter}章埋设：${f.description}`).join('\n')

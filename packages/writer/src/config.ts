@@ -15,8 +15,35 @@ const SHARED_CONFIG_DIR = resolve(__dirname, '..', '..', 'shared', 'config');
 export interface GenerationConfig {
   defaultChapters: number;
   chapterWordCount: number;
-  temperature: number;
-  bibleTemperature: number;
+  recentWindow: number;
+  arcInterval: number;
+  temperatures: {
+    chapter: number;
+    blueprint: number;
+    finalize: number;
+    bible: number;
+  };
+  timeouts: {
+    chapterMs: number;
+    blueprintMs: number;
+    finalizeMs: number;
+    bibleMs: number;
+  };
+}
+
+export interface QualityGateConfig {
+  passGrade: string;
+  passMinScore: number;
+  minDimScore: number;
+  blockGrade: string;
+}
+
+export interface RepetitionConfig {
+  shingleSize: number;
+  withinMild: number;
+  withinSevere: number;
+  crossMild: number;
+  crossSevere: number;
 }
 
 export interface WriterConfig {
@@ -25,18 +52,58 @@ export interface WriterConfig {
   /** 全部引擎表（供 Web 端切换）*/
   engines: Record<string, EngineConfig>;
   generation: GenerationConfig;
+  qualityGate: QualityGateConfig;
+  repetition: RepetitionConfig;
 }
 
 export function loadWriterConfig(): WriterConfig {
   const { engine, engineName, engines } = loadEngineConfig(SHARED_CONFIG_DIR);
-  const raw = loadYaml<{ generation: Partial<GenerationConfig> }>(
-    resolve(WRITER_CONFIG_DIR, 'writer.yml'),
-  );
+  const raw = loadYaml<{
+    generation?: Partial<{
+      defaultChapters: number; chapterWordCount: number; recentWindow: number; arcInterval: number;
+      temperatures: Partial<Record<'chapter' | 'blueprint' | 'finalize' | 'bible', number>>;
+      timeouts: Partial<Record<'chapterMs' | 'blueprintMs' | 'finalizeMs' | 'bibleMs', number>>;
+    }>;
+    qualityGate?: Partial<QualityGateConfig>;
+    repetition?: Partial<RepetitionConfig>;
+  }>(resolve(WRITER_CONFIG_DIR, 'writer.yml'));
+
+  const g = raw.generation ?? {};
   const generation: GenerationConfig = {
-    defaultChapters: raw.generation?.defaultChapters ?? 50,
-    chapterWordCount: raw.generation?.chapterWordCount ?? 2500,
-    temperature: raw.generation?.temperature ?? 0.7,
-    bibleTemperature: raw.generation?.bibleTemperature ?? 0.5,
+    defaultChapters: g.defaultChapters ?? 50,
+    chapterWordCount: g.chapterWordCount ?? 2500,
+    recentWindow: g.recentWindow ?? 5,
+    arcInterval: g.arcInterval ?? 10,
+    temperatures: {
+      chapter: g.temperatures?.chapter ?? 0.7,
+      blueprint: g.temperatures?.blueprint ?? 0.5,
+      finalize: g.temperatures?.finalize ?? 0.4,
+      bible: g.temperatures?.bible ?? 0.5,
+    },
+    timeouts: {
+      chapterMs: g.timeouts?.chapterMs ?? 300_000,
+      blueprintMs: g.timeouts?.blueprintMs ?? 180_000,
+      finalizeMs: g.timeouts?.finalizeMs ?? 120_000,
+      bibleMs: g.timeouts?.bibleMs ?? 120_000,
+    },
   };
-  return { engine, engineName, engines, generation };
+
+  const qg = raw.qualityGate ?? {};
+  const qualityGate: QualityGateConfig = {
+    passGrade: qg.passGrade ?? 'B',
+    passMinScore: qg.passMinScore ?? 75,
+    minDimScore: qg.minDimScore ?? 65,
+    blockGrade: qg.blockGrade ?? 'C',
+  };
+
+  const rep = raw.repetition ?? {};
+  const repetition: RepetitionConfig = {
+    shingleSize: rep.shingleSize ?? 8,
+    withinMild: rep.withinMild ?? 0.15,
+    withinSevere: rep.withinSevere ?? 0.30,
+    crossMild: rep.crossMild ?? 0.25,
+    crossSevere: rep.crossSevere ?? 0.50,
+  };
+
+  return { engine, engineName, engines, generation, qualityGate, repetition };
 }

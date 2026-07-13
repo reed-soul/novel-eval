@@ -21,14 +21,22 @@ export interface RepetitionReport {
   verdict: 'ok' | 'mild' | 'severe';
 }
 
-const SHINGLE_SIZE = 8;
-const WITHIN_MILD = 0.15;
-const WITHIN_SEVERE = 0.30;
-const CROSS_MILD = 0.25;
-const CROSS_SEVERE = 0.50;
+// 阈值从 writer.yml 加载（config.repetition），这里仅作为 fallback 默认值。
+import { getRuntimeConfig } from '../runtime-config.ts';
+
+function repConfig() {
+  const cfg = getRuntimeConfig().repetition;
+  return {
+    SHINGLE_SIZE: cfg.shingleSize,
+    WITHIN_MILD: cfg.withinMild,
+    WITHIN_SEVERE: cfg.withinSevere,
+    CROSS_MILD: cfg.crossMild,
+    CROSS_SEVERE: cfg.crossSevere,
+  };
+}
 
 /** 把文本切成 k-shingle 集合（连续 k 个字符为一组，去空白）*/
-function shingles(text: string, k: number = SHINGLE_SIZE): Set<string> {
+function shingles(text: string, k: number): Set<string> {
   const clean = text.replace(/\s+/g, '');
   const set = new Set<string>();
   for (let i = 0; i + k <= clean.length; i++) {
@@ -51,7 +59,7 @@ function jaccard(a: Set<string>, b: Set<string>): number {
 }
 
 /** 找章内重复的 hotspots：出现 ≥3 次的 shingle 还原成可读片段 */
-function findHotspots(text: string, k: number = SHINGLE_SIZE): string[] {
+function findHotspots(text: string, k: number): string[] {
   const clean = text.replace(/\s+/g, '');
   const counts = new Map<string, number>();
   for (let i = 0; i + k <= clean.length; i++) {
@@ -73,7 +81,8 @@ function findHotspots(text: string, k: number = SHINGLE_SIZE): string[] {
  * @param recent 最近章节正文数组（用于跨章相似度）
  */
 export function detectRepetition(content: string, recent: string[]): RepetitionReport {
-  const contentShingles = shingles(content);
+  const rc = repConfig();
+  const contentShingles = shingles(content, rc.SHINGLE_SIZE);
 
   // 章内重复率：出现 ≥2 次的 shingle 占比
   const counts = new Map<string, number>();
@@ -82,11 +91,11 @@ export function detectRepetition(content: string, recent: string[]): RepetitionR
   }
   // 注意：Set 本身去重了，要算原始 shingle 里的重复，需要从原文重数
   const cleanContent = content.replace(/\s+/g, '');
-  const totalShingles = Math.max(1, cleanContent.length - SHINGLE_SIZE + 1);
+  const totalShingles = Math.max(1, cleanContent.length - rc.SHINGLE_SIZE + 1);
   let repeatedShingles = 0;
   const seen = new Set<string>();
-  for (let i = 0; i + SHINGLE_SIZE <= cleanContent.length; i++) {
-    const s = cleanContent.slice(i, i + SHINGLE_SIZE);
+  for (let i = 0; i + rc.SHINGLE_SIZE <= cleanContent.length; i++) {
+    const s = cleanContent.slice(i, i + rc.SHINGLE_SIZE);
     if (seen.has(s)) {
       repeatedShingles++;
     } else {
@@ -97,14 +106,14 @@ export function detectRepetition(content: string, recent: string[]): RepetitionR
 
   // 跨章 Jaccard：本章 vs 最近所有章合并文本
   const recentText = recent.filter((t) => t.trim().length > 0).join('');
-  const crossChapter = recentText ? jaccard(contentShingles, shingles(recentText)) : 0;
+  const crossChapter = recentText ? jaccard(contentShingles, shingles(recentText, rc.SHINGLE_SIZE)) : 0;
 
   // hotspots
-  const hotspots = findHotspots(content);
+  const hotspots = findHotspots(content, rc.SHINGLE_SIZE);
 
   // 判定
-  const severe = withinChapter > WITHIN_SEVERE || crossChapter > CROSS_SEVERE;
-  const mild = withinChapter > WITHIN_MILD || crossChapter > CROSS_MILD;
+  const severe = withinChapter > rc.WITHIN_SEVERE || crossChapter > rc.CROSS_SEVERE;
+  const mild = withinChapter > rc.WITHIN_MILD || crossChapter > rc.CROSS_MILD;
   const verdict: RepetitionReport['verdict'] = severe ? 'severe' : mild ? 'mild' : 'ok';
 
   return { withinChapter, crossChapter, hotspots, verdict };

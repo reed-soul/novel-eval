@@ -24,8 +24,7 @@ import {
   worldBuildingPrompt, plotArchitecturePrompt,
 } from './prompts.ts';
 
-const BIBLE_TEMPERATURE = 0.5;
-const STEP_TIMEOUT_MS = 120_000;
+import { getRuntimeConfig } from '../runtime-config.ts';
 
 // ─── 各步的 schema 约束 ───────────────────────────────────────────
 
@@ -188,7 +187,7 @@ export async function generateBible(opts: GenerateBibleOptions): Promise<Generat
     onProgress?.('core_seed', '生成核心种子...');
     const res = await callWithValidation<CoreSeed>(engine, coreSeedPrompt(topic, genre, audience), {
       systemPrompt: '你是资深小说策划。只输出 JSON。',
-      temperature: BIBLE_TEMPERATURE, maxTokens: 400, timeoutMs: STEP_TIMEOUT_MS,
+      temperature: getRuntimeConfig().generation.temperatures.bible, maxTokens: 400, timeoutMs: getRuntimeConfig().generation.timeouts.bibleMs,
       schema: CORE_SEED_SCHEMA, maxAttempts: 3,
     });
     if (!res.ok || !res.data) throw new Error(`核心种子生成失败：${res.errors.join('; ')}`);
@@ -210,7 +209,7 @@ export async function generateBible(opts: GenerateBibleOptions): Promise<Generat
       engine, characterDynamicsPrompt(JSON.stringify(coreSeed), audience),
       {
         systemPrompt: '你是角色设计大师。只输出 JSON。',
-        temperature: BIBLE_TEMPERATURE, maxTokens: 3000, timeoutMs: STEP_TIMEOUT_MS,
+        temperature: getRuntimeConfig().generation.temperatures.bible, maxTokens: 3000, timeoutMs: getRuntimeConfig().generation.timeouts.bibleMs,
         schema: CHARACTER_DYNAMICS_SCHEMA, maxAttempts: 3,
       },
     );
@@ -234,7 +233,7 @@ export async function generateBible(opts: GenerateBibleOptions): Promise<Generat
       engine, characterStatePrompt(JSON.stringify({ characters: characterDynamics })),
       {
         systemPrompt: '你是小说连贯性编辑。只输出 JSON。',
-        temperature: BIBLE_TEMPERATURE, maxTokens: 2500, timeoutMs: STEP_TIMEOUT_MS,
+        temperature: getRuntimeConfig().generation.temperatures.bible, maxTokens: 2500, timeoutMs: getRuntimeConfig().generation.timeouts.bibleMs,
         schema: CHARACTER_STATE_SCHEMA, maxAttempts: 3,
       },
     );
@@ -257,7 +256,7 @@ export async function generateBible(opts: GenerateBibleOptions): Promise<Generat
       engine, worldBuildingPrompt(JSON.stringify(coreSeed), genre),
       {
         systemPrompt: '你是世界观架构师。只输出 JSON。',
-        temperature: BIBLE_TEMPERATURE, maxTokens: 3000, timeoutMs: STEP_TIMEOUT_MS,
+        temperature: getRuntimeConfig().generation.temperatures.bible, maxTokens: 3000, timeoutMs: getRuntimeConfig().generation.timeouts.bibleMs,
         schema: WORLD_BUILDING_SCHEMA, maxAttempts: 3,
       },
     );
@@ -284,7 +283,7 @@ export async function generateBible(opts: GenerateBibleOptions): Promise<Generat
       ),
       {
         systemPrompt: '你是情节架构大师。只输出 JSON。',
-        temperature: BIBLE_TEMPERATURE, maxTokens: 4000, timeoutMs: STEP_TIMEOUT_MS,
+        temperature: getRuntimeConfig().generation.temperatures.bible, maxTokens: 4000, timeoutMs: getRuntimeConfig().generation.timeouts.bibleMs,
         schema: PLOT_SCHEMA, maxAttempts: 3,
       },
     );

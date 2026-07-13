@@ -27,6 +27,11 @@ describe('loadWriterConfig', () => {
     const config = loadWriterConfig();
     assert.equal(config.generation.defaultChapters, 50);
     assert.equal(config.generation.chapterWordCount, 2500);
-    assert.equal(config.generation.bibleTemperature, 0.5);
+    assert.equal(config.generation.temperatures.bible, 0.5);
+    assert.equal(config.generation.temperatures.chapter, 0.7);
+    assert.equal(config.generation.timeouts.chapterMs, 300000);
+    assert.equal(config.qualityGate.passMinScore, 75);
+    assert.equal(config.qualityGate.blockGrade, 'C');
+    assert.equal(config.repetition.shingleSize, 8);
   });
 });

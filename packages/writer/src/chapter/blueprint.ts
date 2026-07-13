@@ -20,8 +20,7 @@ import { saveOutlines, countOutlines } from './store.ts';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROMPTS_DIR = resolve(__dirname, 'prompts');
 
-const BLUEPRINT_TEMPERATURE = 0.5;
-const STEP_TIMEOUT_MS = 180_000;
+import { getRuntimeConfig } from '../runtime-config.ts';
 
 // ─── 第一层 schema：幕 → 段落 ────────────────────────────────────
 
@@ -128,7 +127,7 @@ export async function generateBlueprint(opts: GenerateBlueprintOptions): Promise
 
     const res = await callWithValidation<{ beats: Beat[] }>(engine, prompt, {
       systemPrompt: '你是资深小说结构师。只输出 JSON。',
-      temperature: BLUEPRINT_TEMPERATURE, maxTokens: 2000, timeoutMs: STEP_TIMEOUT_MS,
+      temperature: getRuntimeConfig().generation.temperatures.blueprint, maxTokens: 2000, timeoutMs: getRuntimeConfig().generation.timeouts.blueprintMs,
       schema: BEAT_SCHEMA, maxAttempts: 3,
     });
     if (!res.ok || !res.data) throw new Error(`第${actNum}幕段落生成失败：${res.errors.join('; ')}`);
@@ -165,11 +164,11 @@ export async function generateBlueprint(opts: GenerateBlueprintOptions): Promise
 
     const res = await callWithValidation<{ chapters: Array<{ number: number; title: string; beat: string; role: string; purpose: string; suspense_level: number; foreshadowing: string; twist_level: number; summary: string; }> }>(engine, prompt, {
       systemPrompt: '你是资深小说编辑。只输出 JSON。',
-      temperature: BLUEPRINT_TEMPERATURE,
+      temperature: getRuntimeConfig().generation.temperatures.blueprint,
       // 按章节数动态分配 token 预算：每章摘要 ~300 token + JSON 结构开销。
       // 第二幕常 40+ 章，固定 6000 会截断（实测 40 章需 ~14000 token）。
       maxTokens: Math.max(6000, budget * 400),
-      timeoutMs: STEP_TIMEOUT_MS,
+      timeoutMs: getRuntimeConfig().generation.timeouts.blueprintMs,
       schema: { chapters: { type: 'array', min: budget, required: true, itemSpec: CHAPTER_ITEM_SCHEMA } },
       maxAttempts: 3,
     });
