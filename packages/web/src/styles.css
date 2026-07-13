@@ -31,6 +31,11 @@ a:hover { text-decoration: underline; }
 .badge-outlining { background: #fffbeb; color: var(--amber); }
 .badge-writing { background: #fef3c7; color: #92400e; }
 .badge-completed { background: #f0fdf4; color: var(--green); }
+.badge-paused { background: #fef3c7; color: #b45309; }
+.badge-cancelled { background: #f1f5f9; color: var(--muted); }
+.badge-error { background: #fef2f2; color: var(--red); }
+
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .progress-bar { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin: 8px 0; }
 .progress-fill { height: 100%; background: var(--primary); border-radius: 4px; transition: width .3s; }

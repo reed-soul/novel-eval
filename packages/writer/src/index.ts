@@ -16,6 +16,7 @@ import { createProject, getProject, listProjects, updateProjectStatus, type Proj
 import { generateBible } from './bible/generator.ts';
 import { generateBlueprint } from './chapter/blueprint.ts';
 import { generateChapter, generateRange } from './chapter/generator.ts';
+import { ensureChapterConsistency } from './chapter/consistency.ts';
 import { getBibleForChapter } from './chapter/store.ts';
 import { getAllOutlines, countOutlines, countChapters, getChapter } from './chapter/store.ts';
 import type { CharacterDynamic } from './bible/types.ts';
@@ -66,7 +67,13 @@ interface StatusArgs {
   projectId: string;
 }
 
-type CliArgs = InitArgs | OutlineArgs | ChapterArgs | AutoArgs | StatusArgs | { command: 'list' } | { command: 'help' };
+interface ResumeArgs {
+  command: 'resume';
+  projectId: string;
+  maxRevise?: number;       // 可选：续写时启用质量门槛
+}
+
+type CliArgs = InitArgs | OutlineArgs | ChapterArgs | AutoArgs | StatusArgs | ResumeArgs | { command: 'list' } | { command: 'help' };
 
 function parseArgs(argv: string[]): CliArgs {
   // argv = [node, script, ('write'), ('--'), command, ...rest]
@@ -83,6 +90,16 @@ function parseArgs(argv: string[]): CliArgs {
     const projectId = rest.find((a) => !a.startsWith('--'));
     if (!projectId) return { command: 'help' };
     return { command: 'status', projectId };
+  }
+
+  if (cmd === 'resume') {
+    const projectId = rest.find((a) => !a.startsWith('--'));
+    if (!projectId) return { command: 'help' };
+    const args: ResumeArgs = { command: 'resume', projectId };
+    for (let i = 0; i < rest.length; i++) {
+      if (rest[i] === '--max-revise') args.maxRevise = parseInt(rest[++i], 10);
+    }
+    return args;
   }
 
   if (cmd === 'outline') {
@@ -149,6 +166,7 @@ function printHelp(): void {
   novel-eval write init     --title <书名> --genre <类型> --audience <受众> --topic <主题>
   novel-eval write outline  <projectId> [--chapters N]
   novel-eval write chapter  <projectId> --number N | --from A --to B | --all [--max-revise N]
+  novel-eval write resume   <projectId>           从上次断点续写（自动检测已写章节 + 修复半成品状态）
   novel-eval write auto     --title ... --genre ... --audience ... --topic ... --chapters N
   novel-eval write status   <projectId>
   novel-eval write list
@@ -166,6 +184,11 @@ chapter（按蓝图生成章节正文）：
   --from <A> --to <B> 生成第 A 到 B 章
   --all               生成全部章节
   --max-revise <N>    启用质量门槛，最大重写次数（默认不启用）
+
+resume（断点续写 — 中断/暂停后继续）：
+  <projectId>         write init 返回的项目 ID
+  --max-revise <N>    可选：续写时启用质量门槛
+  自动检测：已完成章节跳过，半成品章节（正文已存但状态落后）自动补全叙事状态
 
 auto（全自动：bible → 蓝图 → 章节 + 质量门槛）：
   --title/--genre/--audience/--topic   必填
@@ -408,6 +431,84 @@ async function runChapter(args: ChapterArgs): Promise<void> {
   }
 }
 
+async function runResume(args: ResumeArgs): Promise<void> {
+  const config = loadWriterConfig();
+  const db = openDb();
+  try {
+    const project = getProject(db, args.projectId);
+    if (!project) { console.error(`未找到项目：${args.projectId}`); process.exit(1); }
+
+    if (countOutlines(db, args.projectId) === 0) {
+      console.error('还没有章节蓝图，无法续写。请先运行 write outline。');
+      process.exit(1);
+    }
+
+    console.log(`Novel Writer — 断点续写\n  项目：${project.title}（${args.projectId}）`);
+
+    const engine: AIAgentAdapter = createEngine(config.engine);
+
+    // 一致性检查：补全半成品章节的叙事状态，返回 resume 起点
+    const { from, to, finalizedGap } = await ensureChapterConsistency(
+      engine, db, args.projectId,
+      (step, msg) => console.log(`  [${step}] ${msg}`),
+    );
+
+    if (finalizedGap > 0) {
+      console.log(`\n⚠ 检测到 ${finalizedGap} 章半成品（正文已存但叙事状态落后），已自动补全。`);
+    }
+
+    if (from > to) {
+      console.log(`\n✓ 全部 ${to} 章已完成，无需续写。`);
+      // 顺手修复 status 卡在 writing 的情况
+      if (project.status === 'writing') {
+        updateProjectStatus(db, args.projectId, 'completed');
+        console.log('  项目状态已更新为 completed。');
+      }
+      return;
+    }
+
+    const resumeCount = to - from + 1;
+    console.log(`  续写范围：第 ${from}-${to} 章（${resumeCount} 章待写，已完成章节自动跳过）`);
+    console.log(`  每章约 ${config.generation.chapterWordCount} 字`);
+    const useGate = args.maxRevise !== undefined;
+    if (useGate) console.log(`  质量门槛：启用（maxRevise=${args.maxRevise ?? 2}）`);
+    console.log('');
+
+    updateProjectStatus(db, args.projectId, 'writing');
+    const results = await generateRange({
+      engine, db, projectId: args.projectId,
+      from, to, wordCount: config.generation.chapterWordCount,
+      qualityGate: useGate ? {
+        metadata: { genre: project.genre, targetAudience: project.audience },
+        maxRevise: args.maxRevise ?? 2,
+      } : undefined,
+      onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
+    });
+
+    if (from + results.length - 1 === to) {
+      updateProjectStatus(db, args.projectId, 'completed');
+    }
+
+    const totalCost = results.reduce((s, r) => s + r.usage.costRmb, 0);
+    const totalWords = results.reduce((s, r) => s + r.wordCount, 0);
+    const skipped = resumeCount - results.length;
+    console.log(`\n✓ 续写完成`);
+    console.log(`  本次生成：${results.length} 章 · ${totalWords} 字${skipped > 0 ? `（跳过 ${skipped} 章已完成）` : ''}`);
+    console.log(`  费用：¥${totalCost.toFixed(4)}`);
+    // 写出 txt（本次新生成的章节）
+    if (results.length > 0) {
+      const { writeFileSync } = await import('node:fs');
+      const { resolve } = await import('node:path');
+      const outPath = resolve(writerDataDir(), `${args.projectId}-ch${from}-${to}.txt`);
+      const text = results.map((r) => `第${r.number}章 ${r.title}\n\n${r.content}`).join('\n\n\n');
+      writeFileSync(outPath, text, 'utf-8');
+      console.log(`  导出：${outPath}`);
+    }
+  } finally {
+    closeDb(db);
+  }
+}
+
 async function runAuto(args: AutoArgs): Promise<void> {
   // 校验必填
   const missing: string[] = [];
@@ -490,6 +591,7 @@ async function main(): Promise<void> {
   if (args.command === 'status') { runStatus(args); return; }
   if (args.command === 'outline') { await runOutline(args); return; }
   if (args.command === 'chapter') { await runChapter(args); return; }
+  if (args.command === 'resume') { await runResume(args); return; }
   if (args.command === 'auto') { await runAuto(args); return; }
   await runInit(args);
 }

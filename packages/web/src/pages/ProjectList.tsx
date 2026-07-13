@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { api, type Project } from '../api/client.ts';
 
@@ -6,12 +6,23 @@ export function ProjectList() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  useEffect(() => {
+  const fetchProjects = () => {
     api<Project[]>('/projects')
       .then(setProjects)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchProjects();
+    // 列表页轮询：让状态徽章（writing → completed）随写作进展更新。
+    // 仅当页面可见时轮询，切走标签页暂停以省请求。
+    pollRef.current = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchProjects();
+    }, 5000);
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, []);
 
   if (loading) return <div className="container loading">加载中...</div>;
