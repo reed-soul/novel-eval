@@ -101,6 +101,58 @@ function migrate(db: DB): void {
       up_to_chapter INTEGER NOT NULL DEFAULT 0,
       updated_at TEXT NOT NULL
     );
+
+    -- M3：作业表（暂停/继续/取消的断点来源；内存 job 重启即失，DB job 是真相）
+    CREATE TABLE IF NOT EXISTS job (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL REFERENCES project(id),
+      type TEXT NOT NULL,              -- 'bible' | 'outline' | 'chapter'
+      status TEXT NOT NULL,            -- 'running' | 'paused' | 'done' | 'error' | 'cancelled'
+      from_chapter INTEGER,            -- chapter 类型的起点
+      to_chapter INTEGER,              -- chapter 类型的终点
+      last_chapter INTEGER NOT NULL DEFAULT 0,  -- 已完成的最后一章（暂停/中断断点）
+      quality_gate INTEGER NOT NULL DEFAULT 0,  -- 0/1
+      max_revise INTEGER NOT NULL DEFAULT 0,
+      result TEXT,                     -- JSON 字符串
+      error TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_job_project ON job(project_id);
+
+    -- M4：评估历史（每次质量门槛评估都记一行，含 pass/revise/block 所有轮次）
+    CREATE TABLE IF NOT EXISTS eval_history (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL REFERENCES project(id),
+      chapter_number INTEGER NOT NULL,
+      attempt INTEGER NOT NULL,           -- 第几次尝试（1=初稿，2+=重写）
+      verdict TEXT NOT NULL,              -- pass/revise/block
+      total_score INTEGER,
+      grade TEXT,
+      dimensions TEXT,                    -- JSON: {storyStructure:{score,analysis},...}
+      suggestions TEXT,                   -- JSON: [{dimension,content},...]
+      repetition TEXT,                    -- JSON: {within,cross,hotspots}
+      model TEXT,                         -- 写作+评估用的模型
+      evaluator_model TEXT,               -- 交叉评估时的评估模型（NULL=自评）
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_eval_project ON eval_history(project_id);
+    CREATE INDEX IF NOT EXISTS idx_eval_chapter ON eval_history(project_id, chapter_number);
+
+    -- M4：经验学习表（从 eval_history 聚合出的模式）
+    CREATE TABLE IF NOT EXISTS lesson_learned (
+      id TEXT PRIMARY KEY,
+      project_id TEXT,                    -- NULL = 全局经验
+      pattern TEXT NOT NULL,              -- 如 "开篇章" / "高潮章"
+      dimension TEXT,                     -- 如 "marketPotential"
+      avg_score REAL,
+      common_issues TEXT,                 -- JSON: 高频低分原因列表
+      effective_fixes TEXT,               -- JSON: 重写后提升最大的改进
+      occurrence_count INTEGER NOT NULL DEFAULT 1,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_lesson_project ON lesson_learned(project_id);
+    CREATE INDEX IF NOT EXISTS idx_lesson_pattern ON lesson_learned(pattern);
   `);
 }
 

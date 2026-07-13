@@ -114,6 +114,7 @@ export async function generateChapter(opts: GenerateChapterOptions): Promise<Gen
       engine, db, projectId,
       chapter: { id: '', projectId, number, outlineId: outline.id, title: outline.title, content: gen.content, wordCount: gen.wordCount, createdAt: '', updatedAt: '' },
       metadata: qualityGate.metadata, profile: qualityGate.profile,
+      attempt,
       onProgress: (msg) => onProgress?.(`gate:${number}`, msg),
     });
     addUsage(totalUsage, gateRes.usage);
@@ -298,6 +299,39 @@ function getChapterOrdinalFromTitle(title: string): string {
 
 // ─── 批量生成（按范围）───────────────────────────────────────────
 
+/**
+ * 生成控制 — 在章节边界检查暂停/取消信号。
+ *
+ * 只在每章开始前检查（不中断正在进行的单章生成），
+ * 保证暂停时当前章会完整写完并 finalize 落盘，状态与正文永远对齐。
+ */
+export interface GenerationControl {
+  /** true → 当前章边界暂停，抛 JobPausedError（已写章节已落盘）*/
+  shouldPause?: () => boolean;
+  /** true → 当前章边界取消，抛 JobCancelledError */
+  shouldCancel?: () => boolean;
+  /** 每章写完（含 finalize）后回调，用于持久化断点 job.last_chapter */
+  onChapterComplete?: (n: number) => void;
+}
+
+/** 暂停信号：nextChapter 是下一个该写的章号（resume 起点）*/
+export class JobPausedError extends Error {
+  readonly nextChapter: number;
+  constructor(nextChapter: number) {
+    super(`paused at chapter ${nextChapter}`);
+    this.name = 'JobPausedError';
+    this.nextChapter = nextChapter;
+  }
+}
+
+/** 取消信号：已写章节保留，任务终止 */
+export class JobCancelledError extends Error {
+  constructor() {
+    super('cancelled');
+    this.name = 'JobCancelledError';
+  }
+}
+
 export interface GenerateRangeOptions {
   engine: AIAgentAdapter;
   db: DB;
@@ -307,16 +341,22 @@ export interface GenerateRangeOptions {
   wordCount: number;
   qualityGate?: QualityGateConfig;
   onProgress?: (step: string, msg: string) => void;
+  /** 暂停/取消控制（Web 端传入；CLI 不传，行为不变）*/
+  control?: GenerationControl;
 }
 
 export async function generateRange(opts: GenerateRangeOptions): Promise<GenerateChapterResult[]> {
   const results: GenerateChapterResult[] = [];
   for (let n = opts.from; n <= opts.to; n++) {
+    // 章节边界检查：先看取消，再看暂停
+    if (opts.control?.shouldCancel?.()) throw new JobCancelledError();
+    if (opts.control?.shouldPause?.()) throw new JobPausedError(n);
     const r = await generateChapter({
       engine: opts.engine, db: opts.db,
       projectId: opts.projectId, number: n, wordCount: opts.wordCount,
       qualityGate: opts.qualityGate, onProgress: opts.onProgress,
     });
+    opts.control?.onChapterComplete?.(n);
     results.push(r);
   }
   return results;

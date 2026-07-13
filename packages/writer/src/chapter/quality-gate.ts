@@ -15,7 +15,7 @@ import type { DimensionKey } from '@novel-eval/eval';
 import type { DB } from '../db.ts';
 import type { ChapterContent } from './types.ts';
 import { detectRepetition } from './repetition.ts';
-import { getRecentChapters } from './store.ts';
+import { getRecentChapters, saveEvalHistory } from './store.ts';
 
 const RECENT_WINDOW = 5;
 const PASS_GRADE = 'B';        // grade ≥ B（70 分）
@@ -40,12 +40,35 @@ export interface QualityGateOptions {
   chapter: ChapterContent;
   metadata: NovelMetadata;
   profile?: string;
+  /** 当前重写轮次（1=初稿，2+=重写）*/
+  attempt?: number;
   onProgress?: (msg: string) => void;
 }
 
 export async function assessChapterQuality(opts: QualityGateOptions): Promise<QualityGateResult & { usage: TokenUsage }> {
-  const { engine, db, projectId, chapter, metadata, profile, onProgress } = opts;
+  const { engine, db, projectId, chapter, metadata, profile, attempt: _attempt, onProgress } = opts;
+  const attempt = _attempt ?? 1;
+  const model = engine.name;  // 引擎标识（供 eval_history 追溯）
   const totalUsage: TokenUsage = { ...zeroUsage };
+
+  // ─── 0. 内部辅助：持久化评估记录 ──────────────────────────────────
+  const persistEval = (result: {
+    verdict: 'pass' | 'revise' | 'block';
+    score?: number; grade?: string;
+    dimensions?: Record<string, { score: number; analysis: string }>;
+    suggestions?: Array<{ dimension?: string; content: string }>;
+    repetition?: { within: number; cross: number; hotspots: string[] };
+  }) => {
+    saveEvalHistory(db, {
+      projectId, chapterNumber: chapter.number, attempt,
+      verdict: result.verdict, totalScore: result.score ?? null, grade: result.grade ?? null,
+      dimensions: result.dimensions ?? null, suggestions: result.suggestions ?? null,
+      repetition: result.repetition ? {
+        within: result.repetition.within, cross: result.repetition.cross, hotspots: result.repetition.hotspots,
+      } : null,
+      model, evaluatorModel: null,  // 自评
+    });
+  };
 
   // ─── 1. 防重复检测 ──────────────────────────────────────────────
   const recent = getRecentChapters(db, projectId, chapter.number, RECENT_WINDOW);
@@ -53,6 +76,10 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
   const rep = detectRepetition(chapter.content, recentTexts);
 
   if (rep.verdict === 'severe') {
+    persistEval({
+      verdict: 'block',
+      repetition: { within: rep.withinChapter, cross: rep.crossChapter, hotspots: rep.hotspots },
+    });
     return {
       verdict: 'block',
       reason: `重复率严重：章内 ${(rep.withinChapter * 100).toFixed(1)}% / 跨章 ${(rep.crossChapter * 100).toFixed(1)}%`,
@@ -87,6 +114,10 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
   // block：grade C 或 D（低质量章节不留）
   const blockOrder = gradeOrder.indexOf(BLOCK_GRADE);
   if (gradeOrder.indexOf(grade) >= blockOrder) {
+    persistEval({
+      verdict: 'block', score: totalScore, grade, dimensions, suggestions,
+      repetition: { within: rep.withinChapter, cross: rep.crossChapter, hotspots: rep.hotspots },
+    });
     return {
       verdict: 'block',
       reason: `等级 ${grade}（${totalScore} 分）低于 ${BLOCK_GRADE} 线`,
@@ -98,6 +129,10 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
   }
 
   if (gradeOk && scoreOk && lowDims.length === 0 && !hasRepetition) {
+    persistEval({
+      verdict: 'pass', score: totalScore, grade, dimensions, suggestions,
+      repetition: { within: rep.withinChapter, cross: rep.crossChapter, hotspots: rep.hotspots },
+    });
     return {
       verdict: 'pass',
       reason: `等级 ${grade}（${totalScore} 分），各维度达标`,
@@ -114,6 +149,10 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
   if (lowDims.length) reasons.push(`低分维度：${lowDims.join('、')}`);
   if (hasRepetition) reasons.push(`重复率偏高：章内 ${(rep.withinChapter * 100).toFixed(1)}%`);
 
+  persistEval({
+    verdict: 'revise', score: totalScore, grade, dimensions, suggestions,
+    repetition: { within: rep.withinChapter, cross: rep.crossChapter, hotspots: rep.hotspots },
+  });
   return {
     verdict: 'revise',
     reason: reasons.join('；'),

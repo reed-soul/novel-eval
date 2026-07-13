@@ -210,3 +210,176 @@ export function saveNarrativeState(db: DB, state: NarrativeState): void {
     updated_at: now,
   });
 }
+
+// ─── eval_history（M4：评估数据持久化）─────────────────────────────
+
+export interface EvalHistoryRecord {
+  id: string;
+  projectId: string;
+  chapterNumber: number;
+  attempt: number;
+  verdict: 'pass' | 'revise' | 'block';
+  totalScore: number | null;
+  grade: string | null;
+  dimensions: Record<string, { score: number; analysis: string }> | null;
+  suggestions: Array<{ dimension?: string; content: string }> | null;
+  repetition: { within: number; cross: number; hotspots: string[] } | null;
+  model: string | null;
+  evaluatorModel: string | null;
+  createdAt: string;
+}
+
+interface EvalHistoryRow {
+  id: string; project_id: string; chapter_number: number; attempt: number;
+  verdict: string; total_score: number | null; grade: string | null;
+  dimensions: string | null; suggestions: string | null; repetition: string | null;
+  model: string | null; evaluator_model: string | null; created_at: string;
+}
+
+function rowToEvalHistory(row: EvalHistoryRow): EvalHistoryRecord {
+  return {
+    id: row.id, projectId: row.project_id, chapterNumber: row.chapter_number,
+    attempt: row.attempt, verdict: row.verdict as EvalHistoryRecord['verdict'],
+    totalScore: row.total_score, grade: row.grade,
+    dimensions: row.dimensions ? JSON.parse(row.dimensions) : null,
+    suggestions: row.suggestions ? JSON.parse(row.suggestions) : null,
+    repetition: row.repetition ? JSON.parse(row.repetition) : null,
+    model: row.model, evaluatorModel: row.evaluator_model,
+    createdAt: row.created_at,
+  };
+}
+
+export function saveEvalHistory(db: DB, record: Omit<EvalHistoryRecord, 'id' | 'createdAt'>): void {
+  db.prepare(
+    `INSERT INTO eval_history (id, project_id, chapter_number, attempt, verdict,
+       total_score, grade, dimensions, suggestions, repetition, model, evaluator_model, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    randomUUID(), record.projectId, record.chapterNumber, record.attempt, record.verdict,
+    record.totalScore, record.grade,
+    record.dimensions ? JSON.stringify(record.dimensions) : null,
+    record.suggestions ? JSON.stringify(record.suggestions) : null,
+    record.repetition ? JSON.stringify(record.repetition) : null,
+    record.model, record.evaluatorModel,
+    new Date().toISOString(),
+  );
+}
+
+/** 取某章的全部评估历史（按 attempt 排序）*/
+export function getEvalHistory(db: DB, projectId: string, chapterNumber: number): EvalHistoryRecord[] {
+  const rows = db.prepare(
+    `SELECT * FROM eval_history WHERE project_id = ? AND chapter_number = ? ORDER BY attempt`,
+  ).all(projectId, chapterNumber) as EvalHistoryRow[];
+  return rows.map(rowToEvalHistory);
+}
+
+/** 取项目全部评估历史（用于质量趋势分析）*/
+export function getAllEvalHistory(db: DB, projectId: string): EvalHistoryRecord[] {
+  const rows = db.prepare(
+    `SELECT * FROM eval_history WHERE project_id = ? ORDER BY chapter_number, attempt`,
+  ).all(projectId) as EvalHistoryRow[];
+  return rows.map(rowToEvalHistory);
+}
+
+/** 取每章最终 pass 的分数（用于趋势图）*/
+export function getChapterScores(db: DB, projectId: string): Array<{
+  chapter: number; score: number; grade: string; model: string | null;
+}> {
+  const rows = db.prepare(
+    `SELECT chapter_number, total_score, grade, model FROM eval_history
+     WHERE project_id = ? AND verdict = 'pass'
+     ORDER BY chapter_number`,
+  ).all(projectId) as Array<{ chapter_number: number; total_score: number; grade: string; model: string | null }>;
+  return rows.map((r) => ({ chapter: r.chapter_number, score: r.total_score, grade: r.grade, model: r.model }));
+}
+
+// ─── lesson_learned（M4：经验聚合）─────────────────────────────────
+
+export interface LessonLearned {
+  id: string;
+  projectId: string | null;
+  pattern: string;
+  dimension: string | null;
+  avgScore: number;
+  commonIssues: string[];
+  effectiveFixes: string[];
+  occurrenceCount: number;
+  updatedAt: string;
+}
+
+interface LessonRow {
+  id: string; project_id: string | null; pattern: string; dimension: string | null;
+  avg_score: number; common_issues: string | null; effective_fixes: string | null;
+  occurrence_count: number; updated_at: string;
+}
+
+function rowToLesson(row: LessonRow): LessonLearned {
+  return {
+    id: row.id, projectId: row.project_id, pattern: row.pattern, dimension: row.dimension,
+    avgScore: row.avg_score,
+    commonIssues: row.common_issues ? JSON.parse(row.common_issues) : [],
+    effectiveFixes: row.effective_fixes ? JSON.parse(row.effective_fixes) : [],
+    occurrenceCount: row.occurrence_count, updatedAt: row.updated_at,
+  };
+}
+
+/** 查询经验（先查项目级，回退全局）*/
+export function getLessons(db: DB, projectId: string, pattern?: string): LessonLearned[] {
+  const conditions = ['(project_id = ? OR project_id IS NULL)'];
+  const params: unknown[] = [projectId];
+  if (pattern) { conditions.push('pattern = ?'); params.push(pattern); }
+  const rows = db.prepare(
+    `SELECT * FROM lesson_learned WHERE ${conditions.join(' AND ')} ORDER BY project_id DESC, avg_score ASC`,
+  ).all(...params) as LessonRow[];
+  return rows.map(rowToLesson);
+}
+
+export function getLessonsByPattern(db: DB, pattern: string, projectId?: string): LessonLearned[] {
+  if (projectId) {
+    const rows = db.prepare(
+      `SELECT * FROM lesson_learned WHERE pattern = ? AND (project_id = ? OR project_id IS NULL)
+       ORDER BY project_id DESC`,
+    ).all(pattern, projectId) as LessonRow[];
+    return rows.map(rowToLesson);
+  }
+  const rows = db.prepare('SELECT * FROM lesson_learned WHERE pattern = ?').all(pattern) as LessonRow[];
+  return rows.map(rowToLesson);
+}
+
+/** 插入或更新经验（同 pattern+dimension 合并）*/
+export function upsertLesson(db: DB, lesson: {
+  projectId: string | null;
+  pattern: string;
+  dimension: string | null;
+  avgScore: number;
+  commonIssues: string[];
+  effectiveFixes: string[];
+}): void {
+  const now = new Date().toISOString();
+  // 查找现有
+  const existing = db.prepare(
+    `SELECT id, occurrence_count FROM lesson_learned
+     WHERE pattern = ? AND dimension IS ? AND COALESCE(project_id, '') = COALESCE(?, '')`,
+  ).get(lesson.pattern, lesson.dimension, lesson.projectId) as { id: string; occurrence_count: number } | undefined;
+
+  if (existing) {
+    db.prepare(
+      `UPDATE lesson_learned SET avg_score = ?, common_issues = ?, effective_fixes = ?,
+       occurrence_count = ?, updated_at = ? WHERE id = ?`,
+    ).run(
+      lesson.avgScore,
+      JSON.stringify(lesson.commonIssues),
+      JSON.stringify(lesson.effectiveFixes),
+      existing.occurrence_count + 1, now, existing.id,
+    );
+  } else {
+    db.prepare(
+      `INSERT INTO lesson_learned (id, project_id, pattern, dimension, avg_score, common_issues, effective_fixes, occurrence_count, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)`,
+    ).run(
+      randomUUID(), lesson.projectId, lesson.pattern, lesson.dimension,
+      lesson.avgScore, JSON.stringify(lesson.commonIssues),
+      JSON.stringify(lesson.effectiveFixes), now,
+    );
+  }
+}
