@@ -111,10 +111,13 @@ export function aggregateLessons(db: DB, projectId: string): number {
       }
 
       // 该 pattern 下累积的 hotspots（去重，取前 5）
-      const allHotspots = patternHotspots.get(pattern) ?? [];
-      const uniqueHotspots = [...new Set(allHotspots)].slice(0, 5);
-      if (uniqueHotspots.length) {
-        commonIssues.push(`高频重复片段：${uniqueHotspots.join('、')}`);
+      // 仅在文笔质量（writingQuality）维度下记录重复片段，避免在所有维度中冗余出现
+      if (dim === 'writingQuality') {
+        const allHotspots = patternHotspots.get(pattern) ?? [];
+        const uniqueHotspots = [...new Set(allHotspots)].slice(0, 5);
+        if (uniqueHotspots.length) {
+          commonIssues.push(`高频重复片段：${uniqueHotspots.join('、')}`);
+        }
       }
 
       const effectiveFixes = (patternFixes.get(pattern) ?? []).slice(0, 3);

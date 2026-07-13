@@ -20,8 +20,8 @@ export function linkExcerpt(
   const content = chapters.get(chapterId);
   const base: Excerpt = { ...raw, chapterId, offset: null, matchedBy: 'none' };
   if (!content) return base;
-  const { offset, matchedBy } = locateTextInContent(raw.text, content);
-  return { ...base, offset, matchedBy };
+  const { offset, matchedBy, length } = locateTextInContent(raw.text, content);
+  return { ...base, offset, matchedBy, length };
 }
 
 /** 批量回链，返回统计 */

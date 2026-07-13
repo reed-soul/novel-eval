@@ -205,4 +205,59 @@ describe('inferKind', () => {
     assert.equal(inferKind('第一章 开始'), 'main');
     assert.equal(inferKind('第五回 高潮'), 'main');
   });
+
+  it('行首正则：保留前言/序言作为第一章', () => {
+    const text = '《低智商犯罪》\n作者：紫金陈\n\n第一章 归乡\n内容一\n第二章 旧人\n内容二';
+    const chapters = splitChapters(text);
+    assert.equal(chapters.length, 3);
+    assert.equal(chapters[0].title, '《低智商犯罪》');
+    assert.equal(chapters[0].content, '《低智商犯罪》\n作者：紫金陈');
+    assert.equal(chapters[1].title, '第一章 归乡');
+  });
+});
+
+describe('splitChaptersWithMeta', () => {
+  it('分隔符块返回 strategy=separator, confidence=high', () => {
+    const text = '=====\n第一章 A\n=====\n正文一\n=====\n第二章 B\n=====\n正文二\n=====\n第三章 C\n=====\n正文三';
+    const r = splitChaptersWithMeta(text);
+    assert.equal(r.strategy, 'separator');
+    assert.equal(r.confidence, 'high');
+    assert.equal(r.chapters.length, 3);
+    assert.ok(r.sampleTitles.length > 0);
+  });
+
+  it('行首正则返回 strategy=regex, confidence=high', () => {
+    const text = '第一章 A\n正文\n第二章 B\n正文';
+    const r = splitChaptersWithMeta(text);
+    assert.equal(r.strategy, 'regex');
+    assert.equal(r.confidence, 'high');
+    assert.equal(r.sampleTitles[0], '第一章 A');
+  });
+
+  it('无标志回退返回 strategy=fallback, confidence=low', () => {
+    const text = '这是一段没有任何章节标志 of 纯文本内容，只有连续的段落。';
+    const r = splitChaptersWithMeta(text);
+    assert.equal(r.strategy, 'fallback');
+    assert.equal(r.confidence, 'low');
+    assert.equal(r.chapters.length, 1);
+    assert.equal(r.sampleTitles.length, 0);
+  });
+
+  it('仅 1 个正则命中但文本超长 → confidence=low（触发 AI 确认）', () => {
+    const long = '第一章 唯一\n' + '正文内容'.repeat(20000);
+    const r = splitChaptersWithMeta(long);
+    assert.equal(r.confidence, 'low');
+  });
+
+  it('无章节标志且文本超长(>15000字) → 自动按段落进行滑动分块', () => {
+    // 构造一个没有章节头，且长度大于 15000 字的文本
+    const paragraph = '正文段落，用于测试超长文本自动分块。'.repeat(100); // 1800 字
+    const text = Array(10).fill(paragraph).join('\n'); // 18000 字
+    const r = splitChaptersWithMeta(text);
+    assert.equal(r.strategy, 'fallback');
+    assert.equal(r.confidence, 'low');
+    assert.ok(r.chapters.length > 1); // 应该被切分成多块
+    assert.equal(r.chapters[0].title, '第 1 部分');
+    assert.ok(r.chapters[0].content.length > 0);
+  });
 });

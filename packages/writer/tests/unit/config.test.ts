@@ -9,8 +9,8 @@ describe('loadWriterConfig', () => {
   it('加载 writer.yml + shared engines.yml', () => {
     const config = loadWriterConfig();
     assert.ok(config.engine);
-    assert.equal(config.engineName, 'bigmodel');
-    assert.equal(config.engine.model, 'glm-5.2');
+    assert.equal(config.engineName, 'deepseek');
+    assert.equal(config.engine.model, 'deepseek-v4-pro');
     assert.ok(config.generation);
   });
 
@@ -25,13 +25,13 @@ describe('loadWriterConfig', () => {
 
   it('generation 配置含默认章节数与温度', () => {
     const config = loadWriterConfig();
-    assert.equal(config.generation.defaultChapters, 50);
-    assert.equal(config.generation.chapterWordCount, 2500);
+    assert.equal(config.generation.defaultChapters, 60);
+    assert.equal(config.generation.chapterWordCount, 2800);
     assert.equal(config.generation.temperatures.bible, 0.5);
     assert.equal(config.generation.temperatures.chapter, 0.7);
     assert.equal(config.generation.timeouts.chapterMs, 300000);
     assert.equal(config.qualityGate.passMinScore, 75);
-    assert.equal(config.qualityGate.blockGrade, 'C');
+    assert.equal(config.qualityGate.blockGrade, 'D');
     assert.equal(config.repetition.shingleSize, 8);
   });
 });

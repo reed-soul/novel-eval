@@ -12,14 +12,15 @@ export interface HighlightSlice {
 const CONTEXT_RADIUS = 200;
 
 export function sliceHighlightedExcerpt(content: string, excerpt: Excerpt): HighlightSlice {
-  const { text, offset, matchedBy } = excerpt;
-  if (offset != null && matchedBy === 'exact' && content.slice(offset, offset + text.length) === text) {
+  const { text, offset, matchedBy, length } = excerpt;
+  const matchLen = length ?? text.length;
+  if (offset != null && (matchedBy === 'exact' || matchedBy === 'fuzzy')) {
     const start = Math.max(0, offset - CONTEXT_RADIUS);
-    const end = Math.min(content.length, offset + text.length + CONTEXT_RADIUS);
+    const end = Math.min(content.length, offset + matchLen + CONTEXT_RADIUS);
     return {
       before: content.slice(start, offset),
-      highlight: text,
-      after: content.slice(offset + text.length, end),
+      highlight: content.slice(offset, offset + matchLen),
+      after: content.slice(offset + matchLen, end),
     };
   }
   const idx = content.indexOf(text);

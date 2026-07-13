@@ -18,13 +18,20 @@ describe('locateTextInContent', () => {
     // 原文用全角逗号，摘录用半角——归一化后应匹配
     const r = locateTextInContent('旧历的年底,毕竟最像年底', content);
     assert.equal(r.matchedBy, 'fuzzy');
-    assert.notEqual(r.offset, null);
+    assert.equal(r.offset, 0);
+    assert.equal(r.length, 11); // '旧历的年底毕竟最像年底' length is 11
+    assert.equal(content.slice(r.offset!, r.offset! + r.length!), '旧历的年底毕竟最像年底');
   });
 
   it('模糊匹配：空白差异仍命中', () => {
     const r = locateTextInContent('我回到 相别了 多年的故乡', content);
     assert.equal(r.matchedBy, 'fuzzy');
-    assert.notEqual(r.offset, null);
+    const expectedText = '我回到相别了多年的故乡。';
+    const startIdx = content.indexOf(expectedText);
+    assert.equal(r.offset, startIdx);
+    // Since '。' at the end is a punctuation, the normalized match stops at '乡'
+    assert.equal(r.length, expectedText.length - 1);
+    assert.equal(content.slice(r.offset!, r.offset! + r.length!), '我回到相别了多年的故乡');
   });
 
   it('未匹配：文本原文不存在 → offset=null', () => {

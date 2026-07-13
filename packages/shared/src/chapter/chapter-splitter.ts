@@ -105,16 +105,30 @@ function splitByRegex(text: string): { chapters: ChapterInput[]; sampleTitles: s
 
   const chapters: ChapterInput[] = [];
   const sampleTitles: string[] = [];
+
+  // 提取前言/序章（第一个匹配章节之前的非空文本）
+  const firstMatchIndex = matches[0].index!;
+  const preamble = text.slice(0, firstMatchIndex).trim();
+  if (preamble.length > 0) {
+    const firstLine = preamble.split('\n')[0].trim();
+    const title = (firstLine.length > 0 && firstLine.length < 30) ? firstLine : '前言/序言';
+    chapters.push({ id: '', title, content: preamble });
+  }
+
   for (let i = 0; i < matches.length; i++) {
     const start = matches[i].index!;
     const headerEnd = start + matches[i][0].length;
     const title = matches[i][0].trim();
-    const id = `ch${String(i + 1).padStart(3, '0')}`;
     const nextStart = i + 1 < matches.length ? matches[i + 1].index! : text.length;
     const content = text.slice(headerEnd, nextStart).trim();
-    chapters.push({ id, title, content });
+    chapters.push({ id: '', title, content });
     if (sampleTitles.length < 5) sampleTitles.push(title);
   }
+
+  for (let i = 0; i < chapters.length; i++) {
+    chapters[i].id = `ch${String(i + 1).padStart(3, '0')}`;
+  }
+
   return { chapters, sampleTitles };
 }
 
@@ -122,6 +136,41 @@ function splitByRegex(text: string): { chapters: ChapterInput[]; sampleTitles: s
 
 function fallbackSingleChapter(text: string): ChapterInput[] {
   return [{ id: 'ch001', title: '全文', content: text.trim() }];
+}
+
+/** 按段落将文本分块，目标每块字数接近 chunkSize (如 8000) */
+function splitIntoChunks(text: string, chunkSize = 8000): ChapterInput[] {
+  const chapters: ChapterInput[] = [];
+  const paragraphs = text.split('\n');
+  let currentChunk: string[] = [];
+  let currentLength = 0;
+  let partIndex = 1;
+
+  for (const p of paragraphs) {
+    const pLen = p.length;
+    if (currentLength + pLen > chunkSize && currentLength > 0) {
+      chapters.push({
+        id: `ch${String(partIndex).padStart(3, '0')}`,
+        title: `第 ${partIndex} 部分`,
+        content: currentChunk.join('\n').trim(),
+      });
+      partIndex++;
+      currentChunk = [];
+      currentLength = 0;
+    }
+    currentChunk.push(p);
+    currentLength += pLen + 1; // +1 表示换行符
+  }
+
+  if (currentChunk.length > 0) {
+    chapters.push({
+      id: `ch${String(partIndex).padStart(3, '0')}`,
+      title: `第 ${partIndex} 部分`,
+      content: currentChunk.join('\n').trim(),
+    });
+  }
+
+  return chapters;
 }
 
 // ─── 主入口 ────────────────────────────────────────────────────
@@ -160,6 +209,17 @@ export function splitChaptersWithMeta(rawText: string): SplitResult {
   }
 
   // 策略 C：回退
+  const wordCount = countChars(text);
+  if (wordCount > 15000) {
+    const chunked = splitIntoChunks(text);
+    return {
+      chapters: chunked,
+      strategy: 'fallback',
+      confidence: 'low',
+      sampleTitles: chunked.slice(0, 5).map((c) => c.title),
+    };
+  }
+
   return {
     chapters: fallbackSingleChapter(text),
     strategy: 'fallback',

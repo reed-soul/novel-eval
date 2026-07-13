@@ -2,8 +2,8 @@
 # 改完重启服务即生效。
 
 generation:
-  defaultChapters: 50          # 默认章节数
-  chapterWordCount: 2500       # 每章目标字数
+  defaultChapters: 60          # 默认章节数（余响宇宙：标准网文体量）
+  chapterWordCount: 2800       # 每章目标字数（网文标准单章，留质量门槛修订空间）
   recentWindow: 5              # 最近 N 章原文注入窗口
   arcInterval: 10              # 每 N 章固化一次 arcSummary
 
@@ -23,7 +23,7 @@ qualityGate:                   # 质量门槛判定阈值
   passGrade: B                 # 等级 ≥ 此值才 pass（S/A/B/C/D）
   passMinScore: 75             # 总分 ≥ 此值才 pass
   minDimScore: 65              # 任一维度低于此值 → revise
-  blockGrade: C                # 等级 ≥ blockGrade 的（C/D）直接 block
+  blockGrade: D                # 等级 ≥ blockGrade 的（D）直接 block
 
 repetition:                    # 防重复检测参数
   shingleSize: 8               # k-shingle 粒度（字符数）

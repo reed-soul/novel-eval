@@ -66,18 +66,29 @@ function resplitWithRegex(fullText: string, regexSource: string): ChapterInput[]
   if (matches.length < 2) return null;  // 切不出足够章节，放弃
 
   const chapters: ChapterInput[] = [];
+
+  // 提取前言/序章（第一个匹配章节之前的非空文本）
+  const firstMatchIndex = matches[0].index!;
+  const preamble = fullText.slice(0, firstMatchIndex).trim();
+  if (preamble.length > 0) {
+    const firstLine = preamble.split('\n')[0].trim();
+    const title = (firstLine.length > 0 && firstLine.length < 30) ? firstLine : '前言/序言';
+    chapters.push({ id: '', title, content: preamble });
+  }
+
   for (let i = 0; i < matches.length; i++) {
     const start = matches[i].index!;
     const headerEnd = start + matches[i][0].length;
     const title = matches[i][0].trim();
     const nextStart = i + 1 < matches.length ? matches[i + 1].index! : fullText.length;
     const content = fullText.slice(headerEnd, nextStart).trim();
-    chapters.push({
-      id: `ch${String(i + 1).padStart(3, '0')}`,
-      title,
-      content,
-    });
+    chapters.push({ id: '', title, content });
   }
+
+  for (let i = 0; i < chapters.length; i++) {
+    chapters[i].id = `ch${String(i + 1).padStart(3, '0')}`;
+  }
+
   return chapters;
 }
 

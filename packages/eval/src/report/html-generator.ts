@@ -354,10 +354,12 @@ function buildHtml(result: EvaluationResult): string {
   function sliceHighlight(content, excerpt) {
     var text = excerpt.text;
     var offset = excerpt.offset;
+    var length = excerpt.length;
+    var matchLen = length != null ? length : text.length;
     var radius = 200;
-    if (offset != null && excerpt.matchedBy === 'exact' && content.slice(offset, offset + text.length) === text) {
-      var s = Math.max(0, offset - radius), e = Math.min(content.length, offset + text.length + radius);
-      return escapeText(content.slice(s, offset)) + '<mark>' + escapeText(text) + '</mark>' + escapeText(content.slice(offset + text.length, e));
+    if (offset != null && (excerpt.matchedBy === 'exact' || excerpt.matchedBy === 'fuzzy')) {
+      var s = Math.max(0, offset - radius), e = Math.min(content.length, offset + matchLen + radius);
+      return escapeText(content.slice(s, offset)) + '<mark>' + escapeText(content.slice(offset, offset + matchLen)) + '</mark>' + escapeText(content.slice(offset + matchLen, e));
     }
     var idx = content.indexOf(text);
     if (idx >= 0) {

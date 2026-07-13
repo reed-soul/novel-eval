@@ -98,6 +98,7 @@ export interface Excerpt extends RawExcerpt {
   chapterId: string;
   offset: number | null;
   matchedBy: 'exact' | 'fuzzy' | 'none';
+  length?: number;
 }
 
 // ─── Reduce 阶段引用证据的指针 ─────────────────────────────────────

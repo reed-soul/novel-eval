@@ -10,6 +10,7 @@ export type MatchedBy = 'exact' | 'fuzzy' | 'none';
 export interface LocateResult {
   offset: number | null;
   matchedBy: MatchedBy;
+  length?: number;
 }
 
 /** 归一化：剥离所有空白、标点（P）、符号（S），只保留字母数字与 CJK 等字符 */
@@ -17,24 +18,51 @@ function normalize(s: string): string {
   return s.replace(/[\s\p{P}\p{S}]/gu, '');
 }
 
+/** 建立从归一化后 code unit 索引到原始字符串 code unit 索引的映射数组 */
+function buildIndexMap(s: string): number[] {
+  const map: number[] = [];
+  let codeUnitIdx = 0;
+  for (const ch of s) {
+    const isKept = !/[\s\p{P}\p{S}]/u.test(ch);
+    const len = ch.length;
+    for (let j = 0; j < len; j++) {
+      if (isKept) {
+        map.push(codeUnitIdx + j);
+      }
+    }
+    codeUnitIdx += len;
+  }
+  return map;
+}
+
 /**
  * 在 content 中定位 text 的位置。
  *   1. 精确匹配 indexOf
  *   2. 模糊匹配：归一化（剥离所有标点/空白/符号）后匹配
  *   3. 仍失败 → offset = null，matchedBy = 'none'
- *
- * 注：模糊匹配返回的 offset 是归一化串中的位置（近似），非原文精确偏移。
  */
 export function locateTextInContent(text: string, content: string): LocateResult {
   // 1. 精确
   const exactIdx = content.indexOf(text);
-  if (exactIdx >= 0) return { offset: exactIdx, matchedBy: 'exact' };
+  if (exactIdx >= 0) return { offset: exactIdx, matchedBy: 'exact', length: text.length };
 
   // 2. 模糊
   const normText = normalize(text);
+  if (normText.length === 0) return { offset: null, matchedBy: 'none' };
+
   const normContent = normalize(content);
   const fuzzyIdx = normContent.indexOf(normText);
-  if (fuzzyIdx >= 0) return { offset: fuzzyIdx, matchedBy: 'fuzzy' };
+  if (fuzzyIdx >= 0) {
+    const map = buildIndexMap(content);
+    const startIdx = map[fuzzyIdx];
+    const endNormIdx = fuzzyIdx + normText.length - 1;
+    const endIdx = map[endNormIdx] + 1; // 转换为 exclusive 终点
+    return {
+      offset: startIdx,
+      matchedBy: 'fuzzy',
+      length: endIdx - startIdx,
+    };
+  }
 
   return { offset: null, matchedBy: 'none' };
 }

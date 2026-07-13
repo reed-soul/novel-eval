@@ -25,7 +25,7 @@ const RECENT_WINDOW = 5;
 const FALLBACK_PASS_GRADE = 'B';
 const FALLBACK_PASS_MIN_SCORE = 75;
 const FALLBACK_MIN_DIM_SCORE = 65;
-const FALLBACK_BLOCK_GRADE = 'C';
+const FALLBACK_BLOCK_GRADE = 'D';
 
 function gateConfig() {
   const cfg = getRuntimeConfig().qualityGate;
