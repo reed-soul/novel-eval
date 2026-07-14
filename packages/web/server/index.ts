@@ -80,7 +80,7 @@ app.get('/*', (c) => {
   }
 });
 
-const port = 3000;
+const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
 console.log(`Novel Eval Web — http://localhost:${port}`);
 serve({ fetch: app.fetch, port }, (info) => {
   console.log(`服务已启动：http://localhost:${info.port}`);

@@ -8,6 +8,11 @@ export function Evaluation() {
   const [projects, setProjects] = useState<any[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   
+  // New input states
+  const [genre, setGenre] = useState<string>('都市');
+  const [audience, setAudience] = useState<string>('大众');
+  const [profile, setProfile] = useState<string>('default');
+
   const [taskId, setTaskId] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
   const [status, setStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
@@ -16,7 +21,7 @@ export function Evaluation() {
   useEffect(() => {
     fetch('/api/projects')
       .then(r => r.json())
-      .then(data => setProjects(data.projects || []))
+      .then(data => setProjects(Array.isArray(data) ? data : []))
       .catch(e => console.error('Failed to load projects:', e));
   }, []);
 
@@ -43,7 +48,9 @@ export function Evaluation() {
 
       const formData = new FormData();
       formData.append('file', uploadFile as Blob);
-      // 可选：添加 genre 和 audience
+      formData.append('genre', genre);
+      formData.append('audience', audience);
+      formData.append('profile', profile);
 
       const res = await fetch('/api/eval/upload', {
         method: 'POST',
@@ -93,46 +100,121 @@ export function Evaluation() {
   }, [taskId, status, navigate]);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-accent-primary to-accent-secondary">
+    <div className="container">
+      <div className="eval-title">
         智能作品评估 (Map-Reduce)
-      </h1>
-      <p className="text-text-secondary mb-8">
+      </div>
+      <div className="eval-subtitle">
         采用多维度 Map-Reduce 架构，深度解析小说的故事架构、人物塑造与商业潜力。
-      </p>
+      </div>
 
       {status === 'idle' && (
-        <div className="glass-panel rounded-xl overflow-hidden shadow-lg border border-border-dim bg-bg-secondary/50 p-6">
-          <h2 className="text-xl font-bold mb-6">新建评估任务</h2>
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-text-secondary">选项 1：直接上传本地 TXT 小说</label>
-              <input 
-                type="file" 
-                accept=".txt"
-                onChange={(e) => setFile(e.target.files?.[0] || null)}
-                className="block w-full text-sm text-text-secondary
-                  file:mr-4 file:py-2 file:px-4
-                  file:rounded-md file:border-0
-                  file:text-sm file:font-semibold
-                  file:bg-bg-tertiary file:text-text-primary
-                  hover:file:bg-bg-elevated transition-colors
-                  border border-border-dim rounded-md p-2 bg-bg-secondary"
-              />
+        <div className="card">
+          <h2 style={{ marginBottom: 20 }}>新建评估任务</h2>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* Input Selection Panels */}
+            <div className="eval-form-grid">
+              <div className="eval-form-group">
+                <label>小说类型 (Genre)</label>
+                <input 
+                  type="text" 
+                  className="input" 
+                  value={genre} 
+                  onChange={(e) => setGenre(e.target.value)} 
+                  placeholder="如：科幻, 玄幻, 悬疑, 都市言情"
+                />
+              </div>
+              <div className="eval-form-group">
+                <label>目标受众 (Audience)</label>
+                <input 
+                  type="text" 
+                  className="input" 
+                  value={audience} 
+                  onChange={(e) => setAudience(e.target.value)} 
+                  placeholder="如：青年男性, 大众, 女性向"
+                />
+              </div>
             </div>
 
-            <div className="relative flex items-center py-2">
-              <div className="flex-grow border-t border-border-dim"></div>
-              <span className="flex-shrink-0 mx-4 text-text-muted text-sm">OR</span>
-              <div className="flex-grow border-t border-border-dim"></div>
+            <div className="eval-form-group">
+              <label>评估模式 (Profile)</label>
+              <select 
+                className="input" 
+                value={profile} 
+                onChange={(e) => setProfile(e.target.value)}
+              >
+                <option value="default">标准综合评估 (default)</option>
+                <option value="revision">深度改稿指引模式 (revision)</option>
+                <option value="submission">出版社投稿审查模式 (submission)</option>
+              </select>
             </div>
 
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-text-secondary">选项 2：选择已有工作区项目</label>
+            <div className="eval-divider">选择小说来源</div>
+
+            <div className="eval-form-group">
+              <label>方式 A：直接上传本地 TXT 小说</label>
+              <div className={`upload-zone ${file ? 'has-file' : ''}`}>
+                <input 
+                  type="file" 
+                  accept=".txt"
+                  onChange={(e) => {
+                    setFile(e.target.files?.[0] || null);
+                    if (e.target.files?.[0]) {
+                      setSelectedProjectId('');
+                    }
+                  }}
+                  className="upload-input"
+                />
+                <div className="upload-content">
+                  <div className="upload-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                  </div>
+                  <div className="upload-text">
+                    {file ? (
+                      <>
+                        <span className="file-name">{file.name}</span>
+                        <span className="file-size">({(file.size / 1024).toFixed(1)} KB)</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="upload-prompt">点击或拖拽 TXT 文件到此处</span>
+                        <span className="upload-hint">支持 .txt 格式，建议包含明确的分卷和章节标记</span>
+                      </>
+                    )}
+                  </div>
+                  {file && (
+                    <button 
+                      type="button" 
+                      className="upload-clear-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setFile(null);
+                      }}
+                    >
+                      清除文件
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="eval-divider">OR</div>
+
+            <div className="eval-form-group">
+              <label>方式 B：选择已有工作区项目进行评估</label>
               <select
                 value={selectedProjectId}
-                onChange={(e) => setSelectedProjectId(e.target.value)}
-                className="w-full bg-bg-primary border border-border-dim rounded-md px-3 py-2 text-text-primary focus:outline-none focus:border-accent-primary"
+                onChange={(e) => {
+                  setSelectedProjectId(e.target.value);
+                  if (e.target.value) {
+                    setFile(null);
+                  }
+                }}
+                className="input"
               >
                 <option value="">-- 请选择项目 --</option>
                 {projects.map(p => (
@@ -143,10 +225,11 @@ export function Evaluation() {
 
             <button 
               onClick={handleUpload} 
-              className="w-full mt-4 bg-accent-primary text-black font-bold py-2 px-4 rounded-md disabled:opacity-50"
+              className="btn btn-primary"
+              style={{ width: '100%', marginTop: 10, padding: '12px' }}
               disabled={!file && !selectedProjectId}
             >
-              开始深度评估
+              🚀 开始深度评估
             </button>
           </div>
         </div>

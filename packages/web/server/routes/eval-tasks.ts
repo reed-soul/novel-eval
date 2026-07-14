@@ -33,7 +33,7 @@ evalTasksRouter.post('/upload', async (c) => {
   // 启动后台任务
   runEvalTaskInBackground(taskId, {
     filePath,
-    profile: 'default',
+    profile: (body['profile'] as string) || 'default',
     metadata: {
       genre: (body['genre'] as string) || '未知',
       targetAudience: (body['audience'] as string) || '全年龄',
