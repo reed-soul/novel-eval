@@ -35,6 +35,9 @@ export function Layout() {
             <Link to="/settings" className={`nav-link ${location.pathname === '/settings' ? 'active' : ''}`}>
               ⚙️ 模型配置
             </Link>
+            <Link to="/eval" className={`nav-link ${location.pathname.startsWith('/eval') ? 'active' : ''}`}>
+              📊 质量评估
+            </Link>
             <button 
               className="theme-toggle-btn" 
               onClick={toggleTheme} 

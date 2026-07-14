@@ -25,6 +25,7 @@ import { generateRoutes } from './routes/generate.ts';
 import { editRoutes } from './routes/edit.ts';
 import { configRoutes } from './routes/config.ts';
 import { evalRoutes } from './routes/eval.ts';
+import { evalTasksRouter } from './routes/eval-tasks.ts';
 import { EngineRegistry } from './engine-registry.ts';
 
 loadEnv();
@@ -51,6 +52,8 @@ app.route('/api/projects', generateRoutes(db, registry));
 app.route('/api/projects', editRoutes(db));
 // 评估历史路由（质量趋势 + 经验学习）
 app.route('/api/projects', evalRoutes(db));
+// 新增：质量评估上传与任务流
+app.route('/api/eval', evalTasksRouter);
 // 引擎配置路由（切换引擎/模型/注入 key）
 app.route('/api/config', configRoutes(registry));
 
