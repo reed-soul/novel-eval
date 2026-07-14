@@ -23,6 +23,7 @@ import { outlineRoutes } from './routes/outlines.ts';
 import { narrativeRoutes } from './routes/narrative.ts';
 import { generateRoutes } from './routes/generate.ts';
 import { editRoutes } from './routes/edit.ts';
+import { correctionRoutes } from './routes/correction.ts';
 import { configRoutes } from './routes/config.ts';
 import { evalRoutes } from './routes/eval.ts';
 import { evalTasksRouter } from './routes/eval-tasks.ts';
@@ -50,6 +51,8 @@ app.route('/api/projects', narrativeRoutes(db));
 // 生成 + 编辑路由（POST/PUT + SSE）
 app.route('/api/projects', generateRoutes(db, registry));
 app.route('/api/projects', editRoutes(db));
+// 经验驱动的局部修正（POST 触发 job + 采纳/放弃）
+app.route('/api/projects', correctionRoutes(db, registry));
 // 评估历史路由（质量趋势 + 经验学习）
 app.route('/api/projects', evalRoutes(db));
 // 新增：质量评估上传与任务流

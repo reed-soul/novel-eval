@@ -1386,3 +1386,189 @@ select.input {
   font-size: 12px;
   color: var(--text-muted);
 }
+
+/* ─── 单章质量速览面板（ChapterReader 内，修正按钮上方）────────── */
+
+.chapter-quality-panel {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.quality-panel-placeholder,
+.quality-panel-empty {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 20px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.quality-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quality-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quality-scope {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--text-muted);
+}
+
+.quality-total {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+
+.quality-grade {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--amber-glow);
+  color: var(--amber);
+}
+
+/* 五维分数条 */
+.dim-scores {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dim-score-row {
+  display: grid;
+  grid-template-columns: 72px 1fr 32px;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.dim-label {
+  color: var(--text);
+}
+
+.dim-bar-track {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(148, 163, 184, 0.18);
+  overflow: hidden;
+}
+
+.dim-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.dim-score-value {
+  font-weight: 600;
+  font-size: 13px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.quality-hint {
+  font-size: 12px;
+  color: var(--red);
+  margin-top: 2px;
+}
+
+/* 重复热点 */
+.quality-warn {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--red-glow);
+}
+
+.hotspot-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.hotspot-chip {
+  font-size: 12px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--red);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 经验摘要 */
+.lesson-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.lesson-row {
+  padding: 8px 10px;
+  border-left: 2px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.lesson-dim {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lesson-score {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.lesson-issues {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.lesson-issue {
+  color: var(--text-muted);
+}
+
+.lesson-fixes {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.lesson-fix {
+  color: var(--green);
+}

@@ -87,9 +87,62 @@ export interface LessonItem {
   occurrenceCount: number;
 }
 
+// ─── 单章评估详情（ChapterReader 质量速览用）──────────────────────
+
+export interface EvalDimension {
+  score: number;
+  subscores?: Record<string, number>;
+  analysis: string;
+}
+
+export interface EvalHistoryRecord {
+  id: string;
+  chapterNumber: number;
+  attempt: number;
+  verdict: 'pass' | 'revise' | 'block';
+  totalScore: number | null;
+  grade: string | null;
+  dimensions: Record<string, EvalDimension> | null;
+  suggestions: Array<{ dimension?: string; content: string }> | null;
+  repetition: { within: number; cross: number; hotspots: string[] } | null;
+  model: string | null;
+  evaluatorModel: string | null;
+  createdAt: string;
+}
+
+export async function getChapterEval(projectId: string, chapterNumber: number): Promise<{ chapter: number; history: EvalHistoryRecord[] }> {
+  return api(`/projects/${projectId}/eval/${chapterNumber}`);
+}
+
+export async function getLessons(projectId: string, pattern?: string): Promise<{ lessons: LessonItem[] }> {
+  const q = pattern ? `?pattern=${encodeURIComponent(pattern)}` : '';
+  return api(`/projects/${projectId}/lessons${q}`);
+}
+
+// ─── 单章诊断（只读：本章得分+重复检测+推荐策略，零 LLM）─────────
+
+export interface DiagnosisIssue {
+  dimension: string;
+  dimensionLabel: string;
+  score: number;
+  type: CorrectionStrategy;
+  lessonRef: string | null;
+}
+
+export interface ChapterDiagnosis {
+  strategy: CorrectionStrategy;
+  issues: DiagnosisIssue[];
+  repetition: { within: number; cross: number; hotspots: string[]; verdict: string };
+  pattern: string;
+}
+
+export async function diagnoseChapter(projectId: string, chapterNumber: number): Promise<{ diagnose: ChapterDiagnosis }> {
+  return api(`/projects/${projectId}/chapters/${chapterNumber}/diagnose`);
+}
+
 // ─── Job（写作任务 — 暂停/继续/取消）──────────────────────────────
 
-export type JobType = 'bible' | 'outline' | 'chapter';
+export type JobType = 'bible' | 'outline' | 'chapter' | 'correction';
 export type JobStatus = 'running' | 'paused' | 'done' | 'error' | 'cancelled';
 
 export interface JobInfo {
@@ -135,4 +188,71 @@ export async function cancelJob(jobId: string): Promise<void> {
 
 export async function getJobStatus(jobId: string): Promise<JobInfo> {
   return api<JobInfo>(`/projects/jobs/${jobId}`);
+}
+
+// ─── 经验驱动的局部修正（M5）──────────────────────────────────────
+
+export type CorrectionStrategy = 'surgical' | 'rewrite';
+
+export interface CorrectionIssue {
+  dimension: string;
+  dimensionLabel: string;
+  score: number;
+  type: CorrectionStrategy;
+  lessonRef: string | null;
+}
+
+export interface CorrectionChange {
+  original: string;
+  revised: string;
+  reason: string;
+}
+
+export interface CorrectionDraft {
+  id: string;
+  projectId: string;
+  chapterNumber: number;
+  strategy: CorrectionStrategy;
+  originalContent: string;
+  revisedContent: string;
+  originalScore: number | null;
+  revisedScore: number | null;
+  issues: CorrectionIssue[];
+  changes: CorrectionChange[];
+  revisedResult?: {
+    grade: string | null;
+    dimensions: Record<string, EvalDimension> | null;
+    suggestions: Array<{ dimension?: string; content: string }> | null;
+    repetition: { within: number; cross: number; hotspots: string[] } | null;
+  } | null;
+  status: 'pending' | 'adopted' | 'discarded';
+  engine: string | null;
+  jobId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** 触发单章修正，返回 jobId（进度走现有 SSE）*/
+export async function correctChapter(
+  projectId: string,
+  chapterNumber: number,
+  opts?: { engineName?: string; model?: string; strategy?: CorrectionStrategy },
+): Promise<{ jobId: string }> {
+  return apiPost<{ jobId: string }>(`/projects/${projectId}/chapters/${chapterNumber}/correct`, opts);
+}
+
+/** 取某章最新 pending 草稿（diff 预览用）*/
+export async function getPendingCorrection(
+  projectId: string,
+  chapterNumber: number,
+): Promise<{ draft: CorrectionDraft | null }> {
+  return api<{ draft: CorrectionDraft | null }>(`/projects/${projectId}/chapters/${chapterNumber}/correction`);
+}
+
+export async function adoptCorrection(projectId: string, draftId: string): Promise<{ ok: boolean; chapterNumber: number }> {
+  return apiPost<{ ok: boolean; chapterNumber: number }>(`/projects/${projectId}/corrections/${draftId}/adopt`);
+}
+
+export async function discardCorrection(projectId: string, draftId: string): Promise<{ ok: boolean }> {
+  return apiPost<{ ok: boolean }>(`/projects/${projectId}/corrections/${draftId}/discard`);
 }

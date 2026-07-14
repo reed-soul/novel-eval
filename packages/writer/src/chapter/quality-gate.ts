@@ -178,8 +178,8 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
   };
 }
 
-/** 构造 revise 反馈（注入重写 prompt）*/
-function buildFeedback(
+/** 构造 revise/修正 反馈（注入重写 prompt）。导出供 corrector 复用。*/
+export function buildFeedback(
   suggestions: string[],
   lowDims: string[],
   dimensions: Record<DimensionKey, { score: number; analysis: string }>,

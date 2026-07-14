@@ -383,3 +383,114 @@ export function upsertLesson(db: DB, lesson: {
     );
   }
 }
+
+// ─── correction_draft（M5：经验驱动局部修正，采纳前原章不动）─────────
+
+export type CorrectionStrategy = 'surgical' | 'rewrite';
+export type DraftStatus = 'pending' | 'adopted' | 'discarded';
+
+export interface CorrectionDraft {
+  id: string;
+  projectId: string;
+  chapterNumber: number;
+  strategy: CorrectionStrategy;
+  originalContent: string;
+  revisedContent: string;
+  originalScore: number | null;
+  revisedScore: number | null;
+  /** 诊断出的问题清单（JSON 解析后）*/
+  issues: unknown[];
+  /** 模型标注的改动点（surgical 才有）*/
+  changes: unknown[];
+  revisedResult: unknown | null;
+  status: DraftStatus;
+  engine: string | null;
+  jobId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface DraftRow {
+  id: string; project_id: string; chapter_number: number; strategy: string;
+  original_content: string; revised_content: string;
+  original_score: number | null; revised_score: number | null;
+  issues_json: string | null; changes_json: string | null;
+  revised_result_json: string | null;
+  status: string; engine: string | null; job_id: string | null;
+  created_at: string; updated_at: string;
+}
+
+function rowToDraft(row: DraftRow): CorrectionDraft {
+  return {
+    id: row.id, projectId: row.project_id, chapterNumber: row.chapter_number,
+    strategy: row.strategy as CorrectionStrategy,
+    originalContent: row.original_content, revisedContent: row.revised_content,
+    originalScore: row.original_score, revisedScore: row.revised_score,
+    issues: row.issues_json ? JSON.parse(row.issues_json) : [],
+    changes: row.changes_json ? JSON.parse(row.changes_json) : [],
+    revisedResult: row.revised_result_json ? JSON.parse(row.revised_result_json) : null,
+    status: row.status as DraftStatus,
+    engine: row.engine, jobId: row.job_id,
+    createdAt: row.created_at, updatedAt: row.updated_at,
+  };
+}
+
+/** 保存修正草稿。同一章先前的 pending 自动标 discarded（同一章只留最新 pending）*/
+export function saveCorrectionDraft(db: DB, draft: {
+  projectId: string;
+  chapterNumber: number;
+  strategy: CorrectionStrategy;
+  originalContent: string;
+  revisedContent: string;
+  originalScore?: number | null;
+  revisedScore?: number | null;
+  issues?: unknown[];
+  changes?: unknown[];
+  revisedResult?: unknown;
+  engine?: string | null;
+  jobId?: string | null;
+}): string {
+  const now = new Date().toISOString();
+  const id = randomUUID();
+  // 先把该章旧的 pending 标 discarded
+  db.prepare(
+    `UPDATE correction_draft SET status = 'discarded', updated_at = ? 
+     WHERE project_id = ? AND chapter_number = ? AND status = 'pending'`,
+  ).run(now, draft.projectId, draft.chapterNumber);
+  db.prepare(
+    `INSERT INTO correction_draft 
+       (id, project_id, chapter_number, strategy, original_content, revised_content,
+        original_score, revised_score, issues_json, changes_json, revised_result_json, status, engine, job_id,
+        created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)`,
+  ).run(
+    id, draft.projectId, draft.chapterNumber, draft.strategy,
+    draft.originalContent, draft.revisedContent,
+    draft.originalScore ?? null, draft.revisedScore ?? null,
+    JSON.stringify(draft.issues ?? []), JSON.stringify(draft.changes ?? []),
+    draft.revisedResult ? JSON.stringify(draft.revisedResult) : null,
+    draft.engine ?? null, draft.jobId ?? null,
+    now, now,
+  );
+  return id;
+}
+
+/** 取某章最新的 pending 草稿（无则 null）*/
+export function getPendingDraft(db: DB, projectId: string, chapterNumber: number): CorrectionDraft | null {
+  const row = db.prepare(
+    `SELECT * FROM correction_draft 
+     WHERE project_id = ? AND chapter_number = ? AND status = 'pending'
+     ORDER BY created_at DESC LIMIT 1`,
+  ).get(projectId, chapterNumber) as DraftRow | undefined;
+  return row ? rowToDraft(row) : null;
+}
+
+export function getDraft(db: DB, draftId: string): CorrectionDraft | null {
+  const row = db.prepare('SELECT * FROM correction_draft WHERE id = ?').get(draftId) as DraftRow | undefined;
+  return row ? rowToDraft(row) : null;
+}
+
+export function updateDraftStatus(db: DB, draftId: string, status: DraftStatus): void {
+  db.prepare('UPDATE correction_draft SET status = ?, updated_at = ? WHERE id = ?')
+    .run(status, new Date().toISOString(), draftId);
+}

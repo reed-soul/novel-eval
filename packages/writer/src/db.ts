@@ -153,7 +153,35 @@ function migrate(db: DB): void {
     );
     CREATE INDEX IF NOT EXISTS idx_lesson_project ON lesson_learned(project_id);
     CREATE INDEX IF NOT EXISTS idx_lesson_pattern ON lesson_learned(pattern);
+
+    -- M5：修正草稿（经验驱动局部修正，采纳前原章不动）
+    CREATE TABLE IF NOT EXISTS correction_draft (
+      id TEXT PRIMARY KEY,
+      project_id TEXT NOT NULL REFERENCES project(id),
+      chapter_number INTEGER NOT NULL,
+      strategy TEXT NOT NULL,          -- 'surgical' | 'rewrite'
+      original_content TEXT NOT NULL,
+      revised_content TEXT NOT NULL,
+      original_score INTEGER,
+      revised_score INTEGER,
+      issues_json TEXT,                -- JSON: 诊断出的问题清单
+      changes_json TEXT,               -- JSON: 模型标注的改动点（surgical 才有）
+      revised_result_json TEXT,        -- JSON: 修正后的评估与重复率报告 (M5)
+      status TEXT NOT NULL DEFAULT 'pending',  -- 'pending' | 'adopted' | 'discarded'
+      engine TEXT,
+      job_id TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_draft_chapter ON correction_draft(project_id, chapter_number);
   `);
+
+  // 动态追加 M5 修正草稿所需的新增列（revised_result_json）
+  try {
+    db.prepare('SELECT revised_result_json FROM correction_draft LIMIT 1').get();
+  } catch {
+    db.exec('ALTER TABLE correction_draft ADD COLUMN revised_result_json TEXT');
+  }
 }
 
 /** 关闭数据库（测试与 CLI 退出时调用，防句柄泄漏）*/

@@ -95,7 +95,7 @@ export function EvaluationReport() {
   });
 
   const tensionLinePath = tensionPoints.length > 0
-    ? `M ${tensionPoints.map(p => `${p.x},${p.y}`).join(' L ')}`
+    ? `M ${tensionPoints.map((p: any) => `${p.x},${p.y}`).join(' L ')}`
     : '';
 
   const tensionAreaPath = tensionPoints.length > 0
@@ -221,7 +221,7 @@ export function EvaluationReport() {
               )}
 
               {/* Points */}
-              {tensionPoints.map((pt) => (
+              {tensionPoints.map((pt: any) => (
                 <circle
                   key={pt.idx}
                   cx={pt.x}
@@ -255,11 +255,11 @@ export function EvaluationReport() {
               ))}
               
               {/* X Axis Labels */}
-              {tensionPoints.filter((_, i) => {
+              {tensionPoints.filter((_: any, i: number) => {
                 if (tensionPoints.length <= 15) return true;
                 if (tensionPoints.length <= 40) return i % 2 === 0;
                 return i % 5 === 0;
-              }).map((pt) => (
+              }).map((pt: any) => (
                 <text
                   key={pt.idx}
                   x={pt.x}

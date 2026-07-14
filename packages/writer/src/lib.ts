@@ -18,6 +18,12 @@ export { ensureChapterConsistency, type ConsistencyResult } from './chapter/cons
 export { assessChapterQuality, type QualityGateResult } from './chapter/quality-gate.ts';
 export { detectRepetition, type RepetitionReport } from './chapter/repetition.ts';
 export { aggregateLessons, buildLessonPrompt, classifyChapter, type ChapterPattern } from './chapter/lesson-aggregator.ts';
+// M5：经验驱动的局部修正
+export {
+  diagnoseChapter, correctChapter, applyCorrectionDraft, discardCorrectionDraft,
+  type CorrectionStrategy, type DiagnosisResult, type DiagnosisIssue,
+  type CorrectChapterOptions, type CorrectResult,
+} from './chapter/corrector.ts';
 // store 读写函数（Web 后端 + CLI 共用）
 export {
   saveOutlines, getOutline, getAllOutlines, countOutlines, markOutlineWritten,
@@ -27,6 +33,9 @@ export {
   saveEvalHistory, getEvalHistory, getAllEvalHistory, getChapterScores,
   getLessons, getLessonsByPattern, upsertLesson,
   type EvalHistoryRecord, type LessonLearned,
+  // M5：修正草稿 CRUD
+  saveCorrectionDraft, getPendingDraft, getDraft, updateDraftStatus,
+  type CorrectionDraft, type DraftStatus,
 } from './chapter/store.ts';
 // job 持久化（暂停/继续/取消的断点来源）
 export {

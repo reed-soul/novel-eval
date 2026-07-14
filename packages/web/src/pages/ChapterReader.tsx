@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { api, type ChapterDetail } from '../api/client.ts';
+import { ChapterQualityPanel } from '../components/ChapterQualityPanel.tsx';
 
 export function ChapterReader() {
   const { id, n } = useParams<{ id: string; n: string }>();
+  const navigate = useNavigate();
   const [chapter, setChapter] = useState<ChapterDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -64,6 +66,10 @@ export function ChapterReader() {
         </dl>
       </div>
 
+      {chapter.written && (
+        <ChapterQualityPanel projectId={id!} chapterNumber={chapter.number} />
+      )}
+
       {editing ? (
         <div className="card">
           <h2>编辑正文</h2>
@@ -79,7 +85,12 @@ export function ChapterReader() {
         </div>
       ) : chapter.content ? (
         <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12, gap: 8 }}>
+            <button
+              className="btn"
+              onClick={() => navigate(`/projects/${id}/chapters/${chapter.number}/correction`)}
+              title="根据历史评估经验，对本章做针对性局部修正"
+            >🔧 按经验修正</button>
             <button className="btn" onClick={() => setEditing(true)}>✏️ 编辑</button>
           </div>
           <div className="chapter-content">{chapter.content}</div>

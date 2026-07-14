@@ -13,7 +13,7 @@
 import { randomUUID } from 'node:crypto';
 import type { DB } from './db.ts';
 
-export type JobType = 'bible' | 'outline' | 'chapter';
+export type JobType = 'bible' | 'outline' | 'chapter' | 'correction';
 export type JobStatus = 'running' | 'paused' | 'done' | 'error' | 'cancelled';
 
 export interface JobRow {

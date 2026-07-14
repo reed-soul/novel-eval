@@ -44,3 +44,6 @@ data/*
 !data/spike-samples/
 data/spike-samples/*
 !data/spike-samples/sample-novel.txt
+
+# Web runtime data
+packages/web/data/

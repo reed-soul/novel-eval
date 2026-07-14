@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { ProgressPanel } from '../components/ProgressPanel.tsx';
 import { useNavigate } from 'react-router-dom';
 
 export function Evaluation() {
@@ -236,7 +235,19 @@ export function Evaluation() {
       )}
 
       {(status === 'running' || status === 'completed' || status === 'failed') && (
-        <ProgressPanel logs={logs} status={status === 'completed' ? 'success' : status === 'failed' ? 'error' : 'running'} />
+        <div className="card">
+          <h2>
+            评估进度{' '}
+            {status === 'running' && '⏳ 运行中'}
+            {status === 'completed' && '✅ 评估完成'}
+            {status === 'failed' && '❌ 评估失败'}
+          </h2>
+          <div style={{ fontFamily: 'monospace', fontSize: 13, lineHeight: 1.8, marginTop: 8, maxHeight: '60vh', overflowY: 'auto' }}>
+            {logs.map((log, i) => (
+              <div key={i}>{log}</div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
