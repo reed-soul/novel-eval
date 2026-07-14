@@ -92,9 +92,9 @@ export function Settings() {
 
   return (
     <div className="container">
-      <div className="header">
-        <h1>⚙️ 模型配置</h1>
-        <Link to="/">← 返回列表</Link>
+      <div className="page-header">
+        <h2>⚙️ AI 模型配置</h2>
+        <Link to="/" className="back-link">← 返回列表</Link>
       </div>
 
       <div className="card">

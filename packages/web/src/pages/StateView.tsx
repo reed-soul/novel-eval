@@ -26,9 +26,9 @@ export function StateView() {
 
   return (
     <div className="container">
-      <div className="header">
-        <h1>📖 设定与叙事状态</h1>
-        <Link to={`/projects/${id}`}>← 返回项目</Link>
+      <div className="page-header">
+        <h2>📖 设定与叙事状态</h2>
+        <Link to={`/projects/${id}`} className="back-link">← 返回项目</Link>
       </div>
 
       {error && <div className="error">{error}</div>}

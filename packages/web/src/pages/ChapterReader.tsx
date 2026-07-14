@@ -43,14 +43,14 @@ export function ChapterReader() {
 
   return (
     <div className="container">
-      <div className="header">
+      <div className="page-header">
         <div>
-          <h1>第 {chapter.number} 章《{chapter.title}》</h1>
-          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 4 }}>
+          <h2>第 {chapter.number} 章《{chapter.title}》</h2>
+          <div className="project-subheading">
             {chapter.wordCount} 字 · {chapter.written ? '✓ 已写' : '✗ 未写'}
           </div>
         </div>
-        <Link to={`/projects/${id}`}>← 返回项目</Link>
+        <Link to={`/projects/${id}`} className="back-link">← 返回项目</Link>
       </div>
 
       <div className="outline-info">

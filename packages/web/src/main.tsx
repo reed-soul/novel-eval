@@ -7,18 +7,21 @@ import { ProjectDetail } from './pages/ProjectDetail.tsx';
 import { ChapterReader } from './pages/ChapterReader.tsx';
 import { StateView } from './pages/StateView.tsx';
 import { Settings } from './pages/Settings.tsx';
+import { Layout } from './components/Layout.tsx';
 import './styles.css';
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<ProjectList />} />
-        <Route path="/projects/new" element={<NewProject />} />
-        <Route path="/projects/:id" element={<ProjectDetail />} />
-        <Route path="/projects/:id/chapters/:n" element={<ChapterReader />} />
-        <Route path="/projects/:id/state" element={<StateView />} />
-        <Route path="/settings" element={<Settings />} />
+        <Route element={<Layout />}>
+          <Route path="/" element={<ProjectList />} />
+          <Route path="/projects/new" element={<NewProject />} />
+          <Route path="/projects/:id" element={<ProjectDetail />} />
+          <Route path="/projects/:id/chapters/:n" element={<ChapterReader />} />
+          <Route path="/projects/:id/state" element={<StateView />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   </React.StrictMode>,

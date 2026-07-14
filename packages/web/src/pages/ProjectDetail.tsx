@@ -110,14 +110,14 @@ export function ProjectDetail() {
 
   return (
     <div className="container">
-      <div className="header">
+      <div className="page-header">
         <div>
-          <h1>{project.title}</h1>
-          <div style={{ color: 'var(--muted)', fontSize: 14, marginTop: 4 }}>
+          <h2>{project.title}</h2>
+          <div className="project-subheading">
             {project.genre} · {project.audience} · <span className={`badge badge-${project.status}`}>{project.status}</span>
           </div>
         </div>
-        <Link to="/">← 返回列表</Link>
+        <Link to="/" className="back-link">← 返回列表</Link>
       </div>
 
       <div className="card">

@@ -29,9 +29,9 @@ export function NewProject() {
 
   return (
     <div className="container">
-      <div className="header">
-        <h1>✍️ 新建项目</h1>
-        <Link to="/">← 返回列表</Link>
+      <div className="page-header">
+        <h2>✍️ 新建写作项目</h2>
+        <Link to="/" className="back-link">← 返回列表</Link>
       </div>
 
       <div className="card">
