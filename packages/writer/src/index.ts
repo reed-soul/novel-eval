@@ -22,6 +22,7 @@ import { getAllOutlines, countOutlines, countChapters, getChapter } from './chap
 import type { CharacterDynamic } from './bible/types.ts';
 import * as readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
+import { isServerRunning, startApiJob, streamJobEvents } from './api-client.ts';
 
 interface InitArgs {
   command: 'init';
@@ -51,6 +52,7 @@ interface ChapterArgs {
   maxRevise?: number;       // 质量门槛：最大重写次数
   passGrade?: string;       // 质量门槛：通过等级
   engine?: string;
+  wordCount?: number;       // 覆盖 writer.yml 的 chapterWordCount
 }
 
 interface AutoArgs {
@@ -132,6 +134,7 @@ function parseArgs(argv: string[]): CliArgs {
       else if (rest[i] === '--max-revise') args.maxRevise = parseInt(rest[++i], 10);
       else if (rest[i] === '--pass-grade') args.passGrade = rest[++i];
       else if (rest[i] === '--engine') args.engine = rest[++i];
+      else if (rest[i] === '--word-count') args.wordCount = parseInt(rest[++i], 10);
     }
     return args;
   }
@@ -194,6 +197,7 @@ chapter（按蓝图生成章节正文）：
   --from <A> --to <B> 生成第 A 到 B 章
   --all               生成全部章节
   --max-revise <N>    启用质量门槛，最大重写次数（默认不启用）
+  --word-count <N>    覆盖每章字数（默认读 writer.yml 的 chapterWordCount）
 
 resume（断点续写 — 中断/暂停后继续）：
   <projectId>         write init 返回的项目 ID
@@ -247,6 +251,37 @@ async function runInit(args: InitArgs): Promise<void> {
   if (!args.yes) {
     const ok = await confirmProceed('将生成完整 bible（雪花法 4 步，约 ¥0.05-0.1）');
     if (!ok) { console.log('已取消'); return; }
+  }
+
+  const serverActive = await isServerRunning();
+  if (serverActive) {
+    console.log(`[API] 探测到 Web 服务正在运行，将通过 Web 后端发起任务以保持进度同步...`);
+    try {
+      const res = await fetch('http://localhost:3000/api/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: args.title,
+          genre: args.genre,
+          audience: args.audience,
+          topic: args.topic,
+          generate: true,
+          engineName: args.engine,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Unknown API error' })) as { error?: string };
+        throw new Error(err.error || `HTTP error ${res.status}`);
+      }
+      const data = await res.json() as { project: { id: string }, jobId: string };
+      console.log(`\n✓ 项目创建成功，ID：${data.project.id}`);
+      console.log(`开始生成 bible...\n`);
+      await streamJobEvents(data.jobId);
+      console.log(`\n下一步（M2）：novel-eval write outline ${data.project.id}`);
+      return;
+    } catch (e) {
+      console.error(`[API] 转发任务失败: ${(e as Error).message}，将降级为本地直接运行模式。`);
+    }
   }
 
   console.log('\n开始生成 bible...\n');
@@ -368,6 +403,22 @@ async function runOutline(args: OutlineArgs): Promise<void> {
       if (!ok) { console.log('已取消'); return; }
     }
 
+    const serverActive = await isServerRunning();
+    if (serverActive) {
+      console.log(`[API] 探测到 Web 服务正在运行，将通过 Web 后端发起任务以保持进度同步...`);
+      try {
+        const jobId = await startApiJob(`/api/projects/${args.projectId}/outline/generate`, {
+          chapters: totalChapters,
+          engineName: args.engine,
+        });
+        await streamJobEvents(jobId);
+        console.log(`\n下一步：novel-eval write chapter ${args.projectId} --from 1 --to 3`);
+        return;
+      } catch (e) {
+        console.error(`[API] 转发任务失败: ${(e as Error).message}，将降级为本地直接运行模式。`);
+      }
+    }
+
     const engine: AIAgentAdapter = createEngine(config.engine);
     const { outlines, usage } = await generateBlueprint({
       engine, db, projectId: args.projectId,
@@ -410,16 +461,56 @@ async function runChapter(args: ChapterArgs): Promise<void> {
     else { console.error('请指定 --number N 或 --from A --to B 或 --all'); process.exit(1); }
 
     console.log(`Novel Writer — 生成章节\n  项目：${project.title}（${args.projectId}）`);
-    console.log(`  范围：第 ${from}-${to} 章（每章约 ${config.generation.chapterWordCount} 字）`);
+    const wordCount = args.wordCount ?? config.generation.chapterWordCount;
+    console.log(`  范围：第 ${from}-${to} 章（每章约 ${wordCount} 字）`);
     const useGate = args.maxRevise !== undefined;
     if (useGate) console.log(`  质量门槛：启用（maxRevise=${args.maxRevise ?? 2}）`);
     console.log('');
+
+    const serverActive = await isServerRunning();
+    if (serverActive) {
+      console.log(`[API] 探测到 Web 服务正在运行，将通过 Web 后端发起任务以保持进度同步...`);
+      try {
+        const jobId = await startApiJob(`/api/projects/${args.projectId}/chapters/generate`, {
+          from,
+          to,
+          qualityGate: useGate,
+          maxRevise: args.maxRevise,
+          engineName: args.engine,
+          wordCount,
+        });
+        await streamJobEvents(jobId);
+
+        // Write human readable txt file after SSE done
+        const dbTemp = openDb();
+        try {
+          const results: { number: number; title: string; content: string }[] = [];
+          for (let num = from; num <= to; num++) {
+            const ch = getChapter(dbTemp, args.projectId, num);
+            if (ch) results.push({ number: ch.number, title: ch.title || '', content: ch.content });
+          }
+          if (results.length > 0) {
+            const { writeFileSync } = await import('node:fs');
+            const { resolve } = await import('node:path');
+            const outPath = resolve(writerDataDir(), `${args.projectId}-ch${from}-${to}.txt`);
+            const text = results.map((r) => `第${r.number}章 ${r.title}\n\n${r.content}`).join('\n\n\n');
+            writeFileSync(outPath, text, 'utf-8');
+            console.log(`  导出：${outPath}`);
+          }
+        } finally {
+          closeDb(dbTemp);
+        }
+        return;
+      } catch (e) {
+        console.error(`[API] 转发任务失败: ${(e as Error).message}，将降级为本地直接运行模式。`);
+      }
+    }
 
     updateProjectStatus(db, args.projectId, 'writing');
     const engine: AIAgentAdapter = createEngine(config.engine);
     const results = await generateRange({
       engine, db, projectId: args.projectId,
-      from, to, wordCount: config.generation.chapterWordCount,
+      from, to, wordCount,
       qualityGate: useGate ? {
         metadata: { genre: project.genre, targetAudience: project.audience },
         maxRevise: args.maxRevise ?? 2,
@@ -459,6 +550,79 @@ async function runResume(args: ResumeArgs): Promise<void> {
     }
 
     console.log(`Novel Writer — 断点续写\n  项目：${project.title}（${args.projectId}）`);
+
+    const serverActive = await isServerRunning();
+    if (serverActive) {
+      console.log(`[API] 探测到 Web 服务正在运行，将通过 Web 后端发起任务以保持进度同步...`);
+      try {
+        const activeRes = await fetch(`http://localhost:3000/api/projects/${args.projectId}/active-job`);
+        const { job } = await activeRes.json() as { job: { id: string; status: string } | null };
+        let jobId: string;
+        let fromBound: number, toBound: number;
+        
+        if (job && (job.status === 'paused' || job.status === 'running')) {
+          console.log(`  检测到已有活跃任务 [${job.id}]，正在请求恢复...`);
+          jobId = await startApiJob(`/api/projects/jobs/${job.id}/resume`, {
+            engineName: args.engine,
+            maxRevise: args.maxRevise,
+          });
+          const dbTemp = openDb();
+          try {
+            toBound = countOutlines(dbTemp, args.projectId);
+            const written = countChapters(dbTemp, args.projectId);
+            fromBound = written + 1;
+          } finally {
+            closeDb(dbTemp);
+          }
+        } else {
+          const dbTemp = openDb();
+          try {
+            toBound = countOutlines(dbTemp, args.projectId);
+            const written = countChapters(dbTemp, args.projectId);
+            fromBound = written + 1;
+          } finally {
+            closeDb(dbTemp);
+          }
+          if (fromBound > toBound) {
+            console.log(`\n✓ 全部章节已完成，无需续写。`);
+            return;
+          }
+          console.log(`  未检测到活跃任务，将启动新任务从第 ${fromBound} 章生成到第 ${toBound} 章...`);
+          jobId = await startApiJob(`/api/projects/${args.projectId}/chapters/generate`, {
+            from: fromBound,
+            to: toBound,
+            qualityGate: args.maxRevise !== undefined,
+            maxRevise: args.maxRevise,
+            engineName: args.engine,
+          });
+        }
+        
+        await streamJobEvents(jobId);
+
+        // Write human readable txt file after SSE done
+        const dbTemp = openDb();
+        try {
+          const results: { number: number; title: string; content: string }[] = [];
+          for (let num = fromBound; num <= toBound; num++) {
+            const ch = getChapter(dbTemp, args.projectId, num);
+            if (ch) results.push({ number: ch.number, title: ch.title || '', content: ch.content });
+          }
+          if (results.length > 0) {
+            const { writeFileSync } = await import('node:fs');
+            const { resolve } = await import('node:path');
+            const outPath = resolve(writerDataDir(), `${args.projectId}-ch${fromBound}-${toBound}.txt`);
+            const text = results.map((r) => `第${r.number}章 ${r.title}\n\n${r.content}`).join('\n\n\n');
+            writeFileSync(outPath, text, 'utf-8');
+            console.log(`  导出：${outPath}`);
+          }
+        } finally {
+          closeDb(dbTemp);
+        }
+        return;
+      } catch (e) {
+        console.error(`[API] 转发任务失败: ${(e as Error).message}，将降级为本地直接运行模式。`);
+      }
+    }
 
     const engine: AIAgentAdapter = createEngine(config.engine);
 

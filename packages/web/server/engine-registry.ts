@@ -54,6 +54,10 @@ export class EngineRegistry {
     return this.engines[this.activeName];
   }
 
+  getEngineConfig(name: string): EngineConfig | undefined {
+    return this.engines[name];
+  }
+
   /** 当前引擎实例（懒构造，切换/改模型后重建）*/
   getEngine(): AIAgentAdapter {
     if (!this.activeEngine) {

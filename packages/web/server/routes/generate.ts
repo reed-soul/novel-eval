@@ -15,7 +15,7 @@
  */
 import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
-import type { NovelMetadata } from '@novel-eval/shared';
+import { createEngine, type NovelMetadata } from '@novel-eval/shared';
 import {
   type DB, loadWriterConfig,
   createProject, getProject, updateProjectStatus,
@@ -34,11 +34,26 @@ import type { EngineRegistry } from '../engine-registry.ts';
 export function generateRoutes(db: DB, registry: EngineRegistry) {
   const app = new Hono();
 
+  function resolveEngine(body: { engineName?: string; model?: string }) {
+    if (body.engineName) {
+      const baseConfig = registry.getEngineConfig(body.engineName);
+      if (baseConfig) {
+        return createEngine({
+          ...baseConfig,
+          model: body.model ?? baseConfig.model,
+        });
+      }
+    }
+    return registry.getEngine();
+  }
+
   // ─── 新建项目（可选同时生成 bible）──────────────────────────────
   app.post('/', async (c) => {
     const body = await c.req.json<{
       title: string; genre: string; audience: string; topic: string;
       generate?: boolean;
+      engineName?: string;
+      model?: string;
     }>();
     const project = createProject(db, { title: body.title, genre: body.genre, audience: body.audience, topic: body.topic });
 
@@ -49,7 +64,7 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
     // 同时生成 bible
     const jobId = createJob(db, { type: 'bible', projectId: project.id }, async ({ onProgress }: JobRunnerContext) => {
       const { bible, usage } = await generateBible({
-        engine: registry.getEngine(), db, projectId: project.id,
+        engine: resolveEngine(body), db, projectId: project.id,
         topic: body.topic, genre: body.genre, audience: body.audience, onProgress,
       });
       updateProjectStatus(db, project.id, 'bible_done');
@@ -64,9 +79,10 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
     const project = getProject(db, id);
     if (!project) return c.json({ error: '项目不存在' }, 404);
 
+    const body = await c.req.json<{ engineName?: string; model?: string }>().catch(() => ({}));
     const jobId = createJob(db, { type: 'bible', projectId: id }, async ({ onProgress }: JobRunnerContext) => {
       const { bible, usage } = await generateBible({
-        engine: registry.getEngine(), db, projectId: id,
+        engine: resolveEngine(body), db, projectId: id,
         topic: project.topic, genre: project.genre, audience: project.audience, onProgress,
       });
       updateProjectStatus(db, id, 'bible_done');
@@ -81,7 +97,7 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
     const project = getProject(db, id);
     if (!project) return c.json({ error: '项目不存在' }, 404);
 
-    const body = await c.req.json<{ chapters?: number }>().catch(() => ({}) as { chapters?: number });
+    const body = await c.req.json<{ chapters?: number; engineName?: string; model?: string }>().catch(() => ({} as { chapters?: number; engineName?: string; model?: string }));
     const config = loadWriterConfig();
     const totalChapters = body.chapters ?? config.generation.defaultChapters;
 
@@ -93,7 +109,7 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
 
     const jobId = createJob(db, { type: 'outline', projectId: id }, async ({ onProgress }: JobRunnerContext) => {
       const { outlines, usage } = await generateBlueprint({
-        engine: registry.getEngine(), db, projectId: id, plot: plotArchitecture, characters, totalChapters, onProgress,
+        engine: resolveEngine(body), db, projectId: id, plot: plotArchitecture, characters, totalChapters, onProgress,
       });
       updateProjectStatus(db, id, 'outlining');
       return { chapters: outlines.length, usage };
@@ -108,10 +124,11 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
     if (!project) return c.json({ error: '项目不存在' }, 404);
     if (countOutlines(db, id) === 0) return c.json({ error: '蓝图未生成' }, 400);
 
-    const body = await c.req.json<{ from: number; to: number; qualityGate?: boolean; maxRevise?: number }>();
+    const body = await c.req.json<{ from: number; to: number; qualityGate?: boolean; maxRevise?: number; engineName?: string; model?: string; wordCount?: number }>();
     const config = loadWriterConfig();
     const metadata: NovelMetadata = { genre: project.genre, targetAudience: project.audience };
     const useGate = !!body.qualityGate;
+    const wordCount = body.wordCount ?? config.generation.chapterWordCount;
 
     const jobId = createJob(db, {
       type: 'chapter', projectId: id,
@@ -121,8 +138,8 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
       const { onProgress, control } = ctx;
       updateProjectStatus(db, id, 'writing');
       const results = await generateRange({
-        engine: registry.getEngine(), db, projectId: id, from: body.from, to: body.to,
-        wordCount: config.generation.chapterWordCount,
+        engine: resolveEngine(body), db, projectId: id, from: body.from, to: body.to,
+        wordCount,
         qualityGate: useGate ? { metadata, maxRevise: body.maxRevise ?? 2 } : undefined,
         onProgress,
         control,  // 暂停/取消信号在此注入
@@ -155,9 +172,12 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
     const project = getProject(db, oldRow.projectId);
     if (!project) return c.json({ error: '项目不存在' }, 404);
 
+    const body = await c.req.json<{ engineName?: string; model?: string; maxRevise?: number; wordCount?: number }>().catch(() => ({} as { engineName?: string; model?: string; maxRevise?: number; wordCount?: number }));
     const config = loadWriterConfig();
     const metadata: NovelMetadata = { genre: project.genre, targetAudience: project.audience };
     const useGate = !!oldRow.qualityGate;
+    const maxRevise = body.maxRevise ?? oldRow.maxRevise;
+    const wordCount = body.wordCount ?? config.generation.chapterWordCount;
 
     // 先把原 job 标 cancelled（如果还是 paused 的话），避免 active-job 查到两个
     if (oldRow.status === 'paused') {
@@ -167,13 +187,13 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
     const jobId = createJob(db, {
       type: 'chapter', projectId: oldRow.projectId,
       fromChapter: oldRow.toChapter ?? undefined, toChapter: oldRow.toChapter ?? undefined,  // 临时占位，consistency 后定真实 from
-      qualityGate: useGate, maxRevise: oldRow.maxRevise,
+      qualityGate: useGate, maxRevise,
     }, async (ctx: JobRunnerContext) => {
       const { onProgress, control } = ctx;
       updateProjectStatus(db, oldRow.projectId, 'writing');
       // 一致性检查 + 算真实 resume 起点
       const { from, to, finalizedGap } = await ensureChapterConsistency(
-        registry.getEngine(), db, oldRow.projectId, onProgress,
+        resolveEngine(body), db, oldRow.projectId, onProgress,
       );
       if (finalizedGap > 0) {
         onProgress('resume', `已补全 ${finalizedGap} 章半成品叙事状态`);
@@ -183,9 +203,9 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
         return { chapters: 0, totalWords: 0, totalCost: 0, message: '全部章节已完成' };
       }
       const results = await generateRange({
-        engine: registry.getEngine(), db, projectId: oldRow.projectId, from, to,
-        wordCount: config.generation.chapterWordCount,
-        qualityGate: useGate ? { metadata, maxRevise: oldRow.maxRevise || 2 } : undefined,
+        engine: resolveEngine(body), db, projectId: oldRow.projectId, from, to,
+        wordCount,
+        qualityGate: useGate ? { metadata, maxRevise: maxRevise || 2 } : undefined,
         onProgress,
         control,
       });
