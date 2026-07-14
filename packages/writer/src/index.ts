@@ -508,6 +508,11 @@ async function runChapter(args: ChapterArgs): Promise<void> {
 
     updateProjectStatus(db, args.projectId, 'writing');
     const engine: AIAgentAdapter = createEngine(config.engine);
+    
+    // 一致性检查：修复可能存在的狭窄窗口崩溃导致的脏数据
+    const { ensureChapterConsistency } = await import('./chapter/consistency.ts');
+    await ensureChapterConsistency(engine, db, args.projectId, (step, msg) => console.log(`  [${step}] ${msg}`));
+
     const results = await generateRange({
       engine, db, projectId: args.projectId,
       from, to, wordCount,
@@ -517,6 +522,10 @@ async function runChapter(args: ChapterArgs): Promise<void> {
       } : undefined,
       onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
     });
+
+    if (to >= outlineCount) {
+      updateProjectStatus(db, args.projectId, 'completed');
+    }
 
     const totalCost = results.reduce((s, r) => s + r.usage.costRmb, 0);
     const totalWords = results.reduce((s, r) => s + r.wordCount, 0);

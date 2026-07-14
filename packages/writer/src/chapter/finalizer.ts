@@ -134,6 +134,10 @@ export async function finalizeChapter(opts: FinalizeOptions): Promise<FinalizeRe
     onProgress?.(`finalize:${chapterNumber}`, `⚠ 宏观主线更新失败，保留旧值（${summaryRes.errors.join('; ').slice(0, 120)}）`);
   }
 
+  if (!summaryRes.ok && !stateRes.ok) {
+    throw new Error(`严重错误：叙事状态与角色状态更新均失败，停止生成以防止状态损坏。错误信息：${summaryRes.errors[0]}`);
+  }
+
   // ─── 处理 characterState 结果 ────────────────────────────────────
   if (stateRes.ok && stateRes.data) {
     // 容错：LLM 偶尔输出 null 而非 []，补成空数组

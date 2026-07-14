@@ -26,7 +26,7 @@ import {
   type CharacterDynamic,
 } from '@novel-eval/writer';
 import {
-  createJob, getJob, hydrateJobFromDb, requestPause, requestCancel,
+  createJob, getJob, hydrateJobFromDb, requestPause, requestCancel, hasActiveJobForProject,
   type JobRunnerContext,
 } from '../jobs.ts';
 import type { EngineRegistry } from '../engine-registry.ts';
@@ -61,6 +61,10 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
       return c.json({ project });
     }
 
+    if (hasActiveJobForProject(project.id)) {
+      return c.json({ error: '项目有正在运行的任务，请稍后再试' }, 409);
+    }
+
     // 同时生成 bible
     const jobId = createJob(db, { type: 'bible', projectId: project.id }, async ({ onProgress }: JobRunnerContext) => {
       const { bible, usage } = await generateBible({
@@ -78,6 +82,7 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
     const id = c.req.param('id');
     const project = getProject(db, id);
     if (!project) return c.json({ error: '项目不存在' }, 404);
+    if (hasActiveJobForProject(id)) return c.json({ error: '项目有正在运行的任务' }, 409);
 
     const body = await c.req.json<{ engineName?: string; model?: string }>().catch(() => ({}));
     const jobId = createJob(db, { type: 'bible', projectId: id }, async ({ onProgress }: JobRunnerContext) => {
@@ -96,6 +101,7 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
     const id = c.req.param('id');
     const project = getProject(db, id);
     if (!project) return c.json({ error: '项目不存在' }, 404);
+    if (hasActiveJobForProject(id)) return c.json({ error: '项目有正在运行的任务' }, 409);
 
     const body = await c.req.json<{ chapters?: number; engineName?: string; model?: string }>().catch(() => ({} as { chapters?: number; engineName?: string; model?: string }));
     const config = loadWriterConfig();
@@ -123,6 +129,7 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
     const project = getProject(db, id);
     if (!project) return c.json({ error: '项目不存在' }, 404);
     if (countOutlines(db, id) === 0) return c.json({ error: '蓝图未生成' }, 400);
+    if (hasActiveJobForProject(id)) return c.json({ error: '项目有正在运行的任务' }, 409);
 
     const body = await c.req.json<{ from: number; to: number; qualityGate?: boolean; maxRevise?: number; engineName?: string; model?: string; wordCount?: number }>();
     const config = loadWriterConfig();
@@ -184,24 +191,32 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
       requestCancel(db, oldJobId);
     }
 
+    // 一致性检查 + 算真实 resume 起点（在创建 job 前计算）
+    const msgs: { step: string; msg: string }[] = [];
+    const collectProgress = (step: string, msg: string) => msgs.push({ step, msg });
+    const { from, to, finalizedGap } = await ensureChapterConsistency(
+      resolveEngine(body), db, oldRow.projectId, collectProgress,
+    );
+
+    if (from > to) {
+      updateProjectStatus(db, oldRow.projectId, 'completed');
+      return c.json({ error: '全部章节已完成' }, 400);
+    }
+
     const jobId = createJob(db, {
       type: 'chapter', projectId: oldRow.projectId,
-      fromChapter: oldRow.toChapter ?? undefined, toChapter: oldRow.toChapter ?? undefined,  // 临时占位，consistency 后定真实 from
+      fromChapter: from, toChapter: to,
       qualityGate: useGate, maxRevise,
     }, async (ctx: JobRunnerContext) => {
       const { onProgress, control } = ctx;
       updateProjectStatus(db, oldRow.projectId, 'writing');
-      // 一致性检查 + 算真实 resume 起点
-      const { from, to, finalizedGap } = await ensureChapterConsistency(
-        resolveEngine(body), db, oldRow.projectId, onProgress,
-      );
+      
+      // 补发 consistency 检查日志
+      msgs.forEach(m => onProgress(m.step, m.msg));
       if (finalizedGap > 0) {
         onProgress('resume', `已补全 ${finalizedGap} 章半成品叙事状态`);
       }
-      if (from > to) {
-        updateProjectStatus(db, oldRow.projectId, 'completed');
-        return { chapters: 0, totalWords: 0, totalCost: 0, message: '全部章节已完成' };
-      }
+
       const results = await generateRange({
         engine: resolveEngine(body), db, projectId: oldRow.projectId, from, to,
         wordCount,
@@ -281,25 +296,7 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
         await stream.writeSSE({ data: JSON.stringify(evt) });
       }
 
-      // 如果已完成/失败，推终态
-      if (job.status === 'done') {
-        await stream.writeSSE({ data: JSON.stringify({ event: 'done', result: job.result }) });
-        return;
-      }
-      if (job.status === 'error') {
-        await stream.writeSSE({ data: JSON.stringify({ event: 'error', error: job.error }) });
-        return;
-      }
-      if (job.status === 'paused') {
-        await stream.writeSSE({ data: JSON.stringify({ event: 'paused' }) });
-        return;
-      }
-      if (job.status === 'cancelled') {
-        await stream.writeSSE({ data: JSON.stringify({ event: 'cancelled' }) });
-        return;
-      }
-
-      // running：订阅后续 events
+      // 注册监听器
       const onProgress = (evt: { step: string; msg: string; ts: number }) => {
         stream.writeSSE({ data: JSON.stringify(evt) }).catch(() => {});
       };
@@ -321,6 +318,22 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
       job.emitter.once('error', onError);
       job.emitter.once('paused', onPaused);
       job.emitter.once('cancelled', onCancelled);
+
+      // 在注册监听器之后，再次检查状态，避免竞态条件
+      if (job.status !== 'running') {
+        if (job.status === 'done') await stream.writeSSE({ data: JSON.stringify({ event: 'done', result: job.result }) });
+        else if (job.status === 'error') await stream.writeSSE({ data: JSON.stringify({ event: 'error', error: job.error }) });
+        else if (job.status === 'paused') await stream.writeSSE({ data: JSON.stringify({ event: 'paused' }) });
+        else if (job.status === 'cancelled') await stream.writeSSE({ data: JSON.stringify({ event: 'cancelled' }) });
+        
+        // 既然已经非 running，无需继续监听
+        job.emitter.off('progress', onProgress);
+        job.emitter.off('done', onDone);
+        job.emitter.off('error', onError);
+        job.emitter.off('paused', onPaused);
+        job.emitter.off('cancelled', onCancelled);
+        return;
+      }
 
       // 等待流关闭（客户端断开）再清理
       stream.onAbort(() => {

@@ -141,6 +141,12 @@ export function createJob(
         updateJobStatus(db, id, 'error', { error: (err as Error).message });
         emitter.emit('error', (err as Error).message);
       }
+    })
+    .finally(() => {
+      // TTL: 清理内存以防止泄漏
+      setTimeout(() => {
+        jobs.delete(id);
+      }, 10 * 60 * 1000); // 10分钟后清除
     });
 
   return id;
@@ -180,8 +186,10 @@ export function requestPause(db: DB, jobId: string): boolean {
   if (job) {
     if (job.status !== 'running') return false;
     job.pauseRequested = true;
+    return true; // 不立即写 DB，等 runner 真正停止时再写
   }
-  // DB 立即改 paused（UI 即时反馈；实际 runner 停下后会再写一次，幂等）
+  
+  // DB 兜底：如果内存中没有（僵尸任务），直接标为 paused
   const row = getJobRow(db, jobId);
   if (!row || row.status !== 'running') return false;
   updateJobStatus(db, jobId, 'paused');
@@ -212,4 +220,14 @@ export function requestCancel(db: DB, jobId: string): boolean {
 /** DB→内存同步：把内存 job 的终态信息也读出来（详情页展示用）*/
 export function getJobFromDb(db: DB, jobId: string): JobRow | null {
   return getJobRow(db, jobId);
+}
+
+/** 检查该项目是否有正在运行的任务 */
+export function hasActiveJobForProject(projectId: string): boolean {
+  for (const job of jobs.values()) {
+    if (job.projectId === projectId && job.status === 'running') {
+      return true;
+    }
+  }
+  return false;
 }

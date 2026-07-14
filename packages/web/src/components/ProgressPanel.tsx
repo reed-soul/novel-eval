@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useJobProgress } from '../hooks/useJobProgress.ts';
 
 export interface ProgressPanelProps {
@@ -10,6 +11,13 @@ export interface ProgressPanelProps {
 
 export function ProgressPanel({ jobId, onDone, onPause, onResume, onCancel }: ProgressPanelProps) {
   const { events, status, result } = useJobProgress(jobId);
+
+  useEffect(() => {
+    if (status === 'done' && onDone) {
+      const timer = setTimeout(() => onDone(result), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [status, onDone, result]);
 
   if (!jobId) return null;
 
@@ -46,7 +54,6 @@ export function ProgressPanel({ jobId, onDone, onPause, onResume, onCancel }: Pr
         {status === 'done' && result != null && (
           <div style={{ color: 'var(--green)', marginTop: 8 }}>
             ✅ 完成：{JSON.stringify(result)}
-            {onDone && setTimeout(() => onDone(result), 100) && null}
           </div>
         )}
         {status === 'error' && result != null && (

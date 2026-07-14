@@ -77,16 +77,24 @@ export interface GenerateBlueprintResult {
 
 /** 章数按 30%/50%/20% 分配到三幕，保证合计 = total */
 function splitChaptersByAct(total: number): [number, number, number] {
-  if (total <= 3) return [1, Math.max(1, total - 2), 1];
-  // act1/act3 至少 2，act2 取剩余（中段最长），保证合计 = total
-  const act1 = Math.max(2, Math.round(total * 0.30));
-  const act3 = Math.max(2, Math.round(total * 0.20));
-  const act2 = Math.max(1, total - act1 - act3);
-  // 修正溢出：若 act1+act3 已超 total，按比例缩
-  if (act1 + act2 + act3 > total) {
-    const overflow = (act1 + act2 + act3) - total;
-    return [Math.max(1, act1 - Math.ceil(overflow / 2)), Math.max(1, act2), Math.max(1, act3 - Math.floor(overflow / 2))];
+  if (total <= 0) return [0, 0, 0];
+  if (total === 1) return [1, 0, 0];
+  if (total === 2) return [1, 1, 0];
+  if (total === 3) return [1, 1, 1];
+
+  let act1 = Math.round(total * 0.30);
+  let act3 = Math.round(total * 0.20);
+  
+  if (act1 < 2) act1 = 2;
+  if (act3 < 2) act3 = 2;
+  
+  let act2 = total - act1 - act3;
+  if (act2 < 1) {
+    act2 = 1;
+    if (act1 >= act3) act1 = total - act2 - act3;
+    else act3 = total - act1 - act2;
   }
+  
   return [act1, act2, act3];
 }
 

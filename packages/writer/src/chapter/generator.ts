@@ -162,17 +162,27 @@ async function generateOnce(
     : '你是畅销小说作家。直接输出正文，不要任何解释、标题或元说明。';
   const systemPrompt = `${roleInstruction}\n\n【小说设定】\n${bible}`;
 
-  const res = await engine.run(userPrompt, {
-    systemPrompt,
-    temperature: getRuntimeConfig().generation.temperatures.chapter,
-    maxTokens: Math.ceil(wordCount * 2.5),
-    timeoutMs: getRuntimeConfig().generation.timeouts.chapterMs,
-    // 启用 prompt 缓存：bible 全文在 systemPrompt 里跨章稳定，命中后大幅降低重复发送成本。
-    enableCache: true,
-    // 关闭推理过程：蓝图已提供结构，thinking 会挤占 output 预算导致正文截断。
-    // DeepSeek 默认输出 thinking block；智谱端忽略此字段。
-    disableThinking: true,
-  });
+  let res;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      res = await engine.run(userPrompt, {
+        systemPrompt,
+        temperature: getRuntimeConfig().generation.temperatures.chapter,
+        maxTokens: Math.ceil(wordCount * 2.5),
+        timeoutMs: getRuntimeConfig().generation.timeouts.chapterMs,
+        enableCache: true,
+        disableThinking: true,
+      });
+      break;
+    } catch (error) {
+      onProgress?.('generate', `LLM 调用失败 (尝试 ${attempt}/3): ${(error as Error).message}`);
+      if (attempt === 3) throw error;
+      await new Promise(r => setTimeout(r, 2000 * attempt));
+    }
+  }
+  
+  if (!res) throw new Error('LLM 返回为空');
+  
   addUsage(totalUsage, res.usage);
 
   const content = cleanChapterContent(res.text, outline.title);
