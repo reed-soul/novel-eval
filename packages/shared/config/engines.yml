@@ -1,7 +1,7 @@
 # AI 引擎配置（v2.2：支持 GLM + DeepSeek 多引擎）
 # eval 和 writer 共用同一引擎配置。
 # default 指定启动时使用哪个引擎；可在 Web 端运行时切换。
-default: deepseek
+default: bigmodel
 
 bigmodel:
   provider: bigmodel
