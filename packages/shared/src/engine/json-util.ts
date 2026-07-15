@@ -95,10 +95,16 @@ function fixUnescapedQuotes(json: string): string {
         result += ch;
       } else {
         // 在字符串内遇到引号：判断是"字符串结束"还是"内容中的未转义引号"
-        // 看后面（跳过空白）是不是 JSON 结构字符
+        // 看后面（跳过空白）是不是 JSON 结构字符。
+        // 注意中文场景：中文标点（。、，！？；）跟在引号后时，
+        // 该引号通常是字符串结束（如 "他说"再见"。）——
+        // 若只认 ASCII 结构字符，会把结束引号误判为内容引号而转义，破坏 JSON。
         const nextNonSpace = json.slice(i + 1).match(/\S/);
         const nextCh = nextNonSpace?.[0];
-        if (nextCh === ',' || nextCh === '}' || nextCh === ']' || nextCh === ':') {
+        const isStructureCh = nextCh === ',' || nextCh === '}' || nextCh === ']' || nextCh === ':';
+        const isCjkClosingPunct = nextCh === '。' || nextCh === '，' || nextCh === '、'
+          || nextCh === '！' || nextCh === '？' || nextCh === '；' || nextCh === '\n';
+        if (isStructureCh || isCjkClosingPunct) {
           // 看起来是字符串结束
           inString = false;
           result += ch;

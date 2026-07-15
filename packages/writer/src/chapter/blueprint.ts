@@ -15,7 +15,7 @@ import { callWithValidation, loadPrompt, addUsage, zeroUsage, type SchemaSpec } 
 import type { DB } from '../db.ts';
 import type { PlotArchitecture, CharacterDynamic } from '../bible/types.ts';
 import type { Beat, ChapterOutline } from './types.ts';
-import { saveOutlines, countOutlines } from './store.ts';
+import { saveOutlines, countOutlines, getOutline } from './store.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROMPTS_DIR = resolve(__dirname, 'prompts');
@@ -102,9 +102,11 @@ export async function generateBlueprint(opts: GenerateBlueprintOptions): Promise
   const { engine, db, projectId, plot, characters, totalChapters, onProgress } = opts;
   const totalUsage = { ...zeroUsage };
 
-  // Checkpoint：已有 outline 则跳过
+  // Checkpoint：仅当 outline 已达目标章数才整体跳过。
+  // 若只是部分完成（如长任务中断后重跑），不跳过——进入下面的批次级续传，
+  // 每批开头会检测该批起始章是否已落库并跳过，实现真正的断点续传。
   const existing = countOutlines(db, projectId);
-  if (existing > 0) {
+  if (existing >= totalChapters) {
     onProgress?.('blueprint', `（已完成 ${existing} 章，跳过）`);
     const { getAllOutlines } = await import('./store.ts');
     return { outlines: getAllOutlines(db, projectId), beats: {} as Record<1 | 2 | 3, Beat[]>, usage: { ...zeroUsage } };
@@ -144,59 +146,85 @@ export async function generateBlueprint(opts: GenerateBlueprintOptions): Promise
     onProgress?.(`act${actNum}-beats`, `✓ ${beats[actNum].length} 个段落`);
   }
 
-  // ─── 第二层：段落 → 章节 ────────────────────────────────────────
+  // ─── 第二层：段落 → 章节（大幕自动分批，避免单次调用超时/截断）─────
+  // 一幕章数 > BATCH_SIZE 时，按 beats 均分到多批，每批单独调用 LLM。
+  // 实测智谱 GLM-5.2 生成 17 章 JSON 仍会 abort，BATCH_SIZE 收紧到 12，
+  // 配合更宽的超时（每章 ~6 秒），保证单批稳稳落在超时区内。
+  const CHAPTER_BATCH_SIZE = 12;
   const allOutlines: Omit<ChapterOutline, 'id' | 'projectId' | 'status'>[] = [];
   let startNumber = 1;
   for (const actNum of [1, 2, 3] as const) {
     const budget = actBudget[actNum];
-    const endNumber = startNumber + budget - 1;
-    const beatsBlock = beats[actNum].map((b, i) =>
-      `段落${i + 1}【${b.position}】目标：${b.goal}（张力${b.tension}）伏笔：${b.foreshadows.join('、') || '无'}`,
-    ).join('\n');
+    const actBeats = beats[actNum];
     const charList = characters.map((c) => `${c.name}（${c.role}）`).join('、');
     const actForeshadows = plot.foreshadows
       .filter((f) => f.setupAct === actNum || f.resolveAct === actNum)
       .map((f) => `${f.description}（${f.setupAct === actNum ? '本幕埋设' : ''}${f.resolveAct === actNum ? '本幕回收' : ''}）`)
       .join('\n') || '（无）';
 
-    onProgress?.(`act${actNum}-chapters`, `生成第${actNum}幕章节（${startNumber}-${endNumber}）...`);
+    // 计算本幕需要几批
+    const batchCount = Math.max(1, Math.ceil(budget / CHAPTER_BATCH_SIZE));
+    const chaptersPerBatch = Math.ceil(budget / batchCount);
     const promptTpl = loadPrompt('blueprint-chapters', PROMPTS_DIR);
-    const prompt = promptTpl
-      .replaceAll('{ACT}', String(actNum))
-      .replaceAll('{CHAPTER_BUDGET}', String(budget))
-      .replaceAll('{START_NUMBER}', String(startNumber))
-      .replaceAll('{END_NUMBER}', String(endNumber))
-      .replace('{BEATS}', beatsBlock)
-      .replace('{CHARACTERS}', charList)
-      .replace('{ACT_FORESHADOWS}', actForeshadows);
 
-    const res = await callWithValidation<{ chapters: Array<{ number: number; title: string; beat: string; role: string; purpose: string; suspense_level: number; foreshadowing: string; twist_level: number; summary: string; }> }>(engine, prompt, {
-      systemPrompt: '你是资深小说编辑。只输出 JSON。',
-      temperature: getRuntimeConfig().generation.temperatures.blueprint,
-      // 按章节数动态分配 token 预算：每章摘要 ~300 token + JSON 结构开销。
-      // 第二幕常 40+ 章，固定 6000 会截断（实测 40 章需 ~14000 token）。
-      maxTokens: Math.max(6000, budget * 400),
-      timeoutMs: getRuntimeConfig().generation.timeouts.blueprintMs,
-      schema: { chapters: { type: 'array', min: budget, required: true, itemSpec: CHAPTER_ITEM_SCHEMA } },
-      maxAttempts: 3,
-    });
-    if (!res.ok || !res.data) throw new Error(`第${actNum}幕章节生成失败：${res.errors.join('; ')}`);
-    addUsage(totalUsage, res.totalUsage);
+    for (let batchIdx = 0; batchIdx < batchCount; batchIdx++) {
+      const batchStart = startNumber + batchIdx * chaptersPerBatch;
+      const remaining = budget - batchIdx * chaptersPerBatch;
+      const batchBudget = Math.min(chaptersPerBatch, remaining);
+      const batchEnd = batchStart + batchBudget - 1;
 
-    for (const c of res.data.chapters) {
-      allOutlines.push({
+      // 断点续传：若该批起始章已落库，说明上一轮已生成，跳过本批
+      if (getOutline(db, projectId, batchStart)) {
+        onProgress?.(`act${actNum}-chapters`, `（第${actNum}幕 ${batchStart}-${batchEnd} 已存在，跳过）`);
+        continue;
+      }
+
+      // 本批覆盖的 beats：按批次比例切分（保持叙事连续）
+      const beatStartIdx = Math.floor((batchIdx / batchCount) * actBeats.length);
+      const beatEndIdx = Math.floor(((batchIdx + 1) / batchCount) * actBeats.length);
+      const batchBeats = actBeats.slice(beatStartIdx, Math.max(beatEndIdx, beatStartIdx + 1));
+      const beatsBlock = batchBeats.map((b, i) =>
+        `段落${beatStartIdx + i + 1}【${b.position}】目标：${b.goal}（张力${b.tension}）伏笔：${b.foreshadows.join('、') || '无'}`,
+      ).join('\n');
+
+      onProgress?.(`act${actNum}-chapters`, `生成第${actNum}幕章节（${batchStart}-${batchEnd}）${batchCount > 1 ? `[批次 ${batchIdx + 1}/${batchCount}]` : ''}...`);
+      const prompt = promptTpl
+        .replaceAll('{ACT}', String(actNum))
+        .replaceAll('{CHAPTER_BUDGET}', String(batchBudget))
+        .replaceAll('{START_NUMBER}', String(batchStart))
+        .replaceAll('{END_NUMBER}', String(batchEnd))
+        .replace('{BEATS}', beatsBlock)
+        .replace('{CHARACTERS}', charList)
+        .replace('{ACT_FORESHADOWS}', actForeshadows);
+
+      const res = await callWithValidation<{ chapters: Array<{ number: number; title: string; beat: string; role: string; purpose: string; suspense_level: number; foreshadowing: string; twist_level: number; summary: string; }> }>(engine, prompt, {
+        systemPrompt: '你是资深小说编辑。只输出 JSON。',
+        temperature: getRuntimeConfig().generation.temperatures.blueprint,
+        // 按本批章节数动态分配 token 预算：每章摘要 ~300 token + JSON 结构开销。
+        maxTokens: Math.max(6000, batchBudget * 400),
+        // 按章数动态分配超时：基础 blueprintMs + 每章 ~6 秒（智谱生成 JSON 较慢，留足余量）。
+        timeoutMs: Math.max(getRuntimeConfig().generation.timeouts.blueprintMs, batchBudget * 6000),
+        schema: { chapters: { type: 'array', min: batchBudget, required: true, itemSpec: CHAPTER_ITEM_SCHEMA } },
+        maxAttempts: 3,
+      });
+      if (!res.ok || !res.data) throw new Error(`第${actNum}幕章节生成失败（批次 ${batchIdx + 1}）：${res.errors.join('; ')}`);
+      addUsage(totalUsage, res.totalUsage);
+
+      const batchOutlines: Omit<ChapterOutline, 'id' | 'projectId' | 'status'>[] = res.data.chapters.map((c) => ({
         number: c.number, title: c.title, act: actNum, beat: c.beat,
         role: c.role, purpose: c.purpose,
         suspenseLevel: c.suspense_level, foreshadowing: c.foreshadowing,
         twistLevel: c.twist_level, summary: c.summary,
-      });
+      }));
+      // 增量落盘：每批生成完立即写库，中断后重跑可从断点续传
+      saveOutlines(db, projectId, batchOutlines);
+      allOutlines.push(...batchOutlines);
+      onProgress?.(`act${actNum}-chapters`, `✓ 第${actNum}幕累计 ${allOutlines.filter((o) => o.act === actNum).length} 章`);
     }
-    onProgress?.(`act${actNum}-chapters`, `✓ ${res.data.chapters.length} 章`);
-    startNumber = endNumber + 1;
+    startNumber += budget;
   }
 
-  // 持久化（事务批量写入）
-  saveOutlines(db, projectId, allOutlines);
+  // 持久化已在每批生成后增量完成（saveOutlines per batch），此处无需重复写入。
   onProgress?.('done', `蓝图生成完成：${allOutlines.length} 章`);
 
   // 返回时补齐 id/projectId/status（store 写入时生成，这里读回）

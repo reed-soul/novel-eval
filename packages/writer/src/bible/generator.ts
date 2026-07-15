@@ -314,7 +314,7 @@ export async function generateBible(opts: GenerateBibleOptions): Promise<Generat
 
 // ─── full_text 拼接（M2 单章生成时作为「设定」注入）──────────────
 
-function buildBibleFullText(parts: {
+export function buildBibleFullText(parts: {
   topic: string; genre: string; audience: string;
   coreSeed: CoreSeed;
   characterDynamics: CharacterDynamic[];

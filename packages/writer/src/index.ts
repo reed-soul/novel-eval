@@ -14,12 +14,14 @@ import { loadEnv } from './load-env.ts';
 import { openDb, closeDb, writerDataDir } from './db.ts';
 import { createProject, getProject, listProjects, updateProjectStatus, type Project } from './project.ts';
 import { generateBible } from './bible/generator.ts';
+import { importBible, type ImportBibleInput } from './bible/importer.ts';
 import { generateBlueprint } from './chapter/blueprint.ts';
 import { generateChapter, generateRange } from './chapter/generator.ts';
 import { ensureChapterConsistency } from './chapter/consistency.ts';
 import { getBibleForChapter } from './chapter/store.ts';
 import { getAllOutlines, countOutlines, countChapters, getChapter } from './chapter/store.ts';
 import type { CharacterDynamic } from './bible/types.ts';
+import { readFileSync } from 'node:fs';
 import * as readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import { isServerRunning, startApiJob, streamJobEvents } from './api-client.ts';
@@ -32,6 +34,16 @@ interface InitArgs {
   topic: string;
   yes?: boolean;
   engine?: string;          // 覆盖 engines.yml 默认引擎
+}
+
+interface ImportBibleArgs {
+  command: 'import-bible';
+  title: string;
+  genre: string;
+  audience: string;
+  topic: string;
+  bibleFile: string;        // 结构化 bible JSON 文件路径
+  yes?: boolean;
 }
 
 interface OutlineArgs {
@@ -80,7 +92,7 @@ interface ResumeArgs {
   engine?: string;
 }
 
-type CliArgs = InitArgs | OutlineArgs | ChapterArgs | AutoArgs | StatusArgs | ResumeArgs | { command: 'list' } | { command: 'help' };
+type CliArgs = InitArgs | ImportBibleArgs | OutlineArgs | ChapterArgs | AutoArgs | StatusArgs | ResumeArgs | { command: 'list' } | { command: 'help' };
 
 function parseArgs(argv: string[]): CliArgs {
   // argv = [node, script, ('write'), ('--'), command, ...rest]
@@ -155,6 +167,20 @@ function parseArgs(argv: string[]): CliArgs {
     return args;
   }
 
+  if (cmd === 'import-bible') {
+    const args: ImportBibleArgs = { command: 'import-bible', title: '', genre: '', audience: '', topic: '', bibleFile: '' };
+    for (let i = 0; i < rest.length; i++) {
+      const a = rest[i];
+      if (a === '--title') args.title = rest[++i];
+      else if (a === '--genre') args.genre = rest[++i];
+      else if (a === '--audience') args.audience = rest[++i];
+      else if (a === '--topic') args.topic = rest[++i];
+      else if (a === '--bible-file') args.bibleFile = rest[++i];
+      else if (a === '-y' || a === '--yes') args.yes = true;
+    }
+    return args;
+  }
+
   if (cmd === 'init') {
     const args: InitArgs = { command: 'init', title: '', genre: '', audience: '', topic: '' };
     for (let i = 0; i < rest.length; i++) {
@@ -176,16 +202,27 @@ function printHelp(): void {
   console.log(`Novel Writer — AI 驱动的小说写作工具
 
 用法：
-  novel-eval write init     --title <书名> --genre <类型> --audience <受众> --topic <主题>
-  novel-eval write outline  <projectId> [--chapters N]
-  novel-eval write chapter  <projectId> --number N | --from A --to B | --all [--max-revise N]
-  novel-eval write resume   <projectId>           从上次断点续写（自动检测已写章节 + 修复半成品状态）
-  novel-eval write auto     --title ... --genre ... --audience ... --topic ... --chapters N
-  novel-eval write status   <projectId>
+  novel-eval write init         --title <书名> --genre <类型> --audience <受众> --topic <主题>
+  novel-eval write import-bible --title <书名> --genre <类型> --audience <受众> --topic <主题> --bible-file <结构化bible.json>
+  novel-eval write outline      <projectId> [--chapters N]
+  novel-eval write chapter      <projectId> --number N | --from A --to B | --all [--max-revise N]
+  novel-eval write resume       <projectId>           从上次断点续写（自动检测已写章节 + 修复半成品状态）
+  novel-eval write auto         --title ... --genre ... --audience ... --topic ... --chapters N
+  novel-eval write status       <projectId>
   novel-eval write list
+
+【两种创作模式】
+  init        适合「只有一句话/一个想法」的创作者——AI 用雪花法从 topic 自动发散出角色/世界观/情节。
+  import-bible 适合「已有完整设定/大纲」的创作者——直接导入结构化 bible JSON，跳过 AI 发散，
+              保证设定不走样。后续 outline/chapter 照常由 AI 生成。两种模式不冲突。
 
 init（创建项目 + 生成 bible 设定集）：
   --title/--genre/--audience/--topic   必填
+  -y, --yes           跳过确认屏
+
+import-bible（导入结构化 bible，规格模式）：
+  --title/--genre/--audience/--topic   必填（topic 作为梗概拼入设定全文）
+  --bible-file <path> 必填，结构化 JSON（含 coreSeed/characterDynamics/worldBuilding/plotArchitecture）
   -y, --yes           跳过确认屏
 
 outline（把 bible 拆成章节蓝图）：
@@ -309,6 +346,65 @@ async function runInit(args: InitArgs): Promise<void> {
     console.log(`  伏笔：${bible.plotArchitecture.foreshadows.length} 个`);
     console.log(`  设定全文：${bible.fullText.length} 字`);
     console.log(`\n下一步（M2）：novel-eval write outline ${project.id}`);
+  } finally {
+    closeDb(db);
+  }
+}
+
+async function runImportBible(args: ImportBibleArgs): Promise<void> {
+  // 校验必填
+  const missing: string[] = [];
+  if (!args.title) missing.push('--title');
+  if (!args.genre) missing.push('--genre');
+  if (!args.audience) missing.push('--audience');
+  if (!args.topic) missing.push('--topic');
+  if (!args.bibleFile) missing.push('--bible-file');
+  if (missing.length) {
+    console.error(`错误：缺少必填参数：${missing.join(', ')}`);
+    process.exit(1);
+  }
+
+  // 读取并解析结构化 bible JSON
+  let input: ImportBibleInput;
+  try {
+    const raw = readFileSync(args.bibleFile, 'utf-8');
+    input = JSON.parse(raw) as ImportBibleInput;
+  } catch (e) {
+    console.error(`读取 bible 文件失败：${(e as Error).message}`);
+    process.exit(1);
+  }
+
+  console.log('Novel Writer — 导入结构化 bible（规格模式，跳过雪花法）\n');
+  console.log(`  书名：${args.title}`);
+  console.log(`  类型：${args.genre} · 受众：${args.audience}`);
+  console.log(`  bible 文件：${args.bibleFile}`);
+  console.log(`  角色：${input.characterDynamics?.length ?? 0} 个（来自你的设定，不经过 AI 发散）`);
+  console.log('');
+
+  if (!args.yes) {
+    const ok = await confirmProceed('将导入 bible（不调用 AI，直接写库）');
+    if (!ok) { console.log('已取消'); return; }
+  }
+
+  const db = openDb();
+  try {
+    const project = createProject(db, {
+      title: args.title, genre: args.genre, audience: args.audience, topic: args.topic,
+    });
+
+    const { bible } = importBible({
+      db, projectId: project.id, input,
+      topic: args.topic, genre: args.genre, audience: args.audience,
+    });
+
+    updateProjectStatus(db, project.id, 'bible_done');
+
+    console.log('\n✓ Bible 导入完成');
+    console.log(`  项目 ID：${project.id}`);
+    console.log(`  角色：${bible.characterDynamics.length} 个`);
+    console.log(`  伏笔：${bible.plotArchitecture.foreshadows.length} 个`);
+    console.log(`  设定全文：${bible.fullText.length} 字`);
+    console.log(`\n下一步：novel-eval write outline ${project.id} --chapters 110`);
   } finally {
     closeDb(db);
   }
@@ -781,6 +877,7 @@ async function main(): Promise<void> {
   if (args.command === 'chapter') { await runChapter(args); return; }
   if (args.command === 'resume') { await runResume(args); return; }
   if (args.command === 'auto') { await runAuto(args); return; }
+  if (args.command === 'import-bible') { await runImportBible(args); return; }
   await runInit(args);
 }
 
