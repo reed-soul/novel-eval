@@ -62,3 +62,32 @@ export type {
   CharacterProfile,
   CharacterRelationship,
 } from './types.ts';
+
+// HTTP / API DTOs
+export type {
+  ParseResult,
+  EditChapterRequest,
+  StoryStateDto,
+  StoryStateDeltaDto,
+  GenerateChaptersRequest,
+  JobStatusResponse,
+  JobStatusDto,
+  JobTypeDto,
+  EvaluationReportResponse,
+  EvaluationDimensionDto,
+  EvaluationNovelDto,
+  EvaluationOverallDto,
+  EvaluationEmotionalPointDto,
+  EvaluationSuggestionDto,
+  EvaluationMarketBenchmarkDto,
+  EvaluationMarketComparableDto,
+} from './dto/index.ts';
+export {
+  isRecord,
+  fail,
+  parseEditChapterRequest,
+  parseGenerateChaptersRequest,
+  parseEvaluationReportResponse,
+  toEvaluationReportResponse,
+  unwrapEvaluationPayload,
+} from './dto/index.ts';

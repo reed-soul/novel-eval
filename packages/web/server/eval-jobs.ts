@@ -78,8 +78,8 @@ export async function runEvalTaskInBackground(taskId: string, options: Omit<Eval
     
     completeEvalJob(taskId, result);
     return result;
-  } catch (err: any) {
-    failEvalJob(taskId, err);
+  } catch (err: unknown) {
+    failEvalJob(taskId, err instanceof Error ? err : new Error(String(err)));
     throw err;
   }
 }

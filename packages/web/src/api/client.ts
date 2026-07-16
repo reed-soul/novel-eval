@@ -1,4 +1,18 @@
 /** API 客户端封装 */
+import type {
+  EvaluationReportResponse,
+  JobStatusResponse,
+  EditChapterRequest,
+  GenerateChaptersRequest,
+} from '@novel-eval/shared';
+
+export type {
+  EvaluationReportResponse,
+  JobStatusResponse,
+  EditChapterRequest,
+  GenerateChaptersRequest,
+};
+
 const BASE = '/api';
 
 export async function api<T>(path: string): Promise<T> {
@@ -142,24 +156,14 @@ export async function diagnoseChapter(projectId: string, chapterNumber: number):
 
 // ─── Job（写作任务 — 暂停/继续/取消）──────────────────────────────
 
-export type JobType = 'bible' | 'outline' | 'chapter' | 'correction';
-export type JobStatus = 'running' | 'paused' | 'completed' | 'failed' | 'cancelled';
+export type JobType = JobStatusResponse['type'];
+export type JobStatus = JobStatusResponse['status'];
 
-export interface JobInfo {
-  id: string;
-  type: JobType;
-  projectId: string;
-  status: JobStatus;
-  events?: number;
-  lastChapter?: number;
-  fromChapter?: number;
-  toChapter?: number;
-  result?: unknown;
-  error?: string | null;
-}
+/** @deprecated Prefer JobStatusResponse from shared DTOs */
+export type JobInfo = JobStatusResponse;
 
 export interface ActiveJobResponse {
-  job: (JobInfo & {
+  job: (JobStatusResponse & {
     fromChapter: number | null;
     toChapter: number | null;
     qualityGate: boolean;
@@ -186,8 +190,12 @@ export async function cancelJob(jobId: string): Promise<void> {
   await apiPost(`/projects/jobs/${jobId}/cancel`);
 }
 
-export async function getJobStatus(jobId: string): Promise<JobInfo> {
-  return api<JobInfo>(`/projects/jobs/${jobId}`);
+export async function getJobStatus(jobId: string): Promise<JobStatusResponse> {
+  return api<JobStatusResponse>(`/projects/jobs/${jobId}`);
+}
+
+export async function getEvaluationReport(taskId: string): Promise<EvaluationReportResponse> {
+  return api<EvaluationReportResponse>(`/eval/${taskId}/result`);
 }
 
 // ─── 经验驱动的局部修正（M5）──────────────────────────────────────

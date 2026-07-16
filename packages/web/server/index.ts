@@ -27,6 +27,7 @@ import { configRoutes } from './routes/config.ts';
 import { evalRoutes } from './routes/eval.ts';
 import { evalTasksRouter } from './routes/eval-tasks.ts';
 import { EngineRegistry } from './engine-registry.ts';
+import { httpErrorJson, toHttpError } from './middleware/error-mapper.ts';
 
 loadEnv();
 const databasePath = process.env.WRITER_DB_PATH;
@@ -42,6 +43,11 @@ const config = loadWriterConfig();
 const registry = new EngineRegistry(config.engines, config.engineName);
 
 const app = new Hono();
+
+app.onError((err, c) => {
+  const mapped = toHttpError(err);
+  return c.json(httpErrorJson(mapped), mapped.status as 400 | 402 | 409 | 422 | 500);
+});
 
 app.route('/api/projects', projectRoutes(db));
 app.route('/api/projects', bibleRoutes(db));

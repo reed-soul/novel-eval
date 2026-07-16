@@ -317,6 +317,84 @@ describe('API 路由', () => {
     assert.ok(zipBuf.byteLength > 100);
   });
 
+  it('rejects generate bodies with negative from/to as ValidationError', async () => {
+    const registry = new EngineRegistry(
+      {
+        mock: {
+          name: 'mock',
+          provider: 'openai',
+          model: 'm',
+          baseUrl: 'http://localhost',
+          apiKeyEnv: 'NONE',
+        },
+      },
+      'mock',
+    );
+    const app = new Hono();
+    app.route('/api/projects', generateRoutes(db, registry));
+
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+    seedOutline(db, p.id, 1, '第一章');
+
+    const res = await app.fetch(new Request(`http://test/api/projects/${p.id}/chapters/generate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: -1, to: 2 }),
+    }));
+    assert.equal(res.status, 400);
+    const body = await res.json() as { code: string };
+    assert.equal(body.code, 'ValidationError');
+  });
+
+  it('eval result API returns stable EvaluationReportResponse DTO, not {task,result} wrapper', async () => {
+    const { mkdirSync, writeFileSync, rmSync: rm } = await import('node:fs');
+    const { join: pathJoin } = await import('node:path');
+    const { evalTasksRouter } = await import('../../server/routes/eval-tasks.ts');
+
+    const evalsDir = pathJoin(process.cwd(), 'data', 'evals');
+    mkdirSync(evalsDir, { recursive: true });
+    const taskId = 'dto-shape-task';
+    const nestedLeak = {
+      task: { id: 'internal-task', status: 'completed' },
+      result: {
+        schemaVersion: '1.1.0',
+        novel: { title: '测书', author: '作者', totalChapters: 1, wordCount: 100 },
+        overall: { totalScore: 80, grade: 'A' },
+        dimensions: {
+          storyStructure: { score: 80, analysis: 'ok' },
+          characterization: { score: 80, analysis: 'ok' },
+          writingQuality: { score: 80, analysis: 'ok' },
+          emotionalResonance: { score: 80, analysis: 'ok' },
+          marketPotential: { score: 80, analysis: 'ok' },
+        },
+        chapters: [],
+        characters: [],
+        emotionalCurve: [],
+        excerpts: [],
+        suggestions: [],
+      },
+    };
+    writeFileSync(pathJoin(evalsDir, `${taskId}.json`), JSON.stringify(nestedLeak));
+
+    try {
+      const app = new Hono();
+      app.route('/api/eval', evalTasksRouter);
+      const res = await app.fetch(new Request(`http://test/api/eval/${taskId}/result`));
+      assert.equal(res.status, 200);
+      const body = await res.json() as Record<string, unknown>;
+      // Stable flat report DTO — not the evaluate() { task, result } envelope
+      assert.ok(body.overall, 'expected flat overall');
+      assert.ok(body.novel, 'expected flat novel');
+      assert.ok(body.dimensions, 'expected flat dimensions');
+      assert.equal('result' in body, false, 'must not leak {task,result} wrapper');
+      const overall = body.overall as { totalScore: number; grade: string };
+      assert.equal(overall.grade, 'A');
+      assert.equal(overall.totalScore, 80);
+    } finally {
+      rm(pathJoin(evalsDir, `${taskId}.json`), { force: true });
+    }
+  });
+
   it('generate 路由仅经 WriterApplication facade，不直写 SQL / 旧 store upsert', async () => {
     const generateSrc = readFileSync(
       join(__dirname, '../../server/routes/generate.ts'),

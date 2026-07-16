@@ -5,7 +5,7 @@
  */
 import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
-import { createEngine } from '@novel-eval/shared';
+import { createEngine, parseGenerateChaptersRequest } from '@novel-eval/shared';
 import {
   type DB,
   loadWriterConfig,
@@ -23,6 +23,7 @@ import {
   projectId,
   completeProjectIfFullyWritten,
   finalizeExhaustedResumeJob,
+  ValidationError,
   type CharacterDynamic,
   type PlotArchitecture,
 } from '@novel-eval/writer';
@@ -39,6 +40,7 @@ import {
   type JobRunnerContext,
 } from '../jobs.ts';
 import type { EngineRegistry } from '../engine-registry.ts';
+import { httpErrorJson, toHttpError } from '../middleware/error-mapper.ts';
 
 function readCharacterDynamics(bibleDoc: Record<string, unknown>): CharacterDynamic[] {
   const dynamics = bibleDoc.characterDynamics;
@@ -238,16 +240,21 @@ export function generateRoutes(
     if (countOutlines(db, id) === 0) return c.json({ error: '蓝图未生成' }, 400);
     if (hasActiveJobForProject(db, id)) return c.json({ error: '项目有正在运行的任务' }, 409);
 
-    const body = await c.req.json<{
-      from: number;
-      to: number;
-      qualityGate?: boolean;
-      maxRevise?: number;
-      engineName?: string;
-      model?: string;
-      wordCount?: number;
-      maxCostRmb?: number;
-    }>();
+    let raw: unknown;
+    try {
+      raw = await c.req.json();
+    } catch {
+      const mapped = toHttpError(new ValidationError('请求体必须是合法 JSON'));
+      return c.json(httpErrorJson(mapped), mapped.status as 400);
+    }
+
+    const parsed = parseGenerateChaptersRequest(raw);
+    if (!parsed.ok) {
+      const mapped = toHttpError(new ValidationError(parsed.message));
+      return c.json(httpErrorJson(mapped), mapped.status as 400);
+    }
+    const body = parsed.data;
+
     if (body.qualityGate) {
       return c.json({ error: 'qualityGate is unsupported until the chapter quality system lands' }, 400);
     }

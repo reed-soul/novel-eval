@@ -203,7 +203,7 @@ describe('PUT 章节编辑', () => {
     assert.equal(ch?.content, newContent);
   });
 
-  it('只传 content（ChapterReader 默认路径）返回 400，不改 active story state、不 invalidate 下游', async () => {
+  it('rejects invalid edit bodies with ValidationError code', async () => {
     const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     seedOutline(db, p.id, 1, '第一章');
     seedOutline(db, p.id, 2, '第二章');
@@ -225,8 +225,9 @@ describe('PUT 章节编辑', () => {
       body: JSON.stringify({ content: '这是编辑后的新正文内容，比原来更长。' }),
     }));
     assert.equal(res.status, 400);
-    const body = await res.json() as { error: string };
-    assert.match(body.error, /state|delta/i);
+    const body = await res.json() as { code: string; message: string; error?: string };
+    assert.equal(body.code, 'ValidationError');
+    assert.match(body.message ?? body.error ?? '', /state|delta/i);
 
     const chapters = new ChapterRepository(db);
     const chapter = chapters.getByOutlinePosition(branded, 1);

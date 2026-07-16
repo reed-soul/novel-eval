@@ -1,3 +1,17 @@
+export class ValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
+export class EvaluationIncompleteError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'EvaluationIncompleteError';
+  }
+}
+
 export class InvalidStoryStateDeltaError extends Error {
   constructor(message: string) {
     super(message);

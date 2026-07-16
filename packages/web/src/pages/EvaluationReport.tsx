@@ -1,6 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { RadarChart } from '../components/RadarChart.tsx';
+import {
+  getEvaluationReport,
+  type EvaluationReportResponse,
+} from '../api/client.ts';
+import type {
+  EvaluationDimensionDto,
+  EvaluationEmotionalPointDto,
+  EvaluationSuggestionDto,
+  EvaluationMarketComparableDto,
+} from '@novel-eval/shared';
+import type { CharacterProfile, CharacterRelationship } from '@novel-eval/shared';
 
 const DIMENSION_LABELS: Record<string, string> = {
   storyStructure: '故事架构',
@@ -10,28 +21,43 @@ const DIMENSION_LABELS: Record<string, string> = {
   marketPotential: '市场潜力',
 };
 
+interface TensionPointView extends EvaluationEmotionalPointDto {
+  x: number;
+  y: number;
+  idx: number;
+}
+
+interface ActiveTensionPoint {
+  x: number;
+  y: number;
+  idx: number;
+  tension: number;
+  chapterId: string;
+  annotation?: string | null;
+}
+
+function dimensionScore(dimensions: Record<string, EvaluationDimensionDto>, key: string): number {
+  return dimensions[key]?.score ?? 0;
+}
+
 export function EvaluationReport() {
   const { taskId } = useParams();
-  
-  const [report, setReport] = useState<any>(null);
+
+  const [report, setReport] = useState<EvaluationReportResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTensionPoint, setActiveTensionPoint] = useState<any>(null);
+  const [activeTensionPoint, setActiveTensionPoint] = useState<ActiveTensionPoint | null>(null);
   const chartContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!taskId) return;
-    fetch(`/api/eval/${taskId}/result`)
-      .then(res => {
-        if (!res.ok) throw new Error('报告不存在或仍在生成中');
-        return res.json();
-      })
-      .then(data => {
+    getEvaluationReport(taskId)
+      .then((data) => {
         setReport(data);
         setLoading(false);
       })
-      .catch(err => {
-        setError(err.message);
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : '报告不存在或仍在生成中');
         setLoading(false);
       });
   }, [taskId]);
@@ -52,13 +78,12 @@ export function EvaluationReport() {
 
   const { overall, dimensions, novel, suggestions } = report;
 
-  // Radar Data Extraction (Aligned with actual backend keys)
   const radarData = [
-    dimensions.storyStructure?.score || 0,
-    dimensions.characterization?.score || 0,
-    dimensions.writingQuality?.score || 0,
-    dimensions.emotionalResonance?.score || 0,
-    dimensions.marketPotential?.score || 0,
+    dimensionScore(dimensions, 'storyStructure'),
+    dimensionScore(dimensions, 'characterization'),
+    dimensionScore(dimensions, 'writingQuality'),
+    dimensionScore(dimensions, 'emotionalResonance'),
+    dimensionScore(dimensions, 'marketPotential'),
   ];
 
   const radarLabels = [
@@ -79,32 +104,32 @@ export function EvaluationReport() {
     }
   };
 
-  // SVG Tension Curve Coordinate computations
-  const tensionCurve = report.emotionalCurve || [];
+  const tensionCurve = report.emotionalCurve ?? [];
   const svgWidth = 800;
   const svgHeight = 220;
   const svgPadding = { top: 20, right: 45, bottom: 35, left: 45 };
-  
+
   const chartWidth = svgWidth - svgPadding.left - svgPadding.right;
   const chartHeight = svgHeight - svgPadding.top - svgPadding.bottom;
-  
-  const tensionPoints = tensionCurve.map((pt: any, idx: number) => {
+
+  const tensionPoints: TensionPointView[] = tensionCurve.map((pt, idx) => {
     const x = svgPadding.left + (idx / Math.max(1, tensionCurve.length - 1)) * chartWidth;
     const y = svgPadding.top + chartHeight - (pt.tension / 100) * chartHeight;
     return { ...pt, x, y, idx };
   });
 
   const tensionLinePath = tensionPoints.length > 0
-    ? `M ${tensionPoints.map((p: any) => `${p.x},${p.y}`).join(' L ')}`
+    ? `M ${tensionPoints.map((p) => `${p.x},${p.y}`).join(' L ')}`
     : '';
 
   const tensionAreaPath = tensionPoints.length > 0
     ? `${tensionLinePath} L ${tensionPoints[tensionPoints.length - 1].x},${svgHeight - svgPadding.bottom} L ${tensionPoints[0].x},${svgHeight - svgPadding.bottom} Z`
     : '';
 
+  const characters: CharacterProfile[] = report.characters ?? [];
+
   return (
     <div className="container">
-      {/* Report Header */}
       <div className="eval-report-header">
         <div>
           <Link to="/eval" className="back-link" style={{ marginBottom: 12 }}>
@@ -130,17 +155,14 @@ export function EvaluationReport() {
         </div>
       </div>
 
-      {/* Main Grid: Radar and Details */}
       <div className="report-grid">
-        {/* Left Column: Radar Chart */}
         <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <h2 style={{ alignSelf: 'flex-start', marginBottom: 16 }}>维度解析</h2>
           <RadarChart data={radarData} labels={radarLabels} size={300} />
         </div>
 
-        {/* Right Column: Detailed Dimensions */}
         <div className="dim-list">
-          {Object.entries(dimensions).map(([key, dim]: [string, any]) => (
+          {Object.entries(dimensions).map(([key, dim]) => (
             <div key={key} className="dim-item">
               <div className="dim-score-box">
                 <span className="dim-score-value">{dim.score?.toFixed(1) || dim.score}</span>
@@ -154,14 +176,13 @@ export function EvaluationReport() {
         </div>
       </div>
 
-      {/* Tension Curve SVG Line Chart */}
       {tensionCurve.length > 0 && (
         <div className="card tension-chart-card" style={{ marginTop: 32 }}>
           <h2>章节情绪张力曲线</h2>
           <div className="tension-chart-wrapper" ref={chartContainerRef} style={{ marginTop: 24 }}>
-            <svg 
-              viewBox={`0 0 ${svgWidth} ${svgHeight}`} 
-              width="100%" 
+            <svg
+              viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+              width="100%"
               height="100%"
               style={{ overflow: 'visible' }}
             >
@@ -176,26 +197,25 @@ export function EvaluationReport() {
                 </filter>
               </defs>
 
-              {/* Grid Lines */}
               {[0, 25, 50, 75, 100].map((gridVal) => {
                 const y = svgPadding.top + chartHeight - (gridVal / 100) * chartHeight;
                 return (
                   <g key={gridVal}>
-                    <line 
-                      x1={svgPadding.left} 
-                      y1={y} 
-                      x2={svgWidth - svgPadding.right} 
-                      y2={y} 
-                      stroke="var(--border)" 
-                      strokeWidth="1" 
-                      strokeDasharray="4,4" 
+                    <line
+                      x1={svgPadding.left}
+                      y1={y}
+                      x2={svgWidth - svgPadding.right}
+                      y2={y}
+                      stroke="var(--border)"
+                      strokeWidth="1"
+                      strokeDasharray="4,4"
                     />
-                    <text 
-                      x={svgPadding.left - 10} 
-                      y={y} 
-                      fill="var(--text-muted)" 
-                      fontSize="10" 
-                      textAnchor="end" 
+                    <text
+                      x={svgPadding.left - 10}
+                      y={y}
+                      fill="var(--text-muted)"
+                      fontSize="10"
+                      textAnchor="end"
                       dominantBaseline="middle"
                     >
                       {gridVal}
@@ -204,24 +224,21 @@ export function EvaluationReport() {
                 );
               })}
 
-              {/* Area Path */}
               {tensionAreaPath && (
                 <path d={tensionAreaPath} fill="url(#chart-grad)" />
               )}
 
-              {/* Line Path */}
               {tensionLinePath && (
-                <path 
-                  d={tensionLinePath} 
-                  fill="none" 
-                  stroke="var(--primary)" 
-                  strokeWidth="3" 
+                <path
+                  d={tensionLinePath}
+                  fill="none"
+                  stroke="var(--primary)"
+                  strokeWidth="3"
                   filter="url(#glow)"
                 />
               )}
 
-              {/* Points */}
-              {tensionPoints.map((pt: any) => (
+              {tensionPoints.map((pt) => (
                 <circle
                   key={pt.idx}
                   cx={pt.x}
@@ -232,34 +249,30 @@ export function EvaluationReport() {
                   strokeWidth="3"
                   style={{ cursor: 'pointer', transition: 'all 0.15s' }}
                   onMouseEnter={(e) => {
-                    const rect = chartContainerRef.current?.getBoundingClientRect();
-                    if (rect) {
-                      const svgElement = e.currentTarget.ownerSVGElement;
-                      const rectSvg = svgElement?.getBoundingClientRect();
-                      const ratio = rectSvg ? rectSvg.width / svgWidth : 1;
-                      
-                      setActiveTensionPoint({
-                        x: pt.x * ratio,
-                        y: pt.y * ratio,
-                        idx: pt.idx,
-                        tension: pt.tension,
-                        chapterId: pt.chapterId,
-                        annotation: pt.annotation
-                      });
-                    }
+                    const svgElement = e.currentTarget.ownerSVGElement;
+                    const rectSvg = svgElement?.getBoundingClientRect();
+                    const ratio = rectSvg ? rectSvg.width / svgWidth : 1;
+
+                    setActiveTensionPoint({
+                      x: pt.x * ratio,
+                      y: pt.y * ratio,
+                      idx: pt.idx,
+                      tension: pt.tension,
+                      chapterId: pt.chapterId,
+                      annotation: pt.annotation,
+                    });
                   }}
                   onMouseLeave={() => {
                     setActiveTensionPoint(null);
                   }}
                 />
               ))}
-              
-              {/* X Axis Labels */}
-              {tensionPoints.filter((_: any, i: number) => {
+
+              {tensionPoints.filter((_, i) => {
                 if (tensionPoints.length <= 15) return true;
                 if (tensionPoints.length <= 40) return i % 2 === 0;
                 return i % 5 === 0;
-              }).map((pt: any) => (
+              }).map((pt) => (
                 <text
                   key={pt.idx}
                   x={pt.x}
@@ -273,9 +286,8 @@ export function EvaluationReport() {
               ))}
             </svg>
 
-            {/* Tension Tooltip overlay */}
             {activeTensionPoint && (
-              <div 
+              <div
                 className="chart-tooltip"
                 style={{
                   left: `${activeTensionPoint.x}px`,
@@ -301,12 +313,11 @@ export function EvaluationReport() {
         </div>
       )}
 
-      {/* Characters Spectrum Section */}
-      {report.characters && report.characters.length > 0 && (
+      {characters.length > 0 && (
         <div className="card" style={{ marginTop: 32 }}>
           <h2>人物谱系与人设弧光</h2>
           <div className="character-grid" style={{ marginTop: 20 }}>
-            {report.characters.map((char: any, idx: number) => (
+            {characters.map((char, idx) => (
               <div key={idx} className="character-card">
                 <div>
                   <div className="char-header">
@@ -332,7 +343,7 @@ export function EvaluationReport() {
                 {char.relationships && char.relationships.length > 0 && (
                   <div className="char-relations">
                     <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)', marginBottom: 6 }}>人物关系</div>
-                    {char.relationships.map((rel: any, rIdx: number) => (
+                    {char.relationships.map((rel: CharacterRelationship, rIdx: number) => (
                       <div key={rIdx} className="char-relation-item">
                         <span>{rel.target} ({rel.type})</span>
                         <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -351,7 +362,6 @@ export function EvaluationReport() {
         </div>
       )}
 
-      {/* Market Benchmark Section */}
       {report.marketBenchmark && (
         <div className="card" style={{ marginTop: 32 }}>
           <h2>市场定位与受众对标</h2>
@@ -373,12 +383,12 @@ export function EvaluationReport() {
                 </div>
               </div>
             </div>
-            
+
             {report.marketBenchmark.comparables && report.marketBenchmark.comparables.length > 0 && (
               <div style={{ marginTop: 10 }}>
                 <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 12 }}>同类作品竞品对比</div>
                 <div className="market-comps-grid">
-                  {report.marketBenchmark.comparables.map((comp: any, idx: number) => (
+                  {report.marketBenchmark.comparables.map((comp: EvaluationMarketComparableDto, idx: number) => (
                     <div key={idx} className="comp-card">
                       <div className="comp-title-bar">
                         <span className="comp-title">《{comp.title}》</span>
@@ -400,7 +410,7 @@ export function EvaluationReport() {
                 </div>
               </div>
             )}
-            
+
             {report.marketBenchmark.disclaimer && (
               <div style={{ fontSize: 11, color: 'var(--text-muted)', fontStyle: 'italic', marginTop: 10 }}>
                 * {report.marketBenchmark.disclaimer}
@@ -410,12 +420,11 @@ export function EvaluationReport() {
         </div>
       )}
 
-      {/* Suggestions Section */}
       {suggestions && suggestions.length > 0 && (
         <div className="card" style={{ marginTop: 32 }}>
           <h2>核心优化建议</h2>
           <div className="suggestions-grid" style={{ marginTop: 24 }}>
-            {suggestions.map((sugg: any, i: number) => (
+            {suggestions.map((sugg: EvaluationSuggestionDto, i: number) => (
               <div key={i} className="suggestion-card">
                 <span className="suggestion-num">{i + 1}.</span>
                 <div className="suggestion-body">

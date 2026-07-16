@@ -27,6 +27,8 @@ export {
   type StoryStateRevisionId,
 } from './domain/ids.ts';
 export {
+  ValidationError,
+  EvaluationIncompleteError,
   InvalidPersistenceDataError,
   InvalidStoryStateDeltaError,
   ProjectLeaseConflictError,
