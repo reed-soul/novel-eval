@@ -19,12 +19,45 @@ function insertProject(db: DB, id = 'project-1'): void {
   `).run(id, now, now);
 }
 
+function insertBibleRevision(
+  db: DB,
+  input: { id: string; projectId: string; revisionNumber: number },
+): void {
+  db.prepare(`
+    INSERT INTO story_bible_revision (
+      id, project_id, revision_number, status, bible_json, compiled_text, created_at
+    ) VALUES (?, ?, ?, 'draft', '{}', 'Bible', ?)
+  `).run(input.id, input.projectId, input.revisionNumber, now);
+}
+
+function insertBeat(
+  db: DB,
+  input: { id: string; projectId: string; bibleRevisionId: string; position: number },
+): void {
+  db.prepare(`
+    INSERT INTO beat (
+      id, project_id, bible_revision_id, position, act, content_json, created_at
+    ) VALUES (?, ?, ?, ?, 1, '{}', ?)
+  `).run(input.id, input.projectId, input.bibleRevisionId, input.position, now);
+}
+
 function insertOutline(db: DB, input: { id: string; projectId: string; position: number }): void {
   db.prepare(`
     INSERT INTO chapter_outline (
       id, project_id, position, status, created_at, updated_at
     ) VALUES (?, ?, ?, 'draft', ?, ?)
   `).run(input.id, input.projectId, input.position, now, now);
+}
+
+function insertOutlineRevision(
+  db: DB,
+  input: { id: string; outlineId: string; revisionNumber: number },
+): void {
+  db.prepare(`
+    INSERT INTO chapter_outline_revision (
+      id, outline_id, revision_number, status, title, content_json, created_at
+    ) VALUES (?, ?, ?, 'draft', 'Title', '{}', ?)
+  `).run(input.id, input.outlineId, input.revisionNumber, now);
 }
 
 function insertChapter(db: DB, input: { id: string; projectId: string; outlineId: string }): void {
@@ -63,22 +96,102 @@ function insertStoryState(
     chapterRevisionId: string;
     sequence: number;
     status: 'current' | 'stale';
+    previousStateRevisionId?: string;
   },
 ): void {
   db.prepare(`
     INSERT INTO story_state_revision (
-      id, project_id, chapter_id, chapter_revision_id, sequence, status,
+      id, project_id, chapter_id, chapter_revision_id, previous_state_revision_id, sequence, status,
       state_json, delta_json, summary, model, prompt_version, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, '{}', '{}', 'Summary', 'test', 'v1', ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, '{}', '{}', 'Summary', 'test', 'v1', ?)
   `).run(
     input.id,
     input.projectId,
     input.chapterId,
     input.chapterRevisionId,
+    input.previousStateRevisionId ?? null,
     input.sequence,
     input.status,
     now,
   );
+}
+
+function insertLease(
+  db: DB,
+  input: { id: string; projectId: string; jobId: string },
+): void {
+  db.prepare(`
+    INSERT INTO project_write_lease (
+      id, project_id, job_id, owner_id, expires_at, created_at, updated_at
+    ) VALUES (?, ?, ?, 'worker', ?, ?, ?)
+  `).run(input.id, input.projectId, input.jobId, now, now, now);
+}
+
+function seedCompleteSchema(db: DB): void {
+  insertProject(db);
+  insertBibleRevision(db, {
+    id: 'bible-1',
+    projectId: 'project-1',
+    revisionNumber: 1,
+  });
+  db.prepare(
+    "UPDATE project SET active_bible_revision_id = 'bible-1' WHERE id = 'project-1'",
+  ).run();
+  insertBeat(db, {
+    id: 'beat-1',
+    projectId: 'project-1',
+    bibleRevisionId: 'bible-1',
+    position: 1,
+  });
+  insertOutline(db, { id: 'outline-1', projectId: 'project-1', position: 1 });
+  insertOutlineRevision(db, {
+    id: 'outline-revision-1',
+    outlineId: 'outline-1',
+    revisionNumber: 1,
+  });
+  db.prepare(
+    "UPDATE chapter_outline SET active_revision_id = 'outline-revision-1' WHERE id = 'outline-1'",
+  ).run();
+  insertChapter(db, {
+    id: 'chapter-1',
+    projectId: 'project-1',
+    outlineId: 'outline-1',
+  });
+  insertChapterRevision(db, {
+    id: 'revision-1',
+    chapterId: 'chapter-1',
+    revisionNumber: 1,
+  });
+  insertChapterRevision(db, {
+    id: 'revision-2',
+    chapterId: 'chapter-1',
+    revisionNumber: 2,
+  });
+  db.prepare(
+    "UPDATE chapter_revision SET parent_revision_id = 'revision-1' WHERE id = 'revision-2'",
+  ).run();
+  db.prepare(
+    "UPDATE chapter SET active_revision_id = 'revision-2' WHERE id = 'chapter-1'",
+  ).run();
+  insertStoryState(db, {
+    id: 'state-1',
+    projectId: 'project-1',
+    chapterId: 'chapter-1',
+    chapterRevisionId: 'revision-1',
+    sequence: 1,
+    status: 'stale',
+  });
+  insertStoryState(db, {
+    id: 'state-2',
+    projectId: 'project-1',
+    chapterId: 'chapter-1',
+    chapterRevisionId: 'revision-2',
+    previousStateRevisionId: 'state-1',
+    sequence: 2,
+    status: 'current',
+  });
+  insertJob(db, { id: 'job-1', projectId: 'project-1' });
+  insertLease(db, { id: 'lease-1', projectId: 'project-1', jobId: 'job-1' });
 }
 
 it('creates only the phase-A schema and enables integrity pragmas', (t) => {
@@ -155,6 +268,18 @@ it('enforces status checks', (t) => {
   );
 
   insertProject(testDb.db);
+  insertBibleRevision(testDb.db, {
+    id: 'bible-1',
+    projectId: 'project-1',
+    revisionNumber: 1,
+  });
+  assert.throws(
+    () => testDb.db.prepare(
+      "UPDATE story_bible_revision SET status = 'invalid' WHERE id = 'bible-1'",
+    ).run(),
+    /CHECK constraint failed/,
+  );
+
   assert.throws(
     () => testDb.db.prepare(`
       INSERT INTO chapter_outline (
@@ -194,6 +319,12 @@ it('enforces status checks', (t) => {
     revisionNumber: 1,
   });
   assert.throws(
+    () => testDb.db.prepare(
+      "UPDATE chapter_revision SET source = 'invalid' WHERE id = 'revision-1'",
+    ).run(),
+    /CHECK constraint failed/,
+  );
+  assert.throws(
     () => testDb.db.prepare(`
       INSERT INTO story_state_revision (
         id, project_id, chapter_id, chapter_revision_id, sequence, status,
@@ -218,6 +349,154 @@ it('enforces status checks', (t) => {
     `).run(now, now),
     /CHECK constraint failed/,
   );
+});
+
+it('enforces every numeric range check', (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  seedCompleteSchema(testDb.db);
+  const invalidUpdates: ReadonlyArray<{ name: string; sql: string }> = [
+    {
+      name: 'story_bible_revision.revision_number',
+      sql: "UPDATE story_bible_revision SET revision_number = 0 WHERE id = 'bible-1'",
+    },
+    {
+      name: 'beat.position',
+      sql: "UPDATE beat SET position = 0 WHERE id = 'beat-1'",
+    },
+    {
+      name: 'beat.act',
+      sql: "UPDATE beat SET act = 0 WHERE id = 'beat-1'",
+    },
+    {
+      name: 'chapter_outline.position',
+      sql: "UPDATE chapter_outline SET position = 0 WHERE id = 'outline-1'",
+    },
+    {
+      name: 'chapter_outline_revision.revision_number',
+      sql: "UPDATE chapter_outline_revision SET revision_number = 0 WHERE id = 'outline-revision-1'",
+    },
+    {
+      name: 'chapter_revision.revision_number',
+      sql: "UPDATE chapter_revision SET revision_number = 0 WHERE id = 'revision-1'",
+    },
+    {
+      name: 'chapter_revision.word_count',
+      sql: "UPDATE chapter_revision SET word_count = -1 WHERE id = 'revision-1'",
+    },
+    {
+      name: 'story_state_revision.sequence',
+      sql: "UPDATE story_state_revision SET sequence = 0 WHERE id = 'state-1'",
+    },
+    {
+      name: 'job.word_count',
+      sql: "UPDATE job SET word_count = -1 WHERE id = 'job-1'",
+    },
+    {
+      name: 'job.last_outline_position',
+      sql: "UPDATE job SET last_outline_position = -1 WHERE id = 'job-1'",
+    },
+  ];
+
+  for (const invalidUpdate of invalidUpdates) {
+    assert.throws(
+      () => testDb.db.prepare(invalidUpdate.sql).run(),
+      /CHECK constraint failed/,
+      invalidUpdate.name,
+    );
+  }
+});
+
+it('enforces every phase-A foreign key', (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  seedCompleteSchema(testDb.db);
+  const invalidUpdates: ReadonlyArray<{ name: string; sql: string }> = [
+    {
+      name: 'project.active_bible_revision_id',
+      sql: "UPDATE project SET active_bible_revision_id = 'missing' WHERE id = 'project-1'",
+    },
+    {
+      name: 'story_bible_revision.project_id',
+      sql: "UPDATE story_bible_revision SET project_id = 'missing' WHERE id = 'bible-1'",
+    },
+    {
+      name: 'beat.project_id',
+      sql: "UPDATE beat SET project_id = 'missing' WHERE id = 'beat-1'",
+    },
+    {
+      name: 'beat.bible_revision_id',
+      sql: "UPDATE beat SET bible_revision_id = 'missing' WHERE id = 'beat-1'",
+    },
+    {
+      name: 'chapter_outline.project_id',
+      sql: "UPDATE chapter_outline SET project_id = 'missing' WHERE id = 'outline-1'",
+    },
+    {
+      name: 'chapter_outline.active_revision_id',
+      sql: "UPDATE chapter_outline SET active_revision_id = 'missing' WHERE id = 'outline-1'",
+    },
+    {
+      name: 'chapter_outline_revision.outline_id',
+      sql: "UPDATE chapter_outline_revision SET outline_id = 'missing' WHERE id = 'outline-revision-1'",
+    },
+    {
+      name: 'chapter.project_id',
+      sql: "UPDATE chapter SET project_id = 'missing' WHERE id = 'chapter-1'",
+    },
+    {
+      name: 'chapter.outline_id',
+      sql: "UPDATE chapter SET outline_id = 'missing' WHERE id = 'chapter-1'",
+    },
+    {
+      name: 'chapter.active_revision_id',
+      sql: "UPDATE chapter SET active_revision_id = 'missing' WHERE id = 'chapter-1'",
+    },
+    {
+      name: 'chapter_revision.chapter_id',
+      sql: "UPDATE chapter_revision SET chapter_id = 'missing' WHERE id = 'revision-1'",
+    },
+    {
+      name: 'chapter_revision.parent_revision_id',
+      sql: "UPDATE chapter_revision SET parent_revision_id = 'missing' WHERE id = 'revision-2'",
+    },
+    {
+      name: 'story_state_revision.project_id',
+      sql: "UPDATE story_state_revision SET project_id = 'missing' WHERE id = 'state-1'",
+    },
+    {
+      name: 'story_state_revision.chapter_id',
+      sql: "UPDATE story_state_revision SET chapter_id = 'missing' WHERE id = 'state-1'",
+    },
+    {
+      name: 'story_state_revision.chapter_revision_id',
+      sql: "UPDATE story_state_revision SET chapter_revision_id = 'missing' WHERE id = 'state-1'",
+    },
+    {
+      name: 'story_state_revision.previous_state_revision_id',
+      sql: "UPDATE story_state_revision SET previous_state_revision_id = 'missing' WHERE id = 'state-2'",
+    },
+    {
+      name: 'job.project_id',
+      sql: "UPDATE job SET project_id = 'missing' WHERE id = 'job-1'",
+    },
+    {
+      name: 'project_write_lease.project_id',
+      sql: "UPDATE project_write_lease SET project_id = 'missing' WHERE id = 'lease-1'",
+    },
+    {
+      name: 'project_write_lease.job_id',
+      sql: "UPDATE project_write_lease SET job_id = 'missing' WHERE id = 'lease-1'",
+    },
+  ];
+
+  for (const invalidUpdate of invalidUpdates) {
+    assert.throws(
+      () => testDb.db.prepare(invalidUpdate.sql).run(),
+      /FOREIGN KEY constraint failed/,
+      invalidUpdate.name,
+    );
+  }
 });
 
 it('enforces outline and chapter revision uniqueness', (t) => {
@@ -263,6 +542,65 @@ it('enforces outline and chapter revision uniqueness', (t) => {
       revisionNumber: 1,
     }),
     /UNIQUE constraint failed/,
+  );
+});
+
+it('enforces remaining phase-A domain uniqueness', (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  seedCompleteSchema(testDb.db);
+
+  assert.throws(
+    () => insertBibleRevision(testDb.db, {
+      id: 'bible-2',
+      projectId: 'project-1',
+      revisionNumber: 1,
+    }),
+    /UNIQUE constraint failed/,
+    'story_bible_revision project and revision number',
+  );
+  assert.throws(
+    () => insertBeat(testDb.db, {
+      id: 'beat-2',
+      projectId: 'project-1',
+      bibleRevisionId: 'bible-1',
+      position: 1,
+    }),
+    /UNIQUE constraint failed/,
+    'beat project and position',
+  );
+  assert.throws(
+    () => insertChapter(testDb.db, {
+      id: 'chapter-2',
+      projectId: 'project-1',
+      outlineId: 'outline-1',
+    }),
+    /UNIQUE constraint failed/,
+    'chapter outline identity',
+  );
+  assert.throws(
+    () => insertStoryState(testDb.db, {
+      id: 'state-3',
+      projectId: 'project-1',
+      chapterId: 'chapter-1',
+      chapterRevisionId: 'revision-1',
+      sequence: 3,
+      status: 'stale',
+    }),
+    /UNIQUE constraint failed/,
+    'story state chapter revision identity',
+  );
+
+  insertProject(testDb.db, 'project-2');
+  insertJob(testDb.db, { id: 'job-2', projectId: 'project-2' });
+  assert.throws(
+    () => insertLease(testDb.db, {
+      id: 'lease-1',
+      projectId: 'project-2',
+      jobId: 'job-2',
+    }),
+    /UNIQUE constraint failed/,
+    'lease identity',
   );
 });
 
