@@ -6,6 +6,8 @@ import {
 } from '../api/client.ts';
 import { ProgressPanel } from '../components/ProgressPanel.tsx';
 import { QualityPanel } from '../components/QualityPanel.tsx';
+import { PlanningApproval } from '../components/PlanningApproval.tsx';
+import { StaleImpactPanel } from '../components/StaleImpactPanel.tsx';
 
 export function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +20,8 @@ export function ProjectDetail() {
   const [genFrom, setGenFrom] = useState(1);
   const [genTo, setGenTo] = useState(5);
   const [useGate, setUseGate] = useState(true);
+  const [maxCostRmb, setMaxCostRmb] = useState('');
+  const [planningApproved, setPlanningApproved] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportFormat, setExportFormat] = useState<'merge-txt' | 'merge-md' | 'zip-txt'>('merge-txt');
   const [includeMeta, setIncludeMeta] = useState(false);
@@ -59,19 +63,36 @@ export function ProjectDetail() {
 
   useEffect(reload, [id]);
 
+  const configuredMaxCost = () => {
+    if (maxCostRmb.trim() === '') return null;
+    const value = Number(maxCostRmb);
+    return Number.isFinite(value) && value > 0 ? value : null;
+  };
+
+  const confirmBudget = (label: string) => {
+    const maxCost = configuredMaxCost();
+    if (maxCost === null) return true;
+    return window.confirm(`${label}将启动。当前预算上限为 ¥${maxCost.toFixed(2)}，请确认继续。`);
+  };
+
   const startBible = async () => {
+    if (!confirmBudget('Bible 生成')) return;
     const data = await apiPost<{ jobId: string }>(`/projects/${id}/bible/generate`);
     if (data.jobId) { setJobId(data.jobId); setActiveJob({ id: data.jobId, type: 'bible', projectId: id!, status: 'running' }); }
   };
 
   const startOutline = async () => {
+    if (!confirmBudget('蓝图生成')) return;
     const data = await apiPost<{ jobId: string }>(`/projects/${id}/outline/generate`, { chapters: 12 });
     if (data.jobId) { setJobId(data.jobId); setActiveJob({ id: data.jobId, type: 'outline', projectId: id!, status: 'running' }); }
   };
 
   const startChapters = async () => {
+    if (!confirmBudget('章节生成')) return;
+    const maxCost = configuredMaxCost();
     const data = await apiPost<{ jobId: string }>(`/projects/${id}/chapters/generate`, {
       from: genFrom, to: genTo, qualityGate: useGate, maxRevise: 1,
+      ...(maxCost === null ? {} : { maxCostRmb: maxCost }),
     });
     if (data.jobId) {
       setJobId(data.jobId);
@@ -107,6 +128,7 @@ export function ProjectDetail() {
   const writtenCount = chapters.filter((c) => c.written).length;
   const progress = chapters.length > 0 ? (writtenCount / chapters.length) * 100 : 0;
   const jobActive = activeJob && (activeJob.status === 'running' || activeJob.status === 'paused');
+  const chapterJobActive = jobActive && activeJob?.type === 'chapter';
 
   return (
     <div className="container">
@@ -140,13 +162,15 @@ export function ProjectDetail() {
                 : `${activeJob.type} 任务进行中`}
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              {activeJob.status === 'running' && (
+              {activeJob.type === 'chapter' && activeJob.status === 'running' && (
                 <button className="btn" onClick={handlePause} title="当前章写完后停止">⏸ 暂停</button>
               )}
-              {activeJob.status === 'paused' && (
+              {activeJob.type === 'chapter' && activeJob.status === 'paused' && (
                 <button className="btn btn-primary" onClick={() => handleResume(activeJob.id)}>▶ 继续</button>
               )}
-              <button className="btn" onClick={handleCancel} title="放弃当前任务">⏹ 取消</button>
+              {activeJob.type === 'chapter' && (
+                <button className="btn" onClick={handleCancel} title="放弃当前任务">⏹ 取消</button>
+              )}
             </div>
           </div>
         </div>
@@ -158,26 +182,46 @@ export function ProjectDetail() {
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
           <button className="btn btn-primary" onClick={startBible} disabled={!!jobActive}>📖 生成 Bible</button>
           <button className="btn btn-primary" onClick={startOutline} disabled={!!jobActive}>📋 生成蓝图（12章）</button>
-        </div>
-        <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 14 }}>生成章节：</span>
-          <input type="number" value={genFrom} onChange={(e) => setGenFrom(parseInt(e.target.value) || 1)} style={{ width: 60, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)' }} />
-          <span>到</span>
-          <input type="number" value={genTo} onChange={(e) => setGenTo(parseInt(e.target.value) || 1)} style={{ width: 60, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)' }} />
           <label style={{ fontSize: 14 }}>
-            <input type="checkbox" checked={useGate} onChange={(e) => setUseGate(e.target.checked)} /> 质量门槛
+            预算上限 ¥
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={maxCostRmb}
+              onChange={(e) => setMaxCostRmb(e.target.value)}
+              placeholder="可选"
+              style={{ width: 90, marginLeft: 6, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)' }}
+            />
           </label>
-          <button className="btn btn-primary" onClick={startChapters} disabled={!!jobActive}>✍️ 生成</button>
         </div>
+        {planningApproved ? (
+          <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 14 }}>生成章节：</span>
+            <input type="number" value={genFrom} onChange={(e) => setGenFrom(parseInt(e.target.value) || 1)} style={{ width: 60, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)' }} />
+            <span>到</span>
+            <input type="number" value={genTo} onChange={(e) => setGenTo(parseInt(e.target.value) || 1)} style={{ width: 60, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)' }} />
+            <label style={{ fontSize: 14 }}>
+              <input type="checkbox" checked={useGate} onChange={(e) => setUseGate(e.target.checked)} /> 质量门槛
+            </label>
+            <button className="btn btn-primary" onClick={startChapters} disabled={!!jobActive}>✍️ 生成</button>
+          </div>
+        ) : (
+          <div className="empty" style={{ marginTop: 12 }}>批准 Bible 和蓝图后才能生成章节。</div>
+        )}
       </div>
+
+      {id && <PlanningApproval projectId={id} onApprovedChange={setPlanningApproved} />}
+
+      {id && <StaleImpactPanel projectId={id} onRebuilt={reload} />}
 
       {jobId && (
         <ProgressPanel
           jobId={jobId}
           onDone={reload}
-          onPause={handlePause}
-          onResume={handleResume}
-          onCancel={handleCancel}
+          onPause={chapterJobActive ? handlePause : undefined}
+          onResume={chapterJobActive ? handleResume : undefined}
+          onCancel={chapterJobActive ? handleCancel : undefined}
         />
       )}
 

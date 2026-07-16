@@ -22,7 +22,7 @@ export interface ChapterOutline {
   foreshadowing: string;
   twistLevel: number;
   summary: string;
-  status: 'pending' | 'written';
+  status: 'draft' | 'approved' | 'writing' | 'written' | 'stale' | 'pending';
 }
 
 export interface ChapterContent {

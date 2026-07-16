@@ -107,6 +107,7 @@ export {
   type AssertChapterPlanningApprovedInput,
   type ImportBibleAppInput,
   type PublishChapterEditInput,
+  type PublishChapterEditWithExtractInput,
   type RebuildStoryStateInput,
   type AdoptCorrectionDraftInput,
 } from './services/writer-application.ts';

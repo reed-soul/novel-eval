@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { api, type ChapterDetail } from '../api/client.ts';
+import { api, editChapterWithExtract, type ChapterDetail } from '../api/client.ts';
 import { ChapterQualityPanel } from '../components/ChapterQualityPanel.tsx';
+import { RevisionHistory } from '../components/RevisionHistory.tsx';
+import { StaleImpactPanel } from '../components/StaleImpactPanel.tsx';
 
 export function ChapterReader() {
   const { id, n } = useParams<{ id: string; n: string }>();
@@ -28,20 +30,18 @@ export function ChapterReader() {
     if (!id || !n || !chapter) return;
     setSaving(true);
     setError('');
-    const res = await fetch(`/api/projects/${id}/chapters/${n}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ content: editContent }),
-    });
-    const data = await res.json() as { error?: string };
-    setSaving(false);
-    if (!res.ok || data.error) {
-      // content-only edit is rejected until the client supplies state+delta (no empty shell).
-      setError(data.error ?? `保存失败（${res.status}）`);
-      return;
+    try {
+      await editChapterWithExtract(id, chapter.number, {
+        title: chapter.title,
+        content: editContent,
+      });
+      setEditing(false);
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setSaving(false);
     }
-    setEditing(false);
-    load();
   };
 
   if (loading) return <div className="container loading">加载中...</div>;
@@ -73,6 +73,10 @@ export function ChapterReader() {
 
       {chapter.written && (
         <ChapterQualityPanel projectId={id!} chapterNumber={chapter.number} />
+      )}
+
+      {chapter.written && id && (
+        <StaleImpactPanel projectId={id} fromOutlinePosition={chapter.number} onRebuilt={load} />
       )}
 
       {editing ? (
@@ -113,6 +117,15 @@ export function ChapterReader() {
           <Link to={`/projects/${id}/chapters/${chapter.number + 1}`}>第 {chapter.number + 1} 章 →</Link>
         ) : <span />}
       </div>
+
+      {chapter.written && id && (
+        <RevisionHistory
+          projectId={id}
+          chapterNumber={chapter.number}
+          chapterId={chapter.chapterId}
+          onRestored={load}
+        />
+      )}
     </div>
   );
 }

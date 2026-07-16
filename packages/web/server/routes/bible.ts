@@ -30,6 +30,7 @@ export function bibleRoutes(db: DB) {
     if (!active) return c.json({ error: 'bible 不存在' }, 404);
     const doc = active.bible as Record<string, unknown>;
     return c.json({
+      revisionId: active.id,
       coreSeed: doc.coreSeed ?? null,
       characterDynamics: doc.characterDynamics ?? null,
       characterState: (doc.characterState ?? null) as BibleCharacterState | null,

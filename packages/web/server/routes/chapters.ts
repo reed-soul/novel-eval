@@ -25,6 +25,7 @@ export function chapterRoutes(db: DB) {
       return {
         number: o.number,
         title: ch?.title ?? o.title,
+        chapterId: entity?.id ?? null,
         act: o.act,
         beat: o.beat,
         outlineStatus: o.status,
@@ -50,6 +51,7 @@ export function chapterRoutes(db: DB) {
     return c.json({
       number: n,
       title: ch?.title ?? outline.title,
+      chapterId: entity?.id ?? null,
       outline: {
         act: outline.act, beat: outline.beat, role: outline.role,
         purpose: outline.purpose, suspenseLevel: outline.suspenseLevel,

@@ -480,8 +480,8 @@ export interface ApplyCorrectionDraftInput {
   db: DB;
   draftId: string;
   lease: ProjectWriteLease;
-  state: StoryState;
-  delta: StoryStateDelta;
+  state?: StoryState;
+  delta?: StoryStateDelta;
   model: string;
   promptVersion: string;
   /** When provided, rebuilds from the edited outline position after publication. */
@@ -554,15 +554,41 @@ export async function applyCorrectionDraft(
     );
   }
 
+  let state = input.state;
+  let delta = input.delta;
+  let model = input.model;
+  let promptVersion = input.promptVersion;
+  const extractedForPublish = !state || !delta;
+  if (extractedForPublish) {
+    if (!input.extractState) {
+      throw new Error('采纳必须提供有效的 state 与 delta；禁止缺省写入空壳 story state');
+    }
+    const extraction = await input.extractState({
+      outlinePosition: draft.chapterNumber,
+      previousState: previousState?.state ?? null,
+      previousStateRevisionId: previousState?.id ?? null,
+      chapterRevisionId: candidate.revision.id,
+      title,
+      content: draft.revisedContent,
+    });
+    state = extraction.state;
+    delta = extraction.delta;
+    model = extraction.model;
+    promptVersion = extraction.promptVersion;
+  }
+  if (!state || !delta) {
+    throw new Error('采纳必须提供有效的 state 与 delta；禁止缺省写入空壳 story state');
+  }
+
   const publication = new ChapterPublicationService(input.db, now);
   const publish = publication.publishHistoricalRevision({
     lease: input.lease,
     candidateRevisionId: candidate.revision.id,
     previousStateRevisionId: previousState?.id ?? null,
-    state: input.state,
-    delta: input.delta,
-    model: input.model,
-    promptVersion: input.promptVersion,
+    state,
+    delta,
+    model,
+    promptVersion,
     checkpoint: {
       jobId: input.lease.jobId,
       outlinePosition: draft.chapterNumber,
@@ -570,7 +596,7 @@ export async function applyCorrectionDraft(
   });
 
   let rebuild: RebuildResult | null = null;
-  if (input.extractState) {
+  if (input.extractState && !extractedForPublish) {
     const rebuildService = new StateRebuildService(input.db, now);
     rebuild = await rebuildService.rebuildFrom({
       projectId: brandedProjectId,

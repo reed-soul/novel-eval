@@ -24,6 +24,7 @@ import {
   ChapterRepository,
   PlanningRepository,
   StoryStateRepository,
+  type ExtractStoryStateResult,
 } from '@novel-eval/writer';
 import { editRoutes } from '../../server/routes/edit.ts';
 
@@ -44,6 +45,20 @@ afterEach(() => {
 function testApp(database: DB) {
   const app = new Hono();
   app.route('/api/projects', editRoutes(database));
+  return app;
+}
+
+function testAppWithExtract(database: DB) {
+  const app = new Hono();
+  app.route('/api/projects', editRoutes(database, undefined, {
+    extractState: async ({ content }): Promise<ExtractStoryStateResult> => ({
+      state: emptyState(`抽取状态：${content}`),
+      delta: emptyDelta(`抽取状态：${content}`),
+      usage: { inputTokens: 0, outputTokens: 0, costRmb: 0, model: 'test-extractor', durationMs: 0 },
+      model: 'test-extractor',
+      promptVersion: 'state-v1',
+    }),
+  }));
   return app;
 }
 
@@ -155,6 +170,35 @@ function publishChapter(
 }
 
 describe('PUT 章节编辑', () => {
+  it('publishes a content-only edit by extracting state on the server', async () => {
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+    seedOutline(db, p.id, 1, '第一章');
+    const first = publishChapter(db, p.id, 1, '旧内容一', null);
+
+    const app = testAppWithExtract(db);
+    const res = await app.fetch(new Request(`http://test/api/projects/${p.id}/chapters/1`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: '新的正文',
+        extract: true,
+      }),
+    }));
+
+    assert.equal(res.status, 200, await res.clone().text());
+    const data = await res.json() as {
+      chapterRevisionId: string;
+      storyStateRevisionId: string;
+    };
+    assert.ok(data.chapterRevisionId);
+    assert.ok(data.storyStateRevisionId);
+    assert.notEqual(data.chapterRevisionId, first.chapterRevisionId);
+
+    const state = new StoryStateRepository(db).getCurrentAtPosition(projectId(p.id), 1);
+    assert.equal(state?.id, data.storyStateRevisionId);
+    assert.equal(state?.summary, '抽取状态：新的正文');
+  });
+
   it('发布新 revision 并返回 revisionId / active / staleImpact', async () => {
     const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     seedOutline(db, p.id, 1, '第一章');

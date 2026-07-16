@@ -4,12 +4,14 @@
  * 端点：
  *   PUT /api/projects/:id/chapters/:n
  *     body: EditChapterRequest { content, title?, state, delta, model?, promptVersion? }
+ *       或 { content, title?, extract: true, model?, promptVersion? }
  *
- * state + delta 必须由客户端显式提供；缺省不得写空壳 story state。
+ * 普通编辑必须由客户端显式提供 state + delta；extract=true 时由服务端抽取，仍不得写空壳。
  */
 import { Hono } from 'hono';
-import { parseEditChapterRequest, countChars } from '@novel-eval/shared';
+import { createEngine, parseEditChapterRequest, countChars } from '@novel-eval/shared';
 import {
+  extractStoryState,
   getOutline,
   projectId,
   WriterApplication,
@@ -18,9 +20,40 @@ import {
   type StoryState,
   type StoryStateDelta,
 } from '@novel-eval/writer';
+import type { EngineRegistry } from '../engine-registry.ts';
 import { httpErrorJson, toHttpError } from '../middleware/error-mapper.ts';
 
-export function editRoutes(db: DB, application?: WriterApplication) {
+type ExtractState = Parameters<WriterApplication['publishChapterEditWithExtract']>[0]['extractState'];
+
+export interface EditRoutesOptions {
+  extractState?: ExtractState;
+  registry?: EngineRegistry;
+}
+
+function defaultExtractState(
+  registry: EngineRegistry | undefined,
+  model: string | undefined,
+  promptVersion: string,
+): ExtractState {
+  if (!registry) {
+    throw new ValidationError('extract edit requires an engine registry or injected extractState');
+  }
+  const activeConfig = registry.getActiveConfig();
+  const engine = model === undefined
+    ? registry.getEngine()
+    : createEngine({ ...activeConfig, model });
+  return async (input) => extractStoryState({
+    engine,
+    previousState: input.previousState,
+    chapterTitle: input.title,
+    chapterContent: input.content,
+    chapterRevisionId: input.chapterRevisionId,
+    outlinePosition: input.outlinePosition,
+    promptVersion,
+  });
+}
+
+export function editRoutes(db: DB, application?: WriterApplication, options: EditRoutesOptions = {}) {
   const app = new Hono();
   const writer = application ?? new WriterApplication(db, { defaultOwnerId: 'web' });
 
@@ -47,18 +80,33 @@ export function editRoutes(db: DB, application?: WriterApplication) {
     if (!outline) return c.json({ error: '蓝图不存在', code: 'NotFound', message: '蓝图不存在' }, 404);
 
     try {
-      const published = await writer.publishChapterEdit({
-        projectId: projectId(id),
-        outlinePosition: n,
-        title: body.title?.trim() || outline.title,
-        content: body.content,
-        state: body.state as StoryState,
-        delta: body.delta as StoryStateDelta,
-        model: body.model ?? 'manual-edit',
-        promptVersion: body.promptVersion ?? 'state-v1',
-        source: 'manual',
-        ownerId: 'web',
-      });
+      const promptVersion = body.promptVersion ?? 'state-v1';
+      const title = body.title?.trim() || outline.title;
+      const brandedProjectId = projectId(id);
+      const published = body.extract === true
+        ? await writer.publishChapterEditWithExtract({
+            projectId: brandedProjectId,
+            outlinePosition: n,
+            title,
+            content: body.content,
+            extractState: options.extractState ?? defaultExtractState(options.registry, body.model, promptVersion),
+            model: body.model ?? 'manual-edit',
+            promptVersion,
+            source: 'manual',
+            ownerId: 'web',
+          })
+        : await writer.publishChapterEdit({
+            projectId: brandedProjectId,
+            outlinePosition: n,
+            title,
+            content: body.content,
+            state: body.state as StoryState,
+            delta: body.delta as StoryStateDelta,
+            model: body.model ?? 'manual-edit',
+            promptVersion,
+            source: 'manual',
+            ownerId: 'web',
+          });
 
       return c.json({
         number: n,

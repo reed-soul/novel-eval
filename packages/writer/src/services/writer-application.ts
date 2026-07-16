@@ -170,8 +170,8 @@ export interface GenerateChapterRangeInput {
 export interface AdoptCorrectionDraftInput {
   projectId: ProjectId;
   draftId: string;
-  state: StoryState;
-  delta: StoryStateDelta;
+  state?: StoryState;
+  delta?: StoryStateDelta;
   model: string;
   promptVersion: string;
   ownerId?: string;
@@ -196,6 +196,10 @@ export interface PublishChapterEditInput {
   source?: 'manual' | 'correction';
   ownerId?: string;
   ttlMs?: number;
+}
+
+export interface PublishChapterEditWithExtractInput extends Omit<PublishChapterEditInput, 'state' | 'delta'> {
+  extractState: (input: RebuildExtractInput) => Promise<ExtractStoryStateResult>;
 }
 
 export interface RebuildStoryStateInput {
@@ -605,45 +609,14 @@ export class WriterApplication {
     });
 
     try {
-      const createdAt = this.now().toISOString();
-      const existing = this.chapters.getByOutlinePosition(input.projectId, input.outlinePosition);
-      const candidate = existing
-        ? this.chapters.appendCandidate({
-            chapterId: existing.id,
-            revision: {
-              id: chapterRevisionId(randomUUID()),
-              revisionNumber: this.chapters.nextRevisionNumber(existing.id),
-              source,
-              parentRevisionId: existing.activeRevisionId,
-              title: input.title,
-              content: input.content,
-              wordCount: countChars(input.content),
-              status: 'draft',
-              generationRunId: null,
-              createdAt,
-            },
-          })
-        : this.chapters.saveCandidate({
-            chapter: {
-              id: chapterId(randomUUID()),
-              projectId: input.projectId,
-              outlineId: outline.outline.id,
-              createdAt,
-            },
-            revision: {
-              id: chapterRevisionId(randomUUID()),
-              revisionNumber: 1,
-              source,
-              parentRevisionId: null,
-              title: input.title,
-              content: input.content,
-              wordCount: countChars(input.content),
-              status: 'draft',
-              generationRunId: null,
-              createdAt,
-            },
-          });
-
+      const candidate = this.createEditCandidate({
+        projectId: input.projectId,
+        outline,
+        outlinePosition: input.outlinePosition,
+        title: input.title,
+        content: input.content,
+        source,
+      });
       const previousStateRevisionId = input.outlinePosition === 1
         ? null
         : this.states.getCurrentAtPosition(input.projectId, input.outlinePosition - 1)?.id ?? null;
@@ -672,6 +645,142 @@ export class WriterApplication {
     } finally {
       this.leases.release({ leaseId: lease.id, ownerId });
     }
+  }
+
+  async publishChapterEditWithExtract(input: PublishChapterEditWithExtractInput): Promise<PublishResult> {
+    if (!Number.isInteger(input.outlinePosition) || input.outlinePosition <= 0) {
+      throw new Error('outlinePosition must be a positive integer');
+    }
+    const ownerId = input.ownerId ?? this.defaultOwnerId;
+    const ttlMs = input.ttlMs ?? this.leaseTtlMs;
+    const source = input.source ?? 'manual';
+
+    const outline = this.planning.getOutlineWithApprovedRevisionAtPosition(
+      input.projectId,
+      input.outlinePosition,
+    );
+    if (!outline) {
+      throw new Error(`No outline at position ${input.outlinePosition}`);
+    }
+
+    const jobId = createJobRow(this.db, {
+      projectId: input.projectId,
+      type: 'edit',
+      scope: { from: input.outlinePosition, to: input.outlinePosition },
+      engine: 'manual',
+      model: input.model,
+      wordCount: countChars(input.content),
+      promptVersion: input.promptVersion,
+    });
+    const lease = this.leases.acquire({
+      projectId: input.projectId,
+      jobId,
+      ownerId,
+      ttlMs,
+      now: this.now(),
+    });
+
+    try {
+      const candidate = this.createEditCandidate({
+        projectId: input.projectId,
+        outline,
+        outlinePosition: input.outlinePosition,
+        title: input.title,
+        content: input.content,
+        source,
+      });
+      const previousState = input.outlinePosition === 1
+        ? null
+        : this.states.getCurrentAtPosition(input.projectId, input.outlinePosition - 1);
+
+      const extraction = await input.extractState({
+        outlinePosition: input.outlinePosition,
+        previousState: previousState?.state ?? null,
+        previousStateRevisionId: previousState?.id ?? null,
+        chapterRevisionId: candidate.revision.id,
+        title: input.title,
+        content: input.content,
+      });
+      updateJobUsage(this.db, jobId, {
+        inputTokens: extraction.usage.inputTokens,
+        outputTokens: extraction.usage.outputTokens,
+        costRmb: extraction.usage.costRmb,
+        model: extraction.usage.model,
+        durationMs: extraction.usage.durationMs,
+      });
+
+      const published = this.publication.publishHistoricalRevision({
+        lease,
+        candidateRevisionId: candidate.revision.id,
+        previousStateRevisionId: previousState?.id ?? null,
+        state: extraction.state,
+        delta: extraction.delta,
+        model: extraction.model,
+        promptVersion: extraction.promptVersion,
+        checkpoint: {
+          jobId,
+          outlinePosition: input.outlinePosition,
+        },
+      });
+      updateJobStatus(this.db, jobId, 'completed');
+      return published;
+    } catch (error: unknown) {
+      updateJobStatus(this.db, jobId, 'failed', {
+        errorType: error instanceof Error ? error.name : 'Error',
+        error: error instanceof Error ? error.message : 'publish edit failed',
+      });
+      throw error;
+    } finally {
+      this.leases.release({ leaseId: lease.id, ownerId });
+    }
+  }
+
+  private createEditCandidate(input: {
+    projectId: ProjectId;
+    outline: ApprovedOutline;
+    outlinePosition: number;
+    title: string;
+    content: string;
+    source: 'manual' | 'correction';
+  }) {
+    const createdAt = this.now().toISOString();
+    const existing = this.chapters.getByOutlinePosition(input.projectId, input.outlinePosition);
+    return existing
+      ? this.chapters.appendCandidate({
+          chapterId: existing.id,
+          revision: {
+            id: chapterRevisionId(randomUUID()),
+            revisionNumber: this.chapters.nextRevisionNumber(existing.id),
+            source: input.source,
+            parentRevisionId: existing.activeRevisionId,
+            title: input.title,
+            content: input.content,
+            wordCount: countChars(input.content),
+            status: 'draft',
+            generationRunId: null,
+            createdAt,
+          },
+        })
+      : this.chapters.saveCandidate({
+          chapter: {
+            id: chapterId(randomUUID()),
+            projectId: input.projectId,
+            outlineId: input.outline.outline.id,
+            createdAt,
+          },
+          revision: {
+            id: chapterRevisionId(randomUUID()),
+            revisionNumber: 1,
+            source: input.source,
+            parentRevisionId: null,
+            title: input.title,
+            content: input.content,
+            wordCount: countChars(input.content),
+            status: 'draft',
+            generationRunId: null,
+            createdAt,
+          },
+        });
   }
 
   async generateChapterRange(input: GenerateChapterRangeInput): Promise<GenerateChapterRangeResult> {

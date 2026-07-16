@@ -35,6 +35,16 @@ export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export async function apiPut<T>(path: string, body?: unknown): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+  return res.json() as Promise<T>;
+}
+
 // 类型定义（与后端对齐）
 export interface Project {
   id: string; title: string; genreProfile: string; targetAudience: string; premise: string;
@@ -44,16 +54,18 @@ export interface Project {
 }
 
 export interface ChapterListItem {
-  number: number; title: string; act: number; beat: string;
+  number: number; title: string; chapterId: string | null; act: number; beat: string;
   outlineStatus: string; wordCount: number; written: boolean;
+  activeRevisionId?: string | null;
   suspenseLevel: number; twistLevel: number;
 }
 
 export interface ChapterDetail {
-  number: number; title: string;
+  number: number; title: string; chapterId: string | null;
   outline: { act: number; beat: string; role: string; purpose: string;
     suspenseLevel: number; foreshadowing: string; twistLevel: number; summary: string; };
   content: string | null; wordCount: number; written: boolean;
+  activeRevisionId?: string | null;
   hasNext: boolean; hasPrev: boolean;
 }
 
@@ -148,6 +160,26 @@ export async function getChapterRevisions(chapterId: string): Promise<ChapterRev
   return api<ChapterRevisionsResponse>(`/chapters/${chapterId}/revisions`);
 }
 
+export interface EditChapterExtractResponse {
+  number: number;
+  wordCount: number;
+  saved: boolean;
+  chapterRevisionId: string;
+  storyStateRevisionId: string;
+  staleImpact: { affectedOutlinePositions: number[] };
+}
+
+export async function editChapterWithExtract(
+  projectId: string,
+  chapterNumber: number,
+  input: { content: string; title?: string },
+): Promise<EditChapterExtractResponse> {
+  return apiPut<EditChapterExtractResponse>(`/projects/${projectId}/chapters/${chapterNumber}`, {
+    ...input,
+    extract: true,
+  });
+}
+
 export interface NarrativeState {
   projectId: string; macroSummary: string;
   openForeshadows: Array<{ description: string; setupChapter: number; resolveChapter: number | null }>;
@@ -162,6 +194,35 @@ export interface BibleRaw {
   worldBuilding: unknown | null;
   plotArchitecture: { act1: unknown; act2: unknown; act3: unknown; foreshadows: unknown[] } | null;
   fullText: string | null;
+  revisionId?: string;
+  revisionNumber?: number;
+  status?: 'draft' | 'approved' | 'superseded';
+}
+
+export interface OutlineListItem {
+  id: string;
+  number: number;
+  title: string;
+  status: string;
+  revisionId?: string | null;
+  revisionStatus?: string | null;
+}
+
+export interface OutlinesResponse {
+  outlines: OutlineListItem[];
+  total: number;
+}
+
+export async function approveBibleRevision(projectId: string, revisionId: string): Promise<void> {
+  await apiPost(`/projects/${projectId}/bible-revisions/${revisionId}/approve`);
+}
+
+export async function getProjectOutlines(projectId: string): Promise<OutlinesResponse> {
+  return api<OutlinesResponse>(`/projects/${projectId}/outlines`);
+}
+
+export async function approveOutlines(projectId: string, from: number, to: number): Promise<void> {
+  await apiPost(`/projects/${projectId}/outlines/approve`, { from, to });
 }
 
 // ─── 引擎配置 ─────────────────────────────────────────────────────
@@ -353,7 +414,9 @@ export async function getPendingCorrection(
 }
 
 export async function adoptCorrection(projectId: string, draftId: string): Promise<{ ok: boolean; chapterNumber: number }> {
-  return apiPost<{ ok: boolean; chapterNumber: number }>(`/projects/${projectId}/corrections/${draftId}/adopt`);
+  return apiPost<{ ok: boolean; chapterNumber: number }>(`/projects/${projectId}/corrections/${draftId}/adopt`, {
+    extract: true,
+  });
 }
 
 export async function discardCorrection(projectId: string, draftId: string): Promise<{ ok: boolean }> {

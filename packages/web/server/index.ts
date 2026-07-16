@@ -57,7 +57,7 @@ app.route('/api/projects', bibleRoutes(db));
 app.route('/api/projects', chapterRoutes(db));
 app.route('/api/projects', outlineRoutes(db));
 app.route('/api/projects', generateRoutes(db, registry));
-app.route('/api/projects', editRoutes(db));
+app.route('/api/projects', editRoutes(db, undefined, { registry }));
 app.route('/api/projects', correctionRoutes(db, registry));
 app.route('/api/projects', storyStateRoutes(db));
 app.route('/api/projects', rebuildRoutes(db, { registry }));

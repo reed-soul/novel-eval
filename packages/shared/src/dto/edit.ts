@@ -18,14 +18,25 @@ export interface StoryStateDeltaDto {
   summary: string;
 }
 
-export interface EditChapterRequest {
+export interface ManualEditChapterRequest {
   content: string;
   title?: string;
+  extract?: false;
   state: StoryStateDto;
   delta: StoryStateDeltaDto;
   model?: string;
   promptVersion?: string;
 }
+
+export interface ExtractEditChapterRequest {
+  content: string;
+  title?: string;
+  extract: true;
+  model?: string;
+  promptVersion?: string;
+}
+
+export type EditChapterRequest = ManualEditChapterRequest | ExtractEditChapterRequest;
 
 function isStoryStateDto(value: unknown): value is StoryStateDto {
   if (!isRecord(value)) return false;
@@ -52,11 +63,23 @@ export function parseEditChapterRequest(raw: unknown): ParseResult<EditChapterRe
     return fail('正文不能为空');
   }
 
+  if (raw.extract === true) {
+    const data: ExtractEditChapterRequest = {
+      content: raw.content,
+      extract: true,
+    };
+
+    if (typeof raw.title === 'string') data.title = raw.title;
+    if (typeof raw.model === 'string') data.model = raw.model;
+    if (typeof raw.promptVersion === 'string') data.promptVersion = raw.promptVersion;
+    return { ok: true, data };
+  }
+
   if (!isStoryStateDto(raw.state) || !isStoryStateDeltaDto(raw.delta)) {
     return fail('编辑必须提供有效的 state 与 delta；禁止缺省写入空壳 story state');
   }
 
-  const data: EditChapterRequest = {
+  const data: ManualEditChapterRequest = {
     content: raw.content,
     state: raw.state,
     delta: raw.delta,

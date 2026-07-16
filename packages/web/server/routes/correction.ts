@@ -7,6 +7,7 @@ import { Hono } from 'hono';
 import { createEngine, type NovelMetadata } from '@novel-eval/shared';
 import {
   type DB,
+  extractStoryState,
   getProject,
   countChapters,
   getChapter,
@@ -23,6 +24,12 @@ import {
 } from '@novel-eval/writer';
 import { createJob, hasActiveJobForProject, type JobRunnerContext } from '../jobs.ts';
 import type { EngineRegistry } from '../engine-registry.ts';
+
+type ExtractState = NonNullable<Parameters<WriterApplication['adoptCorrectionDraft']>[0]['extractState']>;
+
+export interface CorrectionRoutesOptions {
+  extractState?: ExtractState;
+}
 
 function isStoryState(value: unknown): value is StoryState {
   if (typeof value !== 'object' || value === null) return false;
@@ -48,6 +55,7 @@ export function correctionRoutes(
   db: DB,
   registry: EngineRegistry,
   application?: WriterApplication,
+  options: CorrectionRoutesOptions = {},
 ) {
   const app = new Hono();
   const writer = application ?? new WriterApplication(db, { defaultOwnerId: 'web' });
@@ -60,6 +68,24 @@ export function correctionRoutes(
       }
     }
     return registry.getEngine();
+  }
+
+  function resolveExtractState(body: { model?: string; promptVersion?: string }): ExtractState {
+    if (options.extractState) return options.extractState;
+    const activeConfig = registry.getActiveConfig();
+    const engine = body.model === undefined
+      ? registry.getEngine()
+      : createEngine({ ...activeConfig, model: body.model });
+    const promptVersion = body.promptVersion ?? 'state-v1';
+    return async (input) => extractStoryState({
+      engine,
+      previousState: input.previousState,
+      chapterTitle: input.title,
+      chapterContent: input.content,
+      chapterRevisionId: input.chapterRevisionId,
+      outlinePosition: input.outlinePosition,
+      promptVersion,
+    });
   }
 
   app.get('/:id/chapters/:n/diagnose', (c) => {
@@ -131,31 +157,42 @@ export function correctionRoutes(
     const body = await c.req.json<{
       state?: unknown;
       delta?: unknown;
+      extract?: boolean;
       model?: string;
       promptVersion?: string;
     }>().catch(() => ({} as {
       state?: unknown;
       delta?: unknown;
+      extract?: boolean;
       model?: string;
       promptVersion?: string;
     }));
 
-    if (!isStoryState(body.state) || !isStoryStateDelta(body.delta)) {
-      return c.json({
-        error: '采纳必须提供有效的 state 与 delta；禁止缺省写入空壳 story state',
-      }, 400);
-    }
-
     try {
-      const result = await writer.adoptCorrectionDraft({
-        projectId: projectId(id),
-        draftId,
-        state: body.state,
-        delta: body.delta,
-        model: body.model ?? draft.engine ?? 'correction',
-        promptVersion: body.promptVersion ?? 'state-v1',
-        ownerId: 'web',
-      });
+      const shouldExtract = body.extract === true;
+      const result = shouldExtract
+        ? await writer.adoptCorrectionDraft({
+            projectId: projectId(id),
+            draftId,
+            model: body.model ?? draft.engine ?? 'correction',
+            promptVersion: body.promptVersion ?? 'state-v1',
+            extractState: resolveExtractState(body),
+            ownerId: 'web',
+          })
+        : await (async () => {
+            if (!isStoryState(body.state) || !isStoryStateDelta(body.delta)) {
+              throw new Error('采纳必须提供有效的 state 与 delta；禁止缺省写入空壳 story state');
+            }
+            return writer.adoptCorrectionDraft({
+              projectId: projectId(id),
+              draftId,
+              state: body.state,
+              delta: body.delta,
+              model: body.model ?? draft.engine ?? 'correction',
+              promptVersion: body.promptVersion ?? 'state-v1',
+              ownerId: 'web',
+            });
+          })();
       return c.json({
         ok: true,
         chapterNumber: result.chapterNumber,

@@ -650,7 +650,7 @@ export class PlanningRepository {
     foreshadowing: string;
     twistLevel: number;
     summary: string;
-    status: 'pending' | 'written';
+    status: 'draft' | 'approved' | 'writing' | 'written' | 'stale' | 'pending';
   }> {
     const rows: unknown[] = this.db.prepare(`
       SELECT
@@ -669,7 +669,11 @@ export class PlanningRepository {
       const entity = 'cli chapter outline';
       const row = persistedRecord(value, entity);
       const content = parseOutlineContent(stringField(row, 'content_json', entity));
-      const outlineStatus = stringField(row, 'outline_status', entity);
+      const outlineStatus = oneOf(
+        stringField(row, 'outline_status', entity),
+        outlineStatuses,
+        entity,
+      );
       const act = content.act === 2 || content.act === 3 ? content.act : 1;
       return {
         id: stringField(row, 'outline_id', entity),
@@ -684,7 +688,7 @@ export class PlanningRepository {
         foreshadowing: content.foreshadowing ?? '',
         twistLevel: content.twistLevel ?? 0,
         summary: content.summary,
-        status: outlineStatus === 'written' ? 'written' as const : 'pending' as const,
+        status: outlineStatus,
       };
     });
   }

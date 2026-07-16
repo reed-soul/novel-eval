@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { api, type BibleRaw, type NarrativeState } from '../api/client.ts';
+import { api, getStoryState, type BibleRaw, type StoryStateResponse } from '../api/client.ts';
 
 export function StateView() {
   const { id } = useParams<{ id: string }>();
   const [bible, setBible] = useState<BibleRaw | null>(null);
-  const [narrative, setNarrative] = useState<NarrativeState | null>(null);
+  const [storyState, setStoryState] = useState<StoryStateResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -13,11 +13,14 @@ export function StateView() {
     if (!id) return;
     Promise.allSettled([
       api<BibleRaw>(`/projects/${id}/bible/raw`),
-      api<NarrativeState>(`/projects/${id}/narrative`),
+      getStoryState(id),
     ])
-      .then(([b, n]) => {
+      .then(([b, s]) => {
         if (b.status === 'fulfilled') setBible(b.value);
-        if (n.status === 'fulfilled') setNarrative(n.value);
+        if (s.status === 'fulfilled') setStoryState(s.value);
+        if (b.status === 'rejected' && s.status === 'rejected') {
+          setError('暂无 Bible 或 story state');
+        }
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -60,41 +63,51 @@ export function StateView() {
         </div>
       )}
 
-      {/* 叙事状态 */}
-      {narrative && (
+      {/* Story state */}
+      {storyState && (
         <>
           <div className="card">
-            <h2>宏观主线摘要（更新到第 {narrative.upToChapter} 章）</h2>
-            <div className="chapter-content" style={{ fontSize: 14 }}>{narrative.macroSummary}</div>
+            <h2>当前 story state（更新到第 {storyState.latestWrittenOutlinePosition ?? 0} 章）</h2>
+            {storyState.current ? (
+              <div className="chapter-content" style={{ fontSize: 14 }}>{storyState.current.summary}</div>
+            ) : (
+              <div className="empty">尚未发布章节状态。</div>
+            )}
           </div>
 
           <div className="card">
-            <h2>未回收伏笔（{narrative.openForeshadows.length} 个）</h2>
-            {narrative.openForeshadows.length === 0 ? (
-              <div className="empty">全部已回收</div>
+            <h2>开放伏笔（{storyState.current?.state.foreshadows.length ?? 0} 个）</h2>
+            {(storyState.current?.state.foreshadows.length ?? 0) === 0 ? (
+              <div className="empty">暂无开放伏笔</div>
             ) : (
               <ul className="foreshadow-list">
-                {narrative.openForeshadows.map((f, i) => (
-                  <li key={i} className={f.resolveChapter ? 'resolved' : ''}>
-                    <strong>第{f.setupChapter}章埋设</strong>：{f.description}
-                    {f.resolveChapter && <span> → 第{f.resolveChapter}章回收</span>}
+                {storyState.current?.state.foreshadows.map((f, i) => (
+                  <li key={i}>
+                    <strong>{typeof f === 'string' ? f : JSON.stringify(f)}</strong>
                   </li>
                 ))}
               </ul>
             )}
           </div>
 
-          {narrative.arcSummaries.length > 0 && (
-            <div className="card">
-              <h2>卷摘要（{narrative.arcSummaries.length} 份）</h2>
-              {narrative.arcSummaries.map((a, i) => (
-                <div key={i} className="char-card">
-                  <h4>第 1-{a.upToChapter} 章</h4>
-                  <div className="char-fields">{a.content}</div>
+          <div className="card">
+            <h2>章节状态链（{storyState.currentStates.length}）</h2>
+            {storyState.currentStates.length === 0 ? (
+              <div className="empty">暂无状态修订。</div>
+            ) : (
+              storyState.currentStates.map((revision) => (
+                <div key={revision.storyStateRevisionId} className="char-card">
+                  <h4>第 {revision.outlinePosition} 章 · {revision.status}</h4>
+                  <div className="char-fields">
+                    <div>{revision.summary}</div>
+                    <div style={{ color: 'var(--muted)', fontSize: 13 }}>
+                      {revision.model} · {new Date(revision.createdAt).toLocaleString()}
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </>
       )}
     </div>

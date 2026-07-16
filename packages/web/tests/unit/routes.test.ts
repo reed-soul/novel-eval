@@ -439,6 +439,9 @@ describe('API 路由', () => {
           usage: { inputTokens: 0, outputTokens: 0, costRmb: 0, model: 'm', durationMs: 0 },
         };
       },
+      assertChapterPlanningApproved(): void {
+        calls.push('assertChapterPlanningApproved');
+      },
       async generateChapterRange(): Promise<GenerateChapterRangeResult> {
         calls.push('generateChapterRange');
         return { jobId: 'spy-job', outcomes: [] };
