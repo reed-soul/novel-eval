@@ -137,6 +137,19 @@ function buildHtml(result: EvaluationResult): string {
     </div>`;
   }).join('');
 
+  // 维度强弱一览：找出最高/最低维度，醒目展示长短板
+  const scoredDims = DIMENSION_KEYS
+    .map((k) => ({ key: k, label: DIMENSION_LABELS[k], score: result.dimensions[k]?.score ?? 0 }))
+    .filter((d) => d.score > 0)
+    .sort((a, b) => b.score - a.score);
+  const strongest = scoredDims[0];
+  const weakest = scoredDims[scoredDims.length - 1];
+  const strengthGap = strongest && weakest ? strongest.score - weakest.score : 0;
+  const strengthsHtml = scoredDims.filter((d) => d.score >= 80)
+    .map((d) => `<span class="strength-tag">${d.label} ${d.score}</span>`).join('') || '<span class="muted">无显著强项（≥80）</span>';
+  const weaknessesHtml = scoredDims.filter((d) => d.score < 70)
+    .map((d) => `<span class="weakness-tag">${d.label} ${d.score}</span>`).join('') || '<span class="muted">无显著短板（&lt;70）</span>';
+
   const charactersHtml = result.characters.map((c) => `
     <div class="char-card">
       <div class="char-name">${escapeHtml(c.name)} <span class="char-role">${escapeHtml(c.role)}</span></div>
@@ -217,6 +230,25 @@ function buildHtml(result: EvaluationResult): string {
   .panel-content mark { background: #fef08a; padding: 0 2px; }
   #panel-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 999; }
   #panel-overlay.open { display: block; }
+  /* 八维强弱一览 */
+  .strength-overview { display: flex; align-items: center; gap: 16px; margin: 20px 0; }
+  .strength-box { flex: 1; padding: 18px 20px; border-radius: 12px; text-align: center; }
+  .strength-high { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+  .strength-low { background: linear-gradient(135deg, #fee2e2, #fecaca); }
+  .strength-label { font-size: 12px; color: #6b7280; margin-bottom: 4px; }
+  .strength-dim { font-size: 18px; font-weight: 700; color: #1f2937; }
+  .strength-score { font-size: 32px; font-weight: 800; margin-top: 4px; }
+  .strength-high .strength-score { color: #059669; }
+  .strength-low .strength-score { color: #dc2626; }
+  .strength-gap { text-align: center; padding: 0 8px; }
+  .gap-num { font-size: 28px; font-weight: 700; color: #6b7280; }
+  .gap-label { font-size: 11px; color: #9ca3af; }
+  .strength-tags { margin-bottom: 20px; }
+  .tag-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0; }
+  .tag-title { font-size: 13px; font-weight: 600; color: #6b7280; min-width: 64px; }
+  .strength-tag { background: #d1fae5; color: #065f46; padding: 3px 10px; border-radius: 12px; font-size: 13px; font-weight: 500; }
+  .weakness-tag { background: #fee2e2; color: #991b1b; padding: 3px 10px; border-radius: 12px; font-size: 13px; font-weight: 500; }
+  .muted { color: #9ca3af; font-size: 13px; }
 </style>
 </head>
 <body>
@@ -242,6 +274,26 @@ function buildHtml(result: EvaluationResult): string {
 
   <section>
     <h2>八维详细分析</h2>
+    <div class="strength-overview">
+      <div class="strength-box strength-high">
+        <div class="strength-label">最强维度</div>
+        <div class="strength-dim">${strongest ? escapeHtml(strongest.label) : '—'}</div>
+        <div class="strength-score">${strongest ? strongest.score : '—'}</div>
+      </div>
+      <div class="strength-gap">
+        <div class="gap-num">${strengthGap}</div>
+        <div class="gap-label">分差</div>
+      </div>
+      <div class="strength-box strength-low">
+        <div class="strength-label">最弱维度</div>
+        <div class="strength-dim">${weakest ? escapeHtml(weakest.label) : '—'}</div>
+        <div class="strength-score">${weakest ? weakest.score : '—'}</div>
+      </div>
+    </div>
+    <div class="strength-tags">
+      <div class="tag-row"><span class="tag-title">👍 强项</span>${strengthsHtml}</div>
+      <div class="tag-row"><span class="tag-title">⚠ 短板</span>${weaknessesHtml}</div>
+    </div>
     ${dimensionCards}
   </section>
 
