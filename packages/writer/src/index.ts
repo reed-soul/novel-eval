@@ -8,7 +8,7 @@
  *   novel-eval write status   <projectId>
  *   novel-eval write list
  */
-import { createEngine, type AIAgentAdapter } from '@novel-eval/shared';
+import { createEngine, resolveWriterApiUrl, type AIAgentAdapter } from '@novel-eval/shared';
 import { loadWriterConfig } from './config.ts';
 import { loadEnv } from './load-env.ts';
 import { openDb, closeDb, type DB } from './db.ts';
@@ -29,6 +29,10 @@ import { dirname } from 'node:path';
 import * as readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import { isServerRunning, startApiJob, streamJobEvents } from './api-client.ts';
+
+function writerApiUrl(): string {
+  return resolveWriterApiUrl(process.env);
+}
 
 function configuredDatabasePath(): string {
   const path = process.env.WRITER_DB_PATH;
@@ -314,7 +318,7 @@ async function runInit(args: InitArgs): Promise<void> {
   if (serverActive) {
     console.log(`[API] 探测到 Web 服务正在运行，将通过 Web 后端发起任务以保持进度同步...`);
     try {
-      const res = await fetch('http://localhost:3000/api/projects', {
+      const res = await fetch(`${writerApiUrl()}/api/projects`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -683,7 +687,7 @@ async function runResume(args: ResumeArgs): Promise<void> {
     if (serverActive) {
       console.log(`[API] 探测到 Web 服务正在运行，将通过 Web 后端发起任务以保持进度同步...`);
       try {
-        const activeRes = await fetch(`http://localhost:3000/api/projects/${args.projectId}/active-job`);
+        const activeRes = await fetch(`${writerApiUrl()}/api/projects/${args.projectId}/active-job`);
         const { job } = await activeRes.json() as { job: { id: string; status: string } | null };
         let jobId: string;
         let fromBound: number, toBound: number;

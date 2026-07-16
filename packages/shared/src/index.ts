@@ -21,6 +21,11 @@ export { parseJSONRobust } from './engine/json-util.ts';
 
 // 配置
 export { loadYaml, loadEngineConfig } from './config.ts';
+export {
+  resolveServicePort,
+  resolveWriterApiUrl,
+  type ServiceEndpointEnv,
+} from './config/service-endpoints.ts';
 
 // Prompt 加载
 export { loadPrompt } from './prompts.ts';

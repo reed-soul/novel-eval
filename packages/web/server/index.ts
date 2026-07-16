@@ -7,6 +7,7 @@
 import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
+import { resolveServicePort } from '@novel-eval/shared';
 import { openDb, closeDb, loadWriterConfig, recoverInterruptedJobs, loadEnv } from '@novel-eval/writer';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -71,10 +72,10 @@ app.get('/*', (c) => {
   }
 });
 
-const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 4000;
-console.log(`Novel Eval Web — http://localhost:${port}`);
+const port = resolveServicePort(process.env);
+console.log(`Novel Eval Web — http://127.0.0.1:${port}`);
 serve({ fetch: app.fetch, port }, (info) => {
-  console.log(`服务已启动：http://localhost:${info.port}`);
+  console.log(`服务已启动：http://127.0.0.1:${info.port}`);
 });
 
 process.on('SIGINT', () => { closeDb(db); process.exit(0); });

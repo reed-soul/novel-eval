@@ -1,10 +1,12 @@
-import { loadEnv } from './load-env.ts';
+import { resolveWriterApiUrl } from '@novel-eval/shared';
 
-const SERVER_URL = 'http://localhost:3000';
+function serverUrl(): string {
+  return resolveWriterApiUrl(process.env);
+}
 
 export async function isServerRunning(): Promise<boolean> {
   try {
-    const res = await fetch(`${SERVER_URL}/api/config`, { signal: AbortSignal.timeout(1000) });
+    const res = await fetch(`${serverUrl()}/api/config`, { signal: AbortSignal.timeout(1000) });
     return res.ok;
   } catch {
     return false;
@@ -12,7 +14,7 @@ export async function isServerRunning(): Promise<boolean> {
 }
 
 export async function startApiJob(endpoint: string, body: unknown): Promise<string> {
-  const res = await fetch(`${SERVER_URL}${endpoint}`, {
+  const res = await fetch(`${serverUrl()}${endpoint}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -27,7 +29,7 @@ export async function startApiJob(endpoint: string, body: unknown): Promise<stri
 
 export async function requestApiPause(jobId: string): Promise<boolean> {
   try {
-    const res = await fetch(`${SERVER_URL}/api/projects/jobs/${jobId}/pause`, { method: 'POST' });
+    const res = await fetch(`${serverUrl()}/api/projects/jobs/${jobId}/pause`, { method: 'POST' });
     return res.ok;
   } catch {
     return false;
@@ -35,7 +37,7 @@ export async function requestApiPause(jobId: string): Promise<boolean> {
 }
 
 export async function streamJobEvents(jobId: string): Promise<void> {
-  const res = await fetch(`${SERVER_URL}/api/projects/jobs/${jobId}/events`);
+  const res = await fetch(`${serverUrl()}/api/projects/jobs/${jobId}/events`);
   if (!res.ok || !res.body) {
     throw new Error(`Failed to stream events: ${res.statusText}`);
   }
