@@ -10,26 +10,27 @@ export {
   createProject, getProject, listProjects, updateProjectStatus,
   type Project, type ProjectStatus,
 } from './project.ts';
-export { generateBible, type GenerateBibleOptions, type GenerateBibleResult } from './bible/generator.ts';
-export { generateBlueprint, type GenerateBlueprintOptions, type GenerateBlueprintResult } from './chapter/blueprint.ts';
-export { generateChapter, generateRange, type GenerateChapterOptions, type GenerateChapterResult, type GenerateRangeOptions, type QualityGateConfig, type GenerationControl, JobPausedError, JobCancelledError } from './chapter/generator.ts';
-export { finalizeChapter, type FinalizeOptions, type FinalizeResult } from './chapter/finalizer.ts';
-export { ensureChapterConsistency, type ConsistencyResult } from './chapter/consistency.ts';
-export { assessChapterQuality, type QualityGateResult } from './chapter/quality-gate.ts';
-export { detectRepetition, type RepetitionReport } from './chapter/repetition.ts';
-export { aggregateLessons, buildLessonPrompt, classifyChapter, type ChapterPattern } from './chapter/lesson-aggregator.ts';
-// M5：经验驱动的局部修正
 export {
-  diagnoseChapter, correctChapter, applyCorrectionDraft, discardCorrectionDraft,
-  type CorrectionStrategy, type DiagnosisResult, type DiagnosisIssue,
-  type CorrectChapterOptions, type CorrectResult,
-} from './chapter/corrector.ts';
-// job 持久化（暂停/继续/取消的断点来源）
+  chapterId,
+  chapterRevisionId,
+  characterId,
+  foreshadowId,
+  outlineId,
+  projectId,
+  storyStateRevisionId,
+  type ChapterId,
+  type ChapterRevisionId,
+  type CharacterId,
+  type ForeshadowId,
+  type OutlineId,
+  type ProjectId,
+  type StoryStateRevisionId,
+} from './domain/ids.ts';
 export {
-  createJobRow, getJobRow, listJobsByProject, getActiveJob,
-  updateJobStatus, updateJobProgress, recoverInterruptedJobs,
-  type JobRow, type JobType, type JobStatus, type CreateJobRowOpts,
-} from './job-store.ts';
+  InvalidPersistenceDataError,
+  InvalidStoryStateDeltaError,
+} from './domain/errors.ts';
+export { applyStoryStateDelta } from './domain/story-state.ts';
 export type {
   Chapter,
   ChapterCandidate,
@@ -39,6 +40,7 @@ export type {
   CharacterChange,
   CharacterPatch,
   CharacterState,
+  CharacterStatus,
   FactChange,
   ForeshadowChange,
   ForeshadowState,
@@ -50,8 +52,3 @@ export type {
   StoryStateDelta,
   TimelineEvent,
 } from './chapter/types.ts';
-export type {
-  Bible, CoreSeed, CharacterDynamic, CharacterDrives, CharacterArc,
-  CharacterRelationship, CharacterState as BibleCharacterState, CharacterStateEntry,
-  WorldBuilding, WorldDimension, PlotArchitecture, PlotAct, Foreshadow,
-} from './bible/types.ts';

@@ -10,6 +10,7 @@ export type {
   CharacterChange,
   CharacterPatch,
   CharacterState,
+  CharacterStatus,
   FactChange,
   ForeshadowChange,
   ForeshadowState,
