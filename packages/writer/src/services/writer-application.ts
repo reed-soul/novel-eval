@@ -58,6 +58,7 @@ import {
 import { PlanningRepository } from '../repositories/planning-repository.ts';
 import { StoryStateRepository } from '../repositories/story-state-repository.ts';
 import type { JsonValue } from '../repositories/validation.ts';
+import { getRuntimeConfig } from '../runtime-config.ts';
 import {
   ChapterGenerationService,
   type GenerateChapterOutcome,
@@ -79,6 +80,12 @@ export interface WriterApplicationOptions {
   now?: () => Date;
   defaultOwnerId?: string;
   leaseTtlMs?: number;
+}
+
+export interface ImportBibleAppInput extends Omit<ImportBibleOptions, 'db'> {
+  existingJobId?: string;
+  ownerId?: string;
+  ttlMs?: number;
 }
 
 export interface GenerateBibleAppInput extends Omit<GenerateBibleOptions, 'db'> {
@@ -193,7 +200,11 @@ export class WriterApplication {
 
   async generateBible(opts: GenerateBibleAppInput): Promise<GenerateBibleResult> {
     const ownerId = opts.ownerId ?? this.defaultOwnerId;
-    const ttlMs = opts.ttlMs ?? this.leaseTtlMs;
+    const stepTimeoutMs = getRuntimeConfig().generation.timeouts.bibleMs;
+    // Floor TTL at one LLM step when caller did not override — prevents mid-call expiry.
+    const ttlMs = opts.ttlMs !== undefined
+      ? opts.ttlMs
+      : Math.max(this.leaseTtlMs, stepTimeoutMs);
     let jobId: string;
     if (opts.existingJobId) {
       const existing = getJobRow(this.db, opts.existingJobId);
@@ -228,7 +239,8 @@ export class WriterApplication {
       throw error;
     }
     try {
-      const result = await generateBibleImpl({ ...opts, db: this.db });
+      const onProgress = this.bindLeaseHeartbeat(lease, ownerId, ttlMs, opts.onProgress);
+      const result = await generateBibleImpl({ ...opts, db: this.db, onProgress });
       updateJobStatus(this.db, jobId, 'completed');
       return result;
     } catch (error: unknown) {
@@ -242,13 +254,63 @@ export class WriterApplication {
     }
   }
 
-  importBible(opts: Omit<ImportBibleOptions, 'db'>): ImportBibleResult {
-    return importBibleImpl({ ...opts, db: this.db });
+  importBible(opts: ImportBibleAppInput): ImportBibleResult {
+    const ownerId = opts.ownerId ?? this.defaultOwnerId;
+    const ttlMs = opts.ttlMs ?? this.leaseTtlMs;
+    let jobId: string;
+    if (opts.existingJobId) {
+      const existing = getJobRow(this.db, opts.existingJobId);
+      if (!existing || existing.projectId !== opts.projectId) {
+        throw new Error(`Job ${opts.existingJobId} not found for project`);
+      }
+      jobId = opts.existingJobId;
+    } else {
+      jobId = createJobRow(this.db, {
+        projectId: opts.projectId,
+        type: 'bible',
+        engine: 'import',
+        model: 'import',
+        wordCount: 0,
+        promptVersion: 'bible-import-v1',
+      });
+    }
+    let lease: ProjectWriteLease;
+    try {
+      lease = this.leases.acquire({
+        projectId: projectId(opts.projectId),
+        jobId,
+        ownerId,
+        ttlMs,
+        now: this.now(),
+      });
+    } catch (error: unknown) {
+      updateJobStatus(this.db, jobId, 'failed', {
+        errorType: error instanceof Error ? error.name : 'Error',
+        error: error instanceof Error ? error.message : 'lease acquire failed',
+      });
+      throw error;
+    }
+    try {
+      const result = importBibleImpl({ ...opts, db: this.db });
+      updateJobStatus(this.db, jobId, 'completed');
+      return result;
+    } catch (error: unknown) {
+      updateJobStatus(this.db, jobId, 'failed', {
+        errorType: error instanceof Error ? error.name : 'Error',
+        error: error instanceof Error ? error.message : 'import bible failed',
+      });
+      throw error;
+    } finally {
+      this.leases.release({ leaseId: lease.id, ownerId });
+    }
   }
 
   async generateBlueprint(opts: GenerateBlueprintAppInput): Promise<GenerateBlueprintResult> {
     const ownerId = opts.ownerId ?? this.defaultOwnerId;
-    const ttlMs = opts.ttlMs ?? this.leaseTtlMs;
+    const stepTimeoutMs = getRuntimeConfig().generation.timeouts.blueprintMs;
+    const ttlMs = opts.ttlMs !== undefined
+      ? opts.ttlMs
+      : Math.max(this.leaseTtlMs, stepTimeoutMs);
     let jobId: string;
     if (opts.existingJobId) {
       const existing = getJobRow(this.db, opts.existingJobId);
@@ -283,7 +345,8 @@ export class WriterApplication {
       throw error;
     }
     try {
-      const result = await generateBlueprintImpl({ ...opts, db: this.db });
+      const onProgress = this.bindLeaseHeartbeat(lease, ownerId, ttlMs, opts.onProgress);
+      const result = await generateBlueprintImpl({ ...opts, db: this.db, onProgress });
       updateJobStatus(this.db, jobId, 'completed');
       return result;
     } catch (error: unknown) {
@@ -622,6 +685,23 @@ export class WriterApplication {
     } finally {
       this.leases.release({ leaseId: lease.id, ownerId });
     }
+  }
+
+  private bindLeaseHeartbeat(
+    lease: ProjectWriteLease,
+    ownerId: string,
+    ttlMs: number,
+    onProgress?: (step: string, msg: string) => void,
+  ): (step: string, msg: string) => void {
+    return (step: string, msg: string) => {
+      this.leases.renew({
+        leaseId: lease.id,
+        ownerId,
+        ttlMs,
+        now: this.now(),
+      });
+      onProgress?.(step, msg);
+    };
   }
 
   private cancelOtherActiveJobs(id: ProjectId, keepJobId: string | null): void {

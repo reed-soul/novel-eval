@@ -86,6 +86,7 @@ export {
   type GenerateChapterRangeResult,
   type GenerateBibleAppInput,
   type GenerateBlueprintAppInput,
+  type ImportBibleAppInput,
   type PublishChapterEditInput,
   type RebuildStoryStateInput,
   type AdoptCorrectionDraftInput,

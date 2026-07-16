@@ -17,10 +17,13 @@ import {
   type StoryStateRevisionId,
 } from '../../src/domain/ids.ts';
 import type { StoryState, StoryStateDelta } from '../../src/domain/story-state.ts';
-import { getJobRow } from '../../src/job-store.ts';
+import { getJobRow, createJobRow } from '../../src/job-store.ts';
 import { ChapterRepository } from '../../src/repositories/chapter-repository.ts';
 import { PlanningRepository } from '../../src/repositories/planning-repository.ts';
 import { ProjectRepository } from '../../src/repositories/project-repository.ts';
+import {
+  ProjectWriteLeaseRepository,
+} from '../../src/repositories/lease-repository.ts';
 import { StoryStateRepository } from '../../src/repositories/story-state-repository.ts';
 import { WriterApplication } from '../../src/services/writer-application.ts';
 import {
@@ -843,6 +846,220 @@ it('generateBlueprint fails when a chapter write lease is held', async (t) => {
       },
       characters: [],
       totalChapters: 3,
+    }),
+    (error: unknown) => error instanceof Error && /lease/i.test(error.message),
+  );
+});
+
+it('generateBible renews lease so it survives clock advancing past initial TTL', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+
+  new ProjectRepository(testDb.db).create({
+    id: fixtureProjectId,
+    title: '北站',
+    genreProfile: '悬疑',
+    targetAudience: '成人',
+    premise: '林晚追查一张失踪的车票。',
+    createdAt: fixtureTime,
+  });
+
+  const ttlMs = 1_000;
+  let nowMs = fixedNow.getTime();
+  const renewNows: number[] = [];
+  const proto = ProjectWriteLeaseRepository.prototype;
+  const originalRenew = proto.renew;
+  proto.renew = function renewWithSpy(this: ProjectWriteLeaseRepository, input) {
+    renewNows.push(input.now.getTime());
+    return originalRenew.call(this, input);
+  };
+  t.after(() => {
+    proto.renew = originalRenew;
+  });
+
+  const app = new WriterApplication(testDb.db, {
+    now: () => new Date(nowMs),
+    defaultOwnerId: ownerId,
+    leaseTtlMs: ttlMs,
+  });
+
+  const responses = [
+    JSON.stringify({ premise: '当少年探险者李川遭遇星际虫族入侵，必须找到失落的星舰核心，否则人类殖民地将在三日内沦陷；与此同时，一个隐藏的叛徒正在瓦解最后的防线。' }),
+    JSON.stringify({
+      characters: [
+        {
+          name: '李川', role: '主角', background: '殖民地孤儿，靠拾荒长大，天生能感知虫族的存在',
+          secret: '他是半虫族混血，身份一旦暴露将被处决',
+          drives: { surface: '活下去', deep: '找到身世真相', soul: '学会信任他人' },
+          arc: { start: '孤僻拾荒者', trigger: '殖民地被袭', shift: '发现自己的混血身份', end: '人类与虫族的桥梁' },
+          relationships: [{ target: '苏婉', type: '盟友', note: '信任与猜疑并存' }],
+        },
+        {
+          name: '苏婉', role: '导师', background: '殖民地防卫军资深军官，身经百战的指挥官',
+          secret: '她知道李川的真实身份并暗中保护',
+          drives: { surface: '完成使命', deep: '赎罪', soul: '放下过去' },
+          arc: { start: '冷酷军官', trigger: '遇见李川', shift: '被其坚韧打动', end: '牺牲自己掩护撤退' },
+          relationships: [{ target: '李川', type: '盟友', note: '暗中保护' }],
+        },
+        {
+          name: '叛徒', role: '反派', background: '殖民地议会核心成员，掌握殖民地最高决策权',
+          secret: '他早已与虫族达成秘密交易出卖殖民地',
+          drives: { surface: '权力', deep: '恐惧死亡', soul: '渴望被认可' },
+          arc: { start: '受尊敬的议员', trigger: '虫族威胁', shift: '选择背叛', end: '被李川揭穿' },
+          relationships: [{ target: '李川', type: '对手', note: '价值观根本对立' }],
+        },
+      ],
+    }),
+    JSON.stringify({
+      characters: [
+        { name: '李川', items: ['拾荒背包'], abilities: ['虫族感知'], status: '健康，孤僻', relationships: ['苏婉：新认识'], events: [] },
+        { name: '苏婉', items: ['军用手枪'], abilities: ['战术指挥'], status: '疲惫', relationships: ['李川：观察中'], events: [] },
+        { name: '叛徒', items: ['议会徽章'], abilities: ['政治操控'], status: '焦虑', relationships: [], events: [] },
+      ],
+    }),
+    JSON.stringify({
+      physical: {
+        elements: ['殖民地穹顶（随时可能破裂）', '地下虫巢', '通讯干扰场'],
+        tensions: ['穹顶材料老化', '氧气储备告急', '虫族夜行性'],
+      },
+      social: {
+        elements: ['议会寡头制', '拾荒者底层阶层', '黑市军火贸易'],
+        tensions: ['议会与军队权力之争', '阶层固化', '资源分配不均'],
+      },
+      metaphorical: {
+        elements: ['穹顶=虚假安全感', '虫族=被压抑的恐惧', '星空=自由渴望'],
+        tensions: ['穹顶裂缝暗示体制崩溃', '虫族地下活动隐喻潜伏危机', '星空遥不可及象征希望渺茫'],
+      },
+    }),
+    JSON.stringify({
+      act1: {
+        setup: '殖民地遭虫族突袭，李川在废墟中救出苏婉',
+        conflicts: ['穹顶第一道裂缝', '议会拒绝升级防卫', '李川的虫族感知觉醒'],
+        climax: '李川决定加入苏婉的突围小队，前往核心区',
+      },
+      act2: {
+        setup: '小队在虫族封锁区艰难推进，发现叛徒线索',
+        conflicts: ['苏婉重伤', '叛徒设下陷阱', '李川的混血身份暴露'],
+        climax: '李川被小队抛弃，独自面对虫潮',
+      },
+      act3: {
+        setup: '李川接纳混血身份，反向利用虫族感知',
+        conflicts: ['揭穿叛徒', '重启星舰核心', '苏婉的牺牲'],
+        climax: '李川成为人类与虫族沟通的桥梁，殖民地获得转机',
+      },
+      foreshadows: [
+        { description: '李川手臂上的神秘虫纹印记会发光', setupAct: 1, resolveAct: 2 },
+        { description: '苏婉临终前那句未说完的遗言', setupAct: 2, resolveAct: 3 },
+        { description: '叛徒书房抽屉里的那封密信', setupAct: 1, resolveAct: 3 },
+      ],
+    }),
+  ];
+  let callIdx = 0;
+  const { bible } = await app.generateBible({
+    engine: {
+      name: 'mock-bible',
+      async run(_prompt: string, _options: RunOptions): Promise<CallResult> {
+        // Advance past the prior TTL between steps; next onProgress renew must extend the lease.
+        nowMs += ttlMs + 500;
+        const text = responses[callIdx++] ?? '{}';
+        return {
+          text,
+          usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'mock', durationMs: 1 },
+          notes: [],
+        };
+      },
+      async isAvailable() { return true; },
+    },
+    projectId: fixtureProjectId,
+    topic: '虫族入侵',
+    genre: '科幻',
+    audience: '青年男性',
+    ttlMs,
+  });
+
+  assert.ok(bible.coreSeed.premise.length > 0);
+  assert.ok(renewNows.length >= 5, `expected renew on each bible step, got ${renewNows.length}`);
+  assert.ok(
+    renewNows.some((ts) => ts > fixedNow.getTime() + ttlMs),
+    'renew must run after the clock advances past the initial TTL',
+  );
+  assert.equal(countLeases(testDb.db, fixtureProjectId), 0);
+});
+
+it('importBible acquires and releases a project write lease', (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  new ProjectRepository(testDb.db).create({
+    id: fixtureProjectId,
+    title: '北站',
+    genreProfile: '悬疑',
+    targetAudience: '成人',
+    premise: '林晚追查一张失踪的车票。',
+    createdAt: fixtureTime,
+  });
+
+  const chapterJobId = createJobRow(testDb.db, {
+    projectId: fixtureProjectId,
+    type: 'chapter',
+    scope: { from: 1, to: 1 },
+    engine: 'chapter-engine',
+    model: 'chapter-model',
+    wordCount: 800,
+  });
+  new ProjectWriteLeaseRepository(testDb.db).acquire({
+    projectId: fixtureProjectId,
+    jobId: chapterJobId,
+    ownerId: 'chapter-owner',
+    ttlMs: 60_000,
+    now: fixedNow,
+  });
+
+  const app = new WriterApplication(testDb.db, {
+    now: () => fixedNow,
+    defaultOwnerId: ownerId,
+    leaseTtlMs: 60_000,
+  });
+
+  assert.throws(
+    () => app.importBible({
+      projectId: fixtureProjectId,
+      topic: 't',
+      genre: 'g',
+      audience: 'a',
+      input: {
+        coreSeed: { premise: '足够长的前提句子' },
+        characterDynamics: [
+          {
+            name: 'A', role: '主角', background: '背景背景背景背景', secret: '秘密秘密',
+            drives: { surface: 's', deep: 'd', soul: 'o' },
+            arc: { start: 's', trigger: 't', shift: 'h', end: 'e' },
+            relationships: [{ target: 'B', type: '盟友', note: 'n' }],
+          },
+          {
+            name: 'B', role: '配角', background: '背景背景背景背景', secret: '秘密秘密',
+            drives: { surface: 's', deep: 'd', soul: 'o' },
+            arc: { start: 's', trigger: 't', shift: 'h', end: 'e' },
+            relationships: [{ target: 'A', type: '盟友', note: 'n' }],
+          },
+          {
+            name: 'C', role: '反派', background: '背景背景背景背景', secret: '秘密秘密',
+            drives: { surface: 's', deep: 'd', soul: 'o' },
+            arc: { start: 's', trigger: 't', shift: 'h', end: 'e' },
+            relationships: [{ target: 'A', type: '对手', note: 'n' }],
+          },
+        ],
+        worldBuilding: {
+          physical: { elements: ['a', 'b', 'c'], tensions: ['t1', 't2', 't3'] },
+          social: { elements: ['a', 'b', 'c'], tensions: ['t1', 't2', 't3'] },
+          metaphorical: { elements: ['a', 'b', 'c'], tensions: ['t1', 't2', 't3'] },
+        },
+        plotArchitecture: {
+          act1: { setup: 's', conflicts: ['c'], climax: 'x' },
+          act2: { setup: 's', conflicts: ['c'], climax: 'x' },
+          act3: { setup: 's', conflicts: ['c'], climax: 'x' },
+          foreshadows: [{ description: '伏笔描述足够长', setupAct: 1, resolveAct: 3 }],
+        },
+      },
     }),
     (error: unknown) => error instanceof Error && /lease/i.test(error.message),
   );
