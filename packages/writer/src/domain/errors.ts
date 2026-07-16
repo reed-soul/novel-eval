@@ -11,3 +11,10 @@ export class InvalidPersistenceDataError extends Error {
     this.name = 'InvalidPersistenceDataError';
   }
 }
+
+export class ProjectLeaseConflictError extends Error {
+  constructor() {
+    super('The project write lease is held by another owner');
+    this.name = 'ProjectLeaseConflictError';
+  }
+}
