@@ -20,15 +20,21 @@ export { parseJobStatusResponse } from './jobs.ts';
 
 export type {
   EvaluationReportResponse,
+  EvaluationDimensionKey,
   EvaluationDimensionDto,
   EvaluationNovelDto,
   EvaluationOverallDto,
   EvaluationEmotionalPointDto,
   EvaluationSuggestionDto,
+  EvaluationExcerptDto,
+  EvaluationCoverageDto,
   EvaluationMarketBenchmarkDto,
   EvaluationMarketComparableDto,
 } from './evaluation.ts';
 export {
+  EVALUATION_DIMENSION_KEYS,
+  EVALUATION_DIMENSION_LABELS,
+  evaluationCoverageFor,
   parseEvaluationReportResponse,
   toEvaluationReportResponse,
   unwrapEvaluationPayload,

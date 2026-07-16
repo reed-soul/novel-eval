@@ -6,20 +6,18 @@ import {
   type EvaluationReportResponse,
 } from '../api/client.ts';
 import type {
+  EvaluationDimensionKey,
   EvaluationDimensionDto,
   EvaluationEmotionalPointDto,
   EvaluationSuggestionDto,
+  EvaluationExcerptDto,
   EvaluationMarketComparableDto,
 } from '@novel-eval/shared';
+import {
+  EVALUATION_DIMENSION_KEYS,
+  EVALUATION_DIMENSION_LABELS,
+} from '@novel-eval/shared/dto';
 import type { CharacterProfile, CharacterRelationship } from '@novel-eval/shared';
-
-const DIMENSION_LABELS: Record<string, string> = {
-  storyStructure: '故事架构',
-  characterization: '人物塑造',
-  writingQuality: '文笔质量',
-  emotionalResonance: '情感共鸣',
-  marketPotential: '市场潜力',
-};
 
 interface TensionPointView extends EvaluationEmotionalPointDto {
   x: number;
@@ -38,6 +36,29 @@ interface ActiveTensionPoint {
 
 function dimensionScore(dimensions: Record<string, EvaluationDimensionDto>, key: string): number {
   return dimensions[key]?.score ?? 0;
+}
+
+function dimensionLabel(key: string): string {
+  for (const dimensionKey of EVALUATION_DIMENSION_KEYS) {
+    if (dimensionKey === key) return EVALUATION_DIMENSION_LABELS[dimensionKey];
+  }
+  return key;
+}
+
+function excerptAnchorId(excerpt: EvaluationExcerptDto, fallbackIndex: number): string {
+  const chapter = excerpt.chapterId ?? 'chapter';
+  const index = excerpt.excerptIndex ?? fallbackIndex;
+  return `excerpt-${chapter}-${index}`.replace(/[^A-Za-z0-9_-]/g, '-');
+}
+
+function excerptRefKey(chapterId: string, excerptIndex: number): string {
+  return `${chapterId}#${excerptIndex}`;
+}
+
+function excerptLabel(excerpt: EvaluationExcerptDto, fallbackIndex: number): string {
+  const chapter = excerpt.chapterId ?? '未知章节';
+  const index = excerpt.excerptIndex ?? fallbackIndex;
+  return `${chapter} #${index + 1}`;
 }
 
 export function EvaluationReport() {
@@ -77,22 +98,29 @@ export function EvaluationReport() {
   }
 
   const { overall, dimensions, novel, suggestions } = report;
+  const excerpts = report.excerpts ?? [];
+  const excerptsByRef = new Map<string, { excerpt: EvaluationExcerptDto; index: number }>();
+  excerpts.forEach((excerpt, index) => {
+    if (excerpt.chapterId && typeof excerpt.excerptIndex === 'number') {
+      excerptsByRef.set(excerptRefKey(excerpt.chapterId, excerpt.excerptIndex), { excerpt, index });
+    }
+  });
+  const excerptRefsByDimension = new Map<string, Array<{ excerpt: EvaluationExcerptDto; index: number }>>();
+  excerpts.forEach((excerpt, index) => {
+    const existing = excerptRefsByDimension.get(excerpt.dimension) ?? [];
+    existing.push({ excerpt, index });
+    excerptRefsByDimension.set(excerpt.dimension, existing);
+  });
+  const dimensionEntries = EVALUATION_DIMENSION_KEYS
+    .map((key) => ({ key, label: EVALUATION_DIMENSION_LABELS[key], dim: dimensions[key] }))
+    .filter((entry): entry is {
+      key: EvaluationDimensionKey;
+      label: string;
+      dim: EvaluationDimensionDto;
+    } => entry.dim !== undefined);
 
-  const radarData = [
-    dimensionScore(dimensions, 'storyStructure'),
-    dimensionScore(dimensions, 'characterization'),
-    dimensionScore(dimensions, 'writingQuality'),
-    dimensionScore(dimensions, 'emotionalResonance'),
-    dimensionScore(dimensions, 'marketPotential'),
-  ];
-
-  const radarLabels = [
-    DIMENSION_LABELS.storyStructure,
-    DIMENSION_LABELS.characterization,
-    DIMENSION_LABELS.writingQuality,
-    DIMENSION_LABELS.emotionalResonance,
-    DIMENSION_LABELS.marketPotential,
-  ];
+  const radarData = EVALUATION_DIMENSION_KEYS.map((key) => dimensionScore(dimensions, key));
+  const radarLabels = EVALUATION_DIMENSION_KEYS.map((key) => EVALUATION_DIMENSION_LABELS[key]);
 
   const getGradeClass = (grade: string) => {
     switch (grade) {
@@ -162,17 +190,29 @@ export function EvaluationReport() {
         </div>
 
         <div className="dim-list">
-          {Object.entries(dimensions).map(([key, dim]) => (
+          {dimensionEntries.map(({ key, label, dim }) => {
+            const dimExcerpts = excerptRefsByDimension.get(key) ?? [];
+            return (
             <div key={key} className="dim-item">
               <div className="dim-score-box">
                 <span className="dim-score-value">{dim.score?.toFixed(1) || dim.score}</span>
-                <span className="dim-score-label">{DIMENSION_LABELS[key] || key}</span>
+                <span className="dim-score-label">{label}</span>
               </div>
               <div style={{ flexGrow: 1 }}>
                 <p className="dim-analysis-text">{dim.analysis}</p>
+                {dimExcerpts.length > 0 && (
+                  <div className="excerpt-link-row">
+                    {dimExcerpts.slice(0, 3).map(({ excerpt, index }) => (
+                      <a key={excerptAnchorId(excerpt, index)} href={`#${excerptAnchorId(excerpt, index)}`}>
+                        证据 {excerptLabel(excerpt, index)}
+                      </a>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
@@ -429,13 +469,52 @@ export function EvaluationReport() {
                 <span className="suggestion-num">{i + 1}.</span>
                 <div className="suggestion-body">
                   <div className="suggestion-tag-bar">
-                    <span className="suggestion-tag">{DIMENSION_LABELS[sugg.dimension] || sugg.dimension}</span>
+                    <span className="suggestion-tag">{dimensionLabel(sugg.dimension)}</span>
                     {sugg.type && <span className="suggestion-tag">{sugg.type}</span>}
                   </div>
                   <p className="dim-analysis-text" style={{ margin: 0, color: 'var(--text)' }}>
                     {sugg.content}
                   </p>
+                  {sugg.excerptRef && (
+                    <div className="excerpt-link-row" style={{ marginTop: 8 }}>
+                      {(() => {
+                        const linked = excerptsByRef.get(excerptRefKey(
+                          sugg.excerptRef.chapterId,
+                          sugg.excerptRef.excerptIndex,
+                        ));
+                        if (!linked) return null;
+                        return (
+                          <a href={`#${excerptAnchorId(linked.excerpt, linked.index)}`}>
+                            查看证据 {excerptLabel(linked.excerpt, linked.index)}
+                          </a>
+                        );
+                      })()}
+                    </div>
+                  )}
                 </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {excerpts.length > 0 && (
+        <div className="card" style={{ marginTop: 32 }}>
+          <h2>证据摘录</h2>
+          <div className="excerpt-grid">
+            {excerpts.map((excerpt, index) => (
+              <div
+                key={excerptAnchorId(excerpt, index)}
+                id={excerptAnchorId(excerpt, index)}
+                className="excerpt-card"
+              >
+                <div className="excerpt-card-meta">
+                  <span>{dimensionLabel(excerpt.dimension)}</span>
+                  <span>{excerptLabel(excerpt, index)}</span>
+                  {typeof excerpt.offset === 'number' && <span>offset {excerpt.offset}</span>}
+                </div>
+                <blockquote>{excerpt.text}</blockquote>
+                <p>{excerpt.reason}</p>
               </div>
             ))}
           </div>

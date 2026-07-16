@@ -1,17 +1,49 @@
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import { streamSSE } from 'hono/streaming';
-import { toEvaluationReportResponse } from '@novel-eval/shared';
+import { evaluationCoverageFor, toEvaluationReportResponse } from '@novel-eval/shared';
+import { EvaluationIncompleteError } from '@novel-eval/writer';
 import { getEvalJob, runEvalTaskInBackground } from '../eval-jobs.ts';
+import { httpErrorJson, toHttpError } from '../middleware/error-mapper.ts';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 
 export const evalTasksRouter = new Hono();
 
-const EVALS_DIR = path.join(process.cwd(), 'data', 'evals');
+const ROUTE_DIR = path.dirname(fileURLToPath(import.meta.url));
+const WEB_ROOT = path.resolve(ROUTE_DIR, '..', '..');
+const DEFAULT_EVALS_DIR = path.join(WEB_ROOT, 'data', 'evals');
+
+export function resolveEvalDataDir(env: NodeJS.ProcessEnv = process.env): string {
+  const configured = env.EVAL_DATA_DIR?.trim();
+  return configured ? path.resolve(configured) : DEFAULT_EVALS_DIR;
+}
+
+const EVALS_DIR = resolveEvalDataDir();
 
 async function ensureEvalsDir() {
   await fs.mkdir(EVALS_DIR, { recursive: true });
+}
+
+function evalArtifactPath(taskId: string, extension: 'txt' | 'json'): string {
+  return path.join(EVALS_DIR, `${taskId}.${extension}`);
+}
+
+function completeReportResponse(raw: unknown) {
+  const report = toEvaluationReportResponse(raw);
+  const coverage = evaluationCoverageFor(report);
+  if (!coverage.complete) {
+    throw new EvaluationIncompleteError(
+      `Evaluation report missing dimensions: ${coverage.missingDimensions.join(', ')}`,
+    );
+  }
+  return { ...report, coverage };
+}
+
+function errorResponse(c: Context, error: unknown) {
+  const mapped = toHttpError(error);
+  return c.json(httpErrorJson(mapped), mapped.status as 400 | 402 | 409 | 422 | 500);
 }
 
 evalTasksRouter.post('/upload', async (c) => {
@@ -23,7 +55,7 @@ evalTasksRouter.post('/upload', async (c) => {
   }
 
   const taskId = randomUUID();
-  const filePath = path.join(process.cwd(), 'data', 'evals', `${taskId}.txt`);
+  const filePath = evalArtifactPath(taskId, 'txt');
 
   await ensureEvalsDir();
 
@@ -43,9 +75,9 @@ evalTasksRouter.post('/upload', async (c) => {
       platform: 'web',
     },
   }).then(async (result) => {
-    const resultPath = path.join(EVALS_DIR, `${taskId}.json`);
+    const resultPath = evalArtifactPath(taskId, 'json');
     // Persist the stable flat report DTO (unwrap evaluate() envelope)
-    const report = toEvaluationReportResponse(result);
+    const report = completeReportResponse(result);
     await fs.writeFile(resultPath, JSON.stringify(report, null, 2));
   }).catch((err: unknown) => {
     const message = err instanceof Error ? err.message : String(err);
@@ -111,18 +143,21 @@ evalTasksRouter.get('/:taskId/result', async (c) => {
   const job = getEvalJob(taskId);
   if (job?.status === 'completed' && job.result) {
     try {
-      return c.json(toEvaluationReportResponse(job.result));
-    } catch {
-      return c.json({ error: 'Result malformed', code: 'InternalError', message: 'Result malformed' }, 500);
+      return c.json(completeReportResponse(job.result));
+    } catch (error: unknown) {
+      return errorResponse(c, error);
     }
   }
 
   try {
-    const resultPath = path.join(EVALS_DIR, `${taskId}.json`);
+    const resultPath = evalArtifactPath(taskId, 'json');
     const content = await fs.readFile(resultPath, 'utf-8');
     const raw: unknown = JSON.parse(content);
-    return c.json(toEvaluationReportResponse(raw));
-  } catch {
+    return c.json(completeReportResponse(raw));
+  } catch (error: unknown) {
+    if (error instanceof EvaluationIncompleteError) {
+      return errorResponse(c, error);
+    }
     return c.json({ error: 'Result not found or not ready' }, 404);
   }
 });

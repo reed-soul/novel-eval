@@ -2,7 +2,7 @@
  * 单章质量速览 — 在 ChapterReader 工具栏上方展示
  *
  * 这个页面的任务只有一个：帮用户看清「这一章哪里差」。
- *   1. 五维分数（横向条）——本章得分，低分标红
+ *   1. 八维分数（横向条）——本章得分，低分标红
  *   2. 重复片段（本章实时检测）——本章正文里出现≥3次的重复短语
  *
  * 不塞全书统计——那是项目级视图的事，不该混进单章页面。
@@ -12,20 +12,16 @@ import {
   getChapterEval, diagnoseChapter,
   type EvalHistoryRecord, type ChapterDiagnosis,
 } from '../api/client.ts';
+import {
+  EVALUATION_DIMENSION_KEYS,
+  EVALUATION_DIMENSION_LABELS,
+} from '@novel-eval/shared/dto';
 
 interface Props {
   projectId: string;
   chapterNumber: number;
 }
 
-const DIM_LABELS: Record<string, string> = {
-  storyStructure: '故事架构',
-  characterization: '人物塑造',
-  writingQuality: '文笔质量',
-  emotionalResonance: '情感共鸣',
-  marketPotential: '市场潜力',
-};
-const DIM_ORDER = ['storyStructure', 'characterization', 'writingQuality', 'emotionalResonance', 'marketPotential'];
 const LOW_THRESHOLD = 65;
 
 function scoreColor(score: number): string {
@@ -72,9 +68,9 @@ export function ChapterQualityPanel({ projectId, chapterNumber }: Props) {
   // 取最新一轮评估
   const latest = evalHistory[evalHistory.length - 1];
   const dims = latest.dimensions ?? {};
-  const dimEntries = DIM_ORDER
+  const dimEntries = EVALUATION_DIMENSION_KEYS
     .filter((k) => dims[k])
-    .map((k) => ({ key: k, label: DIM_LABELS[k] ?? k, score: dims[k].score }));
+    .map((k) => ({ key: k, label: EVALUATION_DIMENSION_LABELS[k], score: dims[k].score }));
   const lowDims = dimEntries.filter((d) => d.score < LOW_THRESHOLD);
 
   // 本章重复热点：来自实时诊断（detectRepetition 跑本章正文）
@@ -82,11 +78,11 @@ export function ChapterQualityPanel({ projectId, chapterNumber }: Props) {
 
   return (
     <div className="chapter-quality-panel">
-      {/* 1. 五维分数（本章） */}
+      {/* 1. 八维分数（本章） */}
       {dimEntries.length > 0 && (
         <div className="quality-section">
           <div className="quality-section-title">
-            五维评分
+            八维评分
             {latest.totalScore != null && (
               <span className="quality-total">
                 总分 <strong style={{ color: scoreColor(latest.totalScore) }}>{latest.totalScore}</strong>

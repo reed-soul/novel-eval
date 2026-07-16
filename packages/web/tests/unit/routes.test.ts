@@ -349,9 +349,9 @@ describe('API 路由', () => {
   it('eval result API returns stable EvaluationReportResponse DTO, not {task,result} wrapper', async () => {
     const { mkdirSync, writeFileSync, rmSync: rm } = await import('node:fs');
     const { join: pathJoin } = await import('node:path');
-    const { evalTasksRouter } = await import('../../server/routes/eval-tasks.ts');
+    const { evalTasksRouter, resolveEvalDataDir } = await import('../../server/routes/eval-tasks.ts');
 
-    const evalsDir = pathJoin(process.cwd(), 'data', 'evals');
+    const evalsDir = resolveEvalDataDir();
     mkdirSync(evalsDir, { recursive: true });
     const taskId = 'dto-shape-task';
     const nestedLeak = {
@@ -366,6 +366,9 @@ describe('API 路由', () => {
           writingQuality: { score: 80, analysis: 'ok' },
           emotionalResonance: { score: 80, analysis: 'ok' },
           marketPotential: { score: 80, analysis: 'ok' },
+          thematicDepth: { score: 80, analysis: 'ok' },
+          originality: { score: 80, analysis: 'ok' },
+          pacingRetention: { score: 80, analysis: 'ok' },
         },
         chapters: [],
         characters: [],

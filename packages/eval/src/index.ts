@@ -12,10 +12,18 @@ import { runPreflight, formatPreflightSummary } from './preflight.ts';
 import { loadResultJson, compareResults, formatCompareTerminal } from './compare.ts';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import * as readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import type { NovelMetadata } from './types.ts';
 import { loadEnv } from './load-env.ts';
+
+const PACKAGE_ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
+
+export function resolveEvalDataRoot(env: NodeJS.ProcessEnv = process.env): string {
+  const configured = env.EVAL_DATA_DIR?.trim();
+  return configured ? resolve(configured) : resolve(PACKAGE_ROOT, 'data');
+}
 
 interface EvaluateArgs {
   command: 'evaluate';
@@ -154,8 +162,7 @@ async function runEvaluate(args: EvaluateArgs): Promise<void> {
     onProgress: (msg) => console.log(`  ${msg}`),
   });
 
-  // 输出到根级 data/reports/<taskId>/（兼容从仓库根或包目录运行）
-  const reportsDir = resolve(process.cwd(), 'data', 'reports');
+  const reportsDir = resolve(resolveEvalDataRoot(), 'reports');
   const outDir = resolve(reportsDir, task.id);
   mkdirSync(outDir, { recursive: true });
   const resultPath = resolve(outDir, 'result.json');

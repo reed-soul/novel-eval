@@ -1,6 +1,30 @@
 import { fail, isRecord, type ParseResult } from './parse.ts';
 import type { CharacterProfile, CharacterRelationship } from '../types.ts';
 
+export const EVALUATION_DIMENSION_KEYS = [
+  'storyStructure',
+  'characterization',
+  'writingQuality',
+  'emotionalResonance',
+  'marketPotential',
+  'thematicDepth',
+  'originality',
+  'pacingRetention',
+] as const;
+
+export type EvaluationDimensionKey = typeof EVALUATION_DIMENSION_KEYS[number];
+
+export const EVALUATION_DIMENSION_LABELS: Record<EvaluationDimensionKey, string> = {
+  storyStructure: '故事架构',
+  characterization: '人物塑造',
+  writingQuality: '文笔质量',
+  emotionalResonance: '情感共鸣',
+  marketPotential: '市场潜力',
+  thematicDepth: '主题深度',
+  originality: '原创性',
+  pacingRetention: '节奏留存',
+};
+
 /** Dimension scores exposed to the web client (B7 may expand UI to all eight). */
 export interface EvaluationDimensionDto {
   score: number;
@@ -33,6 +57,11 @@ export interface EvaluationSuggestionDto {
   dimension: string;
   type?: string;
   content: string;
+  relatedChapters?: string[];
+  excerptRef?: {
+    chapterId: string;
+    excerptIndex: number;
+  } | null;
 }
 
 export interface EvaluationMarketComparableDto {
@@ -50,6 +79,27 @@ export interface EvaluationMarketBenchmarkDto {
   disclaimer?: string;
 }
 
+export interface EvaluationExcerptDto {
+  text: string;
+  dimension: string;
+  reason: string;
+  chapterId?: string;
+  excerptIndex?: number;
+  offset?: number | null;
+  matchedBy?: string;
+  length?: number;
+}
+
+export interface EvaluationCoverageDto {
+  complete: boolean;
+  dimensionsExpected: EvaluationDimensionKey[];
+  dimensionsPresent: string[];
+  missingDimensions: EvaluationDimensionKey[];
+  excerptCount: number;
+  chapterCount?: number;
+  sourceWordCount?: number;
+}
+
 /**
  * Stable evaluation report DTO for GET /api/eval/:taskId/result.
  * Flat shape — never the evaluate() `{ task, result }` envelope.
@@ -63,8 +113,9 @@ export interface EvaluationReportResponse {
   emotionalCurve: EvaluationEmotionalPointDto[];
   suggestions: EvaluationSuggestionDto[];
   marketBenchmark?: EvaluationMarketBenchmarkDto | null;
-  excerpts?: unknown[];
+  excerpts: EvaluationExcerptDto[];
   chapters?: unknown[];
+  coverage: EvaluationCoverageDto;
 }
 
 function parseDimension(raw: unknown): EvaluationDimensionDto | null {
@@ -128,7 +179,39 @@ function parseSuggestion(raw: unknown): EvaluationSuggestionDto | null {
     content: raw.content,
   };
   if (typeof raw.type === 'string') suggestion.type = raw.type;
+  if (Array.isArray(raw.relatedChapters)) {
+    suggestion.relatedChapters = raw.relatedChapters.filter((c): c is string => typeof c === 'string');
+  }
+  if (isRecord(raw.excerptRef)
+    && typeof raw.excerptRef.chapterId === 'string'
+    && typeof raw.excerptRef.excerptIndex === 'number'
+  ) {
+    suggestion.excerptRef = {
+      chapterId: raw.excerptRef.chapterId,
+      excerptIndex: raw.excerptRef.excerptIndex,
+    };
+  } else if (raw.excerptRef === null) {
+    suggestion.excerptRef = null;
+  }
   return suggestion;
+}
+
+function parseExcerpt(raw: unknown): EvaluationExcerptDto | null {
+  if (!isRecord(raw)) return null;
+  if (typeof raw.text !== 'string' || typeof raw.dimension !== 'string' || typeof raw.reason !== 'string') {
+    return null;
+  }
+  const excerpt: EvaluationExcerptDto = {
+    text: raw.text,
+    dimension: raw.dimension,
+    reason: raw.reason,
+  };
+  if (typeof raw.chapterId === 'string') excerpt.chapterId = raw.chapterId;
+  if (typeof raw.excerptIndex === 'number') excerpt.excerptIndex = raw.excerptIndex;
+  if (typeof raw.offset === 'number' || raw.offset === null) excerpt.offset = raw.offset;
+  if (typeof raw.matchedBy === 'string') excerpt.matchedBy = raw.matchedBy;
+  if (typeof raw.length === 'number') excerpt.length = raw.length;
+  return excerpt;
 }
 
 function parseRelationship(raw: unknown): CharacterRelationship | null {
@@ -194,6 +277,27 @@ export function unwrapEvaluationPayload(raw: unknown): unknown {
   return raw;
 }
 
+export function evaluationCoverageFor(report: {
+  dimensions: Record<string, EvaluationDimensionDto>;
+  excerpts?: readonly EvaluationExcerptDto[];
+  chapters?: readonly unknown[];
+  task?: { sourceWordCount?: number; chapterCount?: number };
+}): EvaluationCoverageDto {
+  const dimensionsPresent = Object.keys(report.dimensions);
+  const missingDimensions = EVALUATION_DIMENSION_KEYS.filter((key) => !report.dimensions[key]);
+  const coverage: EvaluationCoverageDto = {
+    complete: missingDimensions.length === 0,
+    dimensionsExpected: [...EVALUATION_DIMENSION_KEYS],
+    dimensionsPresent,
+    missingDimensions,
+    excerptCount: report.excerpts?.length ?? 0,
+  };
+  if (Array.isArray(report.chapters)) coverage.chapterCount = report.chapters.length;
+  if (typeof report.task?.chapterCount === 'number') coverage.chapterCount = report.task.chapterCount;
+  if (typeof report.task?.sourceWordCount === 'number') coverage.sourceWordCount = report.task.sourceWordCount;
+  return coverage;
+}
+
 export function parseEvaluationReportResponse(raw: unknown): ParseResult<EvaluationReportResponse> {
   const flat = unwrapEvaluationPayload(raw);
   if (!isRecord(flat)) return fail('评估报告必须是对象');
@@ -234,6 +338,14 @@ export function parseEvaluationReportResponse(raw: unknown): ParseResult<Evaluat
     }
   }
 
+  const excerpts: EvaluationExcerptDto[] = [];
+  if (Array.isArray(flat.excerpts)) {
+    for (const item of flat.excerpts) {
+      const excerpt = parseExcerpt(item);
+      if (excerpt) excerpts.push(excerpt);
+    }
+  }
+
   const report: EvaluationReportResponse = {
     novel,
     overall,
@@ -241,6 +353,14 @@ export function parseEvaluationReportResponse(raw: unknown): ParseResult<Evaluat
     characters,
     emotionalCurve,
     suggestions,
+    excerpts,
+    coverage: {
+      complete: false,
+      dimensionsExpected: [...EVALUATION_DIMENSION_KEYS],
+      dimensionsPresent: [],
+      missingDimensions: [...EVALUATION_DIMENSION_KEYS],
+      excerptCount: 0,
+    },
   };
 
   if (typeof flat.schemaVersion === 'string') report.schemaVersion = flat.schemaVersion;
@@ -249,8 +369,24 @@ export function parseEvaluationReportResponse(raw: unknown): ParseResult<Evaluat
   } else if (flat.marketBenchmark !== undefined) {
     report.marketBenchmark = parseMarketBenchmark(flat.marketBenchmark);
   }
-  if (Array.isArray(flat.excerpts)) report.excerpts = flat.excerpts;
   if (Array.isArray(flat.chapters)) report.chapters = flat.chapters;
+  const taskCoverage: { sourceWordCount?: number; chapterCount?: number } = {};
+  if (isRecord(flat.task)) {
+    if (typeof flat.task.sourceWordCount === 'number') taskCoverage.sourceWordCount = flat.task.sourceWordCount;
+    if (typeof flat.task.chapterCount === 'number') taskCoverage.chapterCount = flat.task.chapterCount;
+  }
+  const coverageInput: {
+    dimensions: Record<string, EvaluationDimensionDto>;
+    excerpts: readonly EvaluationExcerptDto[];
+    chapters?: readonly unknown[];
+    task?: { sourceWordCount?: number; chapterCount?: number };
+  } = {
+    dimensions: report.dimensions,
+    excerpts: report.excerpts,
+  };
+  if (report.chapters) coverageInput.chapters = report.chapters;
+  if (Object.keys(taskCoverage).length > 0) coverageInput.task = taskCoverage;
+  report.coverage = evaluationCoverageFor(coverageInput);
 
   return { ok: true, data: report };
 }

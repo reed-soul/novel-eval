@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { Project } from '../api/client.ts';
 
 export function Evaluation() {
   const navigate = useNavigate();
   const [file, setFile] = useState<File | null>(null);
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>('');
   
   // New input states
@@ -19,9 +20,9 @@ export function Evaluation() {
   // Load existing projects for convenience
   useEffect(() => {
     fetch('/api/projects')
-      .then(r => r.json())
-      .then(data => setProjects(Array.isArray(data) ? data : []))
-      .catch(e => console.error('Failed to load projects:', e));
+      .then((r) => r.json())
+      .then((data: unknown) => setProjects(Array.isArray(data) ? data.filter(isProject) : []))
+      .catch((e: unknown) => console.error('Failed to load projects:', e));
   }, []);
 
   const handleUpload = async () => {
@@ -58,11 +59,13 @@ export function Evaluation() {
 
       if (!res.ok) throw new Error('上传失败');
       
-      const data = await res.json();
+      const data: unknown = await res.json();
+      if (!isUploadResponse(data)) throw new Error('评估任务返回缺少 taskId');
       setTaskId(data.taskId);
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus('failed');
-      setLogs(prev => [...prev, `[系统错误] ${err.message}`]);
+      const message = err instanceof Error ? err.message : String(err);
+      setLogs(prev => [...prev, `[系统错误] ${message}`]);
     }
   };
 
@@ -87,7 +90,7 @@ export function Evaluation() {
       }, 1500);
     });
 
-    eventSource.addEventListener('error', (e: any) => {
+    eventSource.addEventListener('error', () => {
       setStatus('failed');
       setLogs(prev => [...prev, `[系统错误] 评估中断或失败`]);
       eventSource.close();
@@ -104,7 +107,7 @@ export function Evaluation() {
         智能作品评估 (Map-Reduce)
       </div>
       <div className="eval-subtitle">
-        采用多维度 Map-Reduce 架构，深度解析小说的故事架构、人物塑造与商业潜力。
+        采用八维 Map-Reduce 架构，解析故事、人物、文笔、情绪、市场、主题、原创性与节奏留存。
       </div>
 
       {status === 'idle' && (
@@ -251,4 +254,17 @@ export function Evaluation() {
       )}
     </div>
   );
+}
+
+function isProject(value: unknown): value is Project {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  return 'id' in value
+    && 'title' in value
+    && typeof value.id === 'string'
+    && typeof value.title === 'string';
+}
+
+function isUploadResponse(value: unknown): value is { taskId: string } {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return false;
+  return 'taskId' in value && typeof value.taskId === 'string';
 }
