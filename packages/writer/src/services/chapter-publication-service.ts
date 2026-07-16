@@ -51,10 +51,12 @@ export class ChapterPublicationService {
   }
 
   publishCandidate(input: PublishCandidateInput): PublishResult {
-    const publicationTime = this.publicationTime();
-    this.assertActiveLease(input, publicationTime);
+    this.assertActiveLease(input, this.publicationTime());
 
     const publish = this.db.transaction((): PublishResult => {
+      const publicationTime = this.publicationTime();
+      this.assertActiveLease(input, publicationTime);
+
       const candidate = this.chapters.getRevision(input.candidateRevisionId);
       if (!candidate) {
         throw new Error(`Chapter revision ${input.candidateRevisionId} does not exist`);
@@ -141,7 +143,7 @@ export class ChapterPublicationService {
       };
     });
 
-    return publish();
+    return publish.immediate();
   }
 
   private publicationTime(): string {
