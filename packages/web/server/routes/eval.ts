@@ -8,6 +8,8 @@ import {
   getEvalHistory,
   getLessons,
   getBibleForChapter,
+  projectId,
+  StoryStateRepository,
 } from '@novel-eval/writer';
 
 export function evalRoutes(db: DB) {
@@ -37,25 +39,34 @@ export function evalRoutes(db: DB) {
   app.get('/:id/dashboard', (c) => {
     const id = c.req.param('id');
     const scores = getChapterScores(db, id);
-    // narrative_state 已移除；仪表盘伏笔改从 bible character/plot 尽力提供空壳，阶段 B 再接 story state。
     const narrative: { macroSummary?: string; openForeshadows?: unknown[] } = {
       openForeshadows: [],
     };
     let characters: { name: string; status?: string }[] = [];
+    const currentState = new StoryStateRepository(db).getCurrent(projectId(id));
+    if (currentState) {
+      narrative.macroSummary = currentState.summary;
+      narrative.openForeshadows = currentState.state.foreshadows
+        .filter((foreshadow) => foreshadow.status === 'open')
+        .map((foreshadow) => ({
+          id: foreshadow.id,
+          description: foreshadow.description,
+          openedAtChapterRevisionId: foreshadow.openedAtChapterRevisionId,
+          status: foreshadow.status,
+        }));
+      characters = currentState.state.characters.map((character) => ({
+        name: character.name,
+        status: character.status,
+      }));
+    }
     try {
       const bible = getBibleForChapter(db, id);
-      if (bible.characterState?.characters) {
+      if (characters.length === 0 && bible.characterState?.characters) {
         characters = bible.characterState.characters.map((ch) => ({
           name: ch.name,
           status: ch.status,
         }));
       }
-      const foreshadows = bible.plotArchitecture?.foreshadows ?? [];
-      narrative.openForeshadows = foreshadows.map((f) => ({
-        description: f.description,
-        setupAct: f.setupAct,
-        resolveAct: f.resolveAct,
-      }));
     } catch {
       /* bible 未生成时忽略 */
     }

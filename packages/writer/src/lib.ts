@@ -67,6 +67,11 @@ export type {
 export type { GenerateBibleResult } from './bible/generator.ts';
 export type { GenerateBlueprintResult } from './chapter/blueprint.ts';
 export {
+  extractStoryState,
+  type ExtractStoryStateResult,
+  type ExtractStoryStateOptions,
+} from './chapter/finalizer.ts';
+export {
   createJobRow,
   getJobRow,
   getActiveJob,

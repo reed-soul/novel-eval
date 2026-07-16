@@ -4,6 +4,8 @@ import type {
   JobStatusResponse,
   EditChapterRequest,
   GenerateChaptersRequest,
+  StoryStateDto,
+  StoryStateDeltaDto,
 } from '@novel-eval/shared';
 
 export type {
@@ -11,6 +13,8 @@ export type {
   JobStatusResponse,
   EditChapterRequest,
   GenerateChaptersRequest,
+  StoryStateDto,
+  StoryStateDeltaDto,
 };
 
 const BASE = '/api';
@@ -51,6 +55,97 @@ export interface ChapterDetail {
     suspenseLevel: number; foreshadowing: string; twistLevel: number; summary: string; };
   content: string | null; wordCount: number; written: boolean;
   hasNext: boolean; hasPrev: boolean;
+}
+
+export interface StoryStateRevision {
+  storyStateRevisionId: string;
+  projectId: string;
+  chapterId: string;
+  chapterRevisionId: string;
+  previousStateRevisionId: string | null;
+  outlinePosition: number;
+  status: 'current' | 'stale' | 'failed';
+  state: StoryStateDto;
+  delta: StoryStateDeltaDto;
+  summary: string;
+  model: string;
+  promptVersion: string;
+  createdAt: string;
+}
+
+export interface StoryStateResponse {
+  projectId: string;
+  latestWrittenOutlinePosition: number | null;
+  current: StoryStateRevision | null;
+  currentStates: StoryStateRevision[];
+}
+
+export interface StaleImpactResponse {
+  projectId: string;
+  fromOutlinePosition: number;
+  affectedOutlinePositions: number[];
+}
+
+export interface RebuildStoryStateRequest {
+  fromOutlinePosition?: number;
+  engineName?: string;
+  model?: string;
+}
+
+export interface RebuildStoryStateResponse {
+  projectId: string;
+  fromOutlinePosition: number;
+  latestWrittenOutlinePosition: number | null;
+  rebuiltOutlinePositions: number[];
+  failedAtOutlinePosition: number | null;
+  currentStateRevisionId: string | null;
+  currentStates: StoryStateRevision[];
+}
+
+export interface ChapterRevision {
+  id: string;
+  chapterId: string;
+  revisionNumber: number;
+  source: 'generated' | 'manual' | 'correction' | 'import';
+  parentRevisionId: string | null;
+  title: string;
+  content: string;
+  wordCount: number;
+  status: 'draft' | 'published' | 'rejected';
+  generationRunId: string | null;
+  createdAt: string;
+  active: boolean;
+}
+
+export interface ChapterRevisionsResponse {
+  chapterId: string;
+  activeRevisionId: string | null;
+  revisions: ChapterRevision[];
+}
+
+export async function getStoryState(projectId: string): Promise<StoryStateResponse> {
+  return api<StoryStateResponse>(`/projects/${projectId}/story-state`);
+}
+
+export async function getStaleImpact(
+  projectId: string,
+  fromOutlinePosition?: number,
+): Promise<StaleImpactResponse> {
+  const q = fromOutlinePosition === undefined
+    ? ''
+    : `?fromOutlinePosition=${encodeURIComponent(String(fromOutlinePosition))}`;
+  return api<StaleImpactResponse>(`/projects/${projectId}/stale-impact${q}`);
+}
+
+export async function rebuildStoryState(
+  projectId: string,
+  request: RebuildStoryStateRequest = {},
+): Promise<RebuildStoryStateResponse> {
+  return apiPost<RebuildStoryStateResponse>(`/projects/${projectId}/rebuilds`, request);
+}
+
+export async function getChapterRevisions(chapterId: string): Promise<ChapterRevisionsResponse> {
+  return api<ChapterRevisionsResponse>(`/chapters/${chapterId}/revisions`);
 }
 
 export interface NarrativeState {

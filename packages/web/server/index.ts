@@ -26,6 +26,9 @@ import { correctionRoutes } from './routes/correction.ts';
 import { configRoutes } from './routes/config.ts';
 import { evalRoutes } from './routes/eval.ts';
 import { evalTasksRouter } from './routes/eval-tasks.ts';
+import { storyStateRoutes } from './routes/story-state.ts';
+import { rebuildRoutes } from './routes/rebuilds.ts';
+import { revisionRoutes } from './routes/revisions.ts';
 import { EngineRegistry } from './engine-registry.ts';
 import { httpErrorJson, toHttpError } from './middleware/error-mapper.ts';
 
@@ -56,7 +59,10 @@ app.route('/api/projects', outlineRoutes(db));
 app.route('/api/projects', generateRoutes(db, registry));
 app.route('/api/projects', editRoutes(db));
 app.route('/api/projects', correctionRoutes(db, registry));
+app.route('/api/projects', storyStateRoutes(db));
+app.route('/api/projects', rebuildRoutes(db, { registry }));
 app.route('/api/projects', evalRoutes(db));
+app.route('/api/chapters', revisionRoutes(db));
 app.route('/api/eval', evalTasksRouter);
 app.route('/api/config', configRoutes(registry));
 
