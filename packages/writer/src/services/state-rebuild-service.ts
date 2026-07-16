@@ -67,15 +67,6 @@ export class StateRebuildService {
       );
     }
 
-    const startInvalidation = this.db.transaction(() => {
-      this.assertActiveLease(input.lease, this.rebuildTime());
-      this.states.invalidateCurrentFromPosition(
-        input.projectId,
-        input.fromOutlinePosition,
-      );
-    });
-    startInvalidation.immediate();
-
     const rebuiltOutlinePositions: number[] = [];
     let currentStateRevisionId: StoryStateRevisionId | null = predecessor?.id ?? null;
 
@@ -134,10 +125,7 @@ export class StateRebuildService {
           );
         }
 
-        const existingCurrent = this.states.getCurrentAtPosition(input.projectId, position);
-        if (existingCurrent) {
-          this.states.invalidateCurrentFromPosition(input.projectId, position);
-        }
+        this.states.invalidateCurrentFromPosition(input.projectId, position);
 
         const stateId = storyStateRevisionId(randomUUID());
         this.states.save({
@@ -158,16 +146,9 @@ export class StateRebuildService {
         return stateId;
       });
 
-      try {
-        currentStateRevisionId = append.immediate();
-        rebuiltOutlinePositions.push(position);
-      } catch {
-        return {
-          rebuiltOutlinePositions,
-          failedAtOutlinePosition: position,
-          currentStateRevisionId,
-        };
-      }
+      // Lease/append failures must propagate; only extraction soft-fails above.
+      currentStateRevisionId = append.immediate();
+      rebuiltOutlinePositions.push(position);
     }
 
     return {

@@ -53,10 +53,16 @@ export function aggregateLessons(db: DB, projectId: string): number {
   const patternHotspots = new Map<ChapterPattern, string[]>();
   const patternFixes = new Map<ChapterPattern, string[]>();
 
-  // 需要章节蓝图来分类，加载全部 outline
-  const outlines = db.prepare(
-    'SELECT number, act, suspense_level, twist_level FROM chapter_outline WHERE project_id = ?',
-  ).all(projectId) as Array<{ number: number; act: number; suspense_level: number; twist_level: number }>;
+  // 需要章节蓝图来分类。新 schema 用 position；缺 act/suspense 时用默认值做 pattern 粗分。
+  const outlines = db.prepare(`
+    SELECT
+      position AS number,
+      1 AS act,
+      5 AS suspense_level,
+      0 AS twist_level
+    FROM chapter_outline
+    WHERE project_id = ?
+  `).all(projectId) as Array<{ number: number; act: number; suspense_level: number; twist_level: number }>;
   const totalChapters = outlines.length;
   const outlineMap = new Map(outlines.map(o => [o.number, o]));
 

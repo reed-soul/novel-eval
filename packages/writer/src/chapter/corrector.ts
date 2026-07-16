@@ -23,7 +23,7 @@ import { DIMENSION_LABELS } from '@novel-eval/eval';
 import type { DB } from '../db.ts';
 import {
   getOutline, getChapter, getRecentChapters, getNarrativeState, getBibleForChapter,
-  countOutlines, getEvalHistory,
+  countOutlines, getEvalHistory, saveEvalHistory,
   getLessonsByPattern, saveCorrectionDraft, getDraft, updateDraftStatus,
   type CorrectionStrategy,
 } from './store.ts';
@@ -45,6 +45,11 @@ import {
   type RebuildFromInput,
   type RebuildResult,
 } from '../services/state-rebuild-service.ts';
+import {
+  numberField,
+  persistedRecord,
+  stringField,
+} from '../repositories/validation.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROMPTS_DIR = resolve(__dirname, 'prompts');
@@ -495,7 +500,7 @@ export interface ApplyCorrectionDraftResult {
  *   1. append correction chapter revision（不 upsert 覆盖）
  *   2. publishHistoricalRevision（失效下游状态，后文 revision 保留）
  *   3. 可选 rebuildFrom
- *   4. 标记 draft adopted + 反哺经验
+ *   4. 写入 eval_history + 标记 draft adopted + 反哺经验
  */
 export async function applyCorrectionDraft(
   input: ApplyCorrectionDraftInput,
@@ -575,6 +580,24 @@ export async function applyCorrectionDraft(
     });
   }
 
+  const revised = readRevisedAssessment(draft.revisedResult);
+  const history = getEvalHistory(input.db, draft.projectId, draft.chapterNumber);
+  const maxAttempt = history.reduce((max, entry) => Math.max(max, entry.attempt), 0);
+
+  saveEvalHistory(input.db, {
+    projectId: draft.projectId,
+    chapterNumber: draft.chapterNumber,
+    attempt: maxAttempt + 1,
+    verdict: 'pass',
+    totalScore: draft.revisedScore,
+    grade: revised.grade,
+    dimensions: revised.dimensions,
+    suggestions: revised.suggestions,
+    repetition: revised.repetition,
+    model: draft.engine,
+    evaluatorModel: null,
+  });
+
   updateDraftStatus(input.db, input.draftId, 'adopted');
   aggregateLessons(input.db, draft.projectId);
 
@@ -583,6 +606,62 @@ export async function applyCorrectionDraft(
     publish,
     rebuild,
   };
+}
+
+function readRevisedAssessment(value: unknown): {
+  grade: string | null;
+  dimensions: Record<string, { score: number; analysis: string }> | null;
+  suggestions: Array<{ dimension?: string; content: string }> | null;
+  repetition: { within: number; cross: number; hotspots: string[] } | null;
+} {
+  if (value === null || value === undefined) {
+    return { grade: null, dimensions: null, suggestions: null, repetition: null };
+  }
+  const record = persistedRecord(value, 'correction revised result');
+  const gradeValue = record.grade;
+  const grade = typeof gradeValue === 'string' ? gradeValue : null;
+
+  let dimensions: Record<string, { score: number; analysis: string }> | null = null;
+  if (record.dimensions !== null && record.dimensions !== undefined) {
+    const dimsRecord = persistedRecord(record.dimensions, 'correction revised dimensions');
+    dimensions = {};
+    for (const [key, raw] of Object.entries(dimsRecord)) {
+      const dim = persistedRecord(raw, `correction dimension ${key}`);
+      dimensions[key] = {
+        score: numberField(dim, 'score', `correction dimension ${key}`),
+        analysis: stringField(dim, 'analysis', `correction dimension ${key}`),
+      };
+    }
+  }
+
+  let suggestions: Array<{ dimension?: string; content: string }> | null = null;
+  if (Array.isArray(record.suggestions)) {
+    suggestions = record.suggestions.map((item, index) => {
+      const suggestion = persistedRecord(item, `correction suggestion ${index}`);
+      const content = stringField(suggestion, 'content', `correction suggestion ${index}`);
+      const dimensionValue = suggestion.dimension;
+      if (typeof dimensionValue === 'string') {
+        return { dimension: dimensionValue, content };
+      }
+      return { content };
+    });
+  }
+
+  let repetition: { within: number; cross: number; hotspots: string[] } | null = null;
+  if (record.repetition !== null && record.repetition !== undefined) {
+    const rep = persistedRecord(record.repetition, 'correction repetition');
+    const hotspotsValue = rep.hotspots;
+    if (!Array.isArray(hotspotsValue) || !hotspotsValue.every((h) => typeof h === 'string')) {
+      throw new Error('Invalid correction repetition hotspots');
+    }
+    repetition = {
+      within: numberField(rep, 'within', 'correction repetition'),
+      cross: numberField(rep, 'cross', 'correction repetition'),
+      hotspots: hotspotsValue,
+    };
+  }
+
+  return { grade, dimensions, suggestions, repetition };
 }
 
 /** 放弃修正稿：仅标记状态，无副作用 */

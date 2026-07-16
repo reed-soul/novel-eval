@@ -415,3 +415,104 @@ it('rebuildFrom stops at the first extraction failure and leaves later positions
   assert.equal(states.getCurrentAtPosition(fixtureProjectId, 3), null);
   assert.equal(states.get(thirdStateId)?.status, 'stale');
 });
+
+it('rebuildFrom failure at fromOutlinePosition keeps that position current and later stale', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const {
+    states,
+    lease,
+    publication,
+    rebuild,
+    chapterTwoId,
+    secondRevisionId,
+    firstStateId,
+    thirdStateId,
+  } = publishThreeChapters(testDb.db);
+
+  const replacementRevisionId = chapterRevisionId('chapter-revision-2b');
+  testDb.db.prepare(`
+    INSERT INTO chapter_revision (
+      id, chapter_id, revision_number, source, parent_revision_id, title, content,
+      word_count, status, generation_run_id, created_at
+    ) VALUES (?, ?, 2, 'correction', ?, '第二章修订', '第二章修订正文', 7, 'draft', NULL, ?)
+  `).run(replacementRevisionId, chapterTwoId, secondRevisionId, fixtureTime);
+
+  const historical = publication.publishHistoricalRevision(publicationInput({
+    lease,
+    candidateRevisionId: replacementRevisionId,
+    previousStateRevisionId: firstStateId,
+    outlinePosition: 2,
+    summary: '第二章修订状态',
+  }));
+
+  const rebuildResult = await rebuild.rebuildFrom({
+    projectId: fixtureProjectId,
+    fromOutlinePosition: 2,
+    lease,
+    extractState: async () => {
+      throw new Error('forced extraction failure at fromOutlinePosition');
+    },
+  });
+
+  assert.deepEqual(rebuildResult.rebuiltOutlinePositions, []);
+  assert.equal(rebuildResult.failedAtOutlinePosition, 2);
+  assert.equal(
+    states.getCurrentAtPosition(fixtureProjectId, 2)?.id,
+    historical.storyStateRevisionId,
+  );
+  assert.equal(states.get(historical.storyStateRevisionId)?.status, 'current');
+  assert.equal(states.getCurrentAtPosition(fixtureProjectId, 3), null);
+  assert.equal(states.get(thirdStateId)?.status, 'stale');
+});
+
+it('rebuildFrom throws ProjectLeaseConflictError instead of soft-failing', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const {
+    lease,
+    publication,
+    rebuild,
+    chapterTwoId,
+    secondRevisionId,
+    firstStateId,
+  } = publishThreeChapters(testDb.db);
+
+  const replacementRevisionId = chapterRevisionId('chapter-revision-2b');
+  testDb.db.prepare(`
+    INSERT INTO chapter_revision (
+      id, chapter_id, revision_number, source, parent_revision_id, title, content,
+      word_count, status, generation_run_id, created_at
+    ) VALUES (?, ?, 2, 'correction', ?, '第二章修订', '第二章修订正文', 7, 'draft', NULL, ?)
+  `).run(replacementRevisionId, chapterTwoId, secondRevisionId, fixtureTime);
+
+  publication.publishHistoricalRevision(publicationInput({
+    lease,
+    candidateRevisionId: replacementRevisionId,
+    previousStateRevisionId: firstStateId,
+    outlinePosition: 2,
+    summary: '第二章修订状态',
+  }));
+
+  const leases = new ProjectWriteLeaseRepository(testDb.db);
+  leases.release({ leaseId: lease.id, ownerId: lease.ownerId });
+
+  await assert.rejects(
+    () => rebuild.rebuildFrom({
+      projectId: fixtureProjectId,
+      fromOutlinePosition: 2,
+      lease,
+      extractState: async () => {
+        const summary = 'should-not-run';
+        return {
+          state: emptyState(summary),
+          delta: emptyDelta(summary),
+          usage: { inputTokens: 0, outputTokens: 0, costRmb: 0, model: 'test-model', durationMs: 0 },
+          model: 'test-model',
+          promptVersion: 'state-v1',
+        };
+      },
+    }),
+    /lease/i,
+  );
+});
