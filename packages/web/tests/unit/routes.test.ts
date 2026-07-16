@@ -428,6 +428,7 @@ describe('API 路由', () => {
             },
             fullText: 'bible',
           },
+          bibleRevisionId: 'bible-revision-spy',
           usage: { inputTokens: 0, outputTokens: 0, costRmb: 0, model: 'm', durationMs: 0 },
         };
       },

@@ -3,7 +3,7 @@
  *
  * mock engine 按调用顺序返回预设 JSON，验证：
  *   1. 三幕各调 2 次（段落 + 章节）= 6 次
- *   2. 章节落 DB 且章号连续，outline 为 approved revision 1
+ *   2. 章节落 DB 且章号连续，outline 为 draft revision 1
  *   3. beats 先持久化；重跑读已持久化 beats，不重新生成
  *   4. checkpoint：outline 已齐则跳过
  */
@@ -141,7 +141,7 @@ function seedActiveBible(
 }
 
 describe('generateBlueprint', () => {
-  it('两层拆分：3 幕各调段落+章节，落 DB 且章号连续；outline 为 approved revision 1', async (t) => {
+  it('两层拆分：3 幕各调段落+章节，落 DB 且章号连续；outline 为 draft revision 1', async (t) => {
     const testDb = createTestDb();
     t.after(() => testDb.cleanup());
     const p = createProject(testDb.db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
@@ -170,15 +170,23 @@ describe('generateBlueprint', () => {
     const actSet = new Set(outlines.map((o) => o.act));
     assert.ok(actSet.has(1) && actSet.has(2) && actSet.has(3), '应覆盖三幕');
 
-    const planning = new PlanningRepository(testDb.db);
-    for (const outline of outlines) {
-      const approved = planning.getApprovedOutlineAtPosition(p.id, outline.number);
-      assert.ok(approved, `position ${outline.number} 应为 approved`);
-      assert.equal(approved.outline.id, outline.id);
-      assert.equal(approved.outline.status, 'approved');
-      assert.equal(approved.revision.revisionNumber, 1);
-      assert.equal(approved.revision.status, 'approved');
-      assert.equal(approved.revision.title, outline.title);
+    const rows = testDb.db.prepare(`
+      SELECT o.position, o.status AS outline_status, r.status AS revision_status, r.revision_number
+      FROM chapter_outline o
+      JOIN chapter_outline_revision r ON r.id = o.active_revision_id
+      WHERE o.project_id = ?
+      ORDER BY o.position
+    `).all(p.id) as Array<{
+      position: number;
+      outline_status: string;
+      revision_status: string;
+      revision_number: number;
+    }>;
+    assert.equal(rows.length, outlines.length);
+    for (const row of rows) {
+      assert.equal(row.outline_status, 'draft');
+      assert.equal(row.revision_status, 'draft');
+      assert.equal(row.revision_number, 1);
     }
   });
 
@@ -359,13 +367,15 @@ describe('generateBlueprint', () => {
 
     // Delete positions 3 and 4 to simulate half-batch persistence.
     for (const position of [3, 4]) {
-      const outline = planning.getApprovedOutlineAtPosition(p.id, position);
+      const outline = testDb.db.prepare(
+        'SELECT id FROM chapter_outline WHERE project_id = ? AND position = ?',
+      ).get(p.id, position) as { id: string } | undefined;
       assert.ok(outline);
       testDb.db.prepare(
         'UPDATE chapter_outline SET active_revision_id = NULL WHERE id = ?',
-      ).run(outline.outline.id);
-      testDb.db.prepare('DELETE FROM chapter_outline_revision WHERE outline_id = ?').run(outline.outline.id);
-      testDb.db.prepare('DELETE FROM chapter_outline WHERE id = ?').run(outline.outline.id);
+      ).run(outline.id);
+      testDb.db.prepare('DELETE FROM chapter_outline_revision WHERE outline_id = ?').run(outline.id);
+      testDb.db.prepare('DELETE FROM chapter_outline WHERE id = ?').run(outline.id);
     }
     assert.equal(planning.hasOutlineAtPosition(p.id, 1), true);
     assert.equal(planning.hasOutlineAtPosition(p.id, 3), false);

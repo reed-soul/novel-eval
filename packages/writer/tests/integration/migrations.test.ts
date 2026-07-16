@@ -216,6 +216,7 @@ it('creates only the phase-A schema and enables integrity pragmas', (t) => {
     'correction_draft',
     'eval_history',
     'job',
+    'job_event',
     'lesson_learned',
     'project',
     'project_write_lease',

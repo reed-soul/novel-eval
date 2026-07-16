@@ -109,7 +109,7 @@ const PLOT_RESP = JSON.stringify({
 });
 
 describe('generateBible', () => {
-  it('4 步顺序执行，每步 schema 校验通过，生成完整 bible 并激活 revision 1', async (t) => {
+  it('4 步顺序执行，每步 schema 校验通过，生成完整 bible draft revision 1', async (t) => {
     const testDb = createTestDb();
     t.after(() => testDb.cleanup());
     const project = createProject(testDb.db, {
@@ -120,7 +120,7 @@ describe('generateBible', () => {
     });
     const engine = mockEngine([CORE_SEED_RESP, CHAR_DYNAMICS_RESP, CHAR_STATE_RESP, WORLD_RESP, PLOT_RESP]);
 
-    const { bible, usage } = await generateBible({
+    const { bible, bibleRevisionId, usage } = await generateBible({
       engine,
       db: testDb.db,
       projectId: project.id,
@@ -143,10 +143,12 @@ describe('generateBible', () => {
 
     const planning = new PlanningRepository(testDb.db);
     const active = planning.getActiveBibleForProject(project.id);
-    assert.ok(active);
-    assert.equal(active.revisionNumber, 1);
-    assert.equal(active.status, 'approved');
-    assert.equal(active.compiledText, bible.fullText);
+    assert.equal(active, null);
+    const draft = planning.getBibleRevision(bibleRevisionId);
+    assert.ok(draft);
+    assert.equal(draft.revisionNumber, 1);
+    assert.equal(draft.status, 'draft');
+    assert.equal(draft.compiledText, bible.fullText);
   });
 
   it('上下文隔离：world_building 步骤的 prompt 不含 character_dynamics 的角色细节', async (t) => {
@@ -205,9 +207,11 @@ describe('generateBible', () => {
 
     const planning = new PlanningRepository(testDb.db);
     const active = planning.getActiveBibleForProject(project.id);
-    assert.ok(active);
-    assert.equal(active.status, 'approved');
-    assert.equal(active.revisionNumber, 1);
+    assert.equal(active, null);
+    const draft = planning.getDraftBibleForProject(project.id);
+    assert.ok(draft);
+    assert.equal(draft.status, 'draft');
+    assert.equal(draft.revisionNumber, 1);
   });
 
   it('core_seed 生成失败时抛错（致命步骤）', async (t) => {

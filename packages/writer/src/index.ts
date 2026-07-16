@@ -57,6 +57,7 @@ interface InitArgs {
   audience: string;
   topic: string;
   yes?: boolean;
+  approvePlanning?: boolean;
   engine?: string;          // 覆盖 engines.yml 默认引擎
 }
 
@@ -75,6 +76,7 @@ interface OutlineArgs {
   projectId: string;
   chapters?: number;
   yes?: boolean;
+  approvePlanning?: boolean;
   engine?: string;
 }
 
@@ -101,7 +103,18 @@ interface AutoArgs {
   maxRevise?: number;
   passGrade?: string;
   yes?: boolean;
+  approvePlanning?: boolean;
   engine?: string;
+}
+
+interface ApprovePlanningArgs {
+  command: 'approve-planning';
+  projectId: string;
+  bible?: boolean;
+  outlines?: boolean;
+  bibleRevisionId?: string;
+  from?: number;
+  to?: number;
 }
 
 interface StatusArgs {
@@ -116,7 +129,7 @@ interface ResumeArgs {
   engine?: string;
 }
 
-type CliArgs = InitArgs | ImportBibleArgs | OutlineArgs | ChapterArgs | AutoArgs | StatusArgs | ResumeArgs | { command: 'list' } | { command: 'help' };
+type CliArgs = InitArgs | ImportBibleArgs | OutlineArgs | ChapterArgs | AutoArgs | ApprovePlanningArgs | StatusArgs | ResumeArgs | { command: 'list' } | { command: 'help' };
 
 function parseArgs(argv: string[]): CliArgs {
   // argv = [node, script, ('write'), ('--'), command, ...rest]
@@ -146,6 +159,24 @@ function parseArgs(argv: string[]): CliArgs {
     return args;
   }
 
+  if (cmd === 'approve-planning') {
+    const projectIdValue = rest.find((a) => !a.startsWith('--'));
+    if (!projectIdValue) return { command: 'help' };
+    const args: ApprovePlanningArgs = { command: 'approve-planning', projectId: projectIdValue };
+    for (let i = 0; i < rest.length; i++) {
+      if (rest[i] === '--bible') args.bible = true;
+      else if (rest[i] === '--outlines') args.outlines = true;
+      else if (rest[i] === '--bible-revision') args.bibleRevisionId = rest[++i];
+      else if (rest[i] === '--from') args.from = parseInt(rest[++i], 10);
+      else if (rest[i] === '--to') args.to = parseInt(rest[++i], 10);
+    }
+    if (!args.bible && !args.outlines) {
+      args.bible = true;
+      args.outlines = true;
+    }
+    return args;
+  }
+
   if (cmd === 'outline') {
     const projectId = rest.find((a) => !a.startsWith('--'));
     if (!projectId) return { command: 'help' };
@@ -154,6 +185,7 @@ function parseArgs(argv: string[]): CliArgs {
       if (rest[i] === '--chapters') args.chapters = parseInt(rest[++i], 10);
       else if (rest[i] === '--engine') args.engine = rest[++i];
       else if (rest[i] === '-y' || rest[i] === '--yes') args.yes = true;
+      else if (rest[i] === '--approve-planning') args.approvePlanning = true;
     }
     return args;
   }
@@ -187,6 +219,7 @@ function parseArgs(argv: string[]): CliArgs {
       else if (rest[i] === '--pass-grade') args.passGrade = rest[++i];
       else if (rest[i] === '--engine') args.engine = rest[++i];
       else if (rest[i] === '-y' || rest[i] === '--yes') args.yes = true;
+      else if (rest[i] === '--approve-planning') args.approvePlanning = true;
     }
     return args;
   }
@@ -215,6 +248,7 @@ function parseArgs(argv: string[]): CliArgs {
       else if (a === '--topic') args.topic = rest[++i];
       else if (a === '--engine') args.engine = rest[++i];
       else if (a === '-y' || a === '--yes') args.yes = true;
+      else if (a === '--approve-planning') args.approvePlanning = true;
     }
     return args;
   }
@@ -229,6 +263,7 @@ function printHelp(): void {
   novel-eval write init         --title <书名> --genre <类型> --audience <受众> --topic <主题>
   novel-eval write import-bible --title <书名> --genre <类型> --audience <受众> --topic <主题> --bible-file <结构化bible.json>
   novel-eval write outline      <projectId> [--chapters N]
+  novel-eval write approve-planning <projectId> [--bible] [--outlines] [--from A --to B]
   novel-eval write chapter      <projectId> --number N | --from A --to B | --all [--max-revise N]
   novel-eval write resume       <projectId>           从上次断点续写（自动检测已写章节 + 修复半成品状态）
   novel-eval write auto         --title ... --genre ... --audience ... --topic ... --chapters N
@@ -243,6 +278,7 @@ function printHelp(): void {
 init（创建项目 + 生成 bible 设定集）：
   --title/--genre/--audience/--topic   必填
   -y, --yes           跳过确认屏
+  --approve-planning  生成后显式批准 bible draft（自动化用）
 
 import-bible（导入结构化 bible，规格模式）：
   --title/--genre/--audience/--topic   必填（topic 作为梗概拼入设定全文）
@@ -252,6 +288,14 @@ import-bible（导入结构化 bible，规格模式）：
 outline（把 bible 拆成章节蓝图）：
   <projectId>         write init 返回的项目 ID
   --chapters <N>      目标章数（默认 50）
+  --approve-planning  生成后显式批准本次 outline draft
+
+approve-planning（批准规划 draft）：
+  <projectId>         项目 ID
+  --bible             只批准 bible draft
+  --outlines          只批准 outline draft
+  --bible-revision <id> 指定 bible revision；默认取最新 draft
+  --from <A> --to <B> 批准指定章节范围；默认批准全部 outline
 
 chapter（按蓝图生成章节正文）：
   --number <N>        生成第 N 章
@@ -269,6 +313,7 @@ auto（全自动：bible → 蓝图 → 章节 + 质量门槛）：
   --title/--genre/--audience/--topic   必填
   --chapters <N>      目标章数（默认 30）
   --max-revise <N>    质量门槛重写上限（默认 2）
+  --approve-planning  必填：在 bible 和 outline 生成后显式批准规划
   -y, --yes           跳过确认屏
 
 通用选项（适用于 init/outline/chapter/resume/auto）：
@@ -338,7 +383,20 @@ async function runInit(args: InitArgs): Promise<void> {
       console.log(`\n✓ 项目创建成功，ID：${data.project.id}`);
       console.log(`开始生成 bible...\n`);
       await streamJobEvents(data.jobId);
+      if (args.approvePlanning) {
+        const approvalDb = openConfiguredDb();
+        try {
+          const approvalApp = createApp(approvalDb);
+          const revisionId = approveLatestBibleDraft(approvalDb, approvalApp, data.project.id);
+          console.log(`\n✓ Bible revision 已批准：${revisionId}`);
+        } finally {
+          closeDb(approvalDb);
+        }
+      }
       console.log(`\n下一步（M2）：novel-eval write outline ${data.project.id}`);
+      if (!args.approvePlanning) {
+        console.log(`先批准 bible：novel-eval write approve-planning ${data.project.id} --bible`);
+      }
       return;
     } catch (e) {
       console.error(`[API] 转发任务失败: ${(e as Error).message}，将降级为本地直接运行模式。`);
@@ -355,22 +413,30 @@ async function runInit(args: InitArgs): Promise<void> {
     const engine: AIAgentAdapter = createEngine(config.engine);
     const app = createApp(db);
 
-    const { bible, usage } = await app.generateBible({
+    const { bible, bibleRevisionId, usage } = await app.generateBible({
       engine, projectId: project.id,
       topic: args.topic, genre: args.genre, audience: args.audience,
       onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
     });
 
     updateProjectStatus(db, project.id, 'planning');
+    if (args.approvePlanning) {
+      app.approveBibleRevision({ projectId: project.id, revisionId: bibleRevisionId });
+    }
 
-    console.log('\n✓ Bible 生成完成');
+    console.log(`\n✓ Bible draft 生成完成${args.approvePlanning ? '并已批准' : ''}`);
     console.log(`  项目 ID：${project.id}`);
+    console.log(`  Bible revision：${bibleRevisionId}`);
     console.log(`  数据库：${configuredDatabasePath()}`);
     console.log(`  费用：¥${usage.costRmb.toFixed(4)}（in ${usage.inputTokens} / out ${usage.outputTokens} tok）`);
     console.log(`  角色：${bible.characterDynamics.length} 个`);
     console.log(`  伏笔：${bible.plotArchitecture.foreshadows.length} 个`);
     console.log(`  设定全文：${bible.fullText.length} 字`);
-    console.log(`\n下一步（M2）：novel-eval write outline ${project.id}`);
+    if (args.approvePlanning) {
+      console.log(`\n下一步（M2）：novel-eval write outline ${project.id}`);
+    } else {
+      console.log(`\n下一步：novel-eval write approve-planning ${project.id} --bible`);
+    }
   } finally {
     closeDb(db);
   }
@@ -467,6 +533,76 @@ function runList(): void {
   }
 }
 
+function runApprovePlanning(args: ApprovePlanningArgs): void {
+  const db = openConfiguredDb();
+  try {
+    const project = getProject(db, args.projectId);
+    if (!project) {
+      console.error(`未找到项目：${args.projectId}`);
+      process.exit(1);
+    }
+    const app = createApp(db);
+    if (args.bible) {
+      const revisionId = args.bibleRevisionId
+        ? approveBibleRevisionById(app, args.projectId, args.bibleRevisionId)
+        : approveLatestBibleDraft(db, app, args.projectId);
+      console.log(`✓ Bible revision 已批准：${revisionId}`);
+    }
+    if (args.outlines) {
+      const approved = approveOutlineDrafts(db, app, args.projectId, args.from, args.to);
+      console.log(`✓ Outline 已批准：${approved} 章`);
+    }
+  } finally {
+    closeDb(db);
+  }
+}
+
+function approveLatestBibleDraft(db: DB, app: WriterApplication, rawProjectId: string): string {
+  const id = projectId(rawProjectId);
+  const draft = new PlanningRepository(db).getDraftBibleForProject(id);
+  if (!draft) {
+    throw new Error('没有可批准的 bible draft');
+  }
+  app.approveBibleRevision({
+    projectId: id,
+    revisionId: draft.id,
+  });
+  return draft.id;
+}
+
+function approveBibleRevisionById(
+  app: WriterApplication,
+  rawProjectId: string,
+  revisionId: string,
+): string {
+  app.approveBibleRevision({
+    projectId: projectId(rawProjectId),
+    revisionId,
+  });
+  return revisionId;
+}
+
+function approveOutlineDrafts(
+  db: DB,
+  app: WriterApplication,
+  rawProjectId: string,
+  fromOverride?: number,
+  toOverride?: number,
+): number {
+  const total = countOutlines(db, rawProjectId);
+  if (total === 0) {
+    return 0;
+  }
+  const from = fromOverride ?? 1;
+  const to = toOverride ?? total;
+  const result = app.approveOutlines({
+    projectId: projectId(rawProjectId),
+    from,
+    to,
+  });
+  return result.outlines.length;
+}
+
 function printProject(p: Project, db: ReturnType<typeof openDb>): void {
   console.log(`项目：${p.title}（${p.id}）`);
   console.log(`  类型：${p.genreProfile} · 受众：${p.targetAudience}`);
@@ -536,7 +672,20 @@ async function runOutline(args: OutlineArgs): Promise<void> {
           engineName: args.engine,
         });
         await streamJobEvents(jobId);
+        if (args.approvePlanning) {
+          const approvalDb = openConfiguredDb();
+          try {
+            const approvalApp = createApp(approvalDb);
+            const approved = approveOutlineDrafts(approvalDb, approvalApp, args.projectId);
+            console.log(`\n✓ Outline 已批准：${approved} 章`);
+          } finally {
+            closeDb(approvalDb);
+          }
+        }
         console.log(`\n下一步：novel-eval write chapter ${args.projectId} --from 1 --to 3`);
+        if (!args.approvePlanning) {
+          console.log(`先批准蓝图：novel-eval write approve-planning ${args.projectId} --outlines`);
+        }
         return;
       } catch (e) {
         console.error(`[API] 转发任务失败: ${(e as Error).message}，将降级为本地直接运行模式。`);
@@ -552,13 +701,24 @@ async function runOutline(args: OutlineArgs): Promise<void> {
     });
 
     updateProjectStatus(db, args.projectId, 'planning');
-    console.log('\n✓ 章节蓝图生成完成');
+    if (args.approvePlanning && outlines.length > 0) {
+      app.approveOutlines({
+        projectId: projectId(args.projectId),
+        from: 1,
+        to: outlines.length,
+      });
+    }
+    console.log(`\n✓ 章节蓝图 draft 生成完成${args.approvePlanning ? '并已批准' : ''}`);
     console.log(`  章节数：${outlines.length}`);
     console.log(`  费用：¥${usage.costRmb.toFixed(4)}`);
     const byAct = { 1: 0, 2: 0, 3: 0 };
     for (const o of outlines) byAct[o.act]++;
     console.log(`  分布：第一幕 ${byAct[1]} 章 / 第二幕 ${byAct[2]} 章 / 第三幕 ${byAct[3]} 章`);
-    console.log(`\n下一步：novel-eval write chapter ${args.projectId} --from 1 --to 3`);
+    if (args.approvePlanning) {
+      console.log(`\n下一步：novel-eval write chapter ${args.projectId} --from 1 --to 3`);
+    } else {
+      console.log(`\n下一步：novel-eval write approve-planning ${args.projectId} --outlines`);
+    }
   } finally {
     closeDb(db);
   }
@@ -862,6 +1022,10 @@ async function runAuto(args: AutoArgs): Promise<void> {
   if (!args.audience) missing.push('--audience');
   if (!args.topic) missing.push('--topic');
   if (missing.length) { console.error(`错误：缺少必填参数：${missing.join(', ')}`); process.exit(1); }
+  if (!args.approvePlanning) {
+    console.error('错误：write auto 需要 --approve-planning，明确批准生成的 bible 和 outline draft 后再写章节。');
+    process.exit(1);
+  }
 
   const config = loadWriterConfig(args.engine ? { engine: args.engine } : undefined);
   console.log('Novel Writer — 全自动生成\n');
@@ -889,18 +1053,22 @@ async function runAuto(args: AutoArgs): Promise<void> {
 
     console.log('\n── 阶段 1：bible 生成 ──');
     const project = createProject(db, { title: args.title, genreProfile: args.genre, targetAudience: args.audience, premise: args.topic });
-    const { bible, usage: bibleUsage } = await app.generateBible({
+    const { bible, bibleRevisionId, usage: bibleUsage } = await app.generateBible({
       engine, projectId: project.id, topic: args.topic, genre: args.genre, audience: args.audience, onProgress: log,
     });
+    app.approveBibleRevision({ projectId: project.id, revisionId: bibleRevisionId });
     updateProjectStatus(db, project.id, 'planning');
-    console.log(`✓ bible 完成（${bible.characterDynamics.length} 角色 / ${bible.plotArchitecture.foreshadows.length} 伏笔 / ¥${bibleUsage.costRmb.toFixed(4)}）`);
+    console.log(`✓ bible draft 完成并已批准（${bible.characterDynamics.length} 角色 / ${bible.plotArchitecture.foreshadows.length} 伏笔 / ¥${bibleUsage.costRmb.toFixed(4)}）`);
 
     console.log('\n── 阶段 2：章节蓝图 ──');
     const { outlines, usage: outlineUsage } = await app.generateBlueprint({
       engine, projectId: project.id, plot: bible.plotArchitecture, characters: bible.characterDynamics, totalChapters: args.chapters, onProgress: log,
     });
+    if (outlines.length > 0) {
+      app.approveOutlines({ projectId: project.id, from: 1, to: outlines.length });
+    }
     updateProjectStatus(db, project.id, 'planning');
-    console.log(`✓ 蓝图完成（${outlines.length} 章 / ¥${outlineUsage.costRmb.toFixed(4)}）`);
+    console.log(`✓ 蓝图 draft 完成并已批准（${outlines.length} 章 / ¥${outlineUsage.costRmb.toFixed(4)}）`);
 
     console.log('\n── 阶段 3：章节生成 ──');
     updateProjectStatus(db, project.id, 'writing');
@@ -946,6 +1114,7 @@ async function main(): Promise<void> {
   if (args.command === 'help') { printHelp(); return; }
   if (args.command === 'list') { runList(); return; }
   if (args.command === 'status') { runStatus(args); return; }
+  if (args.command === 'approve-planning') { runApprovePlanning(args); return; }
   if (args.command === 'outline') { await runOutline(args); return; }
   if (args.command === 'chapter') { await runChapter(args); return; }
   if (args.command === 'resume') { await runResume(args); return; }

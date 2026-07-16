@@ -2,7 +2,7 @@
  * 章节蓝图生成器 — 两层拆分（幕→段落→章节）
  *
  * 第一层：plotArchitecture 三幕 → 段落（beats）。生成后立即持久化。
- * 第二层：每幕的 beats → 该幕的章节蓝图（approved outline revision 1）。
+ * 第二层：每幕的 beats → 该幕的章节蓝图 draft revision 1。
  *
  * 重跑时优先读取已持久化 beats，不重新生成。
  */
@@ -132,8 +132,8 @@ export async function generateBlueprint(opts: GenerateBlueprintOptions): Promise
   const totalUsage = { ...zeroUsage };
 
   const bible = planning.getActiveBibleForProject(id);
-  if (!bible) {
-    throw new Error('bible 未完成，无法生成蓝图。请先运行 write init。');
+  if (!bible || bible.status !== 'approved') {
+    throw new Error('bible 未批准，无法生成蓝图。请先批准 bible draft。');
   }
 
   const existingCount = planning.countOutlines(id);
@@ -322,7 +322,7 @@ export async function generateBlueprint(opts: GenerateBlueprintOptions): Promise
             continue;
           }
           const oid = outlineId(randomUUID());
-          planning.saveApprovedOutline({
+          planning.saveDraftOutline({
             outline: {
               id: oid,
               projectId: id,

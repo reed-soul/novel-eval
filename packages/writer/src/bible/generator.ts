@@ -3,8 +3,8 @@
  *
  * 流程：core_seed → character_dynamics → character_state(2.5) → world_building → plot_architecture
  *
- * 持久化：写入 story_bible_revision draft（逐步 checkpoint），完成后批准为
- * immutable revision 1 并设为项目 active bible。
+ * 持久化：写入 story_bible_revision draft（逐步 checkpoint）。
+ * 批准由 WriterApplication 的显式 approval path 完成。
  */
 import { randomUUID } from 'node:crypto';
 
@@ -14,7 +14,6 @@ import { callWithValidation, type SchemaSpec } from '@novel-eval/shared';
 import type { DB } from '../db.ts';
 import { projectId } from '../domain/ids.ts';
 import { PlanningRepository, type BibleDocument } from '../repositories/planning-repository.ts';
-import { ProjectRepository } from '../repositories/project-repository.ts';
 import { getRuntimeConfig } from '../runtime-config.ts';
 import type {
   Bible, CoreSeed, CharacterDynamic, CharacterDynamicsResult,
@@ -175,6 +174,7 @@ export interface GenerateBibleOptions {
 
 export interface GenerateBibleResult {
   bible: Bible;
+  bibleRevisionId: string;
   usage: { inputTokens: number; outputTokens: number; costRmb: number };
 }
 
@@ -182,7 +182,6 @@ export async function generateBible(opts: GenerateBibleOptions): Promise<Generat
   const { engine, db, topic, genre, audience, onProgress } = opts;
   const id = projectId(opts.projectId);
   const planning = new PlanningRepository(db);
-  const projects = new ProjectRepository(db);
   const totalUsage = { inputTokens: 0, outputTokens: 0, costRmb: 0 };
 
   const existingActive = planning.getActiveBibleForProject(id);
@@ -206,6 +205,7 @@ export async function generateBible(opts: GenerateBibleOptions): Promise<Generat
           plotArchitecture: checkpoint.plotArchitecture,
           fullText: checkpoint.fullText,
         },
+        bibleRevisionId: existingActive.id,
         usage: totalUsage,
       };
     }
@@ -365,10 +365,6 @@ export async function generateBible(opts: GenerateBibleOptions): Promise<Generat
 
   const draft = planning.getBibleRevision(revisionId);
   if (!draft) throw new Error(`Bible draft ${revisionId} missing`);
-  if (draft.status === 'draft') {
-    planning.approveBibleRevision(revisionId);
-  }
-  projects.setActiveBibleRevision(id, revisionId, new Date().toISOString());
 
   const bible: Bible = {
     coreSeed,
@@ -378,8 +374,8 @@ export async function generateBible(opts: GenerateBibleOptions): Promise<Generat
     plotArchitecture,
     fullText,
   };
-  onProgress?.('done', 'Bible 生成完成');
-  return { bible, usage: totalUsage };
+  onProgress?.('done', 'Bible draft 生成完成，等待批准');
+  return { bible, bibleRevisionId: revisionId, usage: totalUsage };
 }
 
 export function buildBibleFullText(parts: {

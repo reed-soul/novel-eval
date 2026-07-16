@@ -2,6 +2,7 @@ import type { DB } from '../db.ts';
 import { InvalidPersistenceDataError } from '../domain/errors.ts';
 import { outlineId, projectId, type OutlineId, type ProjectId } from '../domain/ids.ts';
 import {
+  nullableStringField,
   numberField,
   oneOf,
   parseJson,
@@ -88,6 +89,17 @@ export interface SaveApprovedOutlineInput {
 }
 
 const revisionStatuses = ['draft', 'approved', 'superseded'] as const;
+const outlineStatuses = ['draft', 'approved', 'writing', 'written', 'stale'] as const;
+
+interface OutlineApprovalCandidate {
+  outlineId: OutlineId;
+  projectId: ProjectId;
+  position: number;
+  outlineStatus: OutlineStatus;
+  activeRevisionId: string | null;
+  revisionId: string | null;
+  revisionStatus: RevisionStatus | null;
+}
 
 function optionalNumber(value: unknown, field: string, entity: string): number | undefined {
   if (value === undefined) return undefined;
@@ -205,6 +217,23 @@ function readApprovedOutline(value: unknown): ApprovedOutline {
   };
 }
 
+function readOutlineApprovalCandidate(value: unknown): OutlineApprovalCandidate {
+  const entity = 'outline approval candidate';
+  const row = persistedRecord(value, entity);
+  const revisionStatus = nullableStringField(row, 'revision_status', entity);
+  return {
+    outlineId: outlineId(stringField(row, 'outline_id', entity)),
+    projectId: projectId(stringField(row, 'project_id', entity)),
+    position: numberField(row, 'position', entity),
+    outlineStatus: oneOf(stringField(row, 'outline_status', entity), outlineStatuses, entity),
+    activeRevisionId: nullableStringField(row, 'active_revision_id', entity),
+    revisionId: nullableStringField(row, 'revision_id', entity),
+    revisionStatus: revisionStatus === null
+      ? null
+      : oneOf(revisionStatus, revisionStatuses, entity),
+  };
+}
+
 export class PlanningRepository {
   constructor(private readonly db: DB) {}
 
@@ -301,6 +330,42 @@ export class PlanningRepository {
     const saved = this.getApprovedOutline(input.outline.id);
     if (!saved) throw new Error(`Outline ${input.outline.id} was not persisted`);
     return saved;
+  }
+
+  saveDraftOutline(input: SaveApprovedOutlineInput): void {
+    const content = parseJsonValue(
+      input.revision.content,
+      'chapter outline revision content',
+    );
+    const persist = this.db.transaction(() => {
+      this.db.prepare(`
+        INSERT INTO chapter_outline (
+          id, project_id, position, status, created_at, updated_at
+        ) VALUES (?, ?, ?, 'draft', ?, ?)
+      `).run(
+        input.outline.id,
+        input.outline.projectId,
+        input.outline.position,
+        input.outline.createdAt,
+        input.outline.updatedAt,
+      );
+      this.db.prepare(`
+        INSERT INTO chapter_outline_revision (
+          id, outline_id, revision_number, status, title, content_json, created_at
+        ) VALUES (?, ?, ?, 'draft', ?, ?, ?)
+      `).run(
+        input.revision.id,
+        input.outline.id,
+        input.revision.revisionNumber,
+        input.revision.title,
+        JSON.stringify(content),
+        input.revision.createdAt,
+      );
+      this.db.prepare(
+        'UPDATE chapter_outline SET active_revision_id = ? WHERE id = ?',
+      ).run(input.revision.id, input.outline.id);
+    });
+    persist();
   }
 
   getApprovedOutline(id: OutlineId): ApprovedOutline | null {
@@ -447,17 +512,86 @@ export class PlanningRepository {
   }
 
   approveBibleRevision(id: string): BibleRevision {
-    const updated = this.db.prepare(`
-      UPDATE story_bible_revision
-      SET status = 'approved'
-      WHERE id = ? AND status = 'draft'
-    `).run(id);
-    if (updated.changes !== 1) {
+    const existing = this.getBibleRevision(id);
+    if (!existing) throw new Error(`Bible revision ${id} was not found`);
+    if (existing.status === 'approved') return existing;
+    if (existing.status !== 'draft') {
       throw new Error(`Bible revision ${id} cannot be approved`);
     }
+    const approve = this.db.transaction(() => {
+      this.db.prepare(`
+        UPDATE story_bible_revision
+        SET status = 'superseded'
+        WHERE project_id = ? AND status = 'approved' AND id != ?
+      `).run(existing.projectId, id);
+      this.db.prepare(`
+        UPDATE story_bible_revision
+        SET status = 'approved'
+        WHERE id = ? AND status = 'draft'
+      `).run(id);
+    });
+    approve();
     const persisted = this.getBibleRevision(id);
     if (!persisted) throw new Error(`Bible revision ${id} was not found after approve`);
     return persisted;
+  }
+
+  approveOutlinesForRange(id: ProjectId, from: number, to: number): ApprovedOutline[] {
+    if (!Number.isInteger(from) || !Number.isInteger(to) || from <= 0 || to < from) {
+      throw new Error('from/to must be positive integers with to >= from');
+    }
+    const approve = this.db.transaction(() => {
+      for (let position = from; position <= to; position += 1) {
+        const row: unknown = this.db.prepare(`
+          SELECT
+            o.id AS outline_id,
+            o.project_id,
+            o.position,
+            o.status AS outline_status,
+            o.active_revision_id,
+            r.id AS revision_id,
+            r.status AS revision_status
+          FROM chapter_outline o
+          LEFT JOIN chapter_outline_revision r ON r.id = o.active_revision_id
+          WHERE o.project_id = ? AND o.position = ?
+        `).get(id, position);
+        if (row === undefined) {
+          throw new Error(`Outline at position ${position} is missing`);
+        }
+        const candidate = readOutlineApprovalCandidate(row);
+        if (candidate.activeRevisionId === null || candidate.revisionId === null) {
+          throw new Error(`Outline at position ${position} has no active revision`);
+        }
+        if (candidate.revisionStatus === 'superseded') {
+          throw new Error(`Outline at position ${position} cannot be approved`);
+        }
+        if (candidate.outlineStatus === 'stale') {
+          throw new Error(`Outline at position ${position} is stale`);
+        }
+        if (candidate.revisionStatus === 'draft') {
+          this.db.prepare(`
+            UPDATE chapter_outline_revision
+            SET status = 'approved'
+            WHERE id = ? AND status = 'draft'
+          `).run(candidate.revisionId);
+        }
+        if (candidate.outlineStatus === 'draft') {
+          this.db.prepare(`
+            UPDATE chapter_outline
+            SET status = 'approved', updated_at = ?
+            WHERE id = ? AND status = 'draft'
+          `).run(new Date().toISOString(), candidate.outlineId);
+        }
+      }
+    });
+    approve();
+    const approved: ApprovedOutline[] = [];
+    for (let position = from; position <= to; position += 1) {
+      const outline = this.getApprovedOutlineAtPosition(id, position);
+      if (!outline) throw new Error(`Outline at position ${position} is not approved`);
+      approved.push(outline);
+    }
+    return approved;
   }
 
   listApprovedOutlines(id: ProjectId): ApprovedOutline[] {

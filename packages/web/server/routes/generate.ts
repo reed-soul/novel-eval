@@ -112,7 +112,7 @@ export function generateRoutes(
       },
       budget: {},
     }, async (ctx: JobRunnerContext) => {
-      const { bible, usage } = await writer.generateBible({
+      const { bible, bibleRevisionId, usage } = await writer.generateBible({
         engine,
         projectId: project.id,
         topic: body.topic,
@@ -125,6 +125,7 @@ export function generateRoutes(
       updateProjectStatus(db, project.id, 'planning');
       return {
         bible: {
+          revisionId: bibleRevisionId,
           characters: bible.characterDynamics.length,
           foreshadows: bible.plotArchitecture.foreshadows.length,
         },
@@ -158,7 +159,7 @@ export function generateRoutes(
       },
       budget: {},
     }, async (ctx: JobRunnerContext) => {
-      const { bible, usage } = await writer.generateBible({
+      const { bible, bibleRevisionId, usage } = await writer.generateBible({
         engine,
         projectId: id,
         topic: project.premise,
@@ -170,6 +171,7 @@ export function generateRoutes(
       });
       updateProjectStatus(db, id, 'planning');
       return {
+        bibleRevisionId,
         characters: bible.characterDynamics.length,
         foreshadows: bible.plotArchitecture.foreshadows.length,
         usage,
@@ -257,6 +259,16 @@ export function generateRoutes(
 
     if (body.qualityGate) {
       return c.json({ error: 'qualityGate is unsupported until the chapter quality system lands' }, 400);
+    }
+
+    try {
+      writer.assertChapterPlanningApproved({
+        projectId: projectId(id),
+        from: body.from,
+        to: body.to,
+      });
+    } catch (error: unknown) {
+      return c.json({ error: error instanceof Error ? error.message : 'planning is not approved' }, 400);
     }
 
     const config = loadWriterConfig();

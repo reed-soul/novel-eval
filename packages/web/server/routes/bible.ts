@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import {
   getBibleForChapter,
   PlanningRepository,
+  WriterApplication,
   projectId,
   type DB,
   type BibleCharacterState,
@@ -11,6 +12,7 @@ import {
 
 export function bibleRoutes(db: DB) {
   const app = new Hono();
+  const writer = new WriterApplication(db, { defaultOwnerId: 'web' });
 
   app.get('/:id/bible', (c) => {
     const id = c.req.param('id');
@@ -37,6 +39,29 @@ export function bibleRoutes(db: DB) {
       revisionNumber: active.revisionNumber,
       status: active.status,
     });
+  });
+
+  app.post('/:id/bible-revisions/:revisionId/approve', (c) => {
+    const id = projectId(c.req.param('id'));
+    const revisionId = c.req.param('revisionId');
+    try {
+      const { revision } = writer.approveBibleRevision({
+        projectId: id,
+        revisionId,
+        ownerId: 'web',
+      });
+      return c.json({
+        revision: {
+          id: revision.id,
+          projectId: revision.projectId,
+          revisionNumber: revision.revisionNumber,
+          status: revision.status,
+          createdAt: revision.createdAt,
+        },
+      });
+    } catch (error: unknown) {
+      return c.json({ error: error instanceof Error ? error.message : 'approval failed' }, 400);
+    }
   });
 
   return app;

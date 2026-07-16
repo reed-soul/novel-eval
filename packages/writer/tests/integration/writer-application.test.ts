@@ -330,6 +330,112 @@ it('generateChapterRange refuses a range with outline gaps', async (t) => {
   assert.equal(jobCount.n, 0);
 });
 
+it('generateChapterRange requires approved bible and outlines before writing', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+
+  new ProjectRepository(testDb.db).create({
+    id: fixtureProjectId,
+    title: '北站',
+    genreProfile: '悬疑',
+    targetAudience: '成人',
+    premise: '林晚追查一张失踪的车票。',
+    createdAt: fixtureTime,
+  });
+  const planning = new PlanningRepository(testDb.db);
+  const bible = planning.saveDraftBibleRevision({
+    id: 'bible-draft-1',
+    projectId: fixtureProjectId,
+    revisionNumber: 1,
+    status: 'draft',
+    bible: {
+      fullText: '稳定设定。',
+      characterState: { characters: [] },
+      plotArchitecture: {
+        act1: { setup: '起', conflicts: ['疑点', '阻碍'], climax: '转折' },
+        act2: { setup: '承', conflicts: ['追查', '误导'], climax: '低谷' },
+        act3: { setup: '合', conflicts: ['揭露', '代价'], climax: '解决' },
+        foreshadows: [],
+      },
+    },
+    compiledText: '稳定设定。',
+    createdAt: fixtureTime,
+  });
+  testDb.db.prepare(`
+    INSERT INTO chapter_outline (id, project_id, position, status, active_revision_id, created_at, updated_at)
+    VALUES (?, ?, 1, 'draft', ?, ?, ?)
+  `).run('outline-draft-1', fixtureProjectId, null, fixtureTime, fixtureTime);
+  testDb.db.prepare(`
+    INSERT INTO chapter_outline_revision (id, outline_id, revision_number, status, title, content_json, created_at)
+    VALUES (?, ?, 1, 'draft', ?, ?, ?)
+  `).run(
+    'outline-revision-draft-1',
+    'outline-draft-1',
+    '第 1 章',
+    JSON.stringify({ summary: '第一章摘要', beats: ['推进'] }),
+    fixtureTime,
+  );
+  testDb.db.prepare(
+    'UPDATE chapter_outline SET active_revision_id = ? WHERE id = ?',
+  ).run('outline-revision-draft-1', 'outline-draft-1');
+
+  const app = new WriterApplication(testDb.db, {
+    now: () => fixedNow,
+    defaultOwnerId: ownerId,
+    leaseTtlMs: 60_000,
+  });
+
+  await assert.rejects(
+    () => app.generateChapterRange({
+      projectId: fixtureProjectId,
+      from: 1,
+      to: 1,
+      engine: contentEngine('unused'),
+      wordCount: 500,
+      engineName: 'mock',
+      model: 'mock',
+    }),
+    /not approved|未批准/i,
+  );
+
+  await app.approveBibleRevision({
+    projectId: fixtureProjectId,
+    revisionId: bible.id,
+    ownerId,
+  });
+  await app.approveOutlines({
+    projectId: fixtureProjectId,
+    from: 1,
+    to: 1,
+    ownerId,
+  });
+
+  const result = await app.generateChapterRange({
+    projectId: fixtureProjectId,
+    from: 1,
+    to: 1,
+    engine: contentEngine('unused'),
+    wordCount: 500,
+    engineName: 'mock',
+    model: 'mock',
+    generateContent: async (context) => ({
+      title: context.outline.revision.title,
+      content: '第一章正文',
+      usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'mock', durationMs: 1 },
+      model: 'mock',
+    }),
+    extractState: async ({ context }) => ({
+      state: emptyState(`状态${context.outlinePosition}`),
+      delta: emptyDelta(`状态${context.outlinePosition}`),
+      usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'extract', durationMs: 1 },
+      model: 'extract',
+      promptVersion: 'state-v1',
+    }),
+  });
+
+  assert.equal(result.outcomes.length, 1);
+});
+
 it('publishChapterEdit creates a draft then publishes through the same publication path', async (t) => {
   const testDb = createTestDb();
   t.after(() => testDb.cleanup());

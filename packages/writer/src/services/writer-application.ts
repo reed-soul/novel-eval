@@ -58,6 +58,11 @@ import {
   type ProjectWriteLease,
 } from '../repositories/lease-repository.ts';
 import { PlanningRepository } from '../repositories/planning-repository.ts';
+import type {
+  ApprovedOutline,
+  BibleRevision,
+} from '../repositories/planning-repository.ts';
+import { ProjectRepository } from '../repositories/project-repository.ts';
 import { StoryStateRepository } from '../repositories/story-state-repository.ts';
 import type { JsonValue } from '../repositories/validation.ts';
 import { getRuntimeConfig } from '../runtime-config.ts';
@@ -100,6 +105,35 @@ export interface GenerateBlueprintAppInput extends Omit<GenerateBlueprintOptions
   existingJobId?: string;
   ownerId?: string;
   ttlMs?: number;
+}
+
+export interface ApproveBibleRevisionInput {
+  projectId: ProjectId;
+  revisionId: string;
+  ownerId?: string;
+  ttlMs?: number;
+}
+
+export interface ApproveBibleRevisionResult {
+  revision: BibleRevision;
+}
+
+export interface ApproveOutlinesInput {
+  projectId: ProjectId;
+  from: number;
+  to: number;
+  ownerId?: string;
+  ttlMs?: number;
+}
+
+export interface ApproveOutlinesResult {
+  outlines: ApprovedOutline[];
+}
+
+export interface AssertChapterPlanningApprovedInput {
+  projectId: ProjectId;
+  from: number;
+  to: number;
 }
 
 export interface GenerateChapterRangeInput {
@@ -177,6 +211,7 @@ export class WriterApplication {
   private readonly defaultOwnerId: string;
   private readonly leaseTtlMs: number;
   private readonly leases: ProjectWriteLeaseRepository;
+  private readonly projects: ProjectRepository;
   private readonly planning: PlanningRepository;
   private readonly chapters: ChapterRepository;
   private readonly states: StoryStateRepository;
@@ -192,6 +227,7 @@ export class WriterApplication {
     this.defaultOwnerId = options.defaultOwnerId ?? 'local-writer';
     this.leaseTtlMs = options.leaseTtlMs ?? 120_000;
     this.leases = new ProjectWriteLeaseRepository(db);
+    this.projects = new ProjectRepository(db);
     this.planning = new PlanningRepository(db);
     this.chapters = new ChapterRepository(db);
     this.states = new StoryStateRepository(db);
@@ -359,6 +395,117 @@ export class WriterApplication {
       throw error;
     } finally {
       this.leases.release({ leaseId: lease.id, ownerId });
+    }
+  }
+
+  approveBibleRevision(input: ApproveBibleRevisionInput): ApproveBibleRevisionResult {
+    const ownerId = input.ownerId ?? this.defaultOwnerId;
+    const ttlMs = input.ttlMs ?? this.leaseTtlMs;
+    const revision = this.planning.getBibleRevision(input.revisionId);
+    if (!revision || revision.projectId !== input.projectId) {
+      throw new Error(`Bible revision ${input.revisionId} not found for project`);
+    }
+    const jobId = createJobRow(this.db, {
+      projectId: input.projectId,
+      type: 'bible',
+      engine: 'approval',
+      model: 'approval',
+      wordCount: 0,
+      promptVersion: 'planning-approval-v1',
+      input: { revisionId: input.revisionId },
+    });
+    let lease: ProjectWriteLease;
+    try {
+      lease = this.leases.acquire({
+        projectId: input.projectId,
+        jobId,
+        ownerId,
+        ttlMs,
+        now: this.now(),
+      });
+    } catch (error: unknown) {
+      updateJobStatus(this.db, jobId, 'failed', {
+        errorType: error instanceof Error ? error.name : 'Error',
+        error: error instanceof Error ? error.message : 'lease acquire failed',
+      });
+      throw error;
+    }
+    try {
+      const approved = this.planning.approveBibleRevision(input.revisionId);
+      this.projects.setActiveBibleRevision(input.projectId, approved.id, this.now().toISOString());
+      updateJobStatus(this.db, jobId, 'completed');
+      return { revision: approved };
+    } catch (error: unknown) {
+      updateJobStatus(this.db, jobId, 'failed', {
+        errorType: error instanceof Error ? error.name : 'Error',
+        error: error instanceof Error ? error.message : 'approve bible failed',
+      });
+      throw error;
+    } finally {
+      this.leases.release({ leaseId: lease.id, ownerId });
+    }
+  }
+
+  approveOutlines(input: ApproveOutlinesInput): ApproveOutlinesResult {
+    const ownerId = input.ownerId ?? this.defaultOwnerId;
+    const ttlMs = input.ttlMs ?? this.leaseTtlMs;
+    const jobId = createJobRow(this.db, {
+      projectId: input.projectId,
+      type: 'outline',
+      scope: { from: input.from, to: input.to },
+      engine: 'approval',
+      model: 'approval',
+      wordCount: 0,
+      promptVersion: 'planning-approval-v1',
+      input: { from: input.from, to: input.to },
+    });
+    let lease: ProjectWriteLease;
+    try {
+      lease = this.leases.acquire({
+        projectId: input.projectId,
+        jobId,
+        ownerId,
+        ttlMs,
+        now: this.now(),
+      });
+    } catch (error: unknown) {
+      updateJobStatus(this.db, jobId, 'failed', {
+        errorType: error instanceof Error ? error.name : 'Error',
+        error: error instanceof Error ? error.message : 'lease acquire failed',
+      });
+      throw error;
+    }
+    try {
+      const outlines = this.planning.approveOutlinesForRange(input.projectId, input.from, input.to);
+      updateJobStatus(this.db, jobId, 'completed');
+      return { outlines };
+    } catch (error: unknown) {
+      updateJobStatus(this.db, jobId, 'failed', {
+        errorType: error instanceof Error ? error.name : 'Error',
+        error: error instanceof Error ? error.message : 'approve outlines failed',
+      });
+      throw error;
+    } finally {
+      this.leases.release({ leaseId: lease.id, ownerId });
+    }
+  }
+
+  assertChapterPlanningApproved(input: AssertChapterPlanningApprovedInput): void {
+    if (!Number.isInteger(input.from) || !Number.isInteger(input.to) || input.from <= 0 || input.to < input.from) {
+      throw new Error('from/to must be positive integers with to >= from');
+    }
+    const bible = this.planning.getActiveBibleForProject(input.projectId);
+    if (!bible || bible.status !== 'approved') {
+      throw new Error('Bible revision is not approved for this project');
+    }
+    for (let position = input.from; position <= input.to; position += 1) {
+      if (!this.planning.hasOutlineAtPosition(input.projectId, position)) {
+        throw new Error(`章节范围存在缺口：缺少第 ${position} 章蓝图（请求 ${input.from}-${input.to}）`);
+      }
+      const approved = this.planning.getOutlineWithApprovedRevisionAtPosition(input.projectId, position);
+      if (!approved) {
+        throw new Error(`Outline for chapter ${position} is not approved`);
+      }
     }
   }
 
@@ -579,11 +726,7 @@ export class WriterApplication {
       throw new Error('from/to must be positive integers with to >= from');
     }
 
-    for (let position = from; position <= to; position += 1) {
-      if (!this.planning.hasOutlineAtPosition(input.projectId, position)) {
-        throw new Error(`章节范围存在缺口：缺少第 ${position} 章蓝图（请求 ${from}-${to}）`);
-      }
-    }
+    this.assertChapterPlanningApproved({ projectId: input.projectId, from, to });
 
     const approvedPositions: number[] = [];
     for (let position = from; position <= to; position += 1) {
