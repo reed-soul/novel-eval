@@ -39,5 +39,24 @@ export function evalRoutes(db: DB) {
     return c.json({ lessons });
   });
 
+  // 仪表盘聚合数据：scores + 伏笔状态 + 角色，前端一次拉取
+  app.get('/:id/dashboard', (c) => {
+    const id = c.req.param('id');
+    const scores = getChapterScores(db, id);
+    // narrative_state 含 openForeshadows（伏笔回收追踪）
+    let narrative: { macroSummary?: string; openForeshadows?: unknown[] } = {};
+    let characters: { name: string; status?: string }[] = [];
+    try {
+      const { getNarrativeState, getBibleForChapter } = require('@novel-eval/writer');
+      const ns = getNarrativeState(db, id);
+      if (ns) narrative = { macroSummary: ns.macroSummary, openForeshadows: ns.openForeshadows ?? [] };
+      const bible = getBibleForChapter(db, id);
+      if (bible.characterState?.characters) {
+        characters = bible.characterState.characters.map((ch: { name: string; status?: string }) => ({ name: ch.name, status: ch.status }));
+      }
+    } catch { /* narrative/bible 未生成时忽略 */ }
+    return c.json({ scores, narrative, characters });
+  });
+
   return app;
 }

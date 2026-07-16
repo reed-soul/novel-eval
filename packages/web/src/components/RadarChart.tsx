@@ -1,21 +1,21 @@
 import React from 'react';
 
 interface RadarChartProps {
-  data: number[]; // 0-100 范围的值，对应5个维度
-  labels: string[]; // 维度名称，长度必须为 5
+  data: number[]; // 0-100 范围的值，对应各维度
+  labels: string[]; // 维度名称，长度需与 data 一致（支持任意维度数）
   size?: number; // 图表大小（宽高一致）
-  color?: string; // 赛博主题的主色调（如 #00ffff）
+  color?: string; // 主色调（默认用主题色）
 }
 
 export function RadarChart({
   data,
   labels,
   size = 300,
-  color = '#00ffff'
+  color = 'var(--primary)'
 }: RadarChartProps) {
   const center = size / 2;
-  const radius = (size / 2) * 0.75; // 留出边缘放标签
-  const numAxis = 5;
+  const radius = (size / 2) * 0.72; // 留出边缘放标签
+  const numAxis = Math.max(data.length, labels.length, 3);
   const angleStep = (Math.PI * 2) / numAxis;
 
   // 计算多边形顶点的坐标
@@ -130,21 +130,24 @@ export function RadarChart({
         );
       })}
 
-      {/* 文本标签 */}
-      {labelPoints.map((item, i) => (
+      {/* 文本标签（字号随轴数自适应，避免8轴重叠）*/}
+      {labelPoints.map((item, i) => {
+        const fontSize = numAxis <= 5 ? 13 : 11;
+        return (
         <text
           key={`label-${i}`}
           x={item.x}
           y={item.y}
           fill="var(--text-primary)"
-          fontSize="14"
+          fontSize={fontSize}
           fontWeight="500"
           textAnchor="middle"
           dominantBaseline="middle"
         >
-          {item.label} ({data[i].toFixed(1)})
+          {item.label} ({data[i].toFixed(0)})
         </text>
-      ))}
+        );
+      })}
     </svg>
   );
 }
