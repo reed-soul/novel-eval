@@ -1,6 +1,7 @@
 /** 蓝图路由 — GET 全部章节蓝图 */
 import { Hono } from 'hono';
 import { getAllOutlines, projectId, WriterApplication, type DB } from '@novel-eval/writer';
+import { httpErrorJson, toHttpError } from '../middleware/error-mapper.ts';
 
 export function outlineRoutes(db: DB) {
   const app = new Hono();
@@ -41,7 +42,8 @@ export function outlineRoutes(db: DB) {
         })),
       });
     } catch (error: unknown) {
-      return c.json({ error: error instanceof Error ? error.message : 'approval failed' }, 400);
+      const mapped = toHttpError(error);
+      return c.json(httpErrorJson(mapped), mapped.status as 400 | 402 | 409 | 422 | 500);
     }
   });
 

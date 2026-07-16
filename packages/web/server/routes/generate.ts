@@ -268,7 +268,8 @@ export function generateRoutes(
         to: body.to,
       });
     } catch (error: unknown) {
-      return c.json({ error: error instanceof Error ? error.message : 'planning is not approved' }, 400);
+      const mapped = toHttpError(error);
+      return c.json(httpErrorJson(mapped), mapped.status as 400 | 402 | 409 | 422 | 500);
     }
 
     const config = loadWriterConfig();

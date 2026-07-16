@@ -41,7 +41,7 @@ import {
   type ChapterRevisionId,
   type ProjectId,
 } from '../domain/ids.ts';
-import { BudgetExceededError } from '../domain/errors.ts';
+import { BudgetExceededError, ValidationError } from '../domain/errors.ts';
 import type { StoryState, StoryStateDelta } from '../domain/story-state.ts';
 import {
   createJobRow,
@@ -496,19 +496,19 @@ export class WriterApplication {
 
   assertChapterPlanningApproved(input: AssertChapterPlanningApprovedInput): void {
     if (!Number.isInteger(input.from) || !Number.isInteger(input.to) || input.from <= 0 || input.to < input.from) {
-      throw new Error('from/to must be positive integers with to >= from');
+      throw new ValidationError('from/to must be positive integers with to >= from');
     }
     const bible = this.planning.getActiveBibleForProject(input.projectId);
     if (!bible || bible.status !== 'approved') {
-      throw new Error('Bible revision is not approved for this project');
+      throw new ValidationError('Bible revision is not approved for this project');
     }
     for (let position = input.from; position <= input.to; position += 1) {
       if (!this.planning.hasOutlineAtPosition(input.projectId, position)) {
-        throw new Error(`章节范围存在缺口：缺少第 ${position} 章蓝图（请求 ${input.from}-${input.to}）`);
+        throw new ValidationError(`章节范围存在缺口：缺少第 ${position} 章蓝图（请求 ${input.from}-${input.to}）`);
       }
       const approved = this.planning.getOutlineWithApprovedRevisionAtPosition(input.projectId, position);
       if (!approved) {
-        throw new Error(`Outline for chapter ${position} is not approved`);
+        throw new ValidationError(`Outline for chapter ${position} is not approved`);
       }
     }
   }

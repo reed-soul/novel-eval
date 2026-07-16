@@ -180,13 +180,6 @@ export async function editChapterWithExtract(
   });
 }
 
-export interface NarrativeState {
-  projectId: string; macroSummary: string;
-  openForeshadows: Array<{ description: string; setupChapter: number; resolveChapter: number | null }>;
-  arcSummaries: Array<{ upToChapter: number; content: string }>;
-  upToChapter: number; updatedAt: string;
-}
-
 export interface BibleRaw {
   coreSeed: { premise: string } | null;
   characterDynamics: { characters: unknown[] } | null;

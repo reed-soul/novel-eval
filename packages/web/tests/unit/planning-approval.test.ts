@@ -166,7 +166,8 @@ describe('planning approval routes', () => {
     ));
 
     assert.equal(res.status, 400);
-    const body = await res.json() as { error?: string };
-    assert.match(body.error ?? '', /not approved|未批准/i);
+    const body = await res.json() as { error?: string; code?: string; message?: string };
+    assert.equal(body.code, 'ValidationError');
+    assert.match(body.error ?? body.message ?? '', /not approved|未批准/i);
   });
 });

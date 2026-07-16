@@ -17,12 +17,14 @@ import {
   getDraft,
   diagnoseChapter,
   WriterApplication,
+  ValidationError,
   projectId,
   type CorrectionStrategy,
   type StoryState,
   type StoryStateDelta,
 } from '@novel-eval/writer';
 import { createJob, hasActiveJobForProject, type JobRunnerContext } from '../jobs.ts';
+import { httpErrorJson, toHttpError } from '../middleware/error-mapper.ts';
 import type { EngineRegistry } from '../engine-registry.ts';
 
 type ExtractState = NonNullable<Parameters<WriterApplication['adoptCorrectionDraft']>[0]['extractState']>;
@@ -96,7 +98,8 @@ export function correctionRoutes(
       const diag = diagnoseChapter(db, id, n);
       return c.json({ diagnose: diag });
     } catch (e) {
-      return c.json({ error: (e as Error).message }, 400);
+      const mapped = toHttpError(e);
+      return c.json(httpErrorJson(mapped), mapped.status as 400 | 402 | 409 | 422 | 500);
     }
   });
 
@@ -181,7 +184,7 @@ export function correctionRoutes(
           })
         : await (async () => {
             if (!isStoryState(body.state) || !isStoryStateDelta(body.delta)) {
-              throw new Error('采纳必须提供有效的 state 与 delta；禁止缺省写入空壳 story state');
+              throw new ValidationError('采纳必须提供有效的 state 与 delta；禁止缺省写入空壳 story state');
             }
             return writer.adoptCorrectionDraft({
               projectId: projectId(id),
@@ -201,7 +204,8 @@ export function correctionRoutes(
         staleImpact: result.publish.staleImpact,
       });
     } catch (e) {
-      return c.json({ error: (e as Error).message }, 400);
+      const mapped = toHttpError(e);
+      return c.json(httpErrorJson(mapped), mapped.status as 400 | 402 | 409 | 422 | 500);
     }
   });
 
@@ -214,7 +218,8 @@ export function correctionRoutes(
       discardCorrectionDraft(db, draftId);
       return c.json({ ok: true });
     } catch (e) {
-      return c.json({ error: (e as Error).message }, 400);
+      const mapped = toHttpError(e);
+      return c.json(httpErrorJson(mapped), mapped.status as 400 | 402 | 409 | 422 | 500);
     }
   });
 

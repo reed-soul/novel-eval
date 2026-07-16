@@ -9,6 +9,7 @@ import {
   type BibleCharacterState,
   type PlotArchitecture,
 } from '@novel-eval/writer';
+import { httpErrorJson, toHttpError } from '../middleware/error-mapper.ts';
 
 export function bibleRoutes(db: DB) {
   const app = new Hono();
@@ -65,7 +66,8 @@ export function bibleRoutes(db: DB) {
         },
       });
     } catch (error: unknown) {
-      return c.json({ error: error instanceof Error ? error.message : 'approval failed' }, 400);
+      const mapped = toHttpError(error);
+      return c.json(httpErrorJson(mapped), mapped.status as 400 | 402 | 409 | 422 | 500);
     }
   });
 
