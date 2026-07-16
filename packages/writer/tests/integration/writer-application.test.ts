@@ -678,3 +678,172 @@ it('starting a new range cancels a leftover paused job instead of poisoning getA
   ).get(fixtureProjectId) as { n: number };
   assert.equal(active.n, 0);
 });
+
+it('resume binds to stored snapshot and ignores caller wordCount/to overrides', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const app = seedProjectWithApprovedRange(testDb.db, [1, 2, 3]);
+  const { getActiveJob } = await import('../../src/job-store.ts');
+
+  const hooks = {
+    generateContent: async (context: {
+      outlinePosition: number;
+      outline: { revision: { title: string } };
+    }) => ({
+      title: context.outline.revision.title,
+      content: `正文${context.outlinePosition}`,
+      usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'mock', durationMs: 1 },
+      model: 'mock',
+    }),
+    extractState: async ({ context }: { context: { outlinePosition: number } }) => ({
+      state: emptyState(`状态${context.outlinePosition}`),
+      delta: emptyDelta(`状态${context.outlinePosition}`),
+      usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'extract', durationMs: 1 },
+      model: 'extract',
+      promptVersion: 'state-v1',
+    }),
+  };
+
+  let completed = 0;
+  await assert.rejects(
+    () => app.generateChapterRange({
+      projectId: fixtureProjectId,
+      from: 1,
+      to: 3,
+      engine: contentEngine('章节正文'),
+      wordCount: 900,
+      engineName: 'snap-engine',
+      model: 'snap-model',
+      qualityProfile: 'careful',
+      promptVersion: 'chapter-v2',
+      budget: { maxCostRmb: 3 },
+      control: {
+        shouldPause: () => completed >= 1,
+        onChapterComplete: () => {
+          completed += 1;
+        },
+      },
+      ...hooks,
+    }),
+    (error: unknown) => error instanceof Error && error.name === 'JobPausedError',
+  );
+
+  const paused = getActiveJob(testDb.db, fixtureProjectId);
+  assert.ok(paused);
+  const pausedId = paused.id;
+  assert.equal(paused.wordCount, 900);
+  assert.deepEqual(paused.scope, { from: 1, to: 3 });
+
+  const seenPositions: number[] = [];
+  const resumed = await app.generateChapterRange({
+    projectId: fixtureProjectId,
+    from: 1,
+    to: 2,
+    resumeJobId: pausedId,
+    engine: contentEngine('章节正文'),
+    wordCount: 100,
+    engineName: 'override-engine',
+    model: 'override-model',
+    qualityProfile: 'fast',
+    promptVersion: 'chapter-v9',
+    budget: { maxCostRmb: 99 },
+    generateContent: async (context) => {
+      seenPositions.push(context.outlinePosition);
+      return {
+        title: context.outline.revision.title,
+        content: `续写${context.outlinePosition}`,
+        usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'mock', durationMs: 1 },
+        model: 'mock',
+      };
+    },
+    extractState: hooks.extractState,
+  });
+
+  assert.equal(resumed.jobId, pausedId);
+  assert.deepEqual(seenPositions, [2, 3]);
+  const job = getJobRow(testDb.db, pausedId);
+  assert.ok(job);
+  assert.equal(job.status, 'completed');
+  assert.equal(job.wordCount, 900);
+  assert.deepEqual(job.scope, { from: 1, to: 3 });
+  assert.equal(job.engine, 'snap-engine');
+  assert.equal(job.model, 'snap-model');
+  assert.equal(job.qualityProfile, 'careful');
+  assert.equal(job.promptVersion, 'chapter-v2');
+  assert.deepEqual(job.budget, { maxCostRmb: 3 });
+});
+
+it('generateBible fails when a chapter write lease is held', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const app = seedProjectWithApprovedRange(testDb.db, [1]);
+  const { createJobRow } = await import('../../src/job-store.ts');
+  const { ProjectWriteLeaseRepository } = await import('../../src/repositories/lease-repository.ts');
+
+  const chapterJobId = createJobRow(testDb.db, {
+    projectId: fixtureProjectId,
+    type: 'chapter',
+    scope: { from: 1, to: 1 },
+    engine: 'chapter-engine',
+    model: 'chapter-model',
+    wordCount: 800,
+  });
+  new ProjectWriteLeaseRepository(testDb.db).acquire({
+    projectId: fixtureProjectId,
+    jobId: chapterJobId,
+    ownerId: 'chapter-owner',
+    ttlMs: 60_000,
+    now: fixedNow,
+  });
+
+  await assert.rejects(
+    () => app.generateBible({
+      engine: contentEngine('{}'),
+      projectId: fixtureProjectId,
+      topic: 'topic',
+      genre: '悬疑',
+      audience: '成人',
+    }),
+    (error: unknown) => error instanceof Error && /lease/i.test(error.message),
+  );
+});
+
+it('generateBlueprint fails when a chapter write lease is held', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const app = seedProjectWithApprovedRange(testDb.db, []);
+  const { createJobRow } = await import('../../src/job-store.ts');
+  const { ProjectWriteLeaseRepository } = await import('../../src/repositories/lease-repository.ts');
+
+  const chapterJobId = createJobRow(testDb.db, {
+    projectId: fixtureProjectId,
+    type: 'chapter',
+    scope: { from: 1, to: 1 },
+    engine: 'chapter-engine',
+    model: 'chapter-model',
+    wordCount: 800,
+  });
+  new ProjectWriteLeaseRepository(testDb.db).acquire({
+    projectId: fixtureProjectId,
+    jobId: chapterJobId,
+    ownerId: 'chapter-owner',
+    ttlMs: 60_000,
+    now: fixedNow,
+  });
+
+  await assert.rejects(
+    () => app.generateBlueprint({
+      engine: contentEngine('{}'),
+      projectId: fixtureProjectId,
+      plot: {
+        act1: { setup: 'a', conflicts: ['c'], climax: 'x' },
+        act2: { setup: 'a', conflicts: ['c'], climax: 'x' },
+        act3: { setup: 'a', conflicts: ['c'], climax: 'x' },
+        foreshadows: [],
+      },
+      characters: [],
+      totalChapters: 3,
+    }),
+    (error: unknown) => error instanceof Error && /lease/i.test(error.message),
+  );
+});

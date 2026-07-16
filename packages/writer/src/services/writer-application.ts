@@ -37,6 +37,7 @@ import type { DB } from '../db.ts';
 import {
   chapterId,
   chapterRevisionId,
+  projectId,
   type ChapterRevisionId,
   type ProjectId,
 } from '../domain/ids.ts';
@@ -78,6 +79,18 @@ export interface WriterApplicationOptions {
   now?: () => Date;
   defaultOwnerId?: string;
   leaseTtlMs?: number;
+}
+
+export interface GenerateBibleAppInput extends Omit<GenerateBibleOptions, 'db'> {
+  existingJobId?: string;
+  ownerId?: string;
+  ttlMs?: number;
+}
+
+export interface GenerateBlueprintAppInput extends Omit<GenerateBlueprintOptions, 'db'> {
+  existingJobId?: string;
+  ownerId?: string;
+  ttlMs?: number;
 }
 
 export interface GenerateChapterRangeInput {
@@ -178,16 +191,110 @@ export class WriterApplication {
     this.rebuild = new StateRebuildService(db, this.now);
   }
 
-  generateBible(opts: Omit<GenerateBibleOptions, 'db'>): Promise<GenerateBibleResult> {
-    return generateBibleImpl({ ...opts, db: this.db });
+  async generateBible(opts: GenerateBibleAppInput): Promise<GenerateBibleResult> {
+    const ownerId = opts.ownerId ?? this.defaultOwnerId;
+    const ttlMs = opts.ttlMs ?? this.leaseTtlMs;
+    let jobId: string;
+    if (opts.existingJobId) {
+      const existing = getJobRow(this.db, opts.existingJobId);
+      if (!existing || existing.projectId !== opts.projectId) {
+        throw new Error(`Job ${opts.existingJobId} not found for project`);
+      }
+      jobId = opts.existingJobId;
+    } else {
+      jobId = createJobRow(this.db, {
+        projectId: opts.projectId,
+        type: 'bible',
+        engine: opts.engine.name,
+        model: opts.engine.name,
+        wordCount: 0,
+        promptVersion: 'bible-v1',
+      });
+    }
+    let lease: ProjectWriteLease;
+    try {
+      lease = this.leases.acquire({
+        projectId: projectId(opts.projectId),
+        jobId,
+        ownerId,
+        ttlMs,
+        now: this.now(),
+      });
+    } catch (error: unknown) {
+      updateJobStatus(this.db, jobId, 'failed', {
+        errorType: error instanceof Error ? error.name : 'Error',
+        error: error instanceof Error ? error.message : 'lease acquire failed',
+      });
+      throw error;
+    }
+    try {
+      const result = await generateBibleImpl({ ...opts, db: this.db });
+      updateJobStatus(this.db, jobId, 'completed');
+      return result;
+    } catch (error: unknown) {
+      updateJobStatus(this.db, jobId, 'failed', {
+        errorType: error instanceof Error ? error.name : 'Error',
+        error: error instanceof Error ? error.message : 'generate bible failed',
+      });
+      throw error;
+    } finally {
+      this.leases.release({ leaseId: lease.id, ownerId });
+    }
   }
 
   importBible(opts: Omit<ImportBibleOptions, 'db'>): ImportBibleResult {
     return importBibleImpl({ ...opts, db: this.db });
   }
 
-  generateBlueprint(opts: Omit<GenerateBlueprintOptions, 'db'>): Promise<GenerateBlueprintResult> {
-    return generateBlueprintImpl({ ...opts, db: this.db });
+  async generateBlueprint(opts: GenerateBlueprintAppInput): Promise<GenerateBlueprintResult> {
+    const ownerId = opts.ownerId ?? this.defaultOwnerId;
+    const ttlMs = opts.ttlMs ?? this.leaseTtlMs;
+    let jobId: string;
+    if (opts.existingJobId) {
+      const existing = getJobRow(this.db, opts.existingJobId);
+      if (!existing || existing.projectId !== opts.projectId) {
+        throw new Error(`Job ${opts.existingJobId} not found for project`);
+      }
+      jobId = opts.existingJobId;
+    } else {
+      jobId = createJobRow(this.db, {
+        projectId: opts.projectId,
+        type: 'outline',
+        engine: opts.engine.name,
+        model: opts.engine.name,
+        wordCount: 0,
+        promptVersion: 'blueprint-v1',
+      });
+    }
+    let lease: ProjectWriteLease;
+    try {
+      lease = this.leases.acquire({
+        projectId: projectId(opts.projectId),
+        jobId,
+        ownerId,
+        ttlMs,
+        now: this.now(),
+      });
+    } catch (error: unknown) {
+      updateJobStatus(this.db, jobId, 'failed', {
+        errorType: error instanceof Error ? error.name : 'Error',
+        error: error instanceof Error ? error.message : 'lease acquire failed',
+      });
+      throw error;
+    }
+    try {
+      const result = await generateBlueprintImpl({ ...opts, db: this.db });
+      updateJobStatus(this.db, jobId, 'completed');
+      return result;
+    } catch (error: unknown) {
+      updateJobStatus(this.db, jobId, 'failed', {
+        errorType: error instanceof Error ? error.name : 'Error',
+        error: error instanceof Error ? error.message : 'generate blueprint failed',
+      });
+      throw error;
+    } finally {
+      this.leases.release({ leaseId: lease.id, ownerId });
+    }
   }
 
   readJobResumeConfig(jobId: string): JobResumeConfig {
@@ -356,28 +463,21 @@ export class WriterApplication {
   }
 
   async generateChapterRange(input: GenerateChapterRangeInput): Promise<GenerateChapterRangeResult> {
-    if (!Number.isInteger(input.from) || !Number.isInteger(input.to) || input.from <= 0 || input.to < input.from) {
-      throw new Error('from/to must be positive integers with to >= from');
-    }
-
-    for (let position = input.from; position <= input.to; position += 1) {
-      if (!this.planning.hasOutlineAtPosition(input.projectId, position)) {
-        throw new Error(`章节范围存在缺口：缺少第 ${position} 章蓝图（请求 ${input.from}-${input.to}）`);
-      }
-    }
-
-    const approvedPositions: number[] = [];
-    for (let position = input.from; position <= input.to; position += 1) {
-      const approved = this.planning.getApprovedOutlineAtPosition(input.projectId, position);
-      if (approved) approvedPositions.push(position);
-    }
-
     const ownerId = input.ownerId ?? this.defaultOwnerId;
     const ttlMs = input.ttlMs ?? this.leaseTtlMs;
-    const engineName = input.engineName ?? input.engine.name;
-    const model = input.model ?? input.engine.name;
 
-    let jobId: string;
+    let from = input.from;
+    let to = input.to;
+    let wordCount = input.wordCount;
+    let engineName = input.engineName ?? input.engine.name;
+    let model = input.model ?? input.engine.name;
+    let qualityProfile = input.qualityProfile ?? 'default';
+    let promptVersion = input.promptVersion ?? 'chapter-v1';
+    let budget = input.budget ?? {};
+
+    let resumeJobId: string | undefined;
+    let existingJobId: string | undefined;
+
     if (input.resumeJobId) {
       const existing = getJobRow(this.db, input.resumeJobId);
       if (!existing || existing.projectId !== input.projectId) {
@@ -386,10 +486,17 @@ export class WriterApplication {
       if (existing.status !== 'paused' && existing.status !== 'running') {
         throw new Error(`Resume job ${input.resumeJobId} is ${existing.status}, expected paused`);
       }
-      // Cancel any other active jobs so getActiveJob cannot be poisoned.
-      this.cancelOtherActiveJobs(input.projectId, input.resumeJobId);
-      updateJobStatus(this.db, input.resumeJobId, 'running');
-      jobId = input.resumeJobId;
+      const snapshot = readJobResumeConfig(this.db, input.resumeJobId);
+      // AC6: resume is bound to the stored config snapshot; ignore caller overrides.
+      from = snapshot.scope.from;
+      to = snapshot.scope.to;
+      wordCount = snapshot.wordCount;
+      engineName = snapshot.engine;
+      model = snapshot.model;
+      qualityProfile = snapshot.qualityProfile;
+      promptVersion = snapshot.promptVersion;
+      budget = snapshot.budget ?? {};
+      resumeJobId = input.resumeJobId;
     } else if (input.existingJobId) {
       const existing = getJobRow(this.db, input.existingJobId);
       if (!existing || existing.projectId !== input.projectId) {
@@ -398,24 +505,49 @@ export class WriterApplication {
       if (existing.status !== 'running') {
         throw new Error(`Job ${input.existingJobId} is ${existing.status}, expected running`);
       }
-      this.cancelOtherActiveJobs(input.projectId, input.existingJobId);
-      jobId = input.existingJobId;
+      existingJobId = input.existingJobId;
+    }
+
+    if (!Number.isInteger(from) || !Number.isInteger(to) || from <= 0 || to < from) {
+      throw new Error('from/to must be positive integers with to >= from');
+    }
+
+    for (let position = from; position <= to; position += 1) {
+      if (!this.planning.hasOutlineAtPosition(input.projectId, position)) {
+        throw new Error(`章节范围存在缺口：缺少第 ${position} 章蓝图（请求 ${from}-${to}）`);
+      }
+    }
+
+    const approvedPositions: number[] = [];
+    for (let position = from; position <= to; position += 1) {
+      const approved = this.planning.getApprovedOutlineAtPosition(input.projectId, position);
+      if (approved) approvedPositions.push(position);
+    }
+
+    let jobId: string;
+    if (resumeJobId) {
+      this.cancelOtherActiveJobs(input.projectId, resumeJobId);
+      updateJobStatus(this.db, resumeJobId, 'running');
+      jobId = resumeJobId;
+    } else if (existingJobId) {
+      this.cancelOtherActiveJobs(input.projectId, existingJobId);
+      jobId = existingJobId;
     } else {
       this.cancelOtherActiveJobs(input.projectId, null);
       jobId = createJobRow(this.db, {
         projectId: input.projectId,
         type: 'chapter',
-        scope: { from: input.from, to: input.to },
+        scope: { from, to },
         engine: engineName,
         model,
-        wordCount: input.wordCount,
-        qualityProfile: input.qualityProfile ?? 'default',
-        budget: input.budget ?? {},
-        promptVersion: input.promptVersion ?? 'chapter-v1',
+        wordCount,
+        qualityProfile,
+        budget,
+        promptVersion,
         input: {
-          from: input.from,
-          to: input.to,
-          wordCount: input.wordCount,
+          from,
+          to,
+          wordCount,
         },
       });
     }
@@ -460,8 +592,8 @@ export class WriterApplication {
           outlinePosition: position,
           lease,
           engine: input.engine,
-          wordCount: input.wordCount,
-          promptTemplateVersion: input.promptVersion ?? 'chapter-v1',
+          wordCount,
+          promptTemplateVersion: promptVersion,
           generateContent: input.generateContent,
           extractState: input.extractState,
         });

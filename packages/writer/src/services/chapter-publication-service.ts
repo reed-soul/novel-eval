@@ -7,7 +7,11 @@ import {
   type ChapterRevisionId,
   type StoryStateRevisionId,
 } from '../domain/ids.ts';
-import type { StoryState, StoryStateDelta } from '../domain/story-state.ts';
+import {
+  applyStoryStateDelta,
+  type StoryState,
+  type StoryStateDelta,
+} from '../domain/story-state.ts';
 import { ChapterRepository } from '../repositories/chapter-repository.ts';
 import type { ProjectWriteLease } from '../repositories/lease-repository.ts';
 import { StoryStateRepository } from '../repositories/story-state-repository.ts';
@@ -104,6 +108,7 @@ export class ChapterPublicationService {
       }
 
       this.assertPreviousState(input, position);
+      this.assertStateMatchesDelta(input, position);
 
       const affectedOutlinePositions = this.states
         .listCurrentFromPosition(input.lease.projectId, position)
@@ -211,4 +216,36 @@ export class ChapterPublicationService {
       throw new Error(`Chapter ${position} requires the current state from chapter ${position - 1}`);
     }
   }
+
+  private assertStateMatchesDelta(input: PublishCandidateInput, position: number): void {
+    const previous: StoryState = position === 1
+      ? emptyStoryState()
+      : (() => {
+          const revision = this.states.getCurrentAtPosition(input.lease.projectId, position - 1);
+          if (!revision) {
+            throw new Error(`Chapter ${position} requires the current state from chapter ${position - 1}`);
+          }
+          return revision.state;
+        })();
+    const expected = applyStoryStateDelta(previous, input.delta);
+    if (!storyStatesEqual(expected, input.state)) {
+      throw new Error(
+        `Published state does not match applyDelta(previous, delta) at position ${position}`,
+      );
+    }
+  }
+}
+
+function emptyStoryState(): StoryState {
+  return {
+    characters: [],
+    facts: [],
+    foreshadows: [],
+    timeline: [],
+    summary: '',
+  };
+}
+
+function storyStatesEqual(left: StoryState, right: StoryState): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
 }

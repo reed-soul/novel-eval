@@ -80,13 +80,12 @@ export function countOutlines(db: DB, rawProjectId: string): number {
   return new PlanningRepository(db).countOutlines(projectId(rawProjectId));
 }
 
-export function markOutlineWritten(db: DB, rawProjectId: string, number: number): void {
-  const now = new Date().toISOString();
-  db.prepare(`
-    UPDATE chapter_outline
-    SET status = 'written', updated_at = ?
-    WHERE project_id = ? AND position = ?
-  `).run(now, rawProjectId, number);
+export function markOutlineWritten(
+  _db: DB,
+  _rawProjectId: string,
+  _number: number,
+): void {
+  throw new Error('markOutlineWritten was removed; use WriterApplication / ChapterPublicationService');
 }
 
 // ─── chapter（正文，只读适配新 schema）────────────────────────────

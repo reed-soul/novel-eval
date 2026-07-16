@@ -1,7 +1,6 @@
 import {
   chapterId,
   chapterRevisionId,
-  characterId,
   outlineId,
   projectId,
   storyStateRevisionId,
@@ -16,13 +15,9 @@ export const fixtureChapterRevisionId = chapterRevisionId('chapter-revision-1');
 export const fixtureStateRevisionId = storyStateRevisionId('state-revision-1');
 
 export function fixtureStoryState(): StoryState {
+  // Must equal applyStoryStateDelta(emptyState, fixtureStoryStateDelta()).
   return {
-    characters: [{
-      id: characterId('lin'),
-      name: '林晚',
-      status: 'alive',
-      facts: ['左手受伤'],
-    }],
+    characters: [],
     facts: [{
       fact: '林晚到达北站',
       sourceChapterRevisionId: fixtureChapterRevisionId,

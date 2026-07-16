@@ -360,6 +360,77 @@ it('rejects position N without the current state from position N-1', (t) => {
   );
 });
 
+it('rejects publication when client state !== applyDelta(previous, delta) without invalidating', (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const { chapters, states, lease, publication } = seedPublication(testDb.db);
+
+  const first = publication.publishCandidate({
+    lease,
+    candidateRevisionId: fixtureChapterRevisionId,
+    previousStateRevisionId: null,
+    state: fixtureStoryState(),
+    delta: fixtureStoryStateDelta(),
+    model: 'test-model',
+    promptVersion: 'state-v1',
+    checkpoint: { jobId, outlinePosition: 1 },
+  });
+
+  const secondRevisionId = chapterRevisionId('chapter-revision-2');
+  seedCandidateAt(testDb.db, {
+    position: 2,
+    outlineId: outlineId('outline-2'),
+    chapterId: chapterId('chapter-2'),
+    revisionId: secondRevisionId,
+  });
+
+  assert.throws(
+    () => publication.publishCandidate({
+      lease,
+      candidateRevisionId: secondRevisionId,
+      previousStateRevisionId: first.storyStateRevisionId,
+      state: emptyState('客户端捏造状态'),
+      delta: emptyDelta('真实 delta 摘要'),
+      model: 'test-model',
+      promptVersion: 'state-v1',
+      checkpoint: { jobId, outlinePosition: 2 },
+    }),
+    /state does not match applyDelta/i,
+  );
+
+  assert.equal(states.get(first.storyStateRevisionId)?.status, 'current');
+  assert.equal(states.getCurrentAtPosition(fixtureProjectId, 1)?.id, first.storyStateRevisionId);
+  assert.equal(states.getCurrentAtPosition(fixtureProjectId, 2), null);
+  assert.equal(chapters.getRevision(secondRevisionId)?.revision.status, 'draft');
+  assert.deepEqual(
+    testDb.db.prepare('SELECT status FROM chapter_outline WHERE position = 2').get(),
+    { status: 'approved' },
+  );
+});
+
+it('rejects first-chapter publication when state !== applyDelta(empty, delta)', (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const { chapters, states, lease, publication } = seedPublication(testDb.db);
+
+  assert.throws(
+    () => publication.publishCandidate({
+      lease,
+      candidateRevisionId: fixtureChapterRevisionId,
+      previousStateRevisionId: null,
+      state: emptyState('捏造'),
+      delta: fixtureStoryStateDelta(),
+      model: 'test-model',
+      promptVersion: 'state-v1',
+      checkpoint: { jobId, outlinePosition: 1 },
+    }),
+    /state does not match applyDelta/i,
+  );
+
+  assert.equal(chapters.getRevision(fixtureChapterRevisionId)?.revision.status, 'draft');
+  assert.equal(states.getCurrentAtPosition(fixtureProjectId, 1), null);
+});
+
 it('marks downstream states stale without deleting downstream chapters or revisions', (t) => {
   const testDb = createTestDb();
   t.after(() => testDb.cleanup());

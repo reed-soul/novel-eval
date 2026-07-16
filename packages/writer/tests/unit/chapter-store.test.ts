@@ -65,9 +65,16 @@ describe('chapter_outline CRUD', () => {
     assert.equal(outline.title, '第一章');
     assert.equal(outline.act, 1);
     assert.equal(getAllOutlines(testDb.db, p.id).length, 1);
+  });
 
-    markOutlineWritten(testDb.db, p.id, 1);
-    assert.equal(getOutline(testDb.db, p.id, 1)?.status, 'written');
+  it('markOutlineWritten 已移除', (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const p = createProject(testDb.db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+    assert.throws(
+      () => markOutlineWritten(testDb.db, p.id, 1),
+      /markOutlineWritten was removed/,
+    );
   });
 });
 

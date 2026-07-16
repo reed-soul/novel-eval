@@ -61,58 +61,6 @@ function emptyDelta(summary: string): StoryStateDelta {
   };
 }
 
-/** Side tables still used by correction drafts / lessons on top of the versioned kernel. */
-function seedLegacyCorrectionTables(db: DB): void {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS correction_draft (
-      id TEXT PRIMARY KEY,
-      project_id TEXT NOT NULL,
-      chapter_number INTEGER NOT NULL,
-      strategy TEXT NOT NULL,
-      original_content TEXT NOT NULL,
-      revised_content TEXT NOT NULL,
-      original_score REAL,
-      revised_score REAL,
-      issues_json TEXT,
-      changes_json TEXT,
-      revised_result_json TEXT,
-      status TEXT NOT NULL,
-      engine TEXT,
-      job_id TEXT,
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    ) STRICT;
-
-    CREATE TABLE IF NOT EXISTS eval_history (
-      id TEXT PRIMARY KEY,
-      project_id TEXT NOT NULL,
-      chapter_number INTEGER NOT NULL,
-      attempt INTEGER NOT NULL,
-      verdict TEXT NOT NULL,
-      total_score REAL,
-      grade TEXT,
-      dimensions TEXT,
-      suggestions TEXT,
-      repetition TEXT,
-      model TEXT,
-      evaluator_model TEXT,
-      created_at TEXT NOT NULL
-    ) STRICT;
-
-    CREATE TABLE IF NOT EXISTS lesson_learned (
-      id TEXT PRIMARY KEY,
-      project_id TEXT,
-      pattern TEXT NOT NULL,
-      dimension TEXT,
-      avg_score REAL NOT NULL,
-      common_issues TEXT,
-      effective_fixes TEXT,
-      occurrence_count INTEGER NOT NULL,
-      updated_at TEXT NOT NULL
-    ) STRICT;
-  `);
-}
-
 function seedJob(db: DB): void {
   db.prepare(`
     INSERT INTO job (
@@ -207,7 +155,6 @@ function publishThreeChapters(db: DB): {
     createdAt: fixtureTime,
   });
   seedJob(db);
-  seedLegacyCorrectionTables(db);
   const lease = new ProjectWriteLeaseRepository(db).acquire({
     projectId: fixtureProjectId,
     jobId,

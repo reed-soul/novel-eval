@@ -98,14 +98,16 @@ export function generateRoutes(
       projectId: project.id,
       engine: engine.name,
       model: body.model ?? engine.name,
-    }, async ({ onProgress }: JobRunnerContext) => {
+    }, async (ctx: JobRunnerContext) => {
       const { bible, usage } = await writer.generateBible({
         engine,
         projectId: project.id,
         topic: body.topic,
         genre: body.genre,
         audience: body.audience,
-        onProgress,
+        onProgress: ctx.onProgress,
+        existingJobId: ctx.job.id,
+        ownerId: 'web',
       });
       updateProjectStatus(db, project.id, 'planning');
       return {
@@ -134,14 +136,16 @@ export function generateRoutes(
       projectId: id,
       engine: engine.name,
       model: body.model ?? engine.name,
-    }, async ({ onProgress }: JobRunnerContext) => {
+    }, async (ctx: JobRunnerContext) => {
       const { bible, usage } = await writer.generateBible({
         engine,
         projectId: id,
         topic: project.premise,
         genre: project.genreProfile,
         audience: project.targetAudience,
-        onProgress,
+        onProgress: ctx.onProgress,
+        existingJobId: ctx.job.id,
+        ownerId: 'web',
       });
       updateProjectStatus(db, id, 'planning');
       return {
@@ -184,14 +188,16 @@ export function generateRoutes(
       projectId: id,
       engine: engine.name,
       model: body.model ?? engine.name,
-    }, async ({ onProgress }: JobRunnerContext) => {
+    }, async (ctx: JobRunnerContext) => {
       const { outlines, usage } = await writer.generateBlueprint({
         engine,
         projectId: id,
         plot: plotArchitecture,
         characters,
         totalChapters,
-        onProgress,
+        onProgress: ctx.onProgress,
+        existingJobId: ctx.job.id,
+        ownerId: 'web',
       });
       updateProjectStatus(db, id, 'planning');
       return { chapters: outlines.length, usage };
@@ -265,7 +271,7 @@ export function generateRoutes(
     return c.json({ jobId, status: 'paused' });
   });
 
-  // ─── 继续 job（同 jobId 经 WriterApplication.resumeJobId）──────
+  // ─── 继续 job（同 jobId 经 WriterApplication.resumeJobId；配置绑定快照）──
   app.post('/jobs/:jobId/resume', async (c) => {
     const oldJobId = c.req.param('jobId');
     const oldRow = getJobRowDb(db, oldJobId);
@@ -275,8 +281,8 @@ export function generateRoutes(
     const project = getProject(db, oldRow.projectId);
     if (!project) return c.json({ error: '项目不存在' }, 404);
 
-    const body = await c.req.json<{ engineName?: string; model?: string; wordCount?: number }>()
-      .catch(() => ({} as { engineName?: string; model?: string; wordCount?: number }));
+    // Body overrides are ignored; resume binds to the stored job snapshot.
+    await c.req.json().catch(() => ({}));
 
     let snapshot;
     try {
@@ -300,10 +306,9 @@ export function generateRoutes(
     }
 
     const engine = resolveEngine({
-      engineName: body.engineName ?? snapshot.engine,
-      model: body.model ?? snapshot.model,
+      engineName: snapshot.engine,
+      model: snapshot.model,
     });
-    const wordCount = body.wordCount ?? snapshot.wordCount;
 
     const attached = attachJobRunner(db, oldJobId, async (ctx: JobRunnerContext) => {
       const { onProgress, control } = ctx;
@@ -311,15 +316,10 @@ export function generateRoutes(
       const { outcomes } = await writer.generateChapterRange({
         projectId: projectId(oldRow.projectId),
         from: snapshot.scope.from,
-        to: resumeTo,
+        to: snapshot.scope.to,
         resumeJobId: oldJobId,
         engine,
-        wordCount,
-        engineName: snapshot.engine,
-        model: snapshot.model,
-        qualityProfile: snapshot.qualityProfile,
-        promptVersion: snapshot.promptVersion,
-        budget: snapshot.budget,
+        wordCount: snapshot.wordCount,
         onProgress,
         control,
         ownerId: 'web',
