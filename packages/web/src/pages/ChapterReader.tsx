@@ -27,20 +27,25 @@ export function ChapterReader() {
   const saveEdit = async () => {
     if (!id || !n || !chapter) return;
     setSaving(true);
+    setError('');
     const res = await fetch(`/api/projects/${id}/chapters/${n}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: editContent }),
     });
-    const data = await res.json();
+    const data = await res.json() as { error?: string };
     setSaving(false);
-    if (data.error) { setError(data.error); return; }
+    if (!res.ok || data.error) {
+      // content-only edit is rejected until the client supplies state+delta (no empty shell).
+      setError(data.error ?? `保存失败（${res.status}）`);
+      return;
+    }
     setEditing(false);
-    load();  // 重新加载
+    load();
   };
 
   if (loading) return <div className="container loading">加载中...</div>;
-  if (error) return <div className="container error">错误：{error}</div>;
+  if (!chapter && error) return <div className="container error">错误：{error}</div>;
   if (!chapter) return <div className="container empty">章节不存在</div>;
 
   return (
@@ -73,6 +78,7 @@ export function ChapterReader() {
       {editing ? (
         <div className="card">
           <h2>编辑正文</h2>
+          {error && <div className="error" style={{ marginBottom: 12 }}>{error}</div>}
           <textarea
             value={editContent}
             onChange={(e) => setEditContent(e.target.value)}
@@ -80,7 +86,7 @@ export function ChapterReader() {
           />
           <div style={{ marginTop: 12, display: 'flex', gap: 12 }}>
             <button className="btn btn-primary" onClick={saveEdit} disabled={saving}>{saving ? '保存中...' : '保存'}</button>
-            <button className="btn" onClick={() => { setEditing(false); setEditContent(chapter.content ?? ''); }}>取消</button>
+            <button className="btn" onClick={() => { setEditing(false); setError(''); setEditContent(chapter.content ?? ''); }}>取消</button>
           </div>
         </div>
       ) : chapter.content ? (
@@ -91,7 +97,7 @@ export function ChapterReader() {
               onClick={() => navigate(`/projects/${id}/chapters/${chapter.number}/correction`)}
               title="根据历史评估经验，对本章做针对性局部修正"
             >🔧 按经验修正</button>
-            <button className="btn" onClick={() => setEditing(true)}>✏️ 编辑</button>
+            <button className="btn" onClick={() => { setError(''); setEditing(true); }}>✏️ 编辑</button>
           </div>
           <div className="chapter-content">{chapter.content}</div>
         </div>

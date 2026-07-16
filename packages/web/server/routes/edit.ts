@@ -4,6 +4,8 @@
  * 端点：
  *   PUT /api/projects/:id/chapters/:n
  *     body: { content, title?, state, delta, model?, promptVersion? }
+ *
+ * state + delta 必须由客户端显式提供；缺省不得写空壳 story state。
  */
 import { Hono } from 'hono';
 import {
@@ -15,26 +17,6 @@ import {
   type StoryStateDelta,
 } from '@novel-eval/writer';
 import { countChars } from '@novel-eval/shared';
-
-function emptyState(summary: string): StoryState {
-  return {
-    characters: [],
-    facts: [],
-    foreshadows: [],
-    timeline: [],
-    summary,
-  };
-}
-
-function emptyDelta(summary: string): StoryStateDelta {
-  return {
-    characterChanges: [],
-    factChanges: [],
-    foreshadowChanges: [],
-    timelineEvents: [],
-    summary,
-  };
-}
 
 function isStoryState(value: unknown): value is StoryState {
   if (typeof value !== 'object' || value === null) return false;
@@ -76,11 +58,14 @@ export function editRoutes(db: DB, application?: WriterApplication) {
       return c.json({ error: '正文不能为空' }, 400);
     }
 
+    if (!isStoryState(body.state) || !isStoryStateDelta(body.delta)) {
+      return c.json({
+        error: '编辑必须提供有效的 state 与 delta；禁止缺省写入空壳 story state',
+      }, 400);
+    }
+
     const outline = getOutline(db, id, n);
     if (!outline) return c.json({ error: '蓝图不存在' }, 404);
-
-    const state = isStoryState(body.state) ? body.state : emptyState(`手动编辑第 ${n} 章`);
-    const delta = isStoryStateDelta(body.delta) ? body.delta : emptyDelta(`手动编辑第 ${n} 章`);
 
     try {
       const published = await writer.publishChapterEdit({
@@ -88,8 +73,8 @@ export function editRoutes(db: DB, application?: WriterApplication) {
         outlinePosition: n,
         title: body.title?.trim() || outline.title,
         content: body.content,
-        state,
-        delta,
+        state: body.state,
+        delta: body.delta,
         model: body.model ?? 'manual-edit',
         promptVersion: body.promptVersion ?? 'state-v1',
         source: 'manual',

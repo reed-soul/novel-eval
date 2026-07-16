@@ -203,6 +203,66 @@ describe('PUT 章节编辑', () => {
     assert.equal(ch?.content, newContent);
   });
 
+  it('只传 content（ChapterReader 默认路径）返回 400，不改 active story state、不 invalidate 下游', async () => {
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+    seedOutline(db, p.id, 1, '第一章');
+    seedOutline(db, p.id, 2, '第二章');
+    const first = publishChapter(db, p.id, 1, '旧内容一', null);
+    publishChapter(db, p.id, 2, '旧内容二', storyStateRevisionId(`state-revision-${p.id}-1`));
+
+    const states = new StoryStateRepository(db);
+    const branded = projectId(p.id);
+    const before1 = states.getCurrentAtPosition(branded, 1);
+    const before2 = states.getCurrentAtPosition(branded, 2);
+    assert.ok(before1);
+    assert.ok(before2);
+    assert.equal(states.listStale(branded).length, 0);
+
+    const app = testApp(db);
+    const res = await app.fetch(new Request(`http://test/api/projects/${p.id}/chapters/1`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content: '这是编辑后的新正文内容，比原来更长。' }),
+    }));
+    assert.equal(res.status, 400);
+    const body = await res.json() as { error: string };
+    assert.match(body.error, /state|delta/i);
+
+    const chapters = new ChapterRepository(db);
+    const chapter = chapters.getByOutlinePosition(branded, 1);
+    assert.equal(chapter?.activeRevisionId, first.chapterRevisionId);
+    assert.equal(getChapter(db, p.id, 1)?.content, '旧内容一');
+
+    const after1 = states.getCurrentAtPosition(branded, 1);
+    const after2 = states.getCurrentAtPosition(branded, 2);
+    assert.equal(after1?.id, before1.id);
+    assert.equal(after1?.summary, before1.summary);
+    assert.equal(after2?.id, before2.id);
+    assert.equal(after2?.status, 'current');
+    assert.equal(states.listStale(branded).length, 0);
+  });
+
+  it('缺 delta 同样 400，不发布', async () => {
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+    seedOutline(db, p.id, 1, '第一章');
+    const first = publishChapter(db, p.id, 1, '旧内容', null);
+
+    const app = testApp(db);
+    const res = await app.fetch(new Request(`http://test/api/projects/${p.id}/chapters/1`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        content: '新正文内容足够长',
+        state: emptyState('只有 state'),
+      }),
+    }));
+    assert.equal(res.status, 400);
+    assert.equal(
+      new ChapterRepository(db).getByOutlinePosition(projectId(p.id), 1)?.activeRevisionId,
+      first.chapterRevisionId,
+    );
+  });
+
   it('空正文返回 400', async () => {
     const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     seedOutline(db, p.id, 1, 'A');

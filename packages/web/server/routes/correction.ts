@@ -24,26 +24,6 @@ import {
 import { createJob, hasActiveJobForProject, type JobRunnerContext } from '../jobs.ts';
 import type { EngineRegistry } from '../engine-registry.ts';
 
-function emptyState(summary: string): StoryState {
-  return {
-    characters: [],
-    facts: [],
-    foreshadows: [],
-    timeline: [],
-    summary,
-  };
-}
-
-function emptyDelta(summary: string): StoryStateDelta {
-  return {
-    characterChanges: [],
-    factChanges: [],
-    foreshadowChanges: [],
-    timelineEvents: [],
-    summary,
-  };
-}
-
 function isStoryState(value: unknown): value is StoryState {
   if (typeof value !== 'object' || value === null) return false;
   const record = value as Record<string, unknown>;
@@ -160,19 +140,18 @@ export function correctionRoutes(
       promptVersion?: string;
     }));
 
-    const state = isStoryState(body.state)
-      ? body.state
-      : emptyState(`修正采纳第 ${draft.chapterNumber} 章`);
-    const delta = isStoryStateDelta(body.delta)
-      ? body.delta
-      : emptyDelta(`修正采纳第 ${draft.chapterNumber} 章`);
+    if (!isStoryState(body.state) || !isStoryStateDelta(body.delta)) {
+      return c.json({
+        error: '采纳必须提供有效的 state 与 delta；禁止缺省写入空壳 story state',
+      }, 400);
+    }
 
     try {
       const result = await writer.adoptCorrectionDraft({
         projectId: projectId(id),
         draftId,
-        state,
-        delta,
+        state: body.state,
+        delta: body.delta,
         model: body.model ?? draft.engine ?? 'correction',
         promptVersion: body.promptVersion ?? 'state-v1',
         ownerId: 'web',
