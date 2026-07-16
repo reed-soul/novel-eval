@@ -143,7 +143,7 @@ export async function diagnoseChapter(projectId: string, chapterNumber: number):
 // ─── Job（写作任务 — 暂停/继续/取消）──────────────────────────────
 
 export type JobType = 'bible' | 'outline' | 'chapter' | 'correction';
-export type JobStatus = 'running' | 'paused' | 'done' | 'error' | 'cancelled';
+export type JobStatus = 'running' | 'paused' | 'completed' | 'failed' | 'cancelled';
 
 export interface JobInfo {
   id: string;

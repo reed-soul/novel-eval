@@ -13,7 +13,7 @@ export function ProgressPanel({ jobId, onDone, onPause, onResume, onCancel }: Pr
   const { events, status, result } = useJobProgress(jobId);
 
   useEffect(() => {
-    if (status === 'done' && onDone) {
+    if (status === 'completed' && onDone) {
       const timer = setTimeout(() => onDone(result), 100);
       return () => clearTimeout(timer);
     }
@@ -29,8 +29,8 @@ export function ProgressPanel({ jobId, onDone, onPause, onResume, onCancel }: Pr
           {status === 'running' && '⏳ 运行中'}
           {status === 'paused' && '🟡 已暂停'}
           {status === 'cancelled' && '⚪ 已取消'}
-          {status === 'done' && '✅'}
-          {status === 'error' && '❌'}
+          {status === 'completed' && '✅'}
+          {status === 'failed' && '❌'}
         </h2>
         {/* 控制按钮：只在运行中显示暂停/取消；暂停态显示继续/取消 */}
         <div style={{ display: 'flex', gap: 8 }}>
@@ -51,12 +51,12 @@ export function ProgressPanel({ jobId, onDone, onPause, onResume, onCancel }: Pr
             <span style={{ color: 'var(--muted)' }}>[{e.step}]</span> {e.msg}
           </div>
         ))}
-        {status === 'done' && result != null && (
+        {status === 'completed' && result != null && (
           <div style={{ color: 'var(--green)', marginTop: 8 }}>
             ✅ 完成：{JSON.stringify(result)}
           </div>
         )}
-        {status === 'error' && result != null && (
+        {status === 'failed' && result != null && (
           <div style={{ color: 'var(--red)', marginTop: 8 }}>❌ 失败：{String(result)}</div>
         )}
         {status === 'running' && events.length === 0 && (

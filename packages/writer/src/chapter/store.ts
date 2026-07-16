@@ -105,9 +105,9 @@ export function getChapter(db: DB, rawProjectId: string, number: number): Chapte
   const chapter = chapters.getByOutlinePosition(projectId(rawProjectId), number);
   if (!chapter || !chapter.activeRevisionId) return null;
   const active = chapters.getActiveRevision(chapter.id);
-  if (!active) return null;
+  if (!active || active.status !== 'published') return null;
   return {
-    id: chapter.id,
+    id: active.id,
     projectId: chapter.projectId,
     number,
     outlineId: chapter.outlineId,

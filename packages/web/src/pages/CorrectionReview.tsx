@@ -59,7 +59,7 @@ export function CorrectionReview() {
 
   // job 完成 → 拉草稿
   useEffect(() => {
-    if (status !== 'done' || !id || isNaN(chapterNumber)) return;
+    if (status !== 'completed' || !id || isNaN(chapterNumber)) return;
     getPendingCorrection(id, chapterNumber)
       .then((res) => {
         if (!res.draft) setDraftError('未找到修正草稿');
@@ -70,7 +70,7 @@ export function CorrectionReview() {
 
   // 错误结果（job 报错）
   useEffect(() => {
-    if (status === 'error' && result) setDraftError(String(result));
+    if (status === 'failed' && result) setDraftError(String(result));
   }, [status, result]);
 
   const onAdopt = async () => {
@@ -119,7 +119,7 @@ export function CorrectionReview() {
   }
 
   // 进行中
-  if (status !== 'done' && status !== 'error' && (jobId || status !== 'idle')) {
+  if (status !== 'completed' && status !== 'failed' && (jobId || status !== 'idle')) {
     return (
       <div className="container">
         <div className="page-header">

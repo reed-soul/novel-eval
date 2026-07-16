@@ -1,6 +1,11 @@
 /**
  * 质量门槛 — pass/revise/block 判定
  *
+ * 当前生成内核尚未接回质量门槛（WriterApplication / ChapterGenerationService
+ * 拒绝 qualityGate）。本模块保留只读评估能力：最近章窗口只读 active published
+ * revision（getRecentChapters → revision id），候选章以 chapter.id 作为
+ * chapterRevisionId 写入 eval_history。
+ *
  * 流程：
  *   1. 防重复检测（detectRepetition）→ severe 直接 block
  *   2. 调 eval 的 assessChapters（map + reduce）拿八维分数 + 等级
@@ -19,13 +24,6 @@ import { getRecentChapters, saveEvalHistory } from './store.ts';
 import { getRuntimeConfig } from '../runtime-config.ts';
 
 const RECENT_WINDOW = 5;
-
-// 质量门槛阈值从 writer.yml 加载（config.qualityGate），不再硬编码。
-// 保留 fallback 默认值（与 config 的默认值一致）。
-const FALLBACK_PASS_GRADE = 'B';
-const FALLBACK_PASS_MIN_SCORE = 75;
-const FALLBACK_MIN_DIM_SCORE = 65;
-const FALLBACK_BLOCK_GRADE = 'D';
 
 function gateConfig() {
   const cfg = getRuntimeConfig().qualityGate;
@@ -51,6 +49,7 @@ export interface QualityGateOptions {
   engine: AIAgentAdapter;
   db: DB;
   projectId: string;
+  /** Active / candidate chapter; `chapter.id` must be the chapter revision id. */
   chapter: ChapterContent;
   metadata: NovelMetadata;
   profile?: string;
@@ -64,6 +63,8 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
   const attempt = _attempt ?? 1;
   const model = engine.name;  // 引擎标识（供 eval_history 追溯）
   const totalUsage: TokenUsage = { ...zeroUsage };
+  // chapter.id is the published/candidate revision id (see getChapter / getRecentChapters).
+  const chapterRevisionId = chapter.id;
 
   // ─── 0. 内部辅助：持久化评估记录 ──────────────────────────────────
   const persistEval = (result: {
@@ -104,7 +105,7 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
 
   // ─── 2. eval 评估（map + reduce）────────────────────────────────
   onProgress?.(`质量门槛：评估第 ${chapter.number} 章...`);
-  const chapterInput = [{ id: `ch${chapter.number}`, title: chapter.title, content: chapter.content }];
+  const chapterInput = [{ id: chapterRevisionId, title: chapter.title, content: chapter.content }];
   const assessResult = await assessChapters({
     engine, chapters: chapterInput, profile, metadata,
     onProgress: (msg) => onProgress?.(`  ${msg}`),

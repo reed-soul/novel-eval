@@ -1,38 +1,60 @@
 /**
  * 生成路由 — POST 发起生成 + SSE 进度流 + job 状态查询 + 暂停/继续/取消
  *
- * 端点：
- *   POST /api/projects            新建项目（可选 generate bible）
- *   POST /api/projects/:id/bible/generate
- *   POST /api/projects/:id/outline/generate
- *   POST /api/projects/:id/chapters/generate
- *   POST /api/jobs/:jobId/pause           暂停（章节边界生效）
- *   POST /api/jobs/:jobId/resume          从断点继续（新建 job 续跑）
- *   POST /api/jobs/:jobId/cancel          取消
- *   GET  /api/jobs/:jobId                 查 job 状态
- *   GET  /api/jobs/:jobId/events          SSE 进度流（含 paused/cancelled 事件）
- *   GET  /api/projects/:id/active-job     查项目活动 job（running/paused）
+ * 全部写路径经 WriterApplication；禁止直连 SQL 与旧 store 可变写入。
  */
 import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
-import { createEngine, type NovelMetadata } from '@novel-eval/shared';
+import { createEngine } from '@novel-eval/shared';
 import {
-  type DB, loadWriterConfig,
-  createProject, getProject, updateProjectStatus,
-  generateBible, generateBlueprint, generateRange,
-  getBibleForChapter, countOutlines,
-  ensureChapterConsistency,
-  getActiveJob, getJobRow as getJobRowDb,
+  type DB,
+  loadWriterConfig,
+  createProject,
+  getProject,
+  updateProjectStatus,
+  getBibleForChapter,
+  countOutlines,
+  getActiveJob,
+  getJobRow as getJobRowDb,
+  readJobResumeConfig,
+  WriterApplication,
+  PlanningRepository,
+  projectId,
+  completeProjectIfFullyWritten,
+  finalizeExhaustedResumeJob,
   type CharacterDynamic,
+  type PlotArchitecture,
 } from '@novel-eval/writer';
 import {
-  createJob, getJob, hydrateJobFromDb, requestPause, requestCancel, hasActiveJobForProject,
+  createJob,
+  getJob,
+  hydrateJobFromDb,
+  requestPause,
+  requestCancel,
+  hasActiveJobForProject,
+  attachJobRunner,
+  jobToClientPayload,
   type JobRunnerContext,
 } from '../jobs.ts';
 import type { EngineRegistry } from '../engine-registry.ts';
 
-export function generateRoutes(db: DB, registry: EngineRegistry) {
+function readCharacterDynamics(bibleDoc: Record<string, unknown>): CharacterDynamic[] {
+  const dynamics = bibleDoc.characterDynamics;
+  if (!Array.isArray(dynamics)) return [];
+  return dynamics as CharacterDynamic[];
+}
+
+function readPlotArchitecture(value: PlotArchitecture): PlotArchitecture {
+  return value;
+}
+
+export function generateRoutes(
+  db: DB,
+  registry: EngineRegistry,
+  application?: WriterApplication,
+) {
   const app = new Hono();
+  const writer = application ?? new WriterApplication(db, { defaultOwnerId: 'web' });
 
   function resolveEngine(body: { engineName?: string; model?: string }) {
     if (body.engineName) {
@@ -55,7 +77,12 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
       engineName?: string;
       model?: string;
     }>();
-    const project = createProject(db, { title: body.title, genreProfile: body.genre, targetAudience: body.audience, premise: body.topic });
+    const project = createProject(db, {
+      title: body.title,
+      genreProfile: body.genre,
+      targetAudience: body.audience,
+      premise: body.topic,
+    });
 
     if (!body.generate) {
       return c.json({ project });
@@ -65,14 +92,29 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
       return c.json({ error: '项目有正在运行的任务，请稍后再试' }, 409);
     }
 
-    // 同时生成 bible
-    const jobId = createJob(db, { type: 'bible', projectId: project.id }, async ({ onProgress }: JobRunnerContext) => {
-      const { bible, usage } = await generateBible({
-        engine: resolveEngine(body), db, projectId: project.id,
-        topic: body.topic, genre: body.genre, audience: body.audience, onProgress,
+    const engine = resolveEngine(body);
+    const jobId = createJob(db, {
+      type: 'bible',
+      projectId: project.id,
+      engine: engine.name,
+      model: body.model ?? engine.name,
+    }, async ({ onProgress }: JobRunnerContext) => {
+      const { bible, usage } = await writer.generateBible({
+        engine,
+        projectId: project.id,
+        topic: body.topic,
+        genre: body.genre,
+        audience: body.audience,
+        onProgress,
       });
       updateProjectStatus(db, project.id, 'planning');
-      return { bible: { characters: bible.characterDynamics.length, foreshadows: bible.plotArchitecture.foreshadows.length }, usage };
+      return {
+        bible: {
+          characters: bible.characterDynamics.length,
+          foreshadows: bible.plotArchitecture.foreshadows.length,
+        },
+        usage,
+      };
     });
     return c.json({ project, jobId });
   });
@@ -84,14 +126,29 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
     if (!project) return c.json({ error: '项目不存在' }, 404);
     if (hasActiveJobForProject(id)) return c.json({ error: '项目有正在运行的任务' }, 409);
 
-    const body = await c.req.json<{ engineName?: string; model?: string }>().catch(() => ({}));
-    const jobId = createJob(db, { type: 'bible', projectId: id }, async ({ onProgress }: JobRunnerContext) => {
-      const { bible, usage } = await generateBible({
-        engine: resolveEngine(body), db, projectId: id,
-        topic: project.premise, genre: project.genreProfile, audience: project.targetAudience, onProgress,
+    const body = await c.req.json<{ engineName?: string; model?: string }>()
+      .catch(() => ({} as { engineName?: string; model?: string }));
+    const engine = resolveEngine(body);
+    const jobId = createJob(db, {
+      type: 'bible',
+      projectId: id,
+      engine: engine.name,
+      model: body.model ?? engine.name,
+    }, async ({ onProgress }: JobRunnerContext) => {
+      const { bible, usage } = await writer.generateBible({
+        engine,
+        projectId: id,
+        topic: project.premise,
+        genre: project.genreProfile,
+        audience: project.targetAudience,
+        onProgress,
       });
       updateProjectStatus(db, id, 'planning');
-      return { characters: bible.characterDynamics.length, foreshadows: bible.plotArchitecture.foreshadows.length, usage };
+      return {
+        characters: bible.characterDynamics.length,
+        foreshadows: bible.plotArchitecture.foreshadows.length,
+        usage,
+      };
     });
     return c.json({ jobId });
   });
@@ -103,19 +160,38 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
     if (!project) return c.json({ error: '项目不存在' }, 404);
     if (hasActiveJobForProject(id)) return c.json({ error: '项目有正在运行的任务' }, 409);
 
-    const body = await c.req.json<{ chapters?: number; engineName?: string; model?: string }>().catch(() => ({} as { chapters?: number; engineName?: string; model?: string }));
+    const body = await c.req.json<{ chapters?: number; engineName?: string; model?: string }>()
+      .catch(() => ({} as { chapters?: number; engineName?: string; model?: string }));
     const config = loadWriterConfig();
     const totalChapters = body.chapters ?? config.generation.defaultChapters;
 
-    const { plotArchitecture, characterState: _ } = getBibleForChapter(db, id);
-    void _;
-    const bibleRow = db.prepare('SELECT character_dynamics FROM bible WHERE project_id = ?').get(id) as { character_dynamics: string } | undefined;
-    if (!bibleRow?.character_dynamics) return c.json({ error: 'bible 未完成' }, 400);
-    const characters = (JSON.parse(bibleRow.character_dynamics) as { characters: CharacterDynamic[] }).characters;
+    let plotArchitecture: PlotArchitecture;
+    try {
+      const bible = getBibleForChapter(db, id);
+      plotArchitecture = readPlotArchitecture(bible.plotArchitecture);
+    } catch {
+      return c.json({ error: 'bible 未完成' }, 400);
+    }
 
-    const jobId = createJob(db, { type: 'outline', projectId: id }, async ({ onProgress }: JobRunnerContext) => {
-      const { outlines, usage } = await generateBlueprint({
-        engine: resolveEngine(body), db, projectId: id, plot: plotArchitecture, characters, totalChapters, onProgress,
+    const activeBible = new PlanningRepository(db).getActiveBibleForProject(projectId(id));
+    if (!activeBible) return c.json({ error: 'bible 未完成' }, 400);
+    const characters = readCharacterDynamics(activeBible.bible as Record<string, unknown>);
+    if (characters.length === 0) return c.json({ error: 'bible 未完成' }, 400);
+
+    const engine = resolveEngine(body);
+    const jobId = createJob(db, {
+      type: 'outline',
+      projectId: id,
+      engine: engine.name,
+      model: body.model ?? engine.name,
+    }, async ({ onProgress }: JobRunnerContext) => {
+      const { outlines, usage } = await writer.generateBlueprint({
+        engine,
+        projectId: id,
+        plot: plotArchitecture,
+        characters,
+        totalChapters,
+        onProgress,
       });
       updateProjectStatus(db, id, 'planning');
       return { chapters: outlines.length, usage };
@@ -131,32 +207,52 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
     if (countOutlines(db, id) === 0) return c.json({ error: '蓝图未生成' }, 400);
     if (hasActiveJobForProject(id)) return c.json({ error: '项目有正在运行的任务' }, 409);
 
-    const body = await c.req.json<{ from: number; to: number; qualityGate?: boolean; maxRevise?: number; engineName?: string; model?: string; wordCount?: number }>();
+    const body = await c.req.json<{
+      from: number;
+      to: number;
+      qualityGate?: boolean;
+      maxRevise?: number;
+      engineName?: string;
+      model?: string;
+      wordCount?: number;
+    }>();
+    if (body.qualityGate) {
+      return c.json({ error: 'qualityGate is unsupported until the chapter quality system lands' }, 400);
+    }
+
     const config = loadWriterConfig();
-    const metadata: NovelMetadata = { genre: project.genreProfile, targetAudience: project.targetAudience };
-    const useGate = !!body.qualityGate;
     const wordCount = body.wordCount ?? config.generation.chapterWordCount;
+    const engine = resolveEngine(body);
 
     const jobId = createJob(db, {
-      type: 'chapter', projectId: id,
-      fromChapter: body.from, toChapter: body.to,
-      qualityGate: useGate, maxRevise: body.maxRevise ?? 0,
+      type: 'chapter',
+      projectId: id,
+      fromChapter: body.from,
+      toChapter: body.to,
+      qualityGate: false,
+      maxRevise: 0,
+      engine: engine.name,
+      model: body.model ?? engine.name,
+      wordCount,
+      promptVersion: 'chapter-v1',
     }, async (ctx: JobRunnerContext) => {
       const { onProgress, control } = ctx;
       updateProjectStatus(db, id, 'writing');
-      const results = await generateRange({
-        engine: resolveEngine(body), db, projectId: id, from: body.from, to: body.to,
+      const { outcomes } = await writer.generateChapterRange({
+        projectId: projectId(id),
+        from: body.from,
+        to: body.to,
+        engine,
         wordCount,
-        qualityGate: useGate ? { metadata, maxRevise: body.maxRevise ?? 2 } : undefined,
+        existingJobId: ctx.job.id,
+        engineName: body.engineName ?? engine.name,
+        model: body.model ?? engine.name,
         onProgress,
-        control,  // 暂停/取消信号在此注入
+        control,
+        ownerId: 'web',
       });
-      const totalWords = results.reduce((s, r) => s + r.wordCount, 0);
-      const totalCost = results.reduce((s, r) => s + r.usage.costRmb, 0);
-      // 全部写完 → completed
-      const outlineMax = countOutlines(db, id);
-      if (body.to >= outlineMax) updateProjectStatus(db, id, 'completed');
-      return { chapters: results.length, totalWords, totalCost };
+      completeProjectIfFullyWritten(db, id);
+      return { chapters: outcomes.length };
     });
     return c.json({ jobId });
   });
@@ -169,7 +265,7 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
     return c.json({ jobId, status: 'paused' });
   });
 
-  // ─── 继续 job（从断点新建 job 续跑）────────────────────────────
+  // ─── 继续 job（同 jobId 经 WriterApplication.resumeJobId）──────
   app.post('/jobs/:jobId/resume', async (c) => {
     const oldJobId = c.req.param('jobId');
     const oldRow = getJobRowDb(db, oldJobId);
@@ -179,57 +275,60 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
     const project = getProject(db, oldRow.projectId);
     if (!project) return c.json({ error: '项目不存在' }, 404);
 
-    const body = await c.req.json<{ engineName?: string; model?: string; maxRevise?: number; wordCount?: number }>().catch(() => ({} as { engineName?: string; model?: string; maxRevise?: number; wordCount?: number }));
-    const config = loadWriterConfig();
-    const metadata: NovelMetadata = { genre: project.genreProfile, targetAudience: project.targetAudience };
-    const useGate = !!oldRow.qualityGate;
-    const maxRevise = body.maxRevise ?? oldRow.maxRevise;
-    const wordCount = body.wordCount ?? config.generation.chapterWordCount;
+    const body = await c.req.json<{ engineName?: string; model?: string; wordCount?: number }>()
+      .catch(() => ({} as { engineName?: string; model?: string; wordCount?: number }));
 
-    // 先把原 job 标 cancelled（如果还是 paused 的话），避免 active-job 查到两个
-    if (oldRow.status === 'paused') {
-      requestCancel(db, oldJobId);
+    let snapshot;
+    try {
+      snapshot = readJobResumeConfig(db, oldJobId);
+    } catch (error: unknown) {
+      return c.json({ error: error instanceof Error ? error.message : '无法读取 job 配置' }, 400);
     }
 
-    // 一致性检查 + 算真实 resume 起点（在创建 job 前计算）
-    const msgs: { step: string; msg: string }[] = [];
-    const collectProgress = (step: string, msg: string) => msgs.push({ step, msg });
-    const { from, to, finalizedGap } = await ensureChapterConsistency(
-      resolveEngine(body), db, oldRow.projectId, collectProgress,
-    );
-
-    if (from > to) {
-      updateProjectStatus(db, oldRow.projectId, 'completed');
-      return c.json({ error: '全部章节已完成' }, 400);
+    const resumeFrom = Math.max(snapshot.scope.from, snapshot.lastOutlinePosition + 1);
+    const resumeTo = snapshot.scope.to;
+    if (resumeFrom > resumeTo) {
+      const { projectCompleted } = finalizeExhaustedResumeJob(db, {
+        projectId: oldRow.projectId,
+        jobId: oldJobId,
+      });
+      return c.json({
+        error: '全部章节已完成',
+        jobId: oldJobId,
+        projectCompleted,
+      }, 400);
     }
 
-    const jobId = createJob(db, {
-      type: 'chapter', projectId: oldRow.projectId,
-      fromChapter: from, toChapter: to,
-      qualityGate: useGate, maxRevise,
-    }, async (ctx: JobRunnerContext) => {
+    const engine = resolveEngine({
+      engineName: body.engineName ?? snapshot.engine,
+      model: body.model ?? snapshot.model,
+    });
+    const wordCount = body.wordCount ?? snapshot.wordCount;
+
+    const attached = attachJobRunner(db, oldJobId, async (ctx: JobRunnerContext) => {
       const { onProgress, control } = ctx;
       updateProjectStatus(db, oldRow.projectId, 'writing');
-      
-      // 补发 consistency 检查日志
-      msgs.forEach(m => onProgress(m.step, m.msg));
-      if (finalizedGap > 0) {
-        onProgress('resume', `已补全 ${finalizedGap} 章半成品叙事状态`);
-      }
-
-      const results = await generateRange({
-        engine: resolveEngine(body), db, projectId: oldRow.projectId, from, to,
+      const { outcomes } = await writer.generateChapterRange({
+        projectId: projectId(oldRow.projectId),
+        from: snapshot.scope.from,
+        to: resumeTo,
+        resumeJobId: oldJobId,
+        engine,
         wordCount,
-        qualityGate: useGate ? { metadata, maxRevise: maxRevise || 2 } : undefined,
+        engineName: snapshot.engine,
+        model: snapshot.model,
+        qualityProfile: snapshot.qualityProfile,
+        promptVersion: snapshot.promptVersion,
+        budget: snapshot.budget,
         onProgress,
         control,
+        ownerId: 'web',
       });
-      const totalWords = results.reduce((s, r) => s + r.wordCount, 0);
-      const totalCost = results.reduce((s, r) => s + r.usage.costRmb, 0);
-      if (to >= countOutlines(db, oldRow.projectId)) updateProjectStatus(db, oldRow.projectId, 'completed');
-      return { chapters: results.length, totalWords, totalCost };
+      completeProjectIfFullyWritten(db, oldRow.projectId);
+      return { chapters: outcomes.length, resumedFrom: oldJobId };
     });
-    return c.json({ jobId, resumedFrom: oldJobId });
+    if (!attached) return c.json({ error: '无法恢复 job' }, 400);
+    return c.json({ jobId: oldJobId, resumedFrom: oldJobId });
   });
 
   // ─── 取消 job ──────────────────────────────────────────────────
@@ -245,36 +344,27 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
     const id = c.req.param('id');
     const row = getActiveJob(db, id);
     if (!row) return c.json({ job: null });
-    return c.json({ job: row });
+    return c.json({ job: jobToClientPayload(row) });
   });
 
   // ─── job 状态查询 ──────────────────────────────────────────────
   app.get('/jobs/:jobId', (c) => {
     const jobId = c.req.param('jobId');
-    // 优先内存（有实时状态），否则 DB
     const job = getJob(jobId) ?? hydrateJobFromDb(db, jobId);
     if (!job) {
       const row = getJobRowDb(db, jobId);
       if (!row) return c.json({ error: 'job 不存在' }, 404);
-      return c.json({ id: row.id, type: row.type, projectId: row.projectId, status: row.status, lastChapter: row.lastChapter, fromChapter: row.fromChapter, toChapter: row.toChapter, result: row.result, error: row.error });
+      return c.json(jobToClientPayload(row));
     }
-    return c.json({
-      id: job.id, type: job.type, projectId: job.projectId, status: job.status,
-      events: job.events.length,
-      lastChapter: job.lastChapter,
-      fromChapter: job.fromChapter, toChapter: job.toChapter,
-      result: job.result, error: job.error,
-    });
+    return c.json(jobToClientPayload(job));
   });
 
   // ─── SSE 进度流 ────────────────────────────────────────────────
   app.get('/jobs/:jobId/events', (c) => {
     const jobId = c.req.param('jobId');
-    // 内存 job 优先；进程重启后从 DB hydrate（只能拿到非 running 的历史态）
     let job = getJob(jobId);
     if (!job) job = hydrateJobFromDb(db, jobId);
     if (!job) {
-      // 最后兜底：DB 有记录但没 hydrate（比如 running 态重启后）→ 推终态
       const row = getJobRowDb(db, jobId);
       if (!row) return c.json({ error: 'job 不存在' }, 404);
       return streamSSE(c, async (stream) => {
@@ -282,29 +372,34 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
           await stream.writeSSE({ data: JSON.stringify({ event: 'paused' }) });
         } else if (row.status === 'cancelled') {
           await stream.writeSSE({ data: JSON.stringify({ event: 'cancelled' }) });
-        } else if (row.status === 'done') {
-          await stream.writeSSE({ data: JSON.stringify({ event: 'done', result: row.result }) });
-        } else if (row.status === 'error') {
-          await stream.writeSSE({ data: JSON.stringify({ event: 'error', error: row.error }) });
+        } else if (row.status === 'completed') {
+          await stream.writeSSE({
+            data: JSON.stringify({
+              event: 'completed',
+              result: jobToClientPayload(row).result,
+            }),
+          });
+        } else if (row.status === 'failed') {
+          await stream.writeSSE({
+            data: JSON.stringify({ event: 'failed', error: row.errorType }),
+          });
         }
       });
     }
 
     return streamSSE(c, async (stream) => {
-      // 推历史 events（客户端可能晚连接）
       for (const evt of job.events) {
         await stream.writeSSE({ data: JSON.stringify(evt) });
       }
 
-      // 注册监听器
       const onProgress = (evt: { step: string; msg: string; ts: number }) => {
         stream.writeSSE({ data: JSON.stringify(evt) }).catch(() => {});
       };
-      const onDone = (result: unknown) => {
-        stream.writeSSE({ data: JSON.stringify({ event: 'done', result }) }).catch(() => {});
+      const onCompleted = (result: unknown) => {
+        stream.writeSSE({ data: JSON.stringify({ event: 'completed', result }) }).catch(() => {});
       };
-      const onError = (error: string) => {
-        stream.writeSSE({ data: JSON.stringify({ event: 'error', error }) }).catch(() => {});
+      const onFailed = (error: string) => {
+        stream.writeSSE({ data: JSON.stringify({ event: 'failed', error }) }).catch(() => {});
       };
       const onPaused = () => {
         stream.writeSSE({ data: JSON.stringify({ event: 'paused' }) }).catch(() => {});
@@ -314,32 +409,34 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
       };
 
       job.emitter.on('progress', onProgress);
-      job.emitter.once('done', onDone);
-      job.emitter.once('error', onError);
+      job.emitter.once('completed', onCompleted);
+      job.emitter.once('failed', onFailed);
       job.emitter.once('paused', onPaused);
       job.emitter.once('cancelled', onCancelled);
 
-      // 在注册监听器之后，再次检查状态，避免竞态条件
       if (job.status !== 'running') {
-        if (job.status === 'done') await stream.writeSSE({ data: JSON.stringify({ event: 'done', result: job.result }) });
-        else if (job.status === 'error') await stream.writeSSE({ data: JSON.stringify({ event: 'error', error: job.error }) });
-        else if (job.status === 'paused') await stream.writeSSE({ data: JSON.stringify({ event: 'paused' }) });
-        else if (job.status === 'cancelled') await stream.writeSSE({ data: JSON.stringify({ event: 'cancelled' }) });
-        
-        // 既然已经非 running，无需继续监听
+        if (job.status === 'completed') {
+          await stream.writeSSE({ data: JSON.stringify({ event: 'completed', result: job.result }) });
+        } else if (job.status === 'failed') {
+          await stream.writeSSE({ data: JSON.stringify({ event: 'failed', error: job.error }) });
+        } else if (job.status === 'paused') {
+          await stream.writeSSE({ data: JSON.stringify({ event: 'paused' }) });
+        } else if (job.status === 'cancelled') {
+          await stream.writeSSE({ data: JSON.stringify({ event: 'cancelled' }) });
+        }
+
         job.emitter.off('progress', onProgress);
-        job.emitter.off('done', onDone);
-        job.emitter.off('error', onError);
+        job.emitter.off('completed', onCompleted);
+        job.emitter.off('failed', onFailed);
         job.emitter.off('paused', onPaused);
         job.emitter.off('cancelled', onCancelled);
         return;
       }
 
-      // 等待流关闭（客户端断开）再清理
       stream.onAbort(() => {
         job.emitter.off('progress', onProgress);
-        job.emitter.off('done', onDone);
-        job.emitter.off('error', onError);
+        job.emitter.off('completed', onCompleted);
+        job.emitter.off('failed', onFailed);
         job.emitter.off('paused', onPaused);
         job.emitter.off('cancelled', onCancelled);
       });

@@ -55,6 +55,14 @@ export type {
   StoryStateDelta,
   TimelineEvent,
 } from './chapter/types.ts';
+export type {
+  Bible,
+  CharacterDynamic,
+  CharacterState as BibleCharacterState,
+  PlotArchitecture,
+} from './bible/types.ts';
+export type { GenerateBibleResult } from './bible/generator.ts';
+export type { GenerateBlueprintResult } from './chapter/blueprint.ts';
 export {
   createJobRow,
   getJobRow,
@@ -78,6 +86,59 @@ export {
   type GenerateChapterRangeResult,
   type PublishChapterEditInput,
   type RebuildStoryStateInput,
+  type AdoptCorrectionDraftInput,
 } from './services/writer-application.ts';
 export type { StaleImpact, PublishResult } from './services/chapter-publication-service.ts';
 export type { RebuildResult } from './services/state-rebuild-service.ts';
+export { ChapterRepository } from './repositories/chapter-repository.ts';
+export { PlanningRepository } from './repositories/planning-repository.ts';
+export { StoryStateRepository } from './repositories/story-state-repository.ts';
+export {
+  ProjectWriteLeaseRepository,
+  type ProjectWriteLease,
+} from './repositories/lease-repository.ts';
+export {
+  getBibleForChapter,
+  getOutline,
+  getAllOutlines,
+  countOutlines,
+  markOutlineWritten,
+  getChapter,
+  countChapters,
+  getRecentChapters,
+  getNarrativeState,
+  // Removed mutation paths — exported only so callers fail loudly instead of silently no-oping.
+  saveChapter,
+  deleteChapter,
+  saveOutlines,
+  saveNarrativeState,
+  updateCharacterState,
+  getChapterScores,
+  getEvalHistory,
+  getAllEvalHistory,
+  getLessons,
+  getPendingDraft,
+  getDraft,
+  saveCorrectionDraft,
+  updateDraftStatus,
+  type CorrectionStrategy,
+  type CorrectionDraft,
+  type EvalHistoryRecord,
+  type LessonLearned,
+} from './chapter/store.ts';
+export {
+  correctChapter,
+  applyCorrectionDraft,
+  discardCorrectionDraft,
+  diagnoseChapter,
+  type ApplyCorrectionDraftResult,
+} from './chapter/corrector.ts';
+export {
+  JobPausedError,
+  JobCancelledError,
+} from './chapter/generator.ts';
+export {
+  completeProjectIfFullyWritten,
+  finalizeExhaustedResumeJob,
+  isProjectFullyWritten,
+} from './project-completion.ts';

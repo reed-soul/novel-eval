@@ -67,7 +67,7 @@ export function projectRoutes(db: DB) {
       const archive = await zip.generateAsync({ type: 'uint8array' });
       c.header('Content-Type', 'application/zip');
       c.header('Content-Disposition', `attachment; filename="${encodeURIComponent(project.title)}_chapters.zip"`);
-      return c.body(archive as any);
+      return c.body(Buffer.from(archive));
     } else if (format === 'merge-md') {
       let md = `# ${project.title}\n\n`;
       for (const ch of chapters) {

@@ -4,12 +4,12 @@ export interface ProgressEvent {
   step: string;
   msg: string;
   ts?: number;
-  event?: 'done' | 'error' | 'paused' | 'cancelled';
+  event?: 'completed' | 'failed' | 'paused' | 'cancelled' | 'done' | 'error';
   result?: unknown;
   error?: string;
 }
 
-export type JobProgressStatus = 'idle' | 'running' | 'done' | 'error' | 'paused' | 'cancelled';
+export type JobProgressStatus = 'idle' | 'running' | 'completed' | 'failed' | 'paused' | 'cancelled';
 
 const MAX_RETRIES = 3;
 
@@ -45,13 +45,13 @@ export function useJobProgress(jobId: string | null) {
 
       es.onmessage = (e) => {
         const data = JSON.parse(e.data) as ProgressEvent;
-        if (data.event === 'done') {
-          setStatus('done');
+        if (data.event === 'completed' || data.event === 'done') {
+          setStatus('completed');
           setResult(data.result);
           retryRef.current = 0;
           close();
-        } else if (data.event === 'error') {
-          setStatus('error');
+        } else if (data.event === 'failed' || data.event === 'error') {
+          setStatus('failed');
           setResult(data.error);
           retryRef.current = 0;
           close();

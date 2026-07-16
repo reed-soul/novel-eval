@@ -9,6 +9,10 @@ import type { AIAgentAdapter } from '@novel-eval/shared';
 import { countChars } from '@novel-eval/shared';
 
 import {
+  applyCorrectionDraft,
+  type ApplyCorrectionDraftResult,
+} from '../chapter/corrector.ts';
+import {
   generateBible as generateBibleImpl,
   type GenerateBibleOptions,
   type GenerateBibleResult,
@@ -84,6 +88,11 @@ export interface GenerateChapterRangeInput {
   wordCount: number;
   /** Resume a paused job in-place (same jobId); cancels other active jobs first when omitted. */
   resumeJobId?: string;
+  /**
+   * Use a pre-created running job row (Web createJob). Mutually exclusive with resumeJobId.
+   * Skips createJobRow so the facade and the SSE tracker share one job id.
+   */
+  existingJobId?: string;
   ownerId?: string;
   engineName?: string;
   model?: string;
@@ -100,6 +109,18 @@ export interface GenerateChapterRangeInput {
     title: string;
     chapterRevisionId: ChapterRevisionId;
   }) => Promise<ExtractStoryStateResult>;
+}
+
+export interface AdoptCorrectionDraftInput {
+  projectId: ProjectId;
+  draftId: string;
+  state: StoryState;
+  delta: StoryStateDelta;
+  model: string;
+  promptVersion: string;
+  ownerId?: string;
+  ttlMs?: number;
+  extractState?: (input: RebuildExtractInput) => Promise<ExtractStoryStateResult>;
 }
 
 export interface GenerateChapterRangeResult {
@@ -369,6 +390,16 @@ export class WriterApplication {
       this.cancelOtherActiveJobs(input.projectId, input.resumeJobId);
       updateJobStatus(this.db, input.resumeJobId, 'running');
       jobId = input.resumeJobId;
+    } else if (input.existingJobId) {
+      const existing = getJobRow(this.db, input.existingJobId);
+      if (!existing || existing.projectId !== input.projectId) {
+        throw new Error(`Job ${input.existingJobId} not found for project`);
+      }
+      if (existing.status !== 'running') {
+        throw new Error(`Job ${input.existingJobId} is ${existing.status}, expected running`);
+      }
+      this.cancelOtherActiveJobs(input.projectId, input.existingJobId);
+      jobId = input.existingJobId;
     } else {
       this.cancelOtherActiveJobs(input.projectId, null);
       jobId = createJobRow(this.db, {
@@ -472,6 +503,50 @@ export class WriterApplication {
       if (typeof row !== 'object' || row === null || !('id' in row)) continue;
       const jobId = String((row as { id: string }).id);
       updateJobStatus(this.db, jobId, 'cancelled');
+    }
+  }
+
+  async adoptCorrectionDraft(input: AdoptCorrectionDraftInput): Promise<ApplyCorrectionDraftResult> {
+    const ownerId = input.ownerId ?? this.defaultOwnerId;
+    const ttlMs = input.ttlMs ?? this.leaseTtlMs;
+    const jobId = createJobRow(this.db, {
+      projectId: input.projectId,
+      type: 'correction',
+      scope: { from: null, to: null },
+      engine: 'correction',
+      model: input.model,
+      wordCount: 0,
+      promptVersion: input.promptVersion,
+    });
+    const lease = this.leases.acquire({
+      projectId: input.projectId,
+      jobId,
+      ownerId,
+      ttlMs,
+      now: this.now(),
+    });
+    try {
+      const result = await applyCorrectionDraft({
+        db: this.db,
+        draftId: input.draftId,
+        lease,
+        state: input.state,
+        delta: input.delta,
+        model: input.model,
+        promptVersion: input.promptVersion,
+        extractState: input.extractState,
+        now: this.now,
+      });
+      updateJobStatus(this.db, jobId, 'completed');
+      return result;
+    } catch (error: unknown) {
+      updateJobStatus(this.db, jobId, 'failed', {
+        errorType: error instanceof Error ? error.name : 'Error',
+        error: error instanceof Error ? error.message : 'adopt correction failed',
+      });
+      throw error;
+    } finally {
+      this.leases.release({ leaseId: lease.id, ownerId });
     }
   }
 }
