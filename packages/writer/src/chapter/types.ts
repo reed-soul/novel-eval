@@ -2,6 +2,27 @@
  * Chapter 类型定义 — M2 章节蓝图 + 正文 + 叙事状态
  */
 
+export type {
+  Chapter,
+  ChapterCandidate,
+  ChapterRevision,
+  ChapterRevisionSource,
+  ChapterRevisionStatus,
+  SaveChapterCandidateInput,
+} from '../domain/chapter.ts';
+export type {
+  CharacterChange,
+  CharacterPatch,
+  CharacterState as VersionedCharacterState,
+  FactChange,
+  ForeshadowChange,
+  ForeshadowState,
+  StoryFact,
+  StoryState,
+  StoryStateDelta,
+  TimelineEvent,
+} from '../domain/story-state.ts';
+
 // ─── 蓝图中间产物：段落（beat）──────────────────────────────────
 // 第一层拆分（幕→段落）的产物，强制节奏骨架。
 

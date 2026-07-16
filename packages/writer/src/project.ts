@@ -1,78 +1,87 @@
-/**
- * 项目 CRUD — 一本书一个项目
- *
- * 单库设计：所有项目存在 data/writer/writer.db 的 project 表。
- */
 import { randomUUID } from 'node:crypto';
 import type { DB } from './db.ts';
+import { projectId, type ProjectId } from './domain/ids.ts';
+import { ProjectRepository } from './repositories/project-repository.ts';
+
+export type PersistedProjectStatus =
+  | 'draft'
+  | 'planning'
+  | 'writing'
+  | 'completed'
+  | 'archived';
 
 export type ProjectStatus =
-  | 'initialized'   // 项目已建，bible 未生成
-  | 'bible_done'    // bible 完成，大纲未生成（M2）
-  | 'outlining'     // 大纲生成中（M2）
-  | 'writing'       // 正在写章节（M2）
-  | 'completed';    // 全部完成
+  | PersistedProjectStatus
+  | 'initialized'
+  | 'bible_done'
+  | 'outlining';
 
 export interface Project {
-  id: string;
+  id: ProjectId;
   title: string;
-  genre: string;
-  audience: string;
-  topic: string;
-  status: ProjectStatus;
+  genreProfile: string;
+  targetAudience: string;
+  premise: string;
+  status: PersistedProjectStatus;
+  activeBibleRevisionId: string | null;
   createdAt: string;
   updatedAt: string;
-}
-
-interface ProjectRow {
-  id: string;
-  title: string;
+  /** @deprecated compatibility alias for genreProfile */
   genre: string;
+  /** @deprecated compatibility alias for targetAudience */
   audience: string;
+  /** @deprecated compatibility alias for premise */
   topic: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
 }
 
-function rowToProject(row: ProjectRow): Project {
-  return {
-    id: row.id,
-    title: row.title,
-    genre: row.genre,
-    audience: row.audience,
-    topic: row.topic,
-    status: row.status as ProjectStatus,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  };
+function persistedStatus(status: ProjectStatus): PersistedProjectStatus {
+  switch (status) {
+    case 'initialized':
+      return 'draft';
+    case 'bible_done':
+    case 'outlining':
+      return 'planning';
+    case 'draft':
+    case 'planning':
+    case 'writing':
+    case 'completed':
+    case 'archived':
+      return status;
+    default: {
+      const exhaustive: never = status;
+      return exhaustive;
+    }
+  }
 }
 
 export function createProject(
   db: DB,
   opts: { title: string; genre: string; audience: string; topic: string },
 ): Project {
-  const id = randomUUID();
+  const id = projectId(randomUUID());
   const now = new Date().toISOString();
-  db.prepare(
-    `INSERT INTO project (id, title, genre, audience, topic, status, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, 'initialized', ?, ?)`,
-  ).run(id, opts.title, opts.genre, opts.audience, opts.topic, now, now);
-  return { id, ...opts, status: 'initialized', createdAt: now, updatedAt: now };
+  return new ProjectRepository(db).create({
+    id,
+    title: opts.title,
+    genreProfile: opts.genre,
+    targetAudience: opts.audience,
+    premise: opts.topic,
+    createdAt: now,
+  });
 }
 
-export function getProject(db: DB, projectId: string): Project | null {
-  const row = db.prepare('SELECT * FROM project WHERE id = ?').get(projectId) as ProjectRow | undefined;
-  return row ? rowToProject(row) : null;
+export function getProject(db: DB, rawProjectId: string): Project | null {
+  return new ProjectRepository(db).get(projectId(rawProjectId));
 }
 
 export function listProjects(db: DB): Project[] {
-  // rowid 是 SQLite 隐式自增主键，保证插入顺序的稳定 tiebreak（created_at 同毫秒时按插入先后）
-  const rows = db.prepare('SELECT * FROM project ORDER BY created_at DESC, rowid DESC').all() as ProjectRow[];
-  return rows.map(rowToProject);
+  return new ProjectRepository(db).list();
 }
 
-export function updateProjectStatus(db: DB, projectId: string, status: ProjectStatus): void {
-  const now = new Date().toISOString();
-  db.prepare('UPDATE project SET status = ?, updated_at = ? WHERE id = ?').run(status, now, projectId);
+export function updateProjectStatus(db: DB, rawProjectId: string, status: ProjectStatus): void {
+  new ProjectRepository(db).updateStatus(
+    projectId(rawProjectId),
+    persistedStatus(status),
+    new Date().toISOString(),
+  );
 }
