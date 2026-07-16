@@ -27,6 +27,7 @@ import {
   numberField,
   oneOf,
   parseJson,
+  parseJsonValue,
   persistedRecord,
   stringField,
 } from './validation.ts';
@@ -324,6 +325,8 @@ export class StoryStateRepository {
   constructor(private readonly db: DB) {}
 
   save(revision: StoryStateRevision): StoryStateRevision {
+    const state = parseJsonValue(revision.state, 'story state');
+    const delta = parseJsonValue(revision.delta, 'story state delta');
     this.db.prepare(`
       INSERT INTO story_state_revision (
         id, project_id, chapter_id, chapter_revision_id, previous_state_revision_id,
@@ -337,8 +340,8 @@ export class StoryStateRepository {
       revision.previousStateRevisionId,
       revision.sequence,
       revision.status,
-      JSON.stringify(revision.state),
-      JSON.stringify(revision.delta),
+      JSON.stringify(state),
+      JSON.stringify(delta),
       revision.summary,
       revision.model,
       revision.promptVersion,
@@ -365,5 +368,30 @@ export class StoryStateRepository {
       LIMIT 1
     `).get(id);
     return row === undefined ? null : readRevision(row);
+  }
+
+  getCurrentAtPosition(id: ProjectId, position: number): StoryStateRevision | null {
+    const row: unknown = this.db.prepare(`
+      SELECT s.*
+      FROM story_state_revision s
+      JOIN chapter c ON c.id = s.chapter_id
+      JOIN chapter_outline o ON o.id = c.outline_id
+      WHERE s.project_id = ?
+        AND o.position = ?
+        AND s.status = 'current'
+      LIMIT 1
+    `).get(id, position);
+    return row === undefined ? null : readRevision(row);
+  }
+
+  invalidateCurrentFromPosition(id: ProjectId, position: number): number {
+    const result = this.db.prepare(`
+      UPDATE story_state_revision
+      SET status = 'stale'
+      WHERE project_id = ?
+        AND status = 'current'
+        AND sequence >= ?
+    `).run(id, position);
+    return result.changes;
   }
 }

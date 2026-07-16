@@ -1,6 +1,7 @@
 import type { DB } from '../db.ts';
 import type {
   ChapterCandidate,
+  ChapterRevision,
   SaveChapterCandidateInput,
 } from '../domain/chapter.ts';
 import {
@@ -8,6 +9,8 @@ import {
   chapterRevisionId,
   outlineId,
   projectId,
+  type ChapterId,
+  type ChapterRevisionId,
 } from '../domain/ids.ts';
 import {
   nullableStringField,
@@ -88,7 +91,7 @@ export class ChapterRepository {
     return candidate;
   }
 
-  getRevision(id: ReturnType<typeof chapterRevisionId>): ChapterCandidate | null {
+  getRevision(id: ChapterRevisionId): ChapterCandidate | null {
     const row: unknown = this.db.prepare(`
       SELECT
         c.id AS chapter_id,
@@ -111,5 +114,54 @@ export class ChapterRepository {
       WHERE r.id = ?
     `).get(id);
     return row === undefined ? null : readCandidate(row);
+  }
+
+  getActiveRevision(id: ChapterId): ChapterRevision | null {
+    const row: unknown = this.db.prepare(`
+      SELECT
+        c.id AS chapter_id,
+        c.project_id,
+        c.outline_id,
+        c.active_revision_id,
+        c.created_at AS chapter_created_at,
+        r.id AS revision_id,
+        r.revision_number,
+        r.source,
+        r.parent_revision_id,
+        r.title,
+        r.content,
+        r.word_count,
+        r.status AS revision_status,
+        r.generation_run_id,
+        r.created_at AS revision_created_at
+      FROM chapter c
+      JOIN chapter_revision r ON r.id = c.active_revision_id
+      WHERE c.id = ?
+    `).get(id);
+    return row === undefined ? null : readCandidate(row).revision;
+  }
+
+  publishRevision(id: ChapterRevisionId): ChapterRevision {
+    const updated = this.db.prepare(`
+      UPDATE chapter_revision
+      SET status = 'published'
+      WHERE id = ? AND status = 'draft'
+    `).run(id);
+    if (updated.changes !== 1) {
+      throw new Error(`Chapter revision ${id} is not a draft candidate`);
+    }
+
+    const activated = this.db.prepare(`
+      UPDATE chapter
+      SET active_revision_id = ?
+      WHERE id = (SELECT chapter_id FROM chapter_revision WHERE id = ?)
+    `).run(id, id);
+    if (activated.changes !== 1) {
+      throw new Error(`Chapter revision ${id} has no chapter`);
+    }
+
+    const candidate = this.getRevision(id);
+    if (!candidate) throw new Error(`Chapter revision ${id} was not published`);
+    return candidate.revision;
   }
 }
