@@ -542,6 +542,7 @@ export class WriterApplication {
 
     let resumeJobId: string | undefined;
     let existingJobId: string | undefined;
+    let resumedUsage: TokenUsage | null = null;
 
     if (input.resumeJobId) {
       const existing = getJobRow(this.db, input.resumeJobId);
@@ -562,6 +563,7 @@ export class WriterApplication {
       promptVersion = snapshot.promptVersion;
       budget = snapshot.budget ?? {};
       resumeJobId = input.resumeJobId;
+      resumedUsage = readPersistedUsage(existing.usage);
     } else if (input.existingJobId) {
       const existing = getJobRow(this.db, input.existingJobId);
       if (!existing || existing.projectId !== input.projectId) {
@@ -635,7 +637,9 @@ export class WriterApplication {
     }
 
     const outcomes: GenerateChapterOutcome[] = [];
-    const cumulativeUsage: TokenUsage = { ...zeroUsage };
+    const cumulativeUsage: TokenUsage = resumedUsage !== null
+      ? { ...resumedUsage }
+      : { ...zeroUsage };
     const maxCostRmb = readMaxCostRmb(budget);
     try {
       for (const position of approvedPositions) {
@@ -800,4 +804,27 @@ function readMaxCostRmb(budget: JsonValue): number | null {
     return null;
   }
   return value;
+}
+
+function readPersistedUsage(usage: JsonValue | null): TokenUsage {
+  const total: TokenUsage = { ...zeroUsage };
+  if (typeof usage !== 'object' || usage === null || Array.isArray(usage)) {
+    return total;
+  }
+  if (typeof usage.inputTokens === 'number' && Number.isFinite(usage.inputTokens)) {
+    total.inputTokens = usage.inputTokens;
+  }
+  if (typeof usage.outputTokens === 'number' && Number.isFinite(usage.outputTokens)) {
+    total.outputTokens = usage.outputTokens;
+  }
+  if (typeof usage.costRmb === 'number' && Number.isFinite(usage.costRmb)) {
+    total.costRmb = usage.costRmb;
+  }
+  if (typeof usage.model === 'string') {
+    total.model = usage.model;
+  }
+  if (typeof usage.durationMs === 'number' && Number.isFinite(usage.durationMs)) {
+    total.durationMs = usage.durationMs;
+  }
+  return total;
 }
