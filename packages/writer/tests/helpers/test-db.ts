@@ -13,8 +13,11 @@ export function createTestDb(): { db: DB; path: string; cleanup(): void } {
     db,
     path,
     cleanup(): void {
-      db.close();
-      rmSync(directory, { recursive: true, force: true });
+      try {
+        db.close();
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
     },
   };
 }

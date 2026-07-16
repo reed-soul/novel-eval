@@ -9,10 +9,8 @@ interface Migration {
   sql: string;
 }
 
-function loadMigrations(): Migration[] {
-  const directory = dirname(fileURLToPath(import.meta.url));
-
-  return readdirSync(directory)
+function loadMigrations(directory: string): Migration[] {
+  const migrations = readdirSync(directory)
     .filter((filename) => /^\d+_.+\.sql$/.test(filename))
     .map((filename) => {
       const version = Number.parseInt(filename.slice(0, filename.indexOf('_')), 10);
@@ -25,9 +23,21 @@ function loadMigrations(): Migration[] {
       };
     })
     .sort((left, right) => left.version - right.version);
+
+  const versions = new Set<number>();
+  for (const migration of migrations) {
+    if (versions.has(migration.version)) {
+      throw new Error(`Duplicate migration version ${migration.version}`);
+    }
+    versions.add(migration.version);
+  }
+
+  return migrations;
 }
 
-export function runMigrations(db: DB): void {
+export function runMigrations(db: DB, options?: { directory: string }): void {
+  const directory = options?.directory ?? dirname(fileURLToPath(import.meta.url));
+  const migrations = loadMigrations(directory);
   const applyMigration = db.transaction((migration: Migration): void => {
     db.exec(`
       CREATE TABLE IF NOT EXISTS schema_version (
@@ -49,7 +59,7 @@ export function runMigrations(db: DB): void {
     ).run(migration.version);
   });
 
-  for (const migration of loadMigrations()) {
+  for (const migration of migrations) {
     applyMigration(migration);
   }
 }
