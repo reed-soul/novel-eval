@@ -1,18 +1,26 @@
 /**
- * Job 管理器 — 内存 Map（SSE 订阅源）+ DB job 表（断点真相）双层桥接
+ * Job 管理器 — 内存 Map（SSE 订阅源）+ DB job 表（断点/事件真相）双层桥接
  *
  * 状态语义与 writer job-store 对齐：running | paused | completed | failed | cancelled
  */
 import { EventEmitter } from 'node:events';
-import type { DB, JobRow, JobType } from '@novel-eval/writer';
+import type { DB, JobRow, JobType, JsonValue } from '@novel-eval/writer';
 import {
-  createJobRow, updateJobStatus, updateJobProgress, getJobRow,
+  appendJobEvent,
+  createJobRow,
+  getActiveJob,
+  getJobRow,
+  getLatestJobEventSeq,
+  listJobEventsAfter,
+  updateJobProgress,
+  updateJobStatus,
 } from '@novel-eval/writer';
 
 export type { JobType };
 export type JobStatus = 'running' | 'paused' | 'completed' | 'failed' | 'cancelled';
 
 export interface JobEvent {
+  seq: number;
   step: string;
   msg: string;
   ts: number;
@@ -37,6 +45,8 @@ export interface Job {
   /** 控制标志（runner 内部 GenerationControl 读这两个）*/
   pauseRequested: boolean;
   cancelRequested: boolean;
+  /** 下一个要分配的事件 seq */
+  nextEventSeq: number;
 }
 
 /** runner 接收的上下文：进度回调 + 控制句柄 */
@@ -61,6 +71,10 @@ export interface CreateJobOpts {
   model?: string;
   wordCount?: number;
   promptVersion?: string;
+  /** 完整请求快照，写入 job.input_json */
+  input?: JsonValue;
+  /** 完整预算快照，写入 job.budget_json */
+  budget?: JsonValue;
 }
 
 const jobs = new Map<string, Job>();
@@ -68,7 +82,7 @@ const jobs = new Map<string, Job>();
 function budgetFlag(row: JobRow, key: 'qualityGate' | 'maxRevise'): boolean | number | undefined {
   const budget = row.budget;
   if (typeof budget !== 'object' || budget === null || Array.isArray(budget)) return undefined;
-  const value = (budget as Record<string, unknown>)[key];
+  const value = budget[key];
   if (key === 'qualityGate') return typeof value === 'boolean' ? value : undefined;
   return typeof value === 'number' ? value : undefined;
 }
@@ -76,7 +90,16 @@ function budgetFlag(row: JobRow, key: 'qualityGate' | 'maxRevise'): boolean | nu
 function resultFromRow(row: JobRow): unknown {
   const usage = row.usage;
   if (typeof usage !== 'object' || usage === null || Array.isArray(usage)) return undefined;
-  return (usage as Record<string, unknown>).result;
+  return usage.result;
+}
+
+function loadPersistedEvents(db: DB, jobId: string): JobEvent[] {
+  return listJobEventsAfter(db, jobId, 0).map((event) => ({
+    seq: event.seq,
+    step: event.step,
+    msg: event.msg,
+    ts: event.ts,
+  }));
 }
 
 function wireJobRunner(
@@ -85,7 +108,10 @@ function wireJobRunner(
   runner: (ctx: JobRunnerContext) => Promise<unknown>,
 ): void {
   const onProgress = (step: string, msg: string) => {
-    const evt: JobEvent = { step, msg, ts: Date.now() };
+    const seq = job.nextEventSeq;
+    job.nextEventSeq += 1;
+    const evt: JobEvent = { seq, step, msg, ts: Date.now() };
+    appendJobEvent(db, { jobId: job.id, seq, step, msg, ts: evt.ts });
     job.events.push(evt);
     job.emitter.emit('progress', evt);
   };
@@ -120,7 +146,10 @@ function wireJobRunner(
         const message = err instanceof Error ? err.message : 'job failed';
         job.status = 'failed';
         job.error = message;
-        updateJobStatus(db, job.id, 'failed', { error: message });
+        updateJobStatus(db, job.id, 'failed', {
+          error: message,
+          errorType: err instanceof Error ? err.name : 'Error',
+        });
         job.emitter.emit('failed', message);
       }
     })
@@ -132,23 +161,48 @@ function wireJobRunner(
     });
 }
 
+function resolveBudget(opts: CreateJobOpts): JsonValue {
+  if (opts.budget !== undefined) return opts.budget;
+  if (opts.qualityGate !== undefined || opts.maxRevise !== undefined) {
+    return {
+      qualityGate: opts.qualityGate ?? false,
+      maxRevise: opts.maxRevise ?? 0,
+    };
+  }
+  return {};
+}
+
+function resolveInput(opts: CreateJobOpts): JsonValue {
+  if (opts.input !== undefined) return opts.input;
+  const input: { [key: string]: JsonValue } = {};
+  if (opts.fromChapter !== undefined) input.from = opts.fromChapter;
+  if (opts.toChapter !== undefined) input.to = opts.toChapter;
+  if (opts.wordCount !== undefined) input.wordCount = opts.wordCount;
+  if (opts.engine !== undefined) input.engine = opts.engine;
+  if (opts.model !== undefined) input.model = opts.model;
+  if (opts.promptVersion !== undefined) input.promptVersion = opts.promptVersion;
+  return input;
+}
+
 /** 创建并启动一个 job，返回 jobId。runner 通过 ctx.control 与暂停/取消联动。*/
 export function createJob(
   db: DB,
   opts: CreateJobOpts,
   runner: (ctx: JobRunnerContext) => Promise<unknown>,
 ): string {
+  const budget = resolveBudget(opts);
+  const input = resolveInput(opts);
   const id = createJobRow(db, {
     projectId: opts.projectId,
     type: opts.type,
     fromChapter: opts.fromChapter ?? null,
     toChapter: opts.toChapter ?? null,
-    qualityGate: opts.qualityGate,
-    maxRevise: opts.maxRevise,
     engine: opts.engine,
     model: opts.model,
     wordCount: opts.wordCount,
     promptVersion: opts.promptVersion,
+    budget,
+    input,
   });
 
   const emitter = new EventEmitter();
@@ -159,6 +213,7 @@ export function createJob(
     qualityGate: opts.qualityGate, maxRevise: opts.maxRevise,
     lastChapter: opts.fromChapter ? opts.fromChapter - 1 : 0,
     pauseRequested: false, cancelRequested: false,
+    nextEventSeq: 1,
   };
   jobs.set(id, job);
   wireJobRunner(db, job, runner);
@@ -173,6 +228,8 @@ export function attachJobRunner(
 ): Job | null {
   const row = getJobRow(db, jobId);
   if (!row) return null;
+  const persistedEvents = loadPersistedEvents(db, jobId);
+  const nextEventSeq = getLatestJobEventSeq(db, jobId) + 1;
   let job = jobs.get(jobId);
   if (!job) {
     job = {
@@ -180,7 +237,7 @@ export function attachJobRunner(
       type: row.type,
       projectId: row.projectId,
       status: 'running',
-      events: [],
+      events: persistedEvents,
       emitter: new EventEmitter(),
       fromChapter: row.scope.from ?? undefined,
       toChapter: row.scope.to ?? undefined,
@@ -191,12 +248,15 @@ export function attachJobRunner(
       lastChapter: row.lastOutlinePosition,
       pauseRequested: false,
       cancelRequested: false,
+      nextEventSeq,
     };
     jobs.set(jobId, job);
   } else {
     job.status = 'running';
     job.pauseRequested = false;
     job.cancelRequested = false;
+    job.events = persistedEvents;
+    job.nextEventSeq = nextEventSeq;
   }
   updateJobStatus(db, jobId, 'running');
   wireJobRunner(db, job, runner);
@@ -220,10 +280,11 @@ export function hydrateJobFromDb(db: DB, jobId: string): Job | null {
     || row.status === 'paused' || row.status === 'cancelled'
       ? row.status
       : 'failed';
+  const events = loadPersistedEvents(db, jobId);
   const emitter = new EventEmitter();
   const job: Job = {
     id: row.id, type: row.type, projectId: row.projectId,
-    status, events: [], emitter,
+    status, events, emitter,
     fromChapter: row.scope.from ?? undefined,
     toChapter: row.scope.to ?? undefined,
     qualityGate: budgetFlag(row, 'qualityGate') === true,
@@ -234,6 +295,7 @@ export function hydrateJobFromDb(db: DB, jobId: string): Job | null {
     pauseRequested: false, cancelRequested: false,
     result: resultFromRow(row),
     error: row.errorType ?? undefined,
+    nextEventSeq: getLatestJobEventSeq(db, jobId) + 1,
   };
   jobs.set(jobId, job);
   return job;
@@ -278,14 +340,12 @@ export function getJobFromDb(db: DB, jobId: string): JobRow | null {
   return getJobRow(db, jobId);
 }
 
-/** 检查该项目有正在运行的任务 */
-export function hasActiveJobForProject(projectId: string): boolean {
-  for (const job of jobs.values()) {
-    if (job.projectId === projectId && job.status === 'running') {
-      return true;
-    }
-  }
-  return false;
+/**
+ * 检查该项目是否有活动任务。以 DB 的 running|paused 为准，
+ * 不依赖进程内 Map（重启后 Map 为空仍能挡住并发）。
+ */
+export function hasActiveJobForProject(db: DB, projectId: string): boolean {
+  return getActiveJob(db, projectId) !== null;
 }
 
 export function jobToClientPayload(job: Job | JobRow): Record<string, unknown> {
@@ -318,4 +378,11 @@ export function jobToClientPayload(job: Job | JobRow): Record<string, unknown> {
     createdAt: job.createdAt,
     updatedAt: job.updatedAt,
   };
+}
+
+export function parseAfterSeq(raw: string | undefined): number {
+  if (raw === undefined || raw.trim() === '') return 0;
+  const value = Number.parseInt(raw, 10);
+  if (!Number.isInteger(value) || value < 0) return 0;
+  return value;
 }

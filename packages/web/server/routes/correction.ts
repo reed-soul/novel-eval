@@ -84,7 +84,7 @@ export function correctionRoutes(
     if (countChapters(db, id) === 0) return c.json({ error: '项目尚无章节' }, 400);
     const chapter = getChapter(db, id, n);
     if (!chapter) return c.json({ error: `第 ${n} 章不存在，无法修正` }, 404);
-    if (hasActiveJobForProject(id)) return c.json({ error: '项目有正在运行的任务' }, 409);
+    if (hasActiveJobForProject(db, id)) return c.json({ error: '项目有正在运行的任务' }, 409);
 
     const body = await c.req.json<{ engineName?: string; model?: string; strategy?: CorrectionStrategy }>()
       .catch(() => ({}) as { engineName?: string; model?: string; strategy?: CorrectionStrategy });

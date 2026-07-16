@@ -202,11 +202,17 @@ export function updateJobStatus(
   const sets: string[] = ['status = ?', 'updated_at = ?'];
   const args: unknown[] = [status, now];
   if (extra?.result !== undefined) {
+    const existing = getJobRow(db, jobId);
+    const previous = existing?.usage;
+    const resultValue = parseJsonValue(extra.result, 'job usage result');
+    let usagePayload: JsonValue;
+    if (typeof previous === 'object' && previous !== null && !Array.isArray(previous)) {
+      usagePayload = { ...previous, result: resultValue };
+    } else {
+      usagePayload = { result: resultValue };
+    }
     sets.push('usage_json = ?');
-    args.push(JSON.stringify(parseJsonValue(
-      { result: extra.result } as JsonValue,
-      'job usage',
-    )));
+    args.push(JSON.stringify(usagePayload));
   }
   if (extra?.error !== undefined || extra?.errorType !== undefined) {
     sets.push('error_type = ?');
@@ -259,4 +265,86 @@ export function readJobResumeConfig(db: DB, jobId: string): JobResumeConfig {
     budget: job.budget,
     lastOutlinePosition: job.lastOutlinePosition,
   };
+}
+
+export interface JobEventRow {
+  jobId: string;
+  seq: number;
+  step: string;
+  msg: string;
+  ts: number;
+}
+
+export interface AppendJobEventInput {
+  jobId: string;
+  seq: number;
+  step: string;
+  msg: string;
+  ts: number;
+}
+
+/** 追加一条可续传的进度事件（(job_id, seq) 唯一）*/
+export function appendJobEvent(db: DB, event: AppendJobEventInput): void {
+  if (!Number.isInteger(event.seq) || event.seq <= 0) {
+    throw new Error('job event seq must be a positive integer');
+  }
+  db.prepare(`
+    INSERT INTO job_event (job_id, seq, step, msg, ts)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(event.jobId, event.seq, event.step, event.msg, event.ts);
+}
+
+/** 列出 seq > afterSeq 的事件（进程重启后续传）*/
+export function listJobEventsAfter(db: DB, jobId: string, afterSeq: number): JobEventRow[] {
+  const rows: unknown[] = db.prepare(`
+    SELECT job_id, seq, step, msg, ts
+    FROM job_event
+    WHERE job_id = ? AND seq > ?
+    ORDER BY seq ASC
+  `).all(jobId, afterSeq);
+  return rows.map((value) => {
+    const row = persistedRecord(value, 'job_event');
+    return {
+      jobId: stringField(row, 'job_id', 'job_event'),
+      seq: numberField(row, 'seq', 'job_event'),
+      step: stringField(row, 'step', 'job_event'),
+      msg: stringField(row, 'msg', 'job_event'),
+      ts: numberField(row, 'ts', 'job_event'),
+    };
+  });
+}
+
+/** 当前最大 seq；无事件时返回 0 */
+export function getLatestJobEventSeq(db: DB, jobId: string): number {
+  const row: unknown = db.prepare(
+    'SELECT COALESCE(MAX(seq), 0) AS max_seq FROM job_event WHERE job_id = ?',
+  ).get(jobId);
+  if (typeof row !== 'object' || row === null || !('max_seq' in row)) {
+    return 0;
+  }
+  const maxSeq = (row as { max_seq: unknown }).max_seq;
+  return typeof maxSeq === 'number' ? maxSeq : Number(maxSeq);
+}
+
+/** 写入累计 usage（cost / tokens），供预算校验与详情展示 */
+export function updateJobUsage(db: DB, jobId: string, usage: JsonValue): void {
+  const now = new Date().toISOString();
+  const existing = getJobRow(db, jobId);
+  const previous = existing?.usage;
+  const next = parseJsonValue(usage, 'job usage');
+  let merged: JsonValue = next;
+  if (
+    typeof previous === 'object' && previous !== null && !Array.isArray(previous)
+    && typeof next === 'object' && next !== null && !Array.isArray(next)
+  ) {
+    const preservedResult = Object.prototype.hasOwnProperty.call(previous, 'result')
+      ? previous.result
+      : undefined;
+    merged = preservedResult === undefined
+      ? next
+      : { ...next, result: preservedResult };
+  }
+  db.prepare(`
+    UPDATE job SET usage_json = ?, updated_at = ? WHERE id = ?
+  `).run(JSON.stringify(merged), now, jobId);
 }

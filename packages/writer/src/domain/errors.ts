@@ -32,3 +32,17 @@ export class StateExtractionError extends Error {
     this.name = 'StateExtractionError';
   }
 }
+
+export class BudgetExceededError extends Error {
+  readonly cumulativeCostRmb: number;
+  readonly maxCostRmb: number;
+
+  constructor(cumulativeCostRmb: number, maxCostRmb: number) {
+    super(
+      `Generation budget exceeded: cumulative ¥${cumulativeCostRmb.toFixed(4)} > max ¥${maxCostRmb.toFixed(4)}`,
+    );
+    this.name = 'BudgetExceededError';
+    this.cumulativeCostRmb = cumulativeCostRmb;
+    this.maxCostRmb = maxCostRmb;
+  }
+}

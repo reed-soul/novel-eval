@@ -6,8 +6,10 @@ import assert from 'node:assert/strict';
 
 import { createProject } from '../../src/project.ts';
 import {
+  appendJobEvent,
   createJobRow,
   getJobRow,
+  listJobEventsAfter,
   listJobsByProject,
   getActiveJob,
   updateJobStatus,
@@ -155,5 +157,25 @@ describe('job-store', () => {
     assert.equal(resume.promptVersion, 'chapter-v2');
     assert.deepEqual(resume.budget, { maxCostRmb: 3 });
     assert.equal(resume.lastOutlinePosition, 4);
+  });
+
+  it('replays job events after the given sequence following restart', (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const p = createProject(testDb.db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+    const jobId = createJobRow(testDb.db, {
+      projectId: p.id,
+      type: 'chapter',
+      scope: { from: 1, to: 2 },
+    });
+
+    appendJobEvent(testDb.db, { jobId, seq: 1, step: 'chapter:1', msg: 'start', ts: 1 });
+    appendJobEvent(testDb.db, { jobId, seq: 2, step: 'chapter:1', msg: 'done', ts: 2 });
+
+    // simulate process restart with empty memory map — DB is the source of truth
+    assert.deepEqual(
+      listJobEventsAfter(testDb.db, jobId, 1).map((e) => e.seq),
+      [2],
+    );
   });
 });

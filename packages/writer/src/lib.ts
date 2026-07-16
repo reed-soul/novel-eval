@@ -32,6 +32,7 @@ export {
   ProjectLeaseConflictError,
   StaleDependencyError,
   StateExtractionError,
+  BudgetExceededError,
 } from './domain/errors.ts';
 export { applyStoryStateDelta } from './domain/story-state.ts';
 export type {
@@ -70,14 +71,20 @@ export {
   listJobsByProject,
   updateJobStatus,
   updateJobProgress,
+  updateJobUsage,
   recoverInterruptedJobs,
   readJobResumeConfig,
+  appendJobEvent,
+  listJobEventsAfter,
+  getLatestJobEventSeq,
   type JobType,
   type JobStatus,
   type JobRow,
   type JobScope,
   type JobResumeConfig,
   type CreateJobRowOpts,
+  type JobEventRow,
+  type AppendJobEventInput,
 } from './job-store.ts';
 export {
   WriterApplication,
@@ -96,6 +103,7 @@ export type { RebuildResult } from './services/state-rebuild-service.ts';
 export { ChapterRepository } from './repositories/chapter-repository.ts';
 export { PlanningRepository } from './repositories/planning-repository.ts';
 export { StoryStateRepository } from './repositories/story-state-repository.ts';
+export type { JsonValue } from './repositories/validation.ts';
 export {
   ProjectWriteLeaseRepository,
   type ProjectWriteLease,

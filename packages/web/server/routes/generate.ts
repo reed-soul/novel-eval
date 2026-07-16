@@ -17,6 +17,7 @@ import {
   getActiveJob,
   getJobRow as getJobRowDb,
   readJobResumeConfig,
+  listJobEventsAfter,
   WriterApplication,
   PlanningRepository,
   projectId,
@@ -34,6 +35,7 @@ import {
   hasActiveJobForProject,
   attachJobRunner,
   jobToClientPayload,
+  parseAfterSeq,
   type JobRunnerContext,
 } from '../jobs.ts';
 import type { EngineRegistry } from '../engine-registry.ts';
@@ -88,7 +90,7 @@ export function generateRoutes(
       return c.json({ project });
     }
 
-    if (hasActiveJobForProject(project.id)) {
+    if (hasActiveJobForProject(db, project.id)) {
       return c.json({ error: '项目有正在运行的任务，请稍后再试' }, 409);
     }
 
@@ -98,6 +100,15 @@ export function generateRoutes(
       projectId: project.id,
       engine: engine.name,
       model: body.model ?? engine.name,
+      input: {
+        title: body.title,
+        genre: body.genre,
+        audience: body.audience,
+        topic: body.topic,
+        engineName: body.engineName ?? engine.name,
+        model: body.model ?? engine.name,
+      },
+      budget: {},
     }, async (ctx: JobRunnerContext) => {
       const { bible, usage } = await writer.generateBible({
         engine,
@@ -126,7 +137,7 @@ export function generateRoutes(
     const id = c.req.param('id');
     const project = getProject(db, id);
     if (!project) return c.json({ error: '项目不存在' }, 404);
-    if (hasActiveJobForProject(id)) return c.json({ error: '项目有正在运行的任务' }, 409);
+    if (hasActiveJobForProject(db, id)) return c.json({ error: '项目有正在运行的任务' }, 409);
 
     const body = await c.req.json<{ engineName?: string; model?: string }>()
       .catch(() => ({} as { engineName?: string; model?: string }));
@@ -136,6 +147,14 @@ export function generateRoutes(
       projectId: id,
       engine: engine.name,
       model: body.model ?? engine.name,
+      input: {
+        topic: project.premise,
+        genre: project.genreProfile,
+        audience: project.targetAudience,
+        engineName: body.engineName ?? engine.name,
+        model: body.model ?? engine.name,
+      },
+      budget: {},
     }, async (ctx: JobRunnerContext) => {
       const { bible, usage } = await writer.generateBible({
         engine,
@@ -162,7 +181,7 @@ export function generateRoutes(
     const id = c.req.param('id');
     const project = getProject(db, id);
     if (!project) return c.json({ error: '项目不存在' }, 404);
-    if (hasActiveJobForProject(id)) return c.json({ error: '项目有正在运行的任务' }, 409);
+    if (hasActiveJobForProject(db, id)) return c.json({ error: '项目有正在运行的任务' }, 409);
 
     const body = await c.req.json<{ chapters?: number; engineName?: string; model?: string }>()
       .catch(() => ({} as { chapters?: number; engineName?: string; model?: string }));
@@ -188,6 +207,12 @@ export function generateRoutes(
       projectId: id,
       engine: engine.name,
       model: body.model ?? engine.name,
+      input: {
+        chapters: totalChapters,
+        engineName: body.engineName ?? engine.name,
+        model: body.model ?? engine.name,
+      },
+      budget: {},
     }, async (ctx: JobRunnerContext) => {
       const { outlines, usage } = await writer.generateBlueprint({
         engine,
@@ -211,7 +236,7 @@ export function generateRoutes(
     const project = getProject(db, id);
     if (!project) return c.json({ error: '项目不存在' }, 404);
     if (countOutlines(db, id) === 0) return c.json({ error: '蓝图未生成' }, 400);
-    if (hasActiveJobForProject(id)) return c.json({ error: '项目有正在运行的任务' }, 409);
+    if (hasActiveJobForProject(db, id)) return c.json({ error: '项目有正在运行的任务' }, 409);
 
     const body = await c.req.json<{
       from: number;
@@ -221,6 +246,7 @@ export function generateRoutes(
       engineName?: string;
       model?: string;
       wordCount?: number;
+      maxCostRmb?: number;
     }>();
     if (body.qualityGate) {
       return c.json({ error: 'qualityGate is unsupported until the chapter quality system lands' }, 400);
@@ -229,6 +255,13 @@ export function generateRoutes(
     const config = loadWriterConfig();
     const wordCount = body.wordCount ?? config.generation.chapterWordCount;
     const engine = resolveEngine(body);
+    const budget: { [key: string]: boolean | number } = {
+      qualityGate: false,
+      maxRevise: body.maxRevise ?? 0,
+    };
+    if (typeof body.maxCostRmb === 'number' && Number.isFinite(body.maxCostRmb)) {
+      budget.maxCostRmb = body.maxCostRmb;
+    }
 
     const jobId = createJob(db, {
       type: 'chapter',
@@ -236,11 +269,20 @@ export function generateRoutes(
       fromChapter: body.from,
       toChapter: body.to,
       qualityGate: false,
-      maxRevise: 0,
+      maxRevise: body.maxRevise ?? 0,
       engine: engine.name,
       model: body.model ?? engine.name,
       wordCount,
       promptVersion: 'chapter-v1',
+      input: {
+        from: body.from,
+        to: body.to,
+        wordCount,
+        engineName: body.engineName ?? engine.name,
+        model: body.model ?? engine.name,
+        promptVersion: 'chapter-v1',
+      },
+      budget,
     }, async (ctx: JobRunnerContext) => {
       const { onProgress, control } = ctx;
       updateProjectStatus(db, id, 'writing');
@@ -253,6 +295,7 @@ export function generateRoutes(
         existingJobId: ctx.job.id,
         engineName: body.engineName ?? engine.name,
         model: body.model ?? engine.name,
+        budget,
         onProgress,
         control,
         ownerId: 'web',
@@ -362,12 +405,29 @@ export function generateRoutes(
   // ─── SSE 进度流 ────────────────────────────────────────────────
   app.get('/jobs/:jobId/events', (c) => {
     const jobId = c.req.param('jobId');
+    const afterSeq = Math.max(
+      parseAfterSeq(c.req.query('after')),
+      parseAfterSeq(c.req.header('Last-Event-ID') ?? undefined),
+    );
+
     let job = getJob(jobId);
     if (!job) job = hydrateJobFromDb(db, jobId);
     if (!job) {
       const row = getJobRowDb(db, jobId);
       if (!row) return c.json({ error: 'job 不存在' }, 404);
       return streamSSE(c, async (stream) => {
+        const persisted = listJobEventsAfter(db, jobId, afterSeq);
+        for (const evt of persisted) {
+          await stream.writeSSE({
+            id: String(evt.seq),
+            data: JSON.stringify({
+              seq: evt.seq,
+              step: evt.step,
+              msg: evt.msg,
+              ts: evt.ts,
+            }),
+          });
+        }
         if (row.status === 'paused') {
           await stream.writeSSE({ data: JSON.stringify({ event: 'paused' }) });
         } else if (row.status === 'cancelled') {
@@ -388,12 +448,34 @@ export function generateRoutes(
     }
 
     return streamSSE(c, async (stream) => {
+      const persisted = listJobEventsAfter(db, jobId, afterSeq);
+      const seen = new Set<number>();
+      for (const evt of persisted) {
+        seen.add(evt.seq);
+        await stream.writeSSE({
+          id: String(evt.seq),
+          data: JSON.stringify({
+            seq: evt.seq,
+            step: evt.step,
+            msg: evt.msg,
+            ts: evt.ts,
+          }),
+        });
+      }
       for (const evt of job.events) {
-        await stream.writeSSE({ data: JSON.stringify(evt) });
+        if (evt.seq <= afterSeq || seen.has(evt.seq)) continue;
+        await stream.writeSSE({
+          id: String(evt.seq),
+          data: JSON.stringify(evt),
+        });
       }
 
-      const onProgress = (evt: { step: string; msg: string; ts: number }) => {
-        stream.writeSSE({ data: JSON.stringify(evt) }).catch(() => {});
+      const onProgress = (evt: { seq: number; step: string; msg: string; ts: number }) => {
+        if (evt.seq <= afterSeq) return;
+        stream.writeSSE({
+          id: String(evt.seq),
+          data: JSON.stringify(evt),
+        }).catch(() => {});
       };
       const onCompleted = (result: unknown) => {
         stream.writeSSE({ data: JSON.stringify({ event: 'completed', result }) }).catch(() => {});

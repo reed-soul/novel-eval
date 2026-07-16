@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import type { AIAgentAdapter, TokenUsage } from '@novel-eval/shared';
-import { countChars } from '@novel-eval/shared';
+import { addUsage, countChars, zeroUsage } from '@novel-eval/shared';
 
 import { extractStoryState, type ExtractStoryStateResult } from '../chapter/finalizer.ts';
 import type { DB } from '../db.ts';
@@ -56,6 +56,7 @@ export type GenerateChapterOutcome = {
   storyStateRevisionId: StoryStateRevisionId;
   outlineStatus: 'written';
   contextHash: string;
+  usage: TokenUsage;
 };
 
 function readPartialContent(error: unknown): string | null {
@@ -147,6 +148,7 @@ export class ChapterGenerationService {
     const outline = context.outline;
     let content: string;
     let title = outline.revision.title;
+    const totalUsage: TokenUsage = { ...zeroUsage };
 
     try {
       const generated = input.generateContent
@@ -154,6 +156,7 @@ export class ChapterGenerationService {
         : await this.defaultGenerateContent(input.engine, context, input.wordCount);
       content = generated.content;
       title = generated.title;
+      addUsage(totalUsage, generated.usage);
     } catch (error: unknown) {
       const partial = readPartialContent(error);
       if (partial !== null) {
@@ -200,6 +203,7 @@ export class ChapterGenerationService {
       const message = error instanceof Error ? error.message : 'state extraction failed';
       throw new StateExtractionError(message);
     }
+    addUsage(totalUsage, extraction.usage);
 
     const published: PublishResult = this.publication.publishCandidate({
       lease: input.lease,
@@ -221,6 +225,7 @@ export class ChapterGenerationService {
       storyStateRevisionId: published.storyStateRevisionId,
       outlineStatus: published.outlineStatus,
       contextHash: context.contextHash,
+      usage: totalUsage,
     };
   }
 

@@ -6,7 +6,7 @@
 import { randomUUID } from 'node:crypto';
 
 import type { AIAgentAdapter } from '@novel-eval/shared';
-import { countChars } from '@novel-eval/shared';
+import { addUsage, countChars, zeroUsage, type TokenUsage } from '@novel-eval/shared';
 
 import {
   applyCorrectionDraft,
@@ -41,12 +41,14 @@ import {
   type ChapterRevisionId,
   type ProjectId,
 } from '../domain/ids.ts';
+import { BudgetExceededError } from '../domain/errors.ts';
 import type { StoryState, StoryStateDelta } from '../domain/story-state.ts';
 import {
   createJobRow,
   getJobRow,
   readJobResumeConfig,
   updateJobStatus,
+  updateJobUsage,
   type JobResumeConfig,
   type JobRow,
 } from '../job-store.ts';
@@ -633,6 +635,8 @@ export class WriterApplication {
     }
 
     const outcomes: GenerateChapterOutcome[] = [];
+    const cumulativeUsage: TokenUsage = { ...zeroUsage };
+    const maxCostRmb = readMaxCostRmb(budget);
     try {
       for (const position of approvedPositions) {
         if (input.control?.shouldCancel?.()) {
@@ -640,6 +644,10 @@ export class WriterApplication {
         }
         if (input.control?.shouldPause?.()) {
           throw new JobPausedError(position);
+        }
+
+        if (maxCostRmb !== null && cumulativeUsage.costRmb > maxCostRmb) {
+          throw new BudgetExceededError(cumulativeUsage.costRmb, maxCostRmb);
         }
 
         this.leases.renew({
@@ -661,6 +669,23 @@ export class WriterApplication {
           extractState: input.extractState,
         });
         outcomes.push(outcome);
+        addUsage(cumulativeUsage, outcome.usage);
+        updateJobUsage(this.db, jobId, {
+          inputTokens: cumulativeUsage.inputTokens,
+          outputTokens: cumulativeUsage.outputTokens,
+          costRmb: cumulativeUsage.costRmb,
+          model: cumulativeUsage.model,
+          durationMs: cumulativeUsage.durationMs,
+        });
+
+        if (maxCostRmb !== null && cumulativeUsage.costRmb > maxCostRmb) {
+          // Stop before the next expensive call; fail the job now if range continues.
+          const remaining = approvedPositions.filter((p) => p > position);
+          if (remaining.length > 0) {
+            throw new BudgetExceededError(cumulativeUsage.costRmb, maxCostRmb);
+          }
+        }
+
         input.control?.onChapterComplete?.(position);
       }
 
@@ -761,4 +786,18 @@ export class WriterApplication {
       this.leases.release({ leaseId: lease.id, ownerId });
     }
   }
+}
+
+function readMaxCostRmb(budget: JsonValue): number | null {
+  if (typeof budget !== 'object' || budget === null || Array.isArray(budget)) {
+    return null;
+  }
+  if (!Object.prototype.hasOwnProperty.call(budget, 'maxCostRmb')) {
+    return null;
+  }
+  const value = budget.maxCostRmb;
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return null;
+  }
+  return value;
 }
