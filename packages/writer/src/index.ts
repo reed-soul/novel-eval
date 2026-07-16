@@ -20,6 +20,10 @@ import { countOutlines, countChapters, getChapter } from './chapter/store.ts';
 import { projectId } from './domain/ids.ts';
 import { PlanningRepository } from './repositories/planning-repository.ts';
 import { WriterApplication } from './services/writer-application.ts';
+import {
+  completeProjectIfFullyWritten,
+  finalizeExhaustedResumeJob,
+} from './project-completion.ts';
 import { readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import * as readline from 'node:readline/promises';
@@ -637,7 +641,7 @@ async function runChapter(args: ChapterArgs): Promise<void> {
     });
 
     if (to >= outlineCount) {
-      updateProjectStatus(db, args.projectId, 'completed');
+      completeProjectIfFullyWritten(db, args.projectId);
     }
 
     const results: { number: number; title: string; content: string; wordCount: number }[] = [];
@@ -778,10 +782,12 @@ async function runResume(args: ResumeArgs): Promise<void> {
       resumeTo = snapshot.scope.to;
       if (resumeFrom > resumeTo) {
         console.log(`\n✓ 任务 ${persisted.id} 原范围 ${snapshot.scope.from}-${snapshot.scope.to} 已完成，无需续写。`);
-        const { updateJobStatus } = await import('./job-store.ts');
-        updateJobStatus(db, persisted.id, 'completed');
-        if (project.status === 'writing') {
-          updateProjectStatus(db, args.projectId, 'completed');
+        const { projectCompleted } = finalizeExhaustedResumeJob(db, {
+          projectId: args.projectId,
+          jobId: persisted.id,
+        });
+        if (projectCompleted) {
+          console.log('  项目全部章节已写完，状态已更新为 completed。');
         }
         return;
       }
@@ -820,7 +826,7 @@ async function runResume(args: ResumeArgs): Promise<void> {
     });
 
     if (resumeFrom + outcomes.length - 1 >= resumeTo) {
-      updateProjectStatus(db, args.projectId, 'completed');
+      completeProjectIfFullyWritten(db, args.projectId);
     }
 
     const results: { number: number; title: string; content: string; wordCount: number }[] = [];
