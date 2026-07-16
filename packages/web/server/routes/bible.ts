@@ -26,19 +26,23 @@ export function bibleRoutes(db: DB) {
 
   app.get('/:id/bible/raw', (c) => {
     const id = c.req.param('id');
-    const active = new PlanningRepository(db).getActiveBibleForProject(projectId(id));
-    if (!active) return c.json({ error: 'bible 不存在' }, 404);
-    const doc = active.bible as Record<string, unknown>;
+    const planning = new PlanningRepository(db);
+    // Prefer the active approved bible; otherwise expose the latest draft so
+    // PlanningApproval can approve newly generated revisions.
+    const revision = planning.getActiveBibleForProject(projectId(id))
+      ?? planning.getDraftBibleForProject(projectId(id));
+    if (!revision) return c.json({ error: 'bible 不存在' }, 404);
+    const doc = revision.bible as Record<string, unknown>;
     return c.json({
-      revisionId: active.id,
+      revisionId: revision.id,
       coreSeed: doc.coreSeed ?? null,
       characterDynamics: doc.characterDynamics ?? null,
       characterState: (doc.characterState ?? null) as BibleCharacterState | null,
       worldBuilding: doc.worldBuilding ?? null,
       plotArchitecture: (doc.plotArchitecture ?? null) as PlotArchitecture | null,
-      fullText: typeof doc.fullText === 'string' ? doc.fullText : active.compiledText,
-      revisionNumber: active.revisionNumber,
-      status: active.status,
+      fullText: typeof doc.fullText === 'string' ? doc.fullText : revision.compiledText,
+      revisionNumber: revision.revisionNumber,
+      status: revision.status,
     });
   });
 

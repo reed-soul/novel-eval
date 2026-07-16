@@ -106,6 +106,22 @@ function seedDraftPlanning(database: DB): { projectId: string; bibleRevisionId: 
 }
 
 describe('planning approval routes', () => {
+  it('exposes draft bible via /bible/raw before approval', async () => {
+    const seeded = seedDraftPlanning(db);
+    const api = app(db);
+
+    const rawRes = await api.fetch(new Request(
+      `http://test/api/projects/${seeded.projectId}/bible/raw`,
+    ));
+    assert.equal(rawRes.status, 200);
+    const body = await rawRes.json() as {
+      revisionId?: string;
+      status?: string;
+    };
+    assert.equal(body.revisionId, seeded.bibleRevisionId);
+    assert.equal(body.status, 'draft');
+  });
+
   it('approves draft bible and outlines through project-scoped endpoints', async () => {
     const seeded = seedDraftPlanning(db);
     const api = app(db);
