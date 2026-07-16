@@ -1,0 +1,517 @@
+import assert from 'node:assert/strict';
+import { it } from 'node:test';
+
+import type { AIAgentAdapter, CallResult, RunOptions } from '@novel-eval/shared';
+
+import type { DB } from '../../src/db.ts';
+import {
+  chapterId,
+  chapterRevisionId,
+  outlineId,
+  projectId,
+  storyStateRevisionId,
+  type ChapterId,
+  type ChapterRevisionId,
+  type OutlineId,
+  type ProjectId,
+  type StoryStateRevisionId,
+} from '../../src/domain/ids.ts';
+import type { StoryState, StoryStateDelta } from '../../src/domain/story-state.ts';
+import { getJobRow } from '../../src/job-store.ts';
+import { ChapterRepository } from '../../src/repositories/chapter-repository.ts';
+import { PlanningRepository } from '../../src/repositories/planning-repository.ts';
+import { ProjectRepository } from '../../src/repositories/project-repository.ts';
+import { StoryStateRepository } from '../../src/repositories/story-state-repository.ts';
+import { WriterApplication } from '../../src/services/writer-application.ts';
+import {
+  fixtureChapterId,
+  fixtureChapterRevisionId,
+  fixtureOutlineId,
+  fixtureProjectId,
+  fixtureStateRevisionId,
+  fixtureTime,
+} from '../helpers/fixtures.ts';
+import { createTestDb } from '../helpers/test-db.ts';
+
+const ownerId = 'worker-facade-1';
+const fixedNow = new Date('2026-07-16T12:00:00.000Z');
+
+function emptyState(summary: string): StoryState {
+  return {
+    characters: [],
+    facts: [],
+    foreshadows: [],
+    timeline: [],
+    summary,
+  };
+}
+
+function emptyDelta(summary: string): StoryStateDelta {
+  return {
+    characterChanges: [],
+    factChanges: [],
+    foreshadowChanges: [],
+    timelineEvents: [],
+    summary,
+  };
+}
+
+function contentEngine(text: string): AIAgentAdapter {
+  return {
+    name: 'mock-engine',
+    async run(_prompt: string, _options: RunOptions): Promise<CallResult> {
+      return {
+        text,
+        usage: { inputTokens: 10, outputTokens: 20, costRmb: 0.001, model: 'mock-model', durationMs: 1 },
+        notes: [],
+      };
+    },
+    async isAvailable() { return true; },
+  };
+}
+
+function seedApprovedOutline(
+  db: DB,
+  input: { position: number; outlineId: OutlineId; title: string },
+): void {
+  new PlanningRepository(db).saveApprovedOutline({
+    outline: {
+      id: input.outlineId,
+      projectId: fixtureProjectId,
+      position: input.position,
+      createdAt: fixtureTime,
+      updatedAt: fixtureTime,
+    },
+    revision: {
+      id: `outline-revision-${input.position}`,
+      revisionNumber: 1,
+      title: input.title,
+      content: { summary: `${input.title}摘要`, beats: ['推进'] },
+      createdAt: fixtureTime,
+    },
+  });
+}
+
+function publishSeedChapter(
+  db: DB,
+  input: {
+    position: number;
+    outlineId: OutlineId;
+    chapterId: ChapterId;
+    revisionId: ChapterRevisionId;
+    stateId: StoryStateRevisionId;
+    previousStateRevisionId: StoryStateRevisionId | null;
+    content: string;
+    summary: string;
+  },
+): void {
+  seedApprovedOutline(db, {
+    position: input.position,
+    outlineId: input.outlineId,
+    title: `第 ${input.position} 章`,
+  });
+  const chapters = new ChapterRepository(db);
+  const states = new StoryStateRepository(db);
+  chapters.saveCandidate({
+    chapter: {
+      id: input.chapterId,
+      projectId: fixtureProjectId,
+      outlineId: input.outlineId,
+      createdAt: fixtureTime,
+    },
+    revision: {
+      id: input.revisionId,
+      revisionNumber: 1,
+      source: 'generated',
+      parentRevisionId: null,
+      title: `第 ${input.position} 章`,
+      content: input.content,
+      wordCount: input.content.length,
+      status: 'draft',
+      generationRunId: `run-${input.position}`,
+      createdAt: fixtureTime,
+    },
+  });
+  chapters.publishRevision(input.revisionId);
+  db.prepare(`
+    UPDATE chapter_outline SET status = 'written', updated_at = ? WHERE id = ?
+  `).run(fixtureTime, input.outlineId);
+  states.save({
+    id: input.stateId,
+    projectId: fixtureProjectId,
+    chapterId: input.chapterId,
+    chapterRevisionId: input.revisionId,
+    previousStateRevisionId: input.previousStateRevisionId,
+    sequence: input.position,
+    status: 'current',
+    state: emptyState(input.summary),
+    delta: emptyDelta(input.summary),
+    summary: input.summary,
+    model: 'seed-model',
+    promptVersion: 'state-v1',
+    createdAt: fixtureTime,
+  });
+}
+
+function seedProjectWithApprovedRange(db: DB, positions: number[]): WriterApplication {
+  new ProjectRepository(db).create({
+    id: fixtureProjectId,
+    title: '北站',
+    genreProfile: '悬疑',
+    targetAudience: '成人',
+    premise: '林晚追查一张失踪的车票。',
+    createdAt: fixtureTime,
+  });
+  const planning = new PlanningRepository(db);
+  const bible = planning.saveBibleRevision({
+    id: 'bible-revision-1',
+    projectId: fixtureProjectId,
+    revisionNumber: 1,
+    status: 'approved',
+    bible: { premise: '林晚追查一张失踪的车票。' },
+    compiledText: '稳定设定。',
+    createdAt: fixtureTime,
+  });
+  new ProjectRepository(db).setActiveBibleRevision(fixtureProjectId, bible.id, fixtureTime);
+
+  for (const position of positions) {
+    seedApprovedOutline(db, {
+      position,
+      outlineId: outlineId(`outline-${position}`),
+      title: `第 ${position} 章`,
+    });
+  }
+
+  return new WriterApplication(db, {
+    now: () => fixedNow,
+    defaultOwnerId: ownerId,
+    leaseTtlMs: 60_000,
+  });
+}
+
+function countLeases(db: DB, id: ProjectId): number {
+  const row: unknown = db.prepare(
+    'SELECT COUNT(*) AS n FROM project_write_lease WHERE project_id = ?',
+  ).get(id);
+  assert.ok(typeof row === 'object' && row !== null && 'n' in row);
+  return Number((row as { n: number }).n);
+}
+
+it('generateChapterRange acquires one lease, generates approved positions, persists range/config, and releases', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const app = seedProjectWithApprovedRange(testDb.db, [1, 2, 3]);
+  const generated: number[] = [];
+
+  const result = await app.generateChapterRange({
+    projectId: fixtureProjectId,
+    from: 1,
+    to: 3,
+    engine: contentEngine('章节正文'),
+    wordCount: 800,
+    engineName: 'mock-engine',
+    model: 'mock-model',
+    qualityProfile: 'default',
+    promptVersion: 'chapter-v1',
+    budget: { maxCostRmb: 1 },
+    generateContent: async (context) => {
+      generated.push(context.outlinePosition);
+      return {
+        title: context.outline.revision.title,
+        content: `正文第${context.outlinePosition}章`,
+        usage: { inputTokens: 1, outputTokens: 2, costRmb: 0, model: 'mock-model', durationMs: 1 },
+        model: 'mock-model',
+      };
+    },
+    extractState: async ({ chapterRevisionId: _id, context }) => {
+      void _id;
+      return {
+        state: emptyState(`状态${context.outlinePosition}`),
+        delta: emptyDelta(`状态${context.outlinePosition}`),
+        usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'extract', durationMs: 1 },
+        model: 'extract',
+        promptVersion: 'state-v1',
+      };
+    },
+  });
+
+  assert.deepEqual(generated, [1, 2, 3]);
+  assert.equal(result.outcomes.length, 3);
+  assert.equal(countLeases(testDb.db, fixtureProjectId), 0);
+
+  const job = getJobRow(testDb.db, result.jobId);
+  assert.ok(job);
+  assert.equal(job.status, 'completed');
+  assert.equal(job.scope.from, 1);
+  assert.equal(job.scope.to, 3);
+  assert.equal(job.engine, 'mock-engine');
+  assert.equal(job.model, 'mock-model');
+  assert.equal(job.wordCount, 800);
+  assert.equal(job.qualityProfile, 'default');
+  assert.equal(job.promptVersion, 'chapter-v1');
+  assert.deepEqual(job.budget, { maxCostRmb: 1 });
+  assert.equal(job.lastOutlinePosition, 3);
+
+  const chapters = new ChapterRepository(testDb.db);
+  assert.ok(chapters.getByOutlinePosition(fixtureProjectId, 1)?.activeRevisionId);
+  assert.ok(chapters.getByOutlinePosition(fixtureProjectId, 2)?.activeRevisionId);
+  assert.ok(chapters.getByOutlinePosition(fixtureProjectId, 3)?.activeRevisionId);
+});
+
+it('generateChapterRange releases the lease when generation fails', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const app = seedProjectWithApprovedRange(testDb.db, [1, 2]);
+
+  await assert.rejects(
+    () => app.generateChapterRange({
+      projectId: fixtureProjectId,
+      from: 1,
+      to: 2,
+      engine: contentEngine('unused'),
+      wordCount: 500,
+      engineName: 'mock-engine',
+      model: 'mock-model',
+      generateContent: async (context) => {
+        if (context.outlinePosition === 2) {
+          throw new Error('provider boom');
+        }
+        return {
+          title: context.outline.revision.title,
+          content: '第一章正文',
+          usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'mock', durationMs: 1 },
+          model: 'mock',
+        };
+      },
+      extractState: async ({ context }) => ({
+        state: emptyState(`状态${context.outlinePosition}`),
+        delta: emptyDelta(`状态${context.outlinePosition}`),
+        usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'extract', durationMs: 1 },
+        model: 'extract',
+        promptVersion: 'state-v1',
+      }),
+    }),
+    /provider boom/,
+  );
+
+  assert.equal(countLeases(testDb.db, fixtureProjectId), 0);
+  const jobs = testDb.db.prepare(
+    `SELECT status, error_type FROM job WHERE project_id = ? ORDER BY created_at DESC LIMIT 1`,
+  ).get(fixtureProjectId) as { status: string; error_type: string | null };
+  assert.equal(jobs.status, 'failed');
+  assert.ok(jobs.error_type);
+});
+
+it('generateChapterRange refuses a range with outline gaps', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const app = seedProjectWithApprovedRange(testDb.db, [1, 3]);
+
+  await assert.rejects(
+    () => app.generateChapterRange({
+      projectId: fixtureProjectId,
+      from: 1,
+      to: 3,
+      engine: contentEngine('unused'),
+      wordCount: 500,
+      engineName: 'mock',
+      model: 'mock',
+    }),
+    /gap|缺口|missing|连续/i,
+  );
+
+  assert.equal(countLeases(testDb.db, fixtureProjectId), 0);
+  const jobCount = testDb.db.prepare(
+    'SELECT COUNT(*) AS n FROM job WHERE project_id = ?',
+  ).get(fixtureProjectId) as { n: number };
+  assert.equal(jobCount.n, 0);
+});
+
+it('publishChapterEdit creates a draft then publishes through the same publication path', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+
+  new ProjectRepository(testDb.db).create({
+    id: fixtureProjectId,
+    title: '北站',
+    genreProfile: '悬疑',
+    targetAudience: '成人',
+    premise: '林晚追查一张失踪的车票。',
+    createdAt: fixtureTime,
+  });
+  publishSeedChapter(testDb.db, {
+    position: 1,
+    outlineId: fixtureOutlineId,
+    chapterId: fixtureChapterId,
+    revisionId: fixtureChapterRevisionId,
+    stateId: fixtureStateRevisionId,
+    previousStateRevisionId: null,
+    content: '第一章原文',
+    summary: '第一章',
+  });
+
+  const app = new WriterApplication(testDb.db, {
+    now: () => fixedNow,
+    defaultOwnerId: ownerId,
+    leaseTtlMs: 60_000,
+  });
+
+  const published = await app.publishChapterEdit({
+    projectId: fixtureProjectId,
+    outlinePosition: 1,
+    title: '北站·修订',
+    content: '林晚改写了第一章。',
+    state: emptyState('修订后第一章'),
+    delta: emptyDelta('修订后第一章'),
+    model: 'edit-model',
+    promptVersion: 'state-v1',
+    source: 'manual',
+  });
+
+  assert.equal(countLeases(testDb.db, fixtureProjectId), 0);
+  const chapters = new ChapterRepository(testDb.db);
+  const active = chapters.getActiveRevision(fixtureChapterId);
+  assert.ok(active);
+  assert.equal(active.id, published.chapterRevisionId);
+  assert.equal(active.status, 'published');
+  assert.equal(active.source, 'manual');
+  assert.equal(active.content, '林晚改写了第一章。');
+  assert.equal(active.parentRevisionId, fixtureChapterRevisionId);
+
+  const states = new StoryStateRepository(testDb.db);
+  const current = states.getCurrentAtPosition(fixtureProjectId, 1);
+  assert.ok(current);
+  assert.equal(current.id, published.storyStateRevisionId);
+  assert.deepEqual(published.staleImpact.affectedOutlinePositions, [1]);
+});
+
+it('rebuildStoryState and getStaleImpact expose rebuild helpers', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+
+  new ProjectRepository(testDb.db).create({
+    id: fixtureProjectId,
+    title: '北站',
+    genreProfile: '悬疑',
+    targetAudience: '成人',
+    premise: '林晚追查一张失踪的车票。',
+    createdAt: fixtureTime,
+  });
+  publishSeedChapter(testDb.db, {
+    position: 1,
+    outlineId: fixtureOutlineId,
+    chapterId: fixtureChapterId,
+    revisionId: fixtureChapterRevisionId,
+    stateId: fixtureStateRevisionId,
+    previousStateRevisionId: null,
+    content: '第一章',
+    summary: '第一章',
+  });
+  publishSeedChapter(testDb.db, {
+    position: 2,
+    outlineId: outlineId('outline-2'),
+    chapterId: chapterId('chapter-2'),
+    revisionId: chapterRevisionId('chapter-revision-2'),
+    stateId: storyStateRevisionId('state-revision-2'),
+    previousStateRevisionId: fixtureStateRevisionId,
+    content: '第二章',
+    summary: '第二章',
+  });
+
+  const states = new StoryStateRepository(testDb.db);
+  states.invalidateCurrentFromPosition(fixtureProjectId, 2);
+
+  const app = new WriterApplication(testDb.db, {
+    now: () => fixedNow,
+    defaultOwnerId: ownerId,
+    leaseTtlMs: 60_000,
+  });
+
+  assert.deepEqual(app.getStaleImpact(fixtureProjectId, 2), {
+    affectedOutlinePositions: [2],
+  });
+
+  const rebuilt = await app.rebuildStoryState({
+    projectId: fixtureProjectId,
+    fromOutlinePosition: 2,
+    extractState: async ({ outlinePosition }) => ({
+      state: emptyState(`重建${outlinePosition}`),
+      delta: emptyDelta(`重建${outlinePosition}`),
+      usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'rebuild', durationMs: 1 },
+      model: 'rebuild',
+      promptVersion: 'state-v1',
+    }),
+  });
+
+  assert.deepEqual(rebuilt.rebuiltOutlinePositions, [2]);
+  assert.equal(rebuilt.failedAtOutlinePosition, null);
+  assert.equal(countLeases(testDb.db, fixtureProjectId), 0);
+  assert.ok(states.getCurrentAtPosition(fixtureProjectId, 2));
+});
+
+it('job resume reads the stored to value and configuration snapshot', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const app = seedProjectWithApprovedRange(testDb.db, [1, 2, 3]);
+
+  const first = await app.generateChapterRange({
+    projectId: fixtureProjectId,
+    from: 1,
+    to: 3,
+    engine: contentEngine('章节正文'),
+    wordCount: 900,
+    engineName: 'resume-engine',
+    model: 'resume-model',
+    qualityProfile: 'careful',
+    promptVersion: 'chapter-v2',
+    budget: { maxCostRmb: 2 },
+    control: {
+      shouldPause: () => true,
+    },
+    generateContent: async (context) => ({
+      title: context.outline.revision.title,
+      content: `正文${context.outlinePosition}`,
+      usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'resume-model', durationMs: 1 },
+      model: 'resume-model',
+    }),
+    extractState: async ({ context }) => ({
+      state: emptyState(`状态${context.outlinePosition}`),
+      delta: emptyDelta(`状态${context.outlinePosition}`),
+      usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'extract', durationMs: 1 },
+      model: 'extract',
+      promptVersion: 'state-v1',
+    }),
+  }).catch((error: unknown) => error);
+
+  assert.ok(first && typeof first === 'object' && 'name' in first);
+  assert.equal((first as { name: string }).name, 'JobPausedError');
+
+  const pausedJob = testDb.db.prepare(
+    `SELECT id, status, scope_json, engine, model, word_count, quality_profile, prompt_version, budget_json
+     FROM job WHERE project_id = ? ORDER BY created_at DESC LIMIT 1`,
+  ).get(fixtureProjectId) as {
+    id: string;
+    status: string;
+    scope_json: string;
+    engine: string;
+    model: string;
+    word_count: number;
+    quality_profile: string;
+    prompt_version: string;
+    budget_json: string;
+  };
+  assert.equal(pausedJob.status, 'paused');
+  assert.deepEqual(JSON.parse(pausedJob.scope_json), { from: 1, to: 3 });
+  assert.equal(pausedJob.engine, 'resume-engine');
+  assert.equal(pausedJob.model, 'resume-model');
+  assert.equal(pausedJob.word_count, 900);
+
+  const resume = app.readJobResumeConfig(pausedJob.id);
+  assert.deepEqual(resume.scope, { from: 1, to: 3 });
+  assert.equal(resume.engine, 'resume-engine');
+  assert.equal(resume.model, 'resume-model');
+  assert.equal(resume.wordCount, 900);
+  assert.equal(resume.qualityProfile, 'careful');
+  assert.equal(resume.promptVersion, 'chapter-v2');
+  assert.deepEqual(resume.budget, { maxCostRmb: 2 });
+});

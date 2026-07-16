@@ -39,6 +39,14 @@ export interface BeatRecord {
 export interface OutlineContent {
   summary: string;
   beats: string[];
+  /** CLI 兼容：蓝图生成时写入的幕与节拍元数据 */
+  act?: number;
+  role?: string;
+  purpose?: string;
+  suspenseLevel?: number;
+  foreshadowing?: string;
+  twistLevel?: number;
+  beatLabel?: string;
 }
 
 export interface ApprovedOutline {
@@ -81,6 +89,22 @@ export interface SaveApprovedOutlineInput {
 
 const revisionStatuses = ['draft', 'approved', 'superseded'] as const;
 
+function optionalNumber(value: unknown, field: string, entity: string): number | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw new InvalidPersistenceDataError(entity, `${field} must be a number when present`);
+  }
+  return value;
+}
+
+function optionalString(value: unknown, field: string, entity: string): string | undefined {
+  if (value === undefined) return undefined;
+  if (typeof value !== 'string') {
+    throw new InvalidPersistenceDataError(entity, `${field} must be a string when present`);
+  }
+  return value;
+}
+
 function parseOutlineContent(text: string): OutlineContent {
   const entity = 'chapter outline revision content';
   const value = persistedRecord(parseJson(text, entity), entity);
@@ -88,7 +112,7 @@ function parseOutlineContent(text: string): OutlineContent {
   if (!Array.isArray(beatsValue) || !beatsValue.every((beat) => typeof beat === 'string')) {
     throw new InvalidPersistenceDataError(entity, 'beats must be an array of strings');
   }
-  return {
+  const content: OutlineContent = {
     summary: stringField(value, 'summary', entity),
     beats: beatsValue.map((beat) => {
       if (typeof beat !== 'string') {
@@ -97,6 +121,21 @@ function parseOutlineContent(text: string): OutlineContent {
       return beat;
     }),
   };
+  const act = optionalNumber(value.act, 'act', entity);
+  if (act !== undefined) content.act = act;
+  const role = optionalString(value.role, 'role', entity);
+  if (role !== undefined) content.role = role;
+  const purpose = optionalString(value.purpose, 'purpose', entity);
+  if (purpose !== undefined) content.purpose = purpose;
+  const suspenseLevel = optionalNumber(value.suspenseLevel, 'suspenseLevel', entity);
+  if (suspenseLevel !== undefined) content.suspenseLevel = suspenseLevel;
+  const foreshadowing = optionalString(value.foreshadowing, 'foreshadowing', entity);
+  if (foreshadowing !== undefined) content.foreshadowing = foreshadowing;
+  const twistLevel = optionalNumber(value.twistLevel, 'twistLevel', entity);
+  if (twistLevel !== undefined) content.twistLevel = twistLevel;
+  const beatLabel = optionalString(value.beatLabel, 'beatLabel', entity);
+  if (beatLabel !== undefined) content.beatLabel = beatLabel;
+  return content;
 }
 
 function readBible(value: unknown): BibleRevision {
@@ -316,6 +355,39 @@ export class PlanningRepository {
     return row === undefined ? null : readApprovedOutline(row);
   }
 
+  /**
+   * 读取指定位置的蓝图（approved/writing/written），要求 active revision 仍为 approved。
+   * 用于编辑已写章节等路径。
+   */
+  getOutlineWithApprovedRevisionAtPosition(
+    id: ProjectId,
+    position: number,
+  ): ApprovedOutline | null {
+    const row: unknown = this.db.prepare(`
+      SELECT
+        o.id AS outline_id,
+        o.project_id,
+        o.position,
+        'approved' AS outline_status,
+        o.active_revision_id,
+        o.created_at AS outline_created_at,
+        o.updated_at,
+        r.id AS revision_id,
+        r.revision_number,
+        r.status AS revision_status,
+        r.title,
+        r.content_json,
+        r.created_at AS revision_created_at
+      FROM chapter_outline o
+      JOIN chapter_outline_revision r ON r.id = o.active_revision_id
+      WHERE o.project_id = ?
+        AND o.position = ?
+        AND o.status IN ('approved', 'writing', 'written')
+        AND r.status = 'approved'
+    `).get(id, position);
+    return row === undefined ? null : readApprovedOutline(row);
+  }
+
   getActiveBibleForProject(id: ProjectId): BibleRevision | null {
     const row: unknown = this.db.prepare(`
       SELECT b.*
@@ -324,5 +396,162 @@ export class PlanningRepository {
       WHERE p.id = ?
     `).get(id);
     return row === undefined ? null : readBible(row);
+  }
+
+  getDraftBibleForProject(id: ProjectId): BibleRevision | null {
+    const row: unknown = this.db.prepare(`
+      SELECT *
+      FROM story_bible_revision
+      WHERE project_id = ? AND status = 'draft'
+      ORDER BY revision_number DESC
+      LIMIT 1
+    `).get(id);
+    return row === undefined ? null : readBible(row);
+  }
+
+  /**
+   * 写入或更新 draft bible（生成中 checkpoint）。最终批准后内容不可变。
+   */
+  saveDraftBibleRevision(revision: BibleRevision): BibleRevision {
+    if (revision.status !== 'draft') {
+      throw new Error('saveDraftBibleRevision only accepts draft status');
+    }
+    const bible = parseJsonValue(revision.bible, 'story bible revision bible');
+    const existing = this.getBibleRevision(revision.id);
+    if (existing) {
+      if (existing.status !== 'draft') {
+        throw new Error(`Bible revision ${revision.id} is immutable`);
+      }
+      this.db.prepare(`
+        UPDATE story_bible_revision
+        SET bible_json = ?, compiled_text = ?
+        WHERE id = ? AND status = 'draft'
+      `).run(JSON.stringify(bible), revision.compiledText, revision.id);
+    } else {
+      this.db.prepare(`
+        INSERT INTO story_bible_revision (
+          id, project_id, revision_number, status, bible_json, compiled_text, created_at
+        ) VALUES (?, ?, ?, 'draft', ?, ?, ?)
+      `).run(
+        revision.id,
+        revision.projectId,
+        revision.revisionNumber,
+        JSON.stringify(bible),
+        revision.compiledText,
+        revision.createdAt,
+      );
+    }
+    const persisted = this.getBibleRevision(revision.id);
+    if (!persisted) throw new Error(`Bible revision ${revision.id} was not persisted`);
+    return persisted;
+  }
+
+  approveBibleRevision(id: string): BibleRevision {
+    const updated = this.db.prepare(`
+      UPDATE story_bible_revision
+      SET status = 'approved'
+      WHERE id = ? AND status = 'draft'
+    `).run(id);
+    if (updated.changes !== 1) {
+      throw new Error(`Bible revision ${id} cannot be approved`);
+    }
+    const persisted = this.getBibleRevision(id);
+    if (!persisted) throw new Error(`Bible revision ${id} was not found after approve`);
+    return persisted;
+  }
+
+  listApprovedOutlines(id: ProjectId): ApprovedOutline[] {
+    const rows: unknown[] = this.db.prepare(`
+      SELECT
+        o.id AS outline_id,
+        o.project_id,
+        o.position,
+        o.status AS outline_status,
+        o.active_revision_id,
+        o.created_at AS outline_created_at,
+        o.updated_at,
+        r.id AS revision_id,
+        r.revision_number,
+        r.status AS revision_status,
+        r.title,
+        r.content_json,
+        r.created_at AS revision_created_at
+      FROM chapter_outline o
+      JOIN chapter_outline_revision r ON r.id = o.active_revision_id
+      WHERE o.project_id = ?
+        AND o.status = 'approved'
+        AND r.status = 'approved'
+      ORDER BY o.position
+    `).all(id);
+    return rows.map(readApprovedOutline);
+  }
+
+  /** 规划位是否存在（approved/writing/written 均可，用于缺口检测）*/
+  hasOutlineAtPosition(id: ProjectId, position: number): boolean {
+    const row: unknown = this.db.prepare(`
+      SELECT 1 AS present
+      FROM chapter_outline
+      WHERE project_id = ? AND position = ? AND status != 'stale'
+    `).get(id, position);
+    return row !== undefined;
+  }
+
+  countOutlines(id: ProjectId): number {
+    const row: unknown = this.db.prepare(
+      'SELECT COUNT(*) AS n FROM chapter_outline WHERE project_id = ?',
+    ).get(id);
+    return numberField(persistedRecord(row, 'outline count'), 'n', 'outline count');
+  }
+
+  listOutlinesForCli(id: ProjectId): Array<{
+    id: string;
+    projectId: ProjectId;
+    number: number;
+    title: string;
+    act: 1 | 2 | 3;
+    beat: string;
+    role: string;
+    purpose: string;
+    suspenseLevel: number;
+    foreshadowing: string;
+    twistLevel: number;
+    summary: string;
+    status: 'pending' | 'written';
+  }> {
+    const rows: unknown[] = this.db.prepare(`
+      SELECT
+        o.id AS outline_id,
+        o.project_id,
+        o.position,
+        o.status AS outline_status,
+        r.title,
+        r.content_json
+      FROM chapter_outline o
+      JOIN chapter_outline_revision r ON r.id = o.active_revision_id
+      WHERE o.project_id = ?
+      ORDER BY o.position
+    `).all(id);
+    return rows.map((value) => {
+      const entity = 'cli chapter outline';
+      const row = persistedRecord(value, entity);
+      const content = parseOutlineContent(stringField(row, 'content_json', entity));
+      const outlineStatus = stringField(row, 'outline_status', entity);
+      const act = content.act === 2 || content.act === 3 ? content.act : 1;
+      return {
+        id: stringField(row, 'outline_id', entity),
+        projectId: projectId(stringField(row, 'project_id', entity)),
+        number: numberField(row, 'position', entity),
+        title: stringField(row, 'title', entity),
+        act,
+        beat: content.beatLabel ?? content.beats[0] ?? '',
+        role: content.role ?? '',
+        purpose: content.purpose ?? '',
+        suspenseLevel: content.suspenseLevel ?? 5,
+        foreshadowing: content.foreshadowing ?? '',
+        twistLevel: content.twistLevel ?? 0,
+        summary: content.summary,
+        status: outlineStatus === 'written' ? 'written' as const : 'pending' as const,
+      };
+    });
   }
 }

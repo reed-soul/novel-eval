@@ -13,13 +13,13 @@ import { loadWriterConfig } from './config.ts';
 import { loadEnv } from './load-env.ts';
 import { openDb, closeDb, type DB } from './db.ts';
 import { createProject, getProject, listProjects, updateProjectStatus, type Project } from './project.ts';
-import { generateBible } from './bible/generator.ts';
-import { importBible, type ImportBibleInput } from './bible/importer.ts';
-import { generateBlueprint } from './chapter/blueprint.ts';
-import { generateChapter, generateRange } from './chapter/generator.ts';
-import { getBibleForChapter } from './chapter/store.ts';
-import { getAllOutlines, countOutlines, countChapters, getChapter } from './chapter/store.ts';
+import type { ImportBibleInput } from './bible/importer.ts';
 import type { CharacterDynamic } from './bible/types.ts';
+import { getBibleForChapter } from './chapter/store.ts';
+import { countOutlines, countChapters, getChapter } from './chapter/store.ts';
+import { projectId } from './domain/ids.ts';
+import { PlanningRepository } from './repositories/planning-repository.ts';
+import { WriterApplication } from './services/writer-application.ts';
 import { readFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import * as readline from 'node:readline/promises';
@@ -36,6 +36,10 @@ function configuredDatabasePath(): string {
 
 function openConfiguredDb(): DB {
   return openDb({ path: configuredDatabasePath() });
+}
+
+function createApp(db: DB): WriterApplication {
+  return new WriterApplication(db, { defaultOwnerId: 'cli' });
 }
 
 interface InitArgs {
@@ -341,9 +345,10 @@ async function runInit(args: InitArgs): Promise<void> {
       title: args.title, genreProfile: args.genre, targetAudience: args.audience, premise: args.topic,
     });
     const engine: AIAgentAdapter = createEngine(config.engine);
+    const app = createApp(db);
 
-    const { bible, usage } = await generateBible({
-      engine, db, projectId: project.id,
+    const { bible, usage } = await app.generateBible({
+      engine, projectId: project.id,
       topic: args.topic, genre: args.genre, audience: args.audience,
       onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
     });
@@ -403,9 +408,10 @@ async function runImportBible(args: ImportBibleArgs): Promise<void> {
     const project = createProject(db, {
       title: args.title, genreProfile: args.genre, targetAudience: args.audience, premise: args.topic,
     });
+    const app = createApp(db);
 
-    const { bible } = importBible({
-      db, projectId: project.id, input,
+    const { bible } = app.importBible({
+      projectId: project.id, input,
       topic: args.topic, genre: args.genre, audience: args.audience,
     });
 
@@ -459,19 +465,18 @@ function printProject(p: Project, db: ReturnType<typeof openDb>): void {
   console.log(`  主题：${p.premise}`);
   console.log(`  状态：${p.status}`);
   console.log(`  创建：${p.createdAt}`);
-  const bibleRow = db.prepare('SELECT * FROM bible WHERE project_id = ?').get(p.id) as
-    | { core_seed: string | null; character_dynamics: string | null; character_state: string | null; world_building: string | null; plot_architecture: string | null; full_text: string | null }
-    | undefined;
-  if (bibleRow) {
+  const bible = new PlanningRepository(db).getActiveBibleForProject(p.id);
+  if (bible) {
+    const doc = bible.bible;
     console.log('\n  Bible：');
-    console.log(`    核心种子：${bibleRow.core_seed ? '✓' : '✗'}`);
-    console.log(`    角色动力学：${bibleRow.character_dynamics ? '✓' : '✗'}`);
-    console.log(`    角色状态：${bibleRow.character_state ? '✓' : '✗'}`);
-    console.log(`    世界观：${bibleRow.world_building ? '✓' : '✗'}`);
-    console.log(`    情节架构：${bibleRow.plot_architecture ? '✓' : '✗'}`);
-    console.log(`    设定全文：${bibleRow.full_text ? bibleRow.full_text.length + ' 字' : '✗'}`);
+    console.log(`    revision：${bible.revisionNumber}（${bible.status}）`);
+    console.log(`    核心种子：${doc.coreSeed ? '✓' : '✗'}`);
+    console.log(`    角色动力学：${doc.characterDynamics ? '✓' : '✗'}`);
+    console.log(`    角色状态：${doc.characterState ? '✓' : '✗'}`);
+    console.log(`    世界观：${doc.worldBuilding ? '✓' : '✗'}`);
+    console.log(`    情节架构：${doc.plotArchitecture ? '✓' : '✗'}`);
+    console.log(`    设定全文：${bible.compiledText.length} 字`);
   }
-  // M2：章节进度
   const outlineN = countOutlines(db, p.id);
   const chapterN = countChapters(db, p.id);
   if (outlineN > 0) {
@@ -492,14 +497,17 @@ async function runOutline(args: OutlineArgs): Promise<void> {
 
     const { plotArchitecture, characterState: _ } = getBibleForChapter(db, args.projectId);
     void _;
-    // 读 character_dynamics（蓝图生成需要角色列表）
-    const bibleRow = db.prepare('SELECT character_dynamics FROM bible WHERE project_id = ?').get(args.projectId) as
-      | { character_dynamics: string | null } | undefined;
-    if (!bibleRow?.character_dynamics) {
+    const activeBible = new PlanningRepository(db).getActiveBibleForProject(projectId(args.projectId));
+    if (!activeBible) {
       console.error('bible 未完成，无法生成蓝图。请先运行 write init。');
       process.exit(1);
     }
-    const characters = (JSON.parse(bibleRow.character_dynamics) as { characters: CharacterDynamic[] }).characters;
+    const dynamics = activeBible.bible.characterDynamics;
+    if (!Array.isArray(dynamics)) {
+      console.error('bible 未完成，无法生成蓝图。请先运行 write init。');
+      process.exit(1);
+    }
+    const characters = dynamics as unknown as CharacterDynamic[];
     const totalChapters = args.chapters ?? config.generation.defaultChapters;
 
     const existing = countOutlines(db, args.projectId);
@@ -528,8 +536,9 @@ async function runOutline(args: OutlineArgs): Promise<void> {
     }
 
     const engine: AIAgentAdapter = createEngine(config.engine);
-    const { outlines, usage } = await generateBlueprint({
-      engine, db, projectId: args.projectId,
+    const app = createApp(db);
+    const { outlines, usage } = await app.generateBlueprint({
+      engine, projectId: args.projectId,
       plot: plotArchitecture, characters, totalChapters,
       onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
     });
@@ -538,7 +547,6 @@ async function runOutline(args: OutlineArgs): Promise<void> {
     console.log('\n✓ 章节蓝图生成完成');
     console.log(`  章节数：${outlines.length}`);
     console.log(`  费用：¥${usage.costRmb.toFixed(4)}`);
-    // 列出各幕分布
     const byAct = { 1: 0, 2: 0, 3: 0 };
     for (const o of outlines) byAct[o.act]++;
     console.log(`  分布：第一幕 ${byAct[1]} 章 / 第二幕 ${byAct[2]} 章 / 第三幕 ${byAct[3]} 章`);
@@ -615,10 +623,16 @@ async function runChapter(args: ChapterArgs): Promise<void> {
 
     updateProjectStatus(db, args.projectId, 'writing');
     const engine: AIAgentAdapter = createEngine(config.engine);
+    const app = createApp(db);
 
-    const results = await generateRange({
-      engine, db, projectId: args.projectId,
-      from, to, wordCount,
+    const { outcomes } = await app.generateChapterRange({
+      projectId: projectId(args.projectId),
+      from,
+      to,
+      engine,
+      wordCount,
+      engineName: config.engineName,
+      model: config.engine.model,
       onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
     });
 
@@ -626,12 +640,14 @@ async function runChapter(args: ChapterArgs): Promise<void> {
       updateProjectStatus(db, args.projectId, 'completed');
     }
 
-    const totalCost = results.reduce((s, r) => s + r.usage.costRmb, 0);
+    const results: { number: number; title: string; content: string; wordCount: number }[] = [];
+    for (let num = from; num <= to; num++) {
+      const ch = getChapter(db, args.projectId, num);
+      if (ch) results.push({ number: ch.number, title: ch.title, content: ch.content, wordCount: ch.wordCount });
+    }
     const totalWords = results.reduce((s, r) => s + r.wordCount, 0);
     console.log(`\n✓ 章节生成完成`);
-    console.log(`  生成：${results.length} 章 · ${totalWords} 字`);
-    console.log(`  费用：¥${totalCost.toFixed(4)}`);
-    // 写出 txt（方便阅读）
+    console.log(`  生成：${outcomes.length} 章 · ${totalWords} 字`);
     if (results.length > 0) {
       const { writeFileSync } = await import('node:fs');
       const { resolve } = await import('node:path');
@@ -731,13 +747,13 @@ async function runResume(args: ResumeArgs): Promise<void> {
     }
 
     const engine: AIAgentAdapter = createEngine(config.engine);
+    const app = createApp(db);
 
     const to = countOutlines(db, args.projectId);
     const from = countChapters(db, args.projectId) + 1;
 
     if (from > to) {
       console.log(`\n✓ 全部 ${to} 章已完成，无需续写。`);
-      // 顺手修复 status 卡在 writing 的情况
       if (project.status === 'writing') {
         updateProjectStatus(db, args.projectId, 'completed');
         console.log('  项目状态已更新为 completed。');
@@ -745,36 +761,59 @@ async function runResume(args: ResumeArgs): Promise<void> {
       return;
     }
 
-    const resumeCount = to - from + 1;
-    console.log(`  续写范围：第 ${from}-${to} 章（${resumeCount} 章待写，已完成章节自动跳过）`);
-    console.log(`  每章约 ${config.generation.chapterWordCount} 字`);
+    const { getActiveJob, readJobResumeConfig } = await import('./job-store.ts');
+    const persisted = getActiveJob(db, args.projectId);
+    let resumeFrom = from;
+    let resumeTo = to;
+    let wordCount = config.generation.chapterWordCount;
+    let engineName = config.engineName;
+    let model = config.engine.model;
+    if (persisted && (persisted.status === 'paused' || persisted.status === 'running')) {
+      const snapshot = readJobResumeConfig(db, persisted.id);
+      resumeFrom = Math.max(from, snapshot.lastOutlinePosition + 1);
+      resumeTo = snapshot.scope.to;
+      wordCount = snapshot.wordCount || wordCount;
+      engineName = snapshot.engine || engineName;
+      model = snapshot.model || model;
+      console.log(`  恢复任务 ${persisted.id}：继续原始范围 ${snapshot.scope.from}-${snapshot.scope.to}`);
+    }
+
+    const resumeCount = resumeTo - resumeFrom + 1;
+    console.log(`  续写范围：第 ${resumeFrom}-${resumeTo} 章（${resumeCount} 章待写，已完成章节自动跳过）`);
+    console.log(`  每章约 ${wordCount} 字`);
     if (args.maxRevise !== undefined) {
       console.log('  质量门槛：暂未接入本地 kernel（忽略 --max-revise；后续质量体系落地后再启用）');
     }
     console.log('');
 
     updateProjectStatus(db, args.projectId, 'writing');
-    const results = await generateRange({
-      engine, db, projectId: args.projectId,
-      from, to, wordCount: config.generation.chapterWordCount,
+    const { outcomes } = await app.generateChapterRange({
+      projectId: projectId(args.projectId),
+      from: resumeFrom,
+      to: resumeTo,
+      engine,
+      wordCount,
+      engineName,
+      model,
       onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
     });
 
-    if (from + results.length - 1 === to) {
+    if (resumeFrom + outcomes.length - 1 >= resumeTo) {
       updateProjectStatus(db, args.projectId, 'completed');
     }
 
-    const totalCost = results.reduce((s, r) => s + r.usage.costRmb, 0);
+    const results: { number: number; title: string; content: string; wordCount: number }[] = [];
+    for (let num = resumeFrom; num <= resumeTo; num++) {
+      const ch = getChapter(db, args.projectId, num);
+      if (ch) results.push({ number: ch.number, title: ch.title, content: ch.content, wordCount: ch.wordCount });
+    }
     const totalWords = results.reduce((s, r) => s + r.wordCount, 0);
-    const skipped = resumeCount - results.length;
     console.log(`\n✓ 续写完成`);
-    console.log(`  本次生成：${results.length} 章 · ${totalWords} 字${skipped > 0 ? `（跳过 ${skipped} 章已完成）` : ''}`);
-    console.log(`  费用：¥${totalCost.toFixed(4)}`);
-    // 写出 txt（本次新生成的章节）
+    console.log(`  本次生成：${outcomes.length} 章 · ${totalWords} 字`);
     if (results.length > 0) {
       const { writeFileSync } = await import('node:fs');
       const { resolve } = await import('node:path');
-      const outPath = resolve(dirname(configuredDatabasePath()), `${args.projectId}-ch${from}-${to}.txt`);
+      const outPath = resolve(dirname(configuredDatabasePath()), `${args.projectId}-ch${resumeFrom}-${resumeTo}.txt`);
       const text = results.map((r) => `第${r.number}章 ${r.title}\n\n${r.content}`).join('\n\n\n');
       writeFileSync(outPath, text, 'utf-8');
       console.log(`  导出：${outPath}`);
@@ -814,45 +853,51 @@ async function runAuto(args: AutoArgs): Promise<void> {
   const db = openConfiguredDb();
   try {
     const engine: AIAgentAdapter = createEngine(config.engine);
+    const app = createApp(db);
     const log = (step: string, msg: string) => console.log(`  [${step}] ${msg}`);
 
-    // 1. bible
     console.log('\n── 阶段 1：bible 生成 ──');
     const project = createProject(db, { title: args.title, genreProfile: args.genre, targetAudience: args.audience, premise: args.topic });
-    const { bible, usage: bibleUsage } = await generateBible({
-      engine, db, projectId: project.id, topic: args.topic, genre: args.genre, audience: args.audience, onProgress: log,
+    const { bible, usage: bibleUsage } = await app.generateBible({
+      engine, projectId: project.id, topic: args.topic, genre: args.genre, audience: args.audience, onProgress: log,
     });
     updateProjectStatus(db, project.id, 'planning');
     console.log(`✓ bible 完成（${bible.characterDynamics.length} 角色 / ${bible.plotArchitecture.foreshadows.length} 伏笔 / ¥${bibleUsage.costRmb.toFixed(4)}）`);
 
-    // 2. outline
     console.log('\n── 阶段 2：章节蓝图 ──');
-    const { outlines, usage: outlineUsage } = await generateBlueprint({
-      engine, db, projectId: project.id, plot: bible.plotArchitecture, characters: bible.characterDynamics, totalChapters: args.chapters, onProgress: log,
+    const { outlines, usage: outlineUsage } = await app.generateBlueprint({
+      engine, projectId: project.id, plot: bible.plotArchitecture, characters: bible.characterDynamics, totalChapters: args.chapters, onProgress: log,
     });
     updateProjectStatus(db, project.id, 'planning');
     console.log(`✓ 蓝图完成（${outlines.length} 章 / ¥${outlineUsage.costRmb.toFixed(4)}）`);
 
-    // 3. chapter
     console.log('\n── 阶段 3：章节生成 ──');
     updateProjectStatus(db, project.id, 'writing');
     if (args.maxRevise !== undefined) {
       console.log('  质量门槛：暂未接入本地 kernel（忽略 --max-revise）');
     }
-    const results = await generateRange({
-      engine, db, projectId: project.id, from: 1, to: outlines.length,
+    const { outcomes } = await app.generateChapterRange({
+      projectId: project.id,
+      from: 1,
+      to: outlines.length,
+      engine,
       wordCount: config.generation.chapterWordCount,
+      engineName: config.engineName,
+      model: config.engine.model,
       onProgress: log,
     });
     updateProjectStatus(db, project.id, 'completed');
 
-    const totalCost = bibleUsage.costRmb + outlineUsage.costRmb + results.reduce((s, r) => s + r.usage.costRmb, 0);
+    const results: { number: number; title: string; content: string; wordCount: number }[] = [];
+    for (let num = 1; num <= outlines.length; num++) {
+      const ch = getChapter(db, project.id, num);
+      if (ch) results.push({ number: ch.number, title: ch.title, content: ch.content, wordCount: ch.wordCount });
+    }
     const totalWords = results.reduce((s, r) => s + r.wordCount, 0);
     console.log(`\n✓ 全自动生成完成`);
-    console.log(`  生成：${results.length} 章 · ${totalWords} 字`);
-    console.log(`  总费用：¥${totalCost.toFixed(4)}`);
+    console.log(`  生成：${outcomes.length} 章 · ${totalWords} 字`);
+    console.log(`  总费用：¥${(bibleUsage.costRmb + outlineUsage.costRmb).toFixed(4)}+`);
     console.log(`  项目 ID：${project.id}`);
-    // 导出 txt
     const { writeFileSync } = await import('node:fs');
     const { resolve } = await import('node:path');
     const outPath = resolve(dirname(configuredDatabasePath()), `${project.id}-full.txt`);

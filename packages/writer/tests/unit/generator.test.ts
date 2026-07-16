@@ -6,33 +6,16 @@
  *   2. 上下文隔离（world_building 步骤的 prompt 不含 character_dynamics）
  *   3. checkpoint：中途写 SQLite 后重跑能跳过已完成步
  *   4. full_text 拼接包含各段内容
- *
- * 不调真实 LLM。
+ *   5. 最终写入 immutable approved revision 1 并激活
  */
-import { describe, it, beforeEach, afterEach } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import type { AIAgentAdapter, CallResult, RunOptions } from '@novel-eval/shared';
 
-import { openDb, closeDb, type DB } from '../../src/db.ts';
 import { createProject } from '../../src/project.ts';
 import { generateBible } from '../../src/bible/generator.ts';
-
-let origCwd: string;
-let tempRoot: string;
-
-beforeEach(() => {
-  origCwd = process.cwd();
-  tempRoot = mkdtempSync(join(tmpdir(), 'writer-gen-'));
-  process.chdir(tempRoot);
-});
-
-afterEach(() => {
-  process.chdir(origCwd);
-  rmSync(tempRoot, { recursive: true, force: true });
-});
+import { PlanningRepository } from '../../src/repositories/planning-repository.ts';
+import { createTestDb } from '../helpers/test-db.ts';
 
 /** mock engine：按调用顺序返回预设响应。记录每次 prompt 供断言上下文隔离。 */
 function mockEngine(responses: string[]): AIAgentAdapter & { prompts: string[] } {
@@ -53,8 +36,6 @@ function mockEngine(responses: string[]): AIAgentAdapter & { prompts: string[] }
     async isAvailable() { return true; },
   };
 }
-
-// ─── 预设的合法 JSON 响应 ─────────────────────────────────────────
 
 const CORE_SEED_RESP = JSON.stringify({ premise: '当少年探险者李川遭遇星际虫族入侵，必须找到失落的星舰核心，否则人类殖民地将在三日内沦陷；与此同时，一个隐藏的叛徒正在瓦解最后的防线。' });
 
@@ -128,90 +109,123 @@ const PLOT_RESP = JSON.stringify({
 });
 
 describe('generateBible', () => {
-  it('4 步顺序执行，每步 schema 校验通过，生成完整 bible', async () => {
-    const db = openDb();
-    const project = createProject(db, { title: '星际殖民地', genreProfile: '科幻', targetAudience: '青年男性', premise: '虫族入侵' });
+  it('4 步顺序执行，每步 schema 校验通过，生成完整 bible 并激活 revision 1', async (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const project = createProject(testDb.db, {
+      title: '星际殖民地',
+      genreProfile: '科幻',
+      targetAudience: '青年男性',
+      premise: '虫族入侵',
+    });
     const engine = mockEngine([CORE_SEED_RESP, CHAR_DYNAMICS_RESP, CHAR_STATE_RESP, WORLD_RESP, PLOT_RESP]);
 
     const { bible, usage } = await generateBible({
-      engine, db, projectId: project.id,
-      topic: '虫族入侵', genre: '科幻', audience: '青年男性',
+      engine,
+      db: testDb.db,
+      projectId: project.id,
+      topic: '虫族入侵',
+      genre: '科幻',
+      audience: '青年男性',
     });
 
-    // 4 步 + 2.5 = 5 次 LLM 调用
     assert.equal(engine.prompts.length, 5);
-    // bible 结构完整
     assert.equal(bible.coreSeed.premise.length > 0, true);
     assert.equal(bible.characterDynamics.length, 3);
     assert.equal(bible.characterState.characters.length, 3);
     assert.equal(bible.worldBuilding.physical.elements.length, 3);
     assert.equal(bible.plotArchitecture.foreshadows.length, 3);
-    // usage 累计（5 次 × 每次 0.001）
     assert.equal(usage.costRmb, 0.005);
-    // full_text 拼接
     assert.ok(bible.fullText.includes('核心种子'));
     assert.ok(bible.fullText.includes('李川'));
     assert.ok(bible.fullText.includes('世界观'));
     assert.ok(bible.fullText.includes('伏笔'));
-    closeDb(db);
+
+    const planning = new PlanningRepository(testDb.db);
+    const active = planning.getActiveBibleForProject(project.id);
+    assert.ok(active);
+    assert.equal(active.revisionNumber, 1);
+    assert.equal(active.status, 'approved');
+    assert.equal(active.compiledText, bible.fullText);
   });
 
-  it('上下文隔离：world_building 步骤的 prompt 不含 character_dynamics 的角色细节', async () => {
-    const db = openDb();
-    const project = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+  it('上下文隔离：world_building 步骤的 prompt 不含 character_dynamics 的角色细节', async (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const project = createProject(testDb.db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     const engine = mockEngine([CORE_SEED_RESP, CHAR_DYNAMICS_RESP, CHAR_STATE_RESP, WORLD_RESP, PLOT_RESP]);
 
     await generateBible({
-      engine, db, projectId: project.id, topic: 't', genre: 'g', audience: 'a',
+      engine,
+      db: testDb.db,
+      projectId: project.id,
+      topic: 't',
+      genre: 'g',
+      audience: 'a',
     });
 
-    const worldPrompt = engine.prompts[3];  // 第 4 次调用（index 3）是 world_building
-    // world_building prompt 不应含 character_dynamics 的专属细节（驱动力三角、秘密、关系网）
-    // 注意：coreSeed 里可能含角色名（一句话核心），那是允许的——隔离的是角色设计细节
+    const worldPrompt = engine.prompts[3];
     assert.equal(worldPrompt.includes('半虫族混血'), false, 'world_building 不应含角色秘密');
     assert.equal(worldPrompt.includes('驱动力三角'), false, 'world_building 不应含驱动力设计');
     assert.equal(worldPrompt.includes('暗中保护'), false, 'world_building 不应含关系网细节');
-    // 但 plot_architecture（第 5 次调用）应汇集全部角色细节
     const plotPrompt = engine.prompts[4];
     assert.ok(plotPrompt.includes('半虫族混血'), 'plot_architecture 应含角色秘密');
-    closeDb(db);
   });
 
-  it('checkpoint：中途断开重跑能跳过已完成步', async () => {
-    const db = openDb();
-    const project = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+  it('checkpoint：中途断开重跑能跳过已完成步', async (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const project = createProject(testDb.db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
 
-    // 第一次：只跑前 2 步就停（模拟中断）—— 用只提供 2 个响应的 engine
     const engine1 = mockEngine([CORE_SEED_RESP, CHAR_DYNAMICS_RESP]);
-    // generateBible 跑到 character_state 步会因 mock 返回 '{}' 校验失败而抛错
     await assert.rejects(
-      generateBible({ engine: engine1, db, projectId: project.id, topic: 't', genre: 'g', audience: 'a' }),
+      () => generateBible({
+        engine: engine1,
+        db: testDb.db,
+        projectId: project.id,
+        topic: 't',
+        genre: 'g',
+        audience: 'a',
+      }),
     );
-    // 此时 core_seed + character_dynamics 已写入 SQLite（checkpoint）
 
-    // 第二次：用完整 5 响应的 engine 重跑——应跳过前 2 步，只调 3 次
     const engine2 = mockEngine([CHAR_STATE_RESP, WORLD_RESP, PLOT_RESP]);
     const { bible } = await generateBible({
-      engine: engine2, db, projectId: project.id, topic: 't', genre: 'g', audience: 'a',
+      engine: engine2,
+      db: testDb.db,
+      projectId: project.id,
+      topic: 't',
+      genre: 'g',
+      audience: 'a',
     });
 
-    // 只调了 3 次（character_state + world + plot，前两步被跳过）
     assert.equal(engine2.prompts.length, 3);
-    assert.equal(bible.characterDynamics.length, 3);  // 从 checkpoint 恢复
+    assert.equal(bible.characterDynamics.length, 3);
     assert.equal(bible.plotArchitecture.foreshadows.length, 3);
-    closeDb(db);
+
+    const planning = new PlanningRepository(testDb.db);
+    const active = planning.getActiveBibleForProject(project.id);
+    assert.ok(active);
+    assert.equal(active.status, 'approved');
+    assert.equal(active.revisionNumber, 1);
   });
 
-  it('core_seed 生成失败时抛错（致命步骤）', async () => {
-    const db = openDb();
-    const project = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
-    // 返回不合法 JSON（premise 过短，schema min:15 会失败）
+  it('core_seed 生成失败时抛错（致命步骤）', async (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const project = createProject(testDb.db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     const engine = mockEngine([JSON.stringify({ premise: '太短' })]);
 
     await assert.rejects(
-      generateBible({ engine, db, projectId: project.id, topic: 't', genre: 'g', audience: 'a' }),
+      () => generateBible({
+        engine,
+        db: testDb.db,
+        projectId: project.id,
+        topic: 't',
+        genre: 'g',
+        audience: 'a',
+      }),
       /核心种子生成失败/,
     );
-    closeDb(db);
   });
 });

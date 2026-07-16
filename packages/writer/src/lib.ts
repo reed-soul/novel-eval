@@ -55,3 +55,29 @@ export type {
   StoryStateDelta,
   TimelineEvent,
 } from './chapter/types.ts';
+export {
+  createJobRow,
+  getJobRow,
+  getActiveJob,
+  listJobsByProject,
+  updateJobStatus,
+  updateJobProgress,
+  recoverInterruptedJobs,
+  readJobResumeConfig,
+  type JobType,
+  type JobStatus,
+  type JobRow,
+  type JobScope,
+  type JobResumeConfig,
+  type CreateJobRowOpts,
+} from './job-store.ts';
+export {
+  WriterApplication,
+  type WriterApplicationOptions,
+  type GenerateChapterRangeInput,
+  type GenerateChapterRangeResult,
+  type PublishChapterEditInput,
+  type RebuildStoryStateInput,
+} from './services/writer-application.ts';
+export type { StaleImpact, PublishResult } from './services/chapter-publication-service.ts';
+export type { RebuildResult } from './services/state-rebuild-service.ts';

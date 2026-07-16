@@ -3,18 +3,19 @@
  *
  * 流程：core_seed → character_dynamics → character_state(2.5) → world_building → plot_architecture
  *
- * 关键设计：
- *   1. 有意的上下文隔离（照搬 AI_NovelGenerator）：
- *      - character_dynamics 只看 core_seed
- *      - world_building 只看 core_seed（不看角色，避免污染）
- *      - plot_architecture 汇集全部（唯一汇集点）
- *   2. JSON Schema 强约束 + callWithValidation（容错解析/校验/重试）
- *   3. Checkpoint：每步完成即写 SQLite，断了能续（重跑时跳过已完成步）
- *   4. 顺序执行（步骤间有依赖，不能并发）
+ * 持久化：写入 story_bible_revision draft（逐步 checkpoint），完成后批准为
+ * immutable revision 1 并设为项目 active bible。
  */
+import { randomUUID } from 'node:crypto';
+
 import type { AIAgentAdapter } from '@novel-eval/shared';
 import { callWithValidation, type SchemaSpec } from '@novel-eval/shared';
+
 import type { DB } from '../db.ts';
+import { projectId } from '../domain/ids.ts';
+import { PlanningRepository, type BibleDocument } from '../repositories/planning-repository.ts';
+import { ProjectRepository } from '../repositories/project-repository.ts';
+import { getRuntimeConfig } from '../runtime-config.ts';
 import type {
   Bible, CoreSeed, CharacterDynamic, CharacterDynamicsResult,
   CharacterState, WorldBuilding, PlotArchitecture,
@@ -23,8 +24,6 @@ import {
   coreSeedPrompt, characterDynamicsPrompt, characterStatePrompt,
   worldBuildingPrompt, plotArchitecturePrompt,
 } from './prompts.ts';
-
-import { getRuntimeConfig } from '../runtime-config.ts';
 
 // ─── 各步的 schema 约束 ───────────────────────────────────────────
 
@@ -114,51 +113,55 @@ const PLOT_SCHEMA: SchemaSpec = {
   foreshadows: { type: 'array', min: 3, required: true, itemSpec: foreshadowSpec },
 };
 
-// ─── 持久化（checkpoint）─────────────────────────────────────────
-
-interface BibleRow {
-  project_id: string;
-  core_seed: string | null;
-  character_dynamics: string | null;
-  character_state: string | null;
-  world_building: string | null;
-  plot_architecture: string | null;
-  full_text: string | null;
+interface BibleCheckpoint {
+  coreSeed?: CoreSeed;
+  characterDynamics?: CharacterDynamic[];
+  characterState?: CharacterState;
+  worldBuilding?: WorldBuilding;
+  plotArchitecture?: PlotArchitecture;
+  fullText?: string;
 }
 
-/** 读取已完成的步（断点续传）*/
-function loadPartial(db: DB, projectId: string): Partial<Bible> & { hasAny: boolean } {
-  const row = db.prepare('SELECT * FROM bible WHERE project_id = ?').get(projectId) as BibleRow | undefined;
-  if (!row) return { hasAny: false };
-  const partial: Partial<Bible> = {};
-  if (row.core_seed) partial.coreSeed = JSON.parse(row.core_seed) as CoreSeed;
-  if (row.character_dynamics) {
-    const r = JSON.parse(row.character_dynamics) as CharacterDynamicsResult;
-    partial.characterDynamics = r.characters;
+function asDocument(value: BibleCheckpoint): BibleDocument {
+  return value as unknown as BibleDocument;
+}
+
+function readCheckpoint(doc: BibleDocument): BibleCheckpoint {
+  return doc as unknown as BibleCheckpoint;
+}
+
+function loadPartial(
+  planning: PlanningRepository,
+  id: ReturnType<typeof projectId>,
+): { revisionId: string; partial: BibleCheckpoint } {
+  const active = planning.getActiveBibleForProject(id);
+  if (active) {
+    return { revisionId: active.id, partial: readCheckpoint(active.bible) };
   }
-  if (row.character_state) partial.characterState = JSON.parse(row.character_state) as CharacterState;
-  if (row.world_building) partial.worldBuilding = JSON.parse(row.world_building) as WorldBuilding;
-  if (row.plot_architecture) partial.plotArchitecture = JSON.parse(row.plot_architecture) as PlotArchitecture;
-  return { ...partial, hasAny: Object.keys(partial).length > 0 };
+  const draft = planning.getDraftBibleForProject(id);
+  if (draft) {
+    return { revisionId: draft.id, partial: readCheckpoint(draft.bible) };
+  }
+  return { revisionId: randomUUID(), partial: {} };
 }
 
-/** 写入单步结果（upsert）*/
-function saveStep(db: DB, projectId: string, fields: Partial<Record<keyof BibleRow, string>>): void {
-  const now = new Date().toISOString();
-  const cols = Object.keys(fields);
-  if (cols.length === 0) return;
-  // 确保 bible 行存在
-  db.prepare(
-    `INSERT OR IGNORE INTO bible (project_id, created_at, updated_at) VALUES (?, ?, ?)`,
-  ).run(projectId, now, now);
-  const setClause = cols.map((c) => `${c} = ?`).join(', ');
-  const values = cols.map((c) => (fields as Record<string, string>)[c]);
-  db.prepare(
-    `UPDATE bible SET ${setClause}, updated_at = ? WHERE project_id = ?`,
-  ).run(...values, now, projectId);
+function saveCheckpoint(
+  planning: PlanningRepository,
+  id: ReturnType<typeof projectId>,
+  revisionId: string,
+  partial: BibleCheckpoint,
+  compiledText: string,
+): void {
+  planning.saveDraftBibleRevision({
+    id: revisionId,
+    projectId: id,
+    revisionNumber: 1,
+    status: 'draft',
+    bible: asDocument(partial),
+    compiledText,
+    createdAt: new Date().toISOString(),
+  });
 }
-
-// ─── 主入口 ──────────────────────────────────────────────────────
 
 export interface GenerateBibleOptions {
   engine: AIAgentAdapter;
@@ -172,45 +175,82 @@ export interface GenerateBibleOptions {
 
 export interface GenerateBibleResult {
   bible: Bible;
-  /** 各步耗时与 token（供计费展示）*/
   usage: { inputTokens: number; outputTokens: number; costRmb: number };
 }
 
 export async function generateBible(opts: GenerateBibleOptions): Promise<GenerateBibleResult> {
-  const { engine, db, projectId, topic, genre, audience, onProgress } = opts;
+  const { engine, db, topic, genre, audience, onProgress } = opts;
+  const id = projectId(opts.projectId);
+  const planning = new PlanningRepository(db);
+  const projects = new ProjectRepository(db);
   const totalUsage = { inputTokens: 0, outputTokens: 0, costRmb: 0 };
-  const partial = loadPartial(db, projectId);
 
-  // ─── Step 1: core_seed ──────────────────────────────────────────
+  const existingActive = planning.getActiveBibleForProject(id);
+  if (existingActive && existingActive.status === 'approved') {
+    const checkpoint = readCheckpoint(existingActive.bible);
+    if (
+      checkpoint.coreSeed
+      && checkpoint.characterDynamics
+      && checkpoint.characterState
+      && checkpoint.worldBuilding
+      && checkpoint.plotArchitecture
+      && checkpoint.fullText
+    ) {
+      onProgress?.('done', 'Bible 已存在，跳过');
+      return {
+        bible: {
+          coreSeed: checkpoint.coreSeed,
+          characterDynamics: checkpoint.characterDynamics,
+          characterState: checkpoint.characterState,
+          worldBuilding: checkpoint.worldBuilding,
+          plotArchitecture: checkpoint.plotArchitecture,
+          fullText: checkpoint.fullText,
+        },
+        usage: totalUsage,
+      };
+    }
+  }
+
+  const loaded = loadPartial(planning, id);
+  let revisionId = loaded.revisionId;
+  const partial = loaded.partial;
+
   let coreSeed = partial.coreSeed;
   if (!coreSeed) {
     onProgress?.('core_seed', '生成核心种子...');
     const res = await callWithValidation<CoreSeed>(engine, coreSeedPrompt(topic, genre, audience), {
       systemPrompt: '你是资深小说策划。只输出 JSON。',
-      temperature: getRuntimeConfig().generation.temperatures.bible, maxTokens: 400, timeoutMs: getRuntimeConfig().generation.timeouts.bibleMs,
-      schema: CORE_SEED_SCHEMA, maxAttempts: 3,
+      temperature: getRuntimeConfig().generation.temperatures.bible,
+      maxTokens: 400,
+      timeoutMs: getRuntimeConfig().generation.timeouts.bibleMs,
+      schema: CORE_SEED_SCHEMA,
+      maxAttempts: 3,
     });
     if (!res.ok || !res.data) throw new Error(`核心种子生成失败：${res.errors.join('; ')}`);
     coreSeed = res.data;
     totalUsage.inputTokens += res.totalUsage.inputTokens;
     totalUsage.outputTokens += res.totalUsage.outputTokens;
     totalUsage.costRmb += res.totalUsage.costRmb;
-    saveStep(db, projectId, { core_seed: JSON.stringify(coreSeed) });
+    partial.coreSeed = coreSeed;
+    saveCheckpoint(planning, id, revisionId, partial, coreSeed.premise);
     onProgress?.('core_seed', `✓ ${coreSeed.premise.slice(0, 40)}...`);
   } else {
     onProgress?.('core_seed', '（已完成，跳过）');
   }
 
-  // ─── Step 2: character_dynamics（只看 core_seed）────────────────
   let characterDynamics = partial.characterDynamics;
   if (!characterDynamics) {
     onProgress?.('character_dynamics', '生成角色动力学...');
     const res = await callWithValidation<CharacterDynamicsResult>(
-      engine, characterDynamicsPrompt(JSON.stringify(coreSeed), audience),
+      engine,
+      characterDynamicsPrompt(JSON.stringify(coreSeed), audience),
       {
         systemPrompt: '你是角色设计大师。只输出 JSON。',
-        temperature: getRuntimeConfig().generation.temperatures.bible, maxTokens: 3000, timeoutMs: getRuntimeConfig().generation.timeouts.bibleMs,
-        schema: CHARACTER_DYNAMICS_SCHEMA, maxAttempts: 3,
+        temperature: getRuntimeConfig().generation.temperatures.bible,
+        maxTokens: 3000,
+        timeoutMs: getRuntimeConfig().generation.timeouts.bibleMs,
+        schema: CHARACTER_DYNAMICS_SCHEMA,
+        maxAttempts: 3,
       },
     );
     if (!res.ok || !res.data) throw new Error(`角色动力学生成失败：${res.errors.join('; ')}`);
@@ -218,23 +258,26 @@ export async function generateBible(opts: GenerateBibleOptions): Promise<Generat
     totalUsage.inputTokens += res.totalUsage.inputTokens;
     totalUsage.outputTokens += res.totalUsage.outputTokens;
     totalUsage.costRmb += res.totalUsage.costRmb;
-    // 存完整的 {characters:[...]} 结构（character_state 步骤要用）
-    saveStep(db, projectId, { character_dynamics: JSON.stringify({ characters: characterDynamics }) });
+    partial.characterDynamics = characterDynamics;
+    saveCheckpoint(planning, id, revisionId, partial, coreSeed.premise);
     onProgress?.('character_dynamics', `✓ ${characterDynamics.length} 个角色`);
   } else {
     onProgress?.('character_dynamics', '（已完成，跳过）');
   }
 
-  // ─── Step 2.5: character_state（看 character_dynamics）──────────
   let characterState = partial.characterState;
   if (!characterState) {
     onProgress?.('character_state', '生成初始角色状态树...');
     const res = await callWithValidation<CharacterState>(
-      engine, characterStatePrompt(JSON.stringify({ characters: characterDynamics })),
+      engine,
+      characterStatePrompt(JSON.stringify({ characters: characterDynamics })),
       {
         systemPrompt: '你是小说连贯性编辑。只输出 JSON。',
-        temperature: getRuntimeConfig().generation.temperatures.bible, maxTokens: 2500, timeoutMs: getRuntimeConfig().generation.timeouts.bibleMs,
-        schema: CHARACTER_STATE_SCHEMA, maxAttempts: 3,
+        temperature: getRuntimeConfig().generation.temperatures.bible,
+        maxTokens: 2500,
+        timeoutMs: getRuntimeConfig().generation.timeouts.bibleMs,
+        schema: CHARACTER_STATE_SCHEMA,
+        maxAttempts: 3,
       },
     );
     if (!res.ok || !res.data) throw new Error(`角色状态生成失败：${res.errors.join('; ')}`);
@@ -242,22 +285,26 @@ export async function generateBible(opts: GenerateBibleOptions): Promise<Generat
     totalUsage.inputTokens += res.totalUsage.inputTokens;
     totalUsage.outputTokens += res.totalUsage.outputTokens;
     totalUsage.costRmb += res.totalUsage.costRmb;
-    saveStep(db, projectId, { character_state: JSON.stringify(characterState) });
+    partial.characterState = characterState;
+    saveCheckpoint(planning, id, revisionId, partial, coreSeed.premise);
     onProgress?.('character_state', `✓ ${characterState.characters.length} 个状态`);
   } else {
     onProgress?.('character_state', '（已完成，跳过）');
   }
 
-  // ─── Step 3: world_building（只看 core_seed，隔离角色信息）──────
   let worldBuilding = partial.worldBuilding;
   if (!worldBuilding) {
     onProgress?.('world_building', '生成世界观...');
     const res = await callWithValidation<WorldBuilding>(
-      engine, worldBuildingPrompt(JSON.stringify(coreSeed), genre),
+      engine,
+      worldBuildingPrompt(JSON.stringify(coreSeed), genre),
       {
         systemPrompt: '你是世界观架构师。只输出 JSON。',
-        temperature: getRuntimeConfig().generation.temperatures.bible, maxTokens: 3000, timeoutMs: getRuntimeConfig().generation.timeouts.bibleMs,
-        schema: WORLD_BUILDING_SCHEMA, maxAttempts: 3,
+        temperature: getRuntimeConfig().generation.temperatures.bible,
+        maxTokens: 3000,
+        timeoutMs: getRuntimeConfig().generation.timeouts.bibleMs,
+        schema: WORLD_BUILDING_SCHEMA,
+        maxAttempts: 3,
       },
     );
     if (!res.ok || !res.data) throw new Error(`世界观生成失败：${res.errors.join('; ')}`);
@@ -265,26 +312,30 @@ export async function generateBible(opts: GenerateBibleOptions): Promise<Generat
     totalUsage.inputTokens += res.totalUsage.inputTokens;
     totalUsage.outputTokens += res.totalUsage.outputTokens;
     totalUsage.costRmb += res.totalUsage.costRmb;
-    saveStep(db, projectId, { world_building: JSON.stringify(worldBuilding) });
+    partial.worldBuilding = worldBuilding;
+    saveCheckpoint(planning, id, revisionId, partial, coreSeed.premise);
     onProgress?.('world_building', '✓ 三维度完成');
   } else {
     onProgress?.('world_building', '（已完成，跳过）');
   }
 
-  // ─── Step 4: plot_architecture（汇集全部）──────────────────────
   let plotArchitecture = partial.plotArchitecture;
   if (!plotArchitecture) {
     onProgress?.('plot_architecture', '生成三幕式情节架构...');
     const res = await callWithValidation<PlotArchitecture>(
-      engine, plotArchitecturePrompt(
+      engine,
+      plotArchitecturePrompt(
         JSON.stringify(coreSeed),
         JSON.stringify({ characters: characterDynamics }),
         JSON.stringify(worldBuilding),
       ),
       {
         systemPrompt: '你是情节架构大师。只输出 JSON。',
-        temperature: getRuntimeConfig().generation.temperatures.bible, maxTokens: 4000, timeoutMs: getRuntimeConfig().generation.timeouts.bibleMs,
-        schema: PLOT_SCHEMA, maxAttempts: 3,
+        temperature: getRuntimeConfig().generation.temperatures.bible,
+        maxTokens: 4000,
+        timeoutMs: getRuntimeConfig().generation.timeouts.bibleMs,
+        schema: PLOT_SCHEMA,
+        maxAttempts: 3,
       },
     );
     if (!res.ok || !res.data) throw new Error(`情节架构生成失败：${res.errors.join('; ')}`);
@@ -292,37 +343,58 @@ export async function generateBible(opts: GenerateBibleOptions): Promise<Generat
     totalUsage.inputTokens += res.totalUsage.inputTokens;
     totalUsage.outputTokens += res.totalUsage.outputTokens;
     totalUsage.costRmb += res.totalUsage.costRmb;
-    saveStep(db, projectId, { plot_architecture: JSON.stringify(plotArchitecture) });
+    partial.plotArchitecture = plotArchitecture;
+    saveCheckpoint(planning, id, revisionId, partial, coreSeed.premise);
     onProgress?.('plot_architecture', `✓ 三幕 + ${plotArchitecture.foreshadows.length} 伏笔`);
   } else {
     onProgress?.('plot_architecture', '（已完成，跳过）');
   }
 
-  // ─── 拼接 full_text（M2 单章生成的「设定」输入）────────────────
   const fullText = buildBibleFullText({
-    topic, genre, audience,
-    coreSeed, characterDynamics, characterState, worldBuilding, plotArchitecture,
+    topic,
+    genre,
+    audience,
+    coreSeed,
+    characterDynamics,
+    characterState,
+    worldBuilding,
+    plotArchitecture,
   });
-  saveStep(db, projectId, { full_text: fullText });
+  partial.fullText = fullText;
+  saveCheckpoint(planning, id, revisionId, partial, fullText);
+
+  const draft = planning.getBibleRevision(revisionId);
+  if (!draft) throw new Error(`Bible draft ${revisionId} missing`);
+  if (draft.status === 'draft') {
+    planning.approveBibleRevision(revisionId);
+  }
+  projects.setActiveBibleRevision(id, revisionId, new Date().toISOString());
 
   const bible: Bible = {
-    coreSeed, characterDynamics, characterState, worldBuilding, plotArchitecture, fullText,
+    coreSeed,
+    characterDynamics,
+    characterState,
+    worldBuilding,
+    plotArchitecture,
+    fullText,
   };
-  onProgress?.('done', `Bible 生成完成`);
+  onProgress?.('done', 'Bible 生成完成');
   return { bible, usage: totalUsage };
 }
 
-// ─── full_text 拼接（M2 单章生成时作为「设定」注入）──────────────
-
 export function buildBibleFullText(parts: {
-  topic: string; genre: string; audience: string;
+  topic: string;
+  genre: string;
+  audience: string;
   coreSeed: CoreSeed;
   characterDynamics: CharacterDynamic[];
   characterState: CharacterState;
   worldBuilding: WorldBuilding;
   plotArchitecture: PlotArchitecture;
 }): string {
-  const { topic, genre, audience, coreSeed, characterDynamics, characterState, worldBuilding, plotArchitecture } = parts;
+  const {
+    topic, genre, audience, coreSeed, characterDynamics, characterState, worldBuilding, plotArchitecture,
+  } = parts;
   const charLines = characterDynamics.map((c) =>
     `  - ${c.name}（${c.role}）：${c.background}\n    秘密：${c.secret}\n    驱动：表层「${c.drives.surface}」/深层「${c.drives.deep}」/灵魂「${c.drives.soul}」\n    弧光：${c.arc.start} →（${c.arc.trigger}）→ ${c.arc.shift} → ${c.arc.end}\n    关系：${c.relationships.map((r) => `${r.target}(${r.type})`).join('，')}`,
   ).join('\n');

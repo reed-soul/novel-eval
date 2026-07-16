@@ -1,116 +1,159 @@
 /**
- * job-store 单测 — job 表 CRUD + 活动任务查询 + 启动恢复
+ * job-store 单测 — 新 schema 下的 CRUD + 活动任务 + resume 配置快照
  */
-import { describe, it, beforeEach, afterEach } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 
-import { openDb, closeDb } from '../../src/db.ts';
 import { createProject } from '../../src/project.ts';
 import {
-  createJobRow, getJobRow, listJobsByProject, getActiveJob,
-  updateJobStatus, updateJobProgress, recoverInterruptedJobs,
+  createJobRow,
+  getJobRow,
+  listJobsByProject,
+  getActiveJob,
+  updateJobStatus,
+  updateJobProgress,
+  recoverInterruptedJobs,
+  readJobResumeConfig,
 } from '../../src/job-store.ts';
-
-let origCwd: string;
-let tempRoot: string;
-beforeEach(() => { origCwd = process.cwd(); tempRoot = mkdtempSync(join(tmpdir(), 'jobs-')); process.chdir(tempRoot); });
-afterEach(() => { process.chdir(origCwd); rmSync(tempRoot, { recursive: true, force: true }); });
+import { createTestDb } from '../helpers/test-db.ts';
 
 describe('job-store', () => {
-  it('createJobRow 写入 running 状态 + 读回', () => {
-    const db = openDb();
-    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
-    const id = createJobRow(db, { projectId: p.id, type: 'chapter', fromChapter: 1, toChapter: 10, qualityGate: true, maxRevise: 2 });
-    const row = getJobRow(db, id);
+  it('createJobRow 写入 running 状态 + 范围/配置快照', (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const p = createProject(testDb.db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+    const id = createJobRow(testDb.db, {
+      projectId: p.id,
+      type: 'chapter',
+      scope: { from: 1, to: 10 },
+      engine: 'bigmodel',
+      model: 'glm',
+      wordCount: 2000,
+      qualityProfile: 'default',
+      promptVersion: 'chapter-v1',
+      budget: { maxCostRmb: 5 },
+    });
+    const row = getJobRow(testDb.db, id);
     assert.ok(row);
-    assert.equal(row!.status, 'running');
-    assert.equal(row!.type, 'chapter');
-    assert.equal(row!.fromChapter, 1);
-    assert.equal(row!.toChapter, 10);
-    assert.equal(row!.qualityGate, true);
-    assert.equal(row!.maxRevise, 2);
-    assert.equal(row!.lastChapter, 0);
-    closeDb(db);
+    assert.equal(row.status, 'running');
+    assert.equal(row.type, 'chapter');
+    assert.deepEqual(row.scope, { from: 1, to: 10 });
+    assert.equal(row.engine, 'bigmodel');
+    assert.equal(row.model, 'glm');
+    assert.equal(row.wordCount, 2000);
+    assert.equal(row.lastOutlinePosition, 0);
   });
 
-  it('updateJobProgress 推进断点章号', () => {
-    const db = openDb();
-    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
-    const id = createJobRow(db, { projectId: p.id, type: 'chapter', fromChapter: 1, toChapter: 5 });
-    updateJobProgress(db, id, 3);
-    const row = getJobRow(db, id);
-    assert.equal(row!.lastChapter, 3);
-    closeDb(db);
+  it('updateJobProgress 推进断点章号', (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const p = createProject(testDb.db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+    const id = createJobRow(testDb.db, {
+      projectId: p.id,
+      type: 'chapter',
+      scope: { from: 1, to: 5 },
+    });
+    updateJobProgress(testDb.db, id, 3);
+    const row = getJobRow(testDb.db, id);
+    assert.equal(row!.lastOutlinePosition, 3);
+    assert.deepEqual(row!.checkpoint, { outlinePosition: 3 });
   });
 
-  it('updateJobStatus 写终态 + result', () => {
-    const db = openDb();
-    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
-    const id = createJobRow(db, { projectId: p.id, type: 'bible' });
-    updateJobStatus(db, id, 'done', { result: { chapters: 10 } });
-    const row = getJobRow(db, id);
-    assert.equal(row!.status, 'done');
-    assert.deepEqual(row!.result, { chapters: 10 });
-    closeDb(db);
+  it('updateJobStatus 写终态', (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const p = createProject(testDb.db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+    const id = createJobRow(testDb.db, { projectId: p.id, type: 'bible' });
+    updateJobStatus(testDb.db, id, 'completed', { result: { chapters: 10 } });
+    const row = getJobRow(testDb.db, id);
+    assert.equal(row!.status, 'completed');
   });
 
-  it('getActiveJob 返回 running/paused 中最新一条，done 不算', () => {
-    const db = openDb();
-    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
-    // 旧的 done job
-    const oldId = createJobRow(db, { projectId: p.id, type: 'chapter', fromChapter: 1, toChapter: 5 });
-    updateJobStatus(db, oldId, 'done');
-    // 新的 paused job（应该是活动任务）
-    const newId = createJobRow(db, { projectId: p.id, type: 'chapter', fromChapter: 6, toChapter: 10 });
-    updateJobStatus(db, newId, 'paused');
+  it('getActiveJob 返回 running/paused 中最新一条，completed 不算', (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const p = createProject(testDb.db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+    const oldId = createJobRow(testDb.db, {
+      projectId: p.id,
+      type: 'chapter',
+      scope: { from: 1, to: 5 },
+    });
+    updateJobStatus(testDb.db, oldId, 'completed');
+    const newId = createJobRow(testDb.db, {
+      projectId: p.id,
+      type: 'chapter',
+      scope: { from: 6, to: 10 },
+    });
+    updateJobStatus(testDb.db, newId, 'paused');
 
-    const active = getActiveJob(db, p.id);
+    const active = getActiveJob(testDb.db, p.id);
     assert.ok(active);
-    assert.equal(active!.id, newId);
-    assert.equal(active!.status, 'paused');
-    closeDb(db);
+    assert.equal(active.id, newId);
+    assert.equal(active.status, 'paused');
   });
 
-  it('listJobsByProject 按创建倒序', () => {
-    const db = openDb();
-    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
-    const a = createJobRow(db, { projectId: p.id, type: 'bible' });
-    const b = createJobRow(db, { projectId: p.id, type: 'outline' });
-    const list = listJobsByProject(db, p.id);
+  it('listJobsByProject 按创建倒序', (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const p = createProject(testDb.db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+    const a = createJobRow(testDb.db, { projectId: p.id, type: 'bible' });
+    const b = createJobRow(testDb.db, { projectId: p.id, type: 'outline' });
+    const list = listJobsByProject(testDb.db, p.id);
     assert.equal(list.length, 2);
-    assert.equal(list[0].id, b);  // 最新在前
+    assert.equal(list[0].id, b);
     assert.equal(list[1].id, a);
-    closeDb(db);
   });
 
-  it('recoverInterruptedJobs：running → paused（模拟进程重启）', () => {
-    const db = openDb();
-    const p1 = createProject(db, { title: 'T1', genreProfile: 'g', targetAudience: 'a', premise: 't' });
-    const p2 = createProject(db, { title: 'T2', genreProfile: 'g', targetAudience: 'a', premise: 't' });
-    const j1 = createJobRow(db, { projectId: p1.id, type: 'chapter', fromChapter: 1, toChapter: 10 });
-    const j2 = createJobRow(db, { projectId: p2.id, type: 'chapter', fromChapter: 1, toChapter: 5 });
-    const j3 = createJobRow(db, { projectId: p1.id, type: 'bible' });
-    updateJobStatus(db, j3, 'done');  // 已完成的应不受影响
+  it('recoverInterruptedJobs：running → paused', (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const p1 = createProject(testDb.db, { title: 'T1', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+    const p2 = createProject(testDb.db, { title: 'T2', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+    const j1 = createJobRow(testDb.db, {
+      projectId: p1.id,
+      type: 'chapter',
+      scope: { from: 1, to: 10 },
+    });
+    const j2 = createJobRow(testDb.db, {
+      projectId: p2.id,
+      type: 'chapter',
+      scope: { from: 1, to: 5 },
+    });
+    const j3 = createJobRow(testDb.db, { projectId: p1.id, type: 'bible' });
+    updateJobStatus(testDb.db, j3, 'completed');
 
-    const changes = recoverInterruptedJobs(db);
-    assert.equal(changes, 2, '应恢复 2 个 running job');
+    const changes = recoverInterruptedJobs(testDb.db);
+    assert.equal(changes, 2);
 
-    assert.equal(getJobRow(db, j1)!.status, 'paused');
-    assert.equal(getJobRow(db, j2)!.status, 'paused');
-    assert.equal(getJobRow(db, j3)!.status, 'done', 'done 不应变');
-    closeDb(db);
+    assert.equal(getJobRow(testDb.db, j1)!.status, 'paused');
+    assert.equal(getJobRow(testDb.db, j2)!.status, 'paused');
+    assert.equal(getJobRow(testDb.db, j3)!.status, 'completed');
   });
 
-  it('qualityGate/maxRevise 默认值', () => {
-    const db = openDb();
-    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
-    const id = createJobRow(db, { projectId: p.id, type: 'bible' });
-    const row = getJobRow(db, id);
-    assert.equal(row!.qualityGate, false);
-    assert.equal(row!.maxRevise, 0);
-    closeDb(db);
+  it('readJobResumeConfig 读取原始 to 与配置快照', (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const p = createProject(testDb.db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+    const id = createJobRow(testDb.db, {
+      projectId: p.id,
+      type: 'chapter',
+      scope: { from: 2, to: 8 },
+      engine: 'deepseek',
+      model: 'v3',
+      wordCount: 1500,
+      qualityProfile: 'careful',
+      promptVersion: 'chapter-v2',
+      budget: { maxCostRmb: 3 },
+    });
+    updateJobProgress(testDb.db, id, 4);
+    const resume = readJobResumeConfig(testDb.db, id);
+    assert.deepEqual(resume.scope, { from: 2, to: 8 });
+    assert.equal(resume.engine, 'deepseek');
+    assert.equal(resume.model, 'v3');
+    assert.equal(resume.wordCount, 1500);
+    assert.equal(resume.qualityProfile, 'careful');
+    assert.equal(resume.promptVersion, 'chapter-v2');
+    assert.deepEqual(resume.budget, { maxCostRmb: 3 });
+    assert.equal(resume.lastOutlinePosition, 4);
   });
 });

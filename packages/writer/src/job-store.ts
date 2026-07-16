@@ -1,76 +1,130 @@
 /**
- * Job 持久化 — job 表的 CRUD
+ * Job 持久化 — job 表的 CRUD（版本化 schema）
  *
- * 内存 job（web/server/jobs.ts 的 Map）进程重启即失，job 表才是断点的真相来源。
- * 暂停/继续/取消、Web server 重启恢复，都依赖这张表。
- *
- * 状态机：running → paused | done | error | cancelled
- *   - running：内存里有 job + DB 里也是 running
- *   - paused：用户点暂停 / server 重启时把残留 running 改成 paused
- *   - cancelled：用户放弃，已写章节保留但不再提示继续
- *   - done/error：终态
+ * 任务恢复必须继续原始范围（scope）和配置快照（engine/model/word_count/...）。
+ * 状态机：queued → running → paused | completed | failed | cancelled
  */
 import { randomUUID } from 'node:crypto';
-import type { DB } from './db.ts';
 
-export type JobType = 'bible' | 'outline' | 'chapter' | 'correction';
-export type JobStatus = 'running' | 'paused' | 'done' | 'error' | 'cancelled';
+import type { DB } from './db.ts';
+import {
+  numberField,
+  parseJson,
+  parseJsonValue,
+  persistedRecord,
+  stringField,
+  type JsonValue,
+} from './repositories/validation.ts';
+
+export type JobType = 'bible' | 'outline' | 'chapter' | 'correction' | 'rebuild' | 'edit';
+export type JobStatus = 'queued' | 'running' | 'paused' | 'completed' | 'failed' | 'cancelled';
+
+export interface JobScope {
+  from: number | null;
+  to: number | null;
+}
 
 export interface JobRow {
   id: string;
   projectId: string;
   type: JobType;
   status: JobStatus;
-  fromChapter: number | null;
-  toChapter: number | null;
-  lastChapter: number;
-  qualityGate: boolean;
-  maxRevise: number;
-  result: unknown;
-  error: string | null;
+  scope: JobScope;
+  input: JsonValue;
+  engine: string;
+  model: string;
+  wordCount: number;
+  qualityProfile: string;
+  budget: JsonValue;
+  promptVersion: string;
+  checkpoint: JsonValue | null;
+  lastOutlinePosition: number;
+  usage: JsonValue | null;
+  errorType: string | null;
+  retryAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-interface JobDbRow {
-  id: string;
-  project_id: string;
-  type: string;
-  status: string;
-  from_chapter: number | null;
-  to_chapter: number | null;
-  last_chapter: number;
-  quality_gate: number;
-  max_revise: number;
-  result: string | null;
-  error: string | null;
-  created_at: string;
-  updated_at: string;
+/** @deprecated Alias for resume/CLI readability */
+export type JobResumeConfig = {
+  scope: { from: number; to: number };
+  engine: string;
+  model: string;
+  wordCount: number;
+  qualityProfile: string;
+  promptVersion: string;
+  budget: JsonValue;
+  lastOutlinePosition: number;
+};
+
+function readScope(text: string): JobScope {
+  const value = persistedRecord(parseJson(text, 'job scope'), 'job scope');
+  const from = value.from;
+  const to = value.to;
+  if (from !== null && (typeof from !== 'number' || !Number.isInteger(from))) {
+    throw new Error('Invalid job scope.from');
+  }
+  if (to !== null && (typeof to !== 'number' || !Number.isInteger(to))) {
+    throw new Error('Invalid job scope.to');
+  }
+  return {
+    from: from === null || from === undefined ? null : from,
+    to: to === null || to === undefined ? null : to,
+  };
 }
 
-function rowToJob(row: JobDbRow): JobRow {
+function readJob(value: unknown): JobRow {
+  const entity = 'job';
+  const row = persistedRecord(value, entity);
+  const checkpointRaw = row.checkpoint_json;
+  const usageRaw = row.usage_json;
   return {
-    id: row.id,
-    projectId: row.project_id,
-    type: row.type as JobType,
-    status: row.status as JobStatus,
-    fromChapter: row.from_chapter,
-    toChapter: row.to_chapter,
-    lastChapter: row.last_chapter,
-    qualityGate: row.quality_gate === 1,
-    maxRevise: row.max_revise,
-    result: row.result ? JSON.parse(row.result) : null,
-    error: row.error,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    id: stringField(row, 'id', entity),
+    projectId: stringField(row, 'project_id', entity),
+    type: stringField(row, 'type', entity) as JobType,
+    status: stringField(row, 'status', entity) as JobStatus,
+    scope: readScope(stringField(row, 'scope_json', entity)),
+    input: parseJsonValue(parseJson(stringField(row, 'input_json', entity), 'job input'), 'job input'),
+    engine: stringField(row, 'engine', entity),
+    model: stringField(row, 'model', entity),
+    wordCount: numberField(row, 'word_count', entity),
+    qualityProfile: stringField(row, 'quality_profile', entity),
+    budget: parseJsonValue(parseJson(stringField(row, 'budget_json', entity), 'job budget'), 'job budget'),
+    promptVersion: stringField(row, 'prompt_version', entity),
+    checkpoint: checkpointRaw === null || checkpointRaw === undefined
+      ? null
+      : parseJsonValue(parseJson(stringField(row, 'checkpoint_json', entity), 'job checkpoint'), 'job checkpoint'),
+    lastOutlinePosition: numberField(row, 'last_outline_position', entity),
+    usage: usageRaw === null || usageRaw === undefined
+      ? null
+      : parseJsonValue(parseJson(stringField(row, 'usage_json', entity), 'job usage'), 'job usage'),
+    errorType: row.error_type === null || row.error_type === undefined
+      ? null
+      : stringField(row, 'error_type', entity),
+    retryAt: row.retry_at === null || row.retry_at === undefined
+      ? null
+      : stringField(row, 'retry_at', entity),
+    createdAt: stringField(row, 'created_at', entity),
+    updatedAt: stringField(row, 'updated_at', entity),
   };
 }
 
 export interface CreateJobRowOpts {
   projectId: string;
   type: JobType;
+  scope?: { from?: number | null; to?: number | null };
+  /** @deprecated prefer scope.from / scope.to */
   fromChapter?: number | null;
+  /** @deprecated prefer scope.from / scope.to */
   toChapter?: number | null;
+  engine?: string;
+  model?: string;
+  wordCount?: number;
+  qualityProfile?: string;
+  budget?: JsonValue;
+  promptVersion?: string;
+  input?: JsonValue;
   qualityGate?: boolean;
   maxRevise?: number;
 }
@@ -79,65 +133,130 @@ export interface CreateJobRowOpts {
 export function createJobRow(db: DB, opts: CreateJobRowOpts): string {
   const id = randomUUID();
   const now = new Date().toISOString();
-  db.prepare(
-    `INSERT INTO job (id, project_id, type, status, from_chapter, to_chapter, last_chapter, quality_gate, max_revise, result, error, created_at, updated_at)
-     VALUES (?, ?, ?, 'running', ?, ?, 0, ?, ?, NULL, NULL, ?, ?)`,
-  ).run(
-    id, opts.projectId, opts.type,
-    opts.fromChapter ?? null, opts.toChapter ?? null,
-    opts.qualityGate ? 1 : 0, opts.maxRevise ?? 0,
-    now, now,
+  const from = opts.scope?.from ?? opts.fromChapter ?? null;
+  const to = opts.scope?.to ?? opts.toChapter ?? null;
+  const budget = opts.budget
+    ?? (opts.qualityGate !== undefined || opts.maxRevise !== undefined
+      ? {
+          qualityGate: opts.qualityGate ?? false,
+          maxRevise: opts.maxRevise ?? 0,
+        }
+      : {});
+  const input = opts.input ?? {};
+
+  db.prepare(`
+    INSERT INTO job (
+      id, project_id, type, scope_json, input_json, engine, model, word_count,
+      quality_profile, budget_json, prompt_version, status,
+      checkpoint_json, last_outline_position, usage_json, error_type, retry_at,
+      created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'running', NULL, 0, NULL, NULL, NULL, ?, ?)
+  `).run(
+    id,
+    opts.projectId,
+    opts.type,
+    JSON.stringify({ from, to }),
+    JSON.stringify(parseJsonValue(input, 'job input')),
+    opts.engine ?? 'default',
+    opts.model ?? 'default',
+    opts.wordCount ?? 0,
+    opts.qualityProfile ?? 'default',
+    JSON.stringify(parseJsonValue(budget, 'job budget')),
+    opts.promptVersion ?? 'v1',
+    now,
+    now,
   );
   return id;
 }
 
 export function getJobRow(db: DB, jobId: string): JobRow | null {
-  const row = db.prepare('SELECT * FROM job WHERE id = ?').get(jobId) as JobDbRow | undefined;
-  return row ? rowToJob(row) : null;
+  const row: unknown = db.prepare('SELECT * FROM job WHERE id = ?').get(jobId);
+  return row === undefined ? null : readJob(row);
 }
 
 export function listJobsByProject(db: DB, projectId: string): JobRow[] {
-  const rows = db.prepare('SELECT * FROM job WHERE project_id = ? ORDER BY created_at DESC, rowid DESC')
-    .all(projectId) as JobDbRow[];
-  return rows.map(rowToJob);
+  const rows: unknown[] = db.prepare(
+    'SELECT * FROM job WHERE project_id = ? ORDER BY created_at DESC, rowid DESC',
+  ).all(projectId);
+  return rows.map(readJob);
 }
 
 /** 活动任务（running 或 paused）——详情页刷新后重连 SSE 的关键 */
 export function getActiveJob(db: DB, projectId: string): JobRow | null {
-  const row = db.prepare(
-    `SELECT * FROM job WHERE project_id = ? AND status IN ('running', 'paused') ORDER BY updated_at DESC, rowid DESC LIMIT 1`,
-  ).get(projectId) as JobDbRow | undefined;
-  return row ? rowToJob(row) : null;
+  const row: unknown = db.prepare(`
+    SELECT * FROM job
+    WHERE project_id = ? AND status IN ('running', 'paused')
+    ORDER BY updated_at DESC, rowid DESC
+    LIMIT 1
+  `).get(projectId);
+  return row === undefined ? null : readJob(row);
 }
 
-export function updateJobStatus(db: DB, jobId: string, status: JobStatus, extra?: { result?: unknown; error?: string | null }): void {
+export function updateJobStatus(
+  db: DB,
+  jobId: string,
+  status: JobStatus,
+  extra?: { result?: unknown; error?: string | null; errorType?: string | null },
+): void {
   const now = new Date().toISOString();
   const sets: string[] = ['status = ?', 'updated_at = ?'];
   const args: unknown[] = [status, now];
   if (extra?.result !== undefined) {
-    sets.push('result = ?');
-    args.push(JSON.stringify(extra.result));
+    sets.push('usage_json = ?');
+    args.push(JSON.stringify(parseJsonValue(
+      { result: extra.result } as JsonValue,
+      'job usage',
+    )));
   }
-  if (extra?.error !== undefined) {
-    sets.push('error = ?');
-    args.push(extra.error);
+  if (extra?.error !== undefined || extra?.errorType !== undefined) {
+    sets.push('error_type = ?');
+    args.push(extra.errorType ?? extra.error ?? null);
   }
   args.push(jobId);
   db.prepare(`UPDATE job SET ${sets.join(', ')} WHERE id = ?`).run(...args);
 }
 
-/** 推进断点：已完成的最后一章号 */
-export function updateJobProgress(db: DB, jobId: string, lastChapter: number): void {
+/** 推进断点：已完成的最后 outline position */
+export function updateJobProgress(db: DB, jobId: string, lastOutlinePosition: number): void {
   const now = new Date().toISOString();
-  db.prepare('UPDATE job SET last_chapter = ?, updated_at = ? WHERE id = ?').run(lastChapter, now, jobId);
+  db.prepare(`
+    UPDATE job
+    SET last_outline_position = ?, checkpoint_json = ?, updated_at = ?
+    WHERE id = ?
+  `).run(
+    lastOutlinePosition,
+    JSON.stringify({ outlinePosition: lastOutlinePosition }),
+    now,
+    jobId,
+  );
 }
 
 /**
  * 启动恢复：把残留的 running job（上次进程没正常退出）改成 paused。
- * 让用户重启后看到"已暂停"，可以点继续，而不是永远卡 running。
  */
 export function recoverInterruptedJobs(db: DB): number {
   const now = new Date().toISOString();
-  const info = db.prepare(`UPDATE job SET status = 'paused', updated_at = ? WHERE status = 'running'`).run(now);
+  const info = db.prepare(`
+    UPDATE job SET status = 'paused', updated_at = ? WHERE status = 'running'
+  `).run(now);
   return info.changes;
+}
+
+/** 读取 resume 所需的原始范围与配置快照 */
+export function readJobResumeConfig(db: DB, jobId: string): JobResumeConfig {
+  const job = getJobRow(db, jobId);
+  if (!job) throw new Error(`Job ${jobId} not found`);
+  if (job.scope.from === null || job.scope.to === null) {
+    throw new Error(`Job ${jobId} has no chapter range scope`);
+  }
+  return {
+    scope: { from: job.scope.from, to: job.scope.to },
+    engine: job.engine,
+    model: job.model,
+    wordCount: job.wordCount,
+    qualityProfile: job.qualityProfile,
+    promptVersion: job.promptVersion,
+    budget: job.budget,
+    lastOutlinePosition: job.lastOutlinePosition,
+  };
 }
