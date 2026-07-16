@@ -17,7 +17,7 @@ import { createProject } from '../../src/project.ts';
 import { saveOutlines, saveChapter, saveNarrativeState, getNarrativeState } from '../../src/chapter/store.ts';
 import { ensureChapterConsistency } from '../../src/chapter/consistency.ts';
 import type { CharacterState, PlotArchitecture } from '../../src/bible/types.ts';
-import type { NarrativeState } from '../../src/chapter/types.ts';
+import type { NarrativeState } from '../../src/chapter/legacy-types.ts';
 
 let origCwd: string;
 let tempRoot: string;
@@ -58,7 +58,7 @@ function seedBible(db: ReturnType<typeof openDb>, projectId: string) {
 describe('ensureChapterConsistency', () => {
   it('窄窗口：正文比状态多 1 章，补全后状态追平，返回 from = max+1', async () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     seedBible(db, p.id);
     saveOutlines(db, p.id, [
       { number: 1, title: 'A', act: 1, beat: 'b', role: 'r', purpose: '第一章核心', suspenseLevel: 3, foreshadowing: '', twistLevel: 0, summary: 's1' },
@@ -90,7 +90,7 @@ describe('ensureChapterConsistency', () => {
 
   it('一致状态（无窄窗口）：finalizedGap=0，from = max+1', async () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     seedBible(db, p.id);
     saveOutlines(db, p.id, [
       { number: 1, title: 'A', act: 1, beat: 'b', role: 'r', purpose: '第一章核心', suspenseLevel: 3, foreshadowing: '', twistLevel: 0, summary: 's1' },
@@ -112,7 +112,7 @@ describe('ensureChapterConsistency', () => {
 
   it('全新项目（无章节）：from=1，finalizedGap=0', async () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     seedBible(db, p.id);
     saveOutlines(db, p.id, [
       { number: 1, title: 'A', act: 1, beat: 'b', role: 'r', purpose: '第一章核心', suspenseLevel: 3, foreshadowing: '', twistLevel: 0, summary: 's1' },

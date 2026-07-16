@@ -19,7 +19,7 @@ export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
 
 // 类型定义（与后端对齐）
 export interface Project {
-  id: string; title: string; genre: string; audience: string; topic: string;
+  id: string; title: string; genreProfile: string; targetAudience: string; premise: string;
   status: string; createdAt: string; updatedAt: string;
   outlineCount?: number; chapterCount?: number;
   lastChapter?: { number: number; title: string; wordCount: number } | null;

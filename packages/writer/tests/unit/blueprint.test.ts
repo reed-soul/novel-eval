@@ -104,7 +104,7 @@ const chapResp = (start: number, act: number, budget: number = 2) => {
 describe('generateBlueprint', () => {
   it('两层拆分：3 幕各调段落+章节，落 DB 且章号连续', async () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     // 用 totalChapters=12，分配更清晰（act1=4/act2=4/act3=4 经 split 后约 4/4/4 或 3/5/4）
     const engine = mockEngine({
       beats: beatResp,
@@ -131,7 +131,7 @@ describe('generateBlueprint', () => {
 
   it('checkpoint：已有 outline 则跳过，不调 LLM', async () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     const engine1 = mockEngine({ beats: beatResp, chapters: chapResp, actStart: { 1: 1, 2: 5, 3: 9 } });
     await generateBlueprint({ engine: engine1, db, projectId: p.id, plot: PLOT, characters: CHARS, totalChapters: 12 });
     const firstCount = countOutlines(db, p.id);
@@ -146,7 +146,7 @@ describe('generateBlueprint', () => {
 
   it('段落生成失败时抛错', async () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     // beats 返回非法 JSON（缺 beats 字段）
     const engine = mockEngine({
       beats: () => JSON.stringify({ wrong: true }),

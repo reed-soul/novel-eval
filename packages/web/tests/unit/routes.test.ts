@@ -48,7 +48,7 @@ async function fetchJson(app: Hono, path: string): Promise<{ status: number; jso
 
 describe('API 路由', () => {
   it('GET /api/projects 返回项目列表', async () => {
-    createProject(db, { title: '测试书', genre: '科幻', audience: '青年', topic: '测试' });
+    createProject(db, { title: '测试书', genreProfile: '科幻', targetAudience: '青年', premise: '测试' });
     const app = testApp(db);
     const { status, json } = await fetchJson(app, '/api/projects');
     assert.equal(status, 200);
@@ -58,7 +58,7 @@ describe('API 路由', () => {
   });
 
   it('GET /api/projects/:id 返回详情含进度统计', async () => {
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     const app = testApp(db);
     const { status, json } = await fetchJson(app, `/api/projects/${p.id}`);
     assert.equal(status, 200);
@@ -69,7 +69,7 @@ describe('API 路由', () => {
   });
 
   it('GET /api/projects/:id/chapters 返回章节列表', async () => {
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     saveOutlines(db, p.id, [
       { number: 1, title: '第一章', act: 1, beat: '铺垫', role: '引入', purpose: '开篇介绍主角和核心矛盾冲突', suspenseLevel: 5, foreshadowing: '无', twistLevel: 1, summary: '梗概内容' },
       { number: 2, title: '第二章', act: 1, beat: '推进', role: '发展', purpose: '推进情节发展出现转折点', suspenseLevel: 7, foreshadowing: '无', twistLevel: 2, summary: '梗概二' },
@@ -86,7 +86,7 @@ describe('API 路由', () => {
   });
 
   it('GET /api/projects/:id/chapters/:n 返回单章正文+蓝图', async () => {
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     saveOutlines(db, p.id, [
       { number: 1, title: '第一章', act: 1, beat: '铺垫', role: '引入', purpose: '开篇介绍主角和核心矛盾冲突', suspenseLevel: 5, foreshadowing: '埋设：项链', twistLevel: 1, summary: '主角醒来发现世界变了' },
     ]);
@@ -108,7 +108,7 @@ describe('API 路由', () => {
   });
 
   it('GET /api/projects/:id/export 导出项目（txt / zip）', async () => {
-    const p = createProject(db, { title: '测试导出书', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: '测试导出书', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     saveOutlines(db, p.id, [
       { number: 1, title: '第一章 启程', act: 1, beat: 'p', role: 'r', purpose: 'p', suspenseLevel: 5, foreshadowing: 'f', twistLevel: 1, summary: '大纲A' },
       { number: 2, title: '第二章 到达', act: 1, beat: 'p', role: 'r', purpose: 'p', suspenseLevel: 5, foreshadowing: 'f', twistLevel: 1, summary: '大纲B' },

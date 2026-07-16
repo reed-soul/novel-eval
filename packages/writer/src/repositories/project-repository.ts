@@ -3,7 +3,7 @@ import {
   projectId,
   type ProjectId,
 } from '../domain/ids.ts';
-import type { Project, PersistedProjectStatus } from '../project.ts';
+import type { Project, ProjectStatus } from '../project.ts';
 import {
   nullableStringField,
   oneOf,
@@ -38,9 +38,6 @@ function readProject(value: unknown): Project {
     activeBibleRevisionId: nullableStringField(row, 'active_bible_revision_id', entity),
     createdAt: stringField(row, 'created_at', entity),
     updatedAt: stringField(row, 'updated_at', entity),
-    genre: genreProfile,
-    audience: targetAudience,
-    topic: premise,
   };
 }
 
@@ -78,7 +75,7 @@ export class ProjectRepository {
     return rows.map(readProject);
   }
 
-  updateStatus(id: ProjectId, status: PersistedProjectStatus, updatedAt: string): void {
+  updateStatus(id: ProjectId, status: ProjectStatus, updatedAt: string): void {
     this.db.prepare(
       'UPDATE project SET status = ?, updated_at = ? WHERE id = ?',
     ).run(status, updatedAt, id);

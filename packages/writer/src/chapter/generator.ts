@@ -19,7 +19,7 @@ import type { AIAgentAdapter } from '@novel-eval/shared';
 import { loadPrompt, addUsage, zeroUsage, countChars } from '@novel-eval/shared';
 import type { NovelMetadata, TokenUsage } from '@novel-eval/shared';
 import type { DB } from '../db.ts';
-import type { ChapterOutline, ChapterContent } from './types.ts';
+import type { ChapterOutline, ChapterContent } from './legacy-types.ts';
 import {
   getOutline, getChapter, getRecentChapters, saveChapter, markOutlineWritten,
   getNarrativeState, getBibleForChapter, deleteChapter, countOutlines,

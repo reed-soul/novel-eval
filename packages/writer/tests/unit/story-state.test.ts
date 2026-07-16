@@ -94,7 +94,11 @@ it('applies every explicit change without mutating the previous state', () => {
     characterChanges: [{
       kind: 'update',
       characterId: lin,
-      patch: { status: 'injured', facts: ['左手受伤', '失去车票'] },
+      patch: { kind: 'set-status', status: 'injured' },
+    }, {
+      kind: 'update',
+      characterId: lin,
+      patch: { kind: 'replace-facts', facts: ['左手受伤', '失去车票'] },
     }, {
       kind: 'add',
       character: {
@@ -145,4 +149,31 @@ it('applies every explicit change without mutating the previous state', () => {
     facts: ['左手受伤'],
   });
   assert.equal(previous.foreshadows[0]?.status, 'open');
+});
+
+it('rejects an empty character update patch', () => {
+  const previous = storyState({
+    characters: [{
+      id: characterId('lin'),
+      name: '林晚',
+      status: 'alive',
+      facts: [],
+    }],
+  });
+  const invalidDelta: unknown = {
+    characterChanges: [{
+      kind: 'update',
+      characterId: characterId('lin'),
+      patch: {},
+    }],
+    factChanges: [],
+    foreshadowChanges: [],
+    timelineEvents: [],
+    summary: '摘要',
+  };
+
+  assert.throws(
+    () => Reflect.apply(applyStoryStateDelta, undefined, [previous, invalidDelta]),
+    InvalidStoryStateDeltaError,
+  );
 });

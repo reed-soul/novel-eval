@@ -65,7 +65,7 @@ function seedBible(db: ReturnType<typeof openDb>, projectId: string) {
 describe('generateChapter', () => {
   it('第一章生成正文 + finalizer（3 次 LLM 调用）', async () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     seedBible(db, p.id);
     saveOutlines(db, p.id, [
       { number: 1, title: '苏醒', act: 1, beat: '铺垫', role: '引入', purpose: '介绍主角和核心矛盾冲突', suspenseLevel: 5, foreshadowing: '埋设：项链', twistLevel: 2, summary: '主角醒来发现世界变了' },
@@ -83,7 +83,7 @@ describe('generateChapter', () => {
 
   it('第一章 systemPrompt 含 bible 全文（走缓存），user prompt 不含「最近章节原文」', async () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     seedBible(db, p.id);
     saveOutlines(db, p.id, [
       { number: 1, title: '苏醒', act: 1, beat: '铺垫', role: '引入', purpose: '介绍主角和核心矛盾冲突', suspenseLevel: 5, foreshadowing: '埋设：项链', twistLevel: 2, summary: '主角醒来' },
@@ -100,7 +100,7 @@ describe('generateChapter', () => {
 
   it('checkpoint：已存在的章节跳过', async () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     seedBible(db, p.id);
     saveOutlines(db, p.id, [
       { number: 1, title: 'A', act: 1, beat: '铺垫', role: 'r', purpose: '核心作用明确且具体', suspenseLevel: 3, foreshadowing: '无', twistLevel: 0, summary: '梗概' },
@@ -118,7 +118,7 @@ describe('generateChapter', () => {
 
   it('后续章 prompt 含最近章节原文', async () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     seedBible(db, p.id);
     saveOutlines(db, p.id, [
       { number: 1, title: '一', act: 1, beat: '铺垫', role: 'r', purpose: '第一章核心作用明确', suspenseLevel: 3, foreshadowing: '无', twistLevel: 0, summary: '梗概一' },

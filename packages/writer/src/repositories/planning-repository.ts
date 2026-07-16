@@ -226,6 +226,10 @@ export class PlanningRepository {
   }
 
   saveApprovedOutline(input: SaveApprovedOutlineInput): ApprovedOutline {
+    const content = parseJsonValue(
+      input.revision.content,
+      'chapter outline revision content',
+    );
     const persist = this.db.transaction(() => {
       this.db.prepare(`
         INSERT INTO chapter_outline (
@@ -247,7 +251,7 @@ export class PlanningRepository {
         input.outline.id,
         input.revision.revisionNumber,
         input.revision.title,
-        JSON.stringify(input.revision.content),
+        JSON.stringify(content),
         input.revision.createdAt,
       );
       this.db.prepare(

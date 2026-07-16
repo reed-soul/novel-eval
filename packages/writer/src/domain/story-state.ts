@@ -14,11 +14,10 @@ export interface CharacterState {
   facts: string[];
 }
 
-export interface CharacterPatch {
-  name?: string;
-  status?: CharacterStatus;
-  facts?: string[];
-}
+export type CharacterPatch =
+  | { kind: 'set-name'; name: string }
+  | { kind: 'set-status'; status: CharacterStatus }
+  | { kind: 'replace-facts'; facts: string[] };
 
 export type CharacterChange =
   | { kind: 'add'; character: CharacterState }
@@ -123,11 +122,21 @@ function applyCharacterChanges(
         if (index < 0) invalid(`character ${change.characterId} does not exist`);
         const current = characters[index];
         if (!current) invalid(`character ${change.characterId} does not exist`);
-        characters[index] = {
-          ...current,
-          ...change.patch,
-          facts: change.patch.facts ? [...change.patch.facts] : current.facts,
-        };
+        switch (change.patch.kind) {
+          case 'set-name':
+            characters[index] = { ...current, name: change.patch.name };
+            break;
+          case 'set-status':
+            characters[index] = { ...current, status: change.patch.status };
+            break;
+          case 'replace-facts':
+            characters[index] = { ...current, facts: [...change.patch.facts] };
+            break;
+          default: {
+            const exhaustive: never = change.patch;
+            invalid(`unsupported character patch: ${String(exhaustive)}`);
+          }
+        }
         break;
       }
       case 'remove': {

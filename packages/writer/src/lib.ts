@@ -43,9 +43,28 @@ export {
   updateJobStatus, updateJobProgress, recoverInterruptedJobs,
   type JobRow, type JobType, type JobStatus, type CreateJobRowOpts,
 } from './job-store.ts';
-export type { ChapterOutline, ChapterContent, NarrativeState, Beat, ArcSummary, OpenForeshadow } from './chapter/types.ts';
+export type {
+  Chapter,
+  ChapterCandidate,
+  ChapterRevision,
+  ChapterRevisionSource,
+  ChapterRevisionStatus,
+  CharacterChange,
+  CharacterPatch,
+  CharacterState,
+  FactChange,
+  ForeshadowChange,
+  ForeshadowState,
+  OpenForeshadow,
+  ResolvedForeshadow,
+  SaveChapterCandidateInput,
+  StoryFact,
+  StoryState,
+  StoryStateDelta,
+  TimelineEvent,
+} from './chapter/types.ts';
 export type {
   Bible, CoreSeed, CharacterDynamic, CharacterDrives, CharacterArc,
-  CharacterRelationship, CharacterState, CharacterStateEntry,
+  CharacterRelationship, CharacterState as BibleCharacterState, CharacterStateEntry,
   WorldBuilding, WorldDimension, PlotArchitecture, PlotAct, Foreshadow,
 } from './bible/types.ts';

@@ -72,7 +72,7 @@ function seedOutlines(db: ReturnType<typeof openDb>, projectId: string, count: n
 describe('generateRange 暂停/取消控制', () => {
   it('shouldPause：写完 2 章后在第 3 章边界暂停', async () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     seedBible(db, p.id);
     seedOutlines(db, p.id, 5);
     const engine = mockEngine('这是正文内容，描述场景的展开。'.repeat(20));
@@ -99,7 +99,7 @@ describe('generateRange 暂停/取消控制', () => {
 
   it('onChapterComplete：每章写完回调，记录断点章号', async () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     seedBible(db, p.id);
     seedOutlines(db, p.id, 3);
     const engine = mockEngine('正文内容描述。'.repeat(20));
@@ -123,7 +123,7 @@ describe('generateRange 暂停/取消控制', () => {
 
   it('shouldCancel：取消信号抛 JobCancelledError，已写章节保留', async () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     seedBible(db, p.id);
     seedOutlines(db, p.id, 4);
     const engine = mockEngine('正文内容描述场景。'.repeat(20));
@@ -151,7 +151,7 @@ describe('generateRange 暂停/取消控制', () => {
 
   it('无 control：行为与原来一致（全跑完）', async () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     seedBible(db, p.id);
     seedOutlines(db, p.id, 3);
     const engine = mockEngine('正文内容描述场景的展开。'.repeat(20));

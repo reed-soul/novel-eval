@@ -62,7 +62,7 @@ export function correctionRoutes(db: DB, registry: EngineRegistry) {
 
     const body = await c.req.json<{ engineName?: string; model?: string; strategy?: CorrectionStrategy }>()
       .catch(() => ({}) as { engineName?: string; model?: string; strategy?: CorrectionStrategy });
-    const metadata: NovelMetadata = { genre: project.genre, targetAudience: project.audience };
+    const metadata: NovelMetadata = { genre: project.genreProfile, targetAudience: project.targetAudience };
 
     const jobId = createJob(db, {
       type: 'correction', projectId: id,

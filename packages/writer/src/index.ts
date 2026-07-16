@@ -339,7 +339,7 @@ async function runInit(args: InitArgs): Promise<void> {
   const db = openConfiguredDb();
   try {
     const project = createProject(db, {
-      title: args.title, genre: args.genre, audience: args.audience, topic: args.topic,
+      title: args.title, genreProfile: args.genre, targetAudience: args.audience, premise: args.topic,
     });
     const engine: AIAgentAdapter = createEngine(config.engine);
 
@@ -349,7 +349,7 @@ async function runInit(args: InitArgs): Promise<void> {
       onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
     });
 
-    updateProjectStatus(db, project.id, 'bible_done');
+    updateProjectStatus(db, project.id, 'planning');
 
     console.log('\n✓ Bible 生成完成');
     console.log(`  项目 ID：${project.id}`);
@@ -402,7 +402,7 @@ async function runImportBible(args: ImportBibleArgs): Promise<void> {
   const db = openConfiguredDb();
   try {
     const project = createProject(db, {
-      title: args.title, genre: args.genre, audience: args.audience, topic: args.topic,
+      title: args.title, genreProfile: args.genre, targetAudience: args.audience, premise: args.topic,
     });
 
     const { bible } = importBible({
@@ -410,7 +410,7 @@ async function runImportBible(args: ImportBibleArgs): Promise<void> {
       topic: args.topic, genre: args.genre, audience: args.audience,
     });
 
-    updateProjectStatus(db, project.id, 'bible_done');
+    updateProjectStatus(db, project.id, 'planning');
 
     console.log('\n✓ Bible 导入完成');
     console.log(`  项目 ID：${project.id}`);
@@ -456,8 +456,8 @@ function runList(): void {
 
 function printProject(p: Project, db: ReturnType<typeof openDb>): void {
   console.log(`项目：${p.title}（${p.id}）`);
-  console.log(`  类型：${p.genre} · 受众：${p.audience}`);
-  console.log(`  主题：${p.topic}`);
+  console.log(`  类型：${p.genreProfile} · 受众：${p.targetAudience}`);
+  console.log(`  主题：${p.premise}`);
   console.log(`  状态：${p.status}`);
   console.log(`  创建：${p.createdAt}`);
   const bibleRow = db.prepare('SELECT * FROM bible WHERE project_id = ?').get(p.id) as
@@ -535,7 +535,7 @@ async function runOutline(args: OutlineArgs): Promise<void> {
       onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
     });
 
-    updateProjectStatus(db, args.projectId, 'outlining');
+    updateProjectStatus(db, args.projectId, 'planning');
     console.log('\n✓ 章节蓝图生成完成');
     console.log(`  章节数：${outlines.length}`);
     console.log(`  费用：¥${usage.costRmb.toFixed(4)}`);
@@ -626,7 +626,7 @@ async function runChapter(args: ChapterArgs): Promise<void> {
       engine, db, projectId: args.projectId,
       from, to, wordCount,
       qualityGate: useGate ? {
-        metadata: { genre: project.genre, targetAudience: project.audience },
+        metadata: { genre: project.genreProfile, targetAudience: project.targetAudience },
         maxRevise: args.maxRevise ?? 2,
       } : undefined,
       onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
@@ -776,7 +776,7 @@ async function runResume(args: ResumeArgs): Promise<void> {
       engine, db, projectId: args.projectId,
       from, to, wordCount: config.generation.chapterWordCount,
       qualityGate: useGate ? {
-        metadata: { genre: project.genre, targetAudience: project.audience },
+        metadata: { genre: project.genreProfile, targetAudience: project.targetAudience },
         maxRevise: args.maxRevise ?? 2,
       } : undefined,
       onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
@@ -836,11 +836,11 @@ async function runAuto(args: AutoArgs): Promise<void> {
 
     // 1. bible
     console.log('\n── 阶段 1：bible 生成 ──');
-    const project = createProject(db, { title: args.title, genre: args.genre, audience: args.audience, topic: args.topic });
+    const project = createProject(db, { title: args.title, genreProfile: args.genre, targetAudience: args.audience, premise: args.topic });
     const { bible, usage: bibleUsage } = await generateBible({
       engine, db, projectId: project.id, topic: args.topic, genre: args.genre, audience: args.audience, onProgress: log,
     });
-    updateProjectStatus(db, project.id, 'bible_done');
+    updateProjectStatus(db, project.id, 'planning');
     console.log(`✓ bible 完成（${bible.characterDynamics.length} 角色 / ${bible.plotArchitecture.foreshadows.length} 伏笔 / ¥${bibleUsage.costRmb.toFixed(4)}）`);
 
     // 2. outline
@@ -848,7 +848,7 @@ async function runAuto(args: AutoArgs): Promise<void> {
     const { outlines, usage: outlineUsage } = await generateBlueprint({
       engine, db, projectId: project.id, plot: bible.plotArchitecture, characters: bible.characterDynamics, totalChapters: args.chapters, onProgress: log,
     });
-    updateProjectStatus(db, project.id, 'outlining');
+    updateProjectStatus(db, project.id, 'planning');
     console.log(`✓ 蓝图完成（${outlines.length} 章 / ¥${outlineUsage.costRmb.toFixed(4)}）`);
 
     // 3. chapter（带质量门槛）

@@ -130,7 +130,7 @@ const PLOT_RESP = JSON.stringify({
 describe('generateBible', () => {
   it('4 步顺序执行，每步 schema 校验通过，生成完整 bible', async () => {
     const db = openDb();
-    const project = createProject(db, { title: '星际殖民地', genre: '科幻', audience: '青年男性', topic: '虫族入侵' });
+    const project = createProject(db, { title: '星际殖民地', genreProfile: '科幻', targetAudience: '青年男性', premise: '虫族入侵' });
     const engine = mockEngine([CORE_SEED_RESP, CHAR_DYNAMICS_RESP, CHAR_STATE_RESP, WORLD_RESP, PLOT_RESP]);
 
     const { bible, usage } = await generateBible({
@@ -158,7 +158,7 @@ describe('generateBible', () => {
 
   it('上下文隔离：world_building 步骤的 prompt 不含 character_dynamics 的角色细节', async () => {
     const db = openDb();
-    const project = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const project = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     const engine = mockEngine([CORE_SEED_RESP, CHAR_DYNAMICS_RESP, CHAR_STATE_RESP, WORLD_RESP, PLOT_RESP]);
 
     await generateBible({
@@ -179,7 +179,7 @@ describe('generateBible', () => {
 
   it('checkpoint：中途断开重跑能跳过已完成步', async () => {
     const db = openDb();
-    const project = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const project = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
 
     // 第一次：只跑前 2 步就停（模拟中断）—— 用只提供 2 个响应的 engine
     const engine1 = mockEngine([CORE_SEED_RESP, CHAR_DYNAMICS_RESP]);
@@ -204,7 +204,7 @@ describe('generateBible', () => {
 
   it('core_seed 生成失败时抛错（致命步骤）', async () => {
     const db = openDb();
-    const project = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const project = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     // 返回不合法 JSON（premise 过短，schema min:15 会失败）
     const engine = mockEngine([JSON.stringify({ premise: '太短' })]);
 

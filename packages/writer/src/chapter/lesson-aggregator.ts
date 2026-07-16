@@ -14,7 +14,7 @@
  *   结局: act=3 且 totalChapters - number ≤ 3
  */
 import type { DB } from '../db.ts';
-import type { ChapterOutline } from './types.ts';
+import type { ChapterOutline } from './legacy-types.ts';
 import { getAllEvalHistory, getLessonsByPattern, upsertLesson, type EvalHistoryRecord } from './store.ts';
 
 // ─── 章节类型分类 ─────────────────────────────────────────────────

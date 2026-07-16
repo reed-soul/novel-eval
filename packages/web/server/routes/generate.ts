@@ -55,7 +55,7 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
       engineName?: string;
       model?: string;
     }>();
-    const project = createProject(db, { title: body.title, genre: body.genre, audience: body.audience, topic: body.topic });
+    const project = createProject(db, { title: body.title, genreProfile: body.genre, targetAudience: body.audience, premise: body.topic });
 
     if (!body.generate) {
       return c.json({ project });
@@ -71,7 +71,7 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
         engine: resolveEngine(body), db, projectId: project.id,
         topic: body.topic, genre: body.genre, audience: body.audience, onProgress,
       });
-      updateProjectStatus(db, project.id, 'bible_done');
+      updateProjectStatus(db, project.id, 'planning');
       return { bible: { characters: bible.characterDynamics.length, foreshadows: bible.plotArchitecture.foreshadows.length }, usage };
     });
     return c.json({ project, jobId });
@@ -88,9 +88,9 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
     const jobId = createJob(db, { type: 'bible', projectId: id }, async ({ onProgress }: JobRunnerContext) => {
       const { bible, usage } = await generateBible({
         engine: resolveEngine(body), db, projectId: id,
-        topic: project.topic, genre: project.genre, audience: project.audience, onProgress,
+        topic: project.premise, genre: project.genreProfile, audience: project.targetAudience, onProgress,
       });
-      updateProjectStatus(db, id, 'bible_done');
+      updateProjectStatus(db, id, 'planning');
       return { characters: bible.characterDynamics.length, foreshadows: bible.plotArchitecture.foreshadows.length, usage };
     });
     return c.json({ jobId });
@@ -117,7 +117,7 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
       const { outlines, usage } = await generateBlueprint({
         engine: resolveEngine(body), db, projectId: id, plot: plotArchitecture, characters, totalChapters, onProgress,
       });
-      updateProjectStatus(db, id, 'outlining');
+      updateProjectStatus(db, id, 'planning');
       return { chapters: outlines.length, usage };
     });
     return c.json({ jobId });
@@ -133,7 +133,7 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
 
     const body = await c.req.json<{ from: number; to: number; qualityGate?: boolean; maxRevise?: number; engineName?: string; model?: string; wordCount?: number }>();
     const config = loadWriterConfig();
-    const metadata: NovelMetadata = { genre: project.genre, targetAudience: project.audience };
+    const metadata: NovelMetadata = { genre: project.genreProfile, targetAudience: project.targetAudience };
     const useGate = !!body.qualityGate;
     const wordCount = body.wordCount ?? config.generation.chapterWordCount;
 
@@ -181,7 +181,7 @@ export function generateRoutes(db: DB, registry: EngineRegistry) {
 
     const body = await c.req.json<{ engineName?: string; model?: string; maxRevise?: number; wordCount?: number }>().catch(() => ({} as { engineName?: string; model?: string; maxRevise?: number; wordCount?: number }));
     const config = loadWriterConfig();
-    const metadata: NovelMetadata = { genre: project.genre, targetAudience: project.audience };
+    const metadata: NovelMetadata = { genre: project.genreProfile, targetAudience: project.targetAudience };
     const useGate = !!oldRow.qualityGate;
     const maxRevise = body.maxRevise ?? oldRow.maxRevise;
     const wordCount = body.wordCount ?? config.generation.chapterWordCount;

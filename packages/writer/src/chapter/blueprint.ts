@@ -14,7 +14,7 @@ import type { AIAgentAdapter } from '@novel-eval/shared';
 import { callWithValidation, loadPrompt, addUsage, zeroUsage, type SchemaSpec } from '@novel-eval/shared';
 import type { DB } from '../db.ts';
 import type { PlotArchitecture, CharacterDynamic } from '../bible/types.ts';
-import type { Beat, ChapterOutline } from './types.ts';
+import type { Beat, ChapterOutline } from './legacy-types.ts';
 import { saveOutlines, countOutlines, getOutline } from './store.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

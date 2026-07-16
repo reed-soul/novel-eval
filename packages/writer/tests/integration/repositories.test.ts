@@ -2,7 +2,8 @@ import assert from 'node:assert/strict';
 import { it } from 'node:test';
 
 import { InvalidPersistenceDataError } from '../../src/domain/errors.ts';
-import { chapterRevisionId, storyStateRevisionId } from '../../src/domain/ids.ts';
+import { chapterRevisionId, outlineId, storyStateRevisionId } from '../../src/domain/ids.ts';
+import { createProject } from '../../src/project.ts';
 import { ChapterRepository } from '../../src/repositories/chapter-repository.ts';
 import { PlanningRepository } from '../../src/repositories/planning-repository.ts';
 import { ProjectRepository } from '../../src/repositories/project-repository.ts';
@@ -18,6 +19,26 @@ import {
   fixtureTime,
 } from '../helpers/fixtures.ts';
 import { createTestDb } from '../helpers/test-db.ts';
+
+it('exposes only the new project vocabulary', (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+
+  const project = createProject(testDb.db, {
+    title: '北站',
+    genreProfile: '悬疑',
+    targetAudience: '成人',
+    premise: '林晚追查一张失踪的车票。',
+  });
+
+  assert.equal(project.status, 'draft');
+  assert.equal(project.genreProfile, '悬疑');
+  assert.equal(project.targetAudience, '成人');
+  assert.equal(project.premise, '林晚追查一张失踪的车票。');
+  assert.equal('genre' in project, false);
+  assert.equal('audience' in project, false);
+  assert.equal('topic' in project, false);
+});
 
 it('persists and reads a complete versioned story foundation', (t) => {
   const testDb = createTestDb();
@@ -215,4 +236,44 @@ it('rejects persisted JSON that does not match the domain model', (t) => {
     chapters.getRevision(chapterRevisionId('missing')),
     null,
   );
+});
+
+it('validates outline content before writing it', (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const projects = new ProjectRepository(testDb.db);
+  const planning = new PlanningRepository(testDb.db);
+  projects.create({
+    id: fixtureProjectId,
+    title: '北站',
+    genreProfile: '悬疑',
+    targetAudience: '成人',
+    premise: 'Premise',
+    createdAt: fixtureTime,
+  });
+  const invalidInput: unknown = {
+    outline: {
+      id: outlineId('outline-invalid'),
+      projectId: fixtureProjectId,
+      position: 1,
+      createdAt: fixtureTime,
+      updatedAt: fixtureTime,
+    },
+    revision: {
+      id: 'outline-revision-invalid',
+      revisionNumber: 1,
+      title: '北站',
+      content: { summary: 'Summary', beats: [undefined] },
+      createdAt: fixtureTime,
+    },
+  };
+
+  assert.throws(
+    () => Reflect.apply(planning.saveApprovedOutline, planning, [invalidInput]),
+    InvalidPersistenceDataError,
+  );
+  const row = testDb.db.prepare(
+    "SELECT COUNT(*) AS count FROM chapter_outline WHERE id = 'outline-invalid'",
+  ).get();
+  assert.deepEqual(row, { count: 0 });
 });

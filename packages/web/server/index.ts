@@ -30,7 +30,11 @@ import { evalTasksRouter } from './routes/eval-tasks.ts';
 import { EngineRegistry } from './engine-registry.ts';
 
 loadEnv();
-const db = openDb();
+const databasePath = process.env.WRITER_DB_PATH;
+if (typeof databasePath !== 'string' || databasePath.trim() === '') {
+  throw new Error('WRITER_DB_PATH must be set to an explicit database path');
+}
+const db = openDb({ path: databasePath });
 // 启动恢复：把上次进程没正常退出残留的 running job 标成 paused，
 // 让用户重启后看到"已暂停"并点继续，而不是永远卡 running（内存 job 已失）。
 const recovered = recoverInterruptedJobs(db);

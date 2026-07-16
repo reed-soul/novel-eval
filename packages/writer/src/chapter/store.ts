@@ -5,7 +5,13 @@
  */
 import { randomUUID } from 'node:crypto';
 import type { DB } from '../db.ts';
-import type { ChapterOutline, ChapterContent, NarrativeState, OpenForeshadow, ArcSummary } from './types.ts';
+import type {
+  ArcSummary,
+  ChapterContent,
+  ChapterOutline,
+  NarrativeState,
+  OpenForeshadow,
+} from './legacy-types.ts';
 import type { Bible, CharacterState, PlotArchitecture } from '../bible/types.ts';
 
 // ─── bible（读 M1 产物）──────────────────────────────────────────

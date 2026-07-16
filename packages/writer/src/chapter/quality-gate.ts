@@ -13,7 +13,7 @@ import { addUsage, zeroUsage } from '@novel-eval/shared';
 import { assessChapters, DIMENSION_LABELS } from '@novel-eval/eval';
 import type { DimensionKey } from '@novel-eval/eval';
 import type { DB } from '../db.ts';
-import type { ChapterContent } from './types.ts';
+import type { ChapterContent } from './legacy-types.ts';
 import { detectRepetition } from './repetition.ts';
 import { getRecentChapters, saveEvalHistory } from './store.ts';
 import { getRuntimeConfig } from '../runtime-config.ts';

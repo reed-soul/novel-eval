@@ -114,7 +114,7 @@ export function ProjectDetail() {
         <div>
           <h2>{project.title}</h2>
           <div className="project-subheading">
-            {project.genre} · {project.audience} · <span className={`badge badge-${project.status}`}>{project.status}</span>
+            {project.genreProfile} · {project.targetAudience} · <span className={`badge badge-${project.status}`}>{project.status}</span>
           </div>
         </div>
         <Link to="/" className="back-link">← 返回列表</Link>
@@ -122,7 +122,7 @@ export function ProjectDetail() {
 
       <div className="card">
         <h2>主题</h2>
-        <p style={{ lineHeight: 1.7 }}>{project.topic}</p>
+        <p style={{ lineHeight: 1.7 }}>{project.premise}</p>
       </div>
 
       {/* 任务状态条（运行中/已暂停）*/}

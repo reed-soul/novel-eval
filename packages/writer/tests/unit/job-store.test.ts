@@ -22,7 +22,7 @@ afterEach(() => { process.chdir(origCwd); rmSync(tempRoot, { recursive: true, fo
 describe('job-store', () => {
   it('createJobRow 写入 running 状态 + 读回', () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     const id = createJobRow(db, { projectId: p.id, type: 'chapter', fromChapter: 1, toChapter: 10, qualityGate: true, maxRevise: 2 });
     const row = getJobRow(db, id);
     assert.ok(row);
@@ -38,7 +38,7 @@ describe('job-store', () => {
 
   it('updateJobProgress 推进断点章号', () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     const id = createJobRow(db, { projectId: p.id, type: 'chapter', fromChapter: 1, toChapter: 5 });
     updateJobProgress(db, id, 3);
     const row = getJobRow(db, id);
@@ -48,7 +48,7 @@ describe('job-store', () => {
 
   it('updateJobStatus 写终态 + result', () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     const id = createJobRow(db, { projectId: p.id, type: 'bible' });
     updateJobStatus(db, id, 'done', { result: { chapters: 10 } });
     const row = getJobRow(db, id);
@@ -59,7 +59,7 @@ describe('job-store', () => {
 
   it('getActiveJob 返回 running/paused 中最新一条，done 不算', () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     // 旧的 done job
     const oldId = createJobRow(db, { projectId: p.id, type: 'chapter', fromChapter: 1, toChapter: 5 });
     updateJobStatus(db, oldId, 'done');
@@ -76,7 +76,7 @@ describe('job-store', () => {
 
   it('listJobsByProject 按创建倒序', () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     const a = createJobRow(db, { projectId: p.id, type: 'bible' });
     const b = createJobRow(db, { projectId: p.id, type: 'outline' });
     const list = listJobsByProject(db, p.id);
@@ -88,8 +88,8 @@ describe('job-store', () => {
 
   it('recoverInterruptedJobs：running → paused（模拟进程重启）', () => {
     const db = openDb();
-    const p1 = createProject(db, { title: 'T1', genre: 'g', audience: 'a', topic: 't' });
-    const p2 = createProject(db, { title: 'T2', genre: 'g', audience: 'a', topic: 't' });
+    const p1 = createProject(db, { title: 'T1', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+    const p2 = createProject(db, { title: 'T2', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     const j1 = createJobRow(db, { projectId: p1.id, type: 'chapter', fromChapter: 1, toChapter: 10 });
     const j2 = createJobRow(db, { projectId: p2.id, type: 'chapter', fromChapter: 1, toChapter: 5 });
     const j3 = createJobRow(db, { projectId: p1.id, type: 'bible' });
@@ -106,7 +106,7 @@ describe('job-store', () => {
 
   it('qualityGate/maxRevise 默认值', () => {
     const db = openDb();
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     const id = createJobRow(db, { projectId: p.id, type: 'bible' });
     const row = getJobRow(db, id);
     assert.equal(row!.qualityGate, false);

@@ -158,17 +158,30 @@ function parseStoryState(text: string): StoryState {
 function parseCharacterPatch(value: unknown): CharacterPatch {
   const entity = 'character patch';
   const record = persistedRecord(value, entity);
-  const patch: CharacterPatch = {};
-  if ('name' in record) patch.name = stringField(record, 'name', entity);
-  if ('status' in record) {
-    patch.status = oneOf(
-      stringField(record, 'status', entity),
-      ['alive', 'injured', 'missing', 'dead'] as const,
-      entity,
-    );
+  const kind = oneOf(
+    stringField(record, 'kind', entity),
+    ['set-name', 'set-status', 'replace-facts'] as const,
+    entity,
+  );
+  switch (kind) {
+    case 'set-name':
+      return { kind, name: stringField(record, 'name', entity) };
+    case 'set-status':
+      return {
+        kind,
+        status: oneOf(
+          stringField(record, 'status', entity),
+          ['alive', 'injured', 'missing', 'dead'] as const,
+          entity,
+        ),
+      };
+    case 'replace-facts':
+      return { kind, facts: stringArray(record.facts, `${entity} facts`) };
+    default: {
+      const exhaustive: never = kind;
+      return exhaustive;
+    }
   }
-  if ('facts' in record) patch.facts = stringArray(record.facts, `${entity} facts`);
-  return patch;
 }
 
 function parseCharacterChange(value: unknown): CharacterChange {

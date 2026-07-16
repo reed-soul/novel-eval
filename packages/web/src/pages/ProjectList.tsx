@@ -43,12 +43,12 @@ export function ProjectList() {
               <div className="project-card">
                 <h3>{p.title}</h3>
                 <div className="meta">
-                  <span>{p.genre} · {p.audience}</span>
+                  <span>{p.genreProfile} · {p.targetAudience}</span>
                   <span className={`badge badge-${p.status}`}>{p.status}</span>
                   <span>{p.createdAt.slice(0, 10)}</span>
                 </div>
                 <div className="meta" style={{ marginTop: 6, fontSize: 12 }}>
-                  <span>主题：{p.topic.slice(0, 60)}{p.topic.length > 60 ? '…' : ''}</span>
+                  <span>主题：{p.premise.slice(0, 60)}{p.premise.length > 60 ? '…' : ''}</span>
                 </div>
               </div>
             </Link>

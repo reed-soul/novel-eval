@@ -13,7 +13,7 @@ import type { AIAgentAdapter } from '@novel-eval/shared';
 import { callWithValidation, loadPrompt, addUsage, zeroUsage, type SchemaSpec } from '@novel-eval/shared';
 import type { DB } from '../db.ts';
 import type { CharacterState, CharacterStateEntry } from '../bible/types.ts';
-import type { NarrativeState, ArcSummary, OpenForeshadow } from './types.ts';
+import type { NarrativeState, ArcSummary, OpenForeshadow } from './legacy-types.ts';
 import { getBibleForChapter, updateCharacterState, getNarrativeState, saveNarrativeState } from './store.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

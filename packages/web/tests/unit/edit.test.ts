@@ -35,7 +35,7 @@ function testApp(db: DB) {
 
 describe('PUT 章节编辑', () => {
   it('保存正文后 GET 能读到新内容', async () => {
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     saveOutlines(db, p.id, [
       { number: 1, title: '第一章', act: 1, beat: '铺垫', role: '引入', purpose: '开篇介绍主角和核心矛盾冲突', suspenseLevel: 5, foreshadowing: '无', twistLevel: 1, summary: '梗概' },
     ]);
@@ -59,7 +59,7 @@ describe('PUT 章节编辑', () => {
   });
 
   it('空正文返回 400', async () => {
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     saveOutlines(db, p.id, [
       { number: 1, title: 'A', act: 1, beat: 'b', role: 'r', purpose: '核心作用明确且具体', suspenseLevel: 3, foreshadowing: '无', twistLevel: 0, summary: '梗概' },
     ]);
@@ -73,7 +73,7 @@ describe('PUT 章节编辑', () => {
   });
 
   it('蓝图不存在返回 404', async () => {
-    const p = createProject(db, { title: 'T', genre: 'g', audience: 'a', topic: 't' });
+    const p = createProject(db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
     const app = testApp(db);
     const res = await app.fetch(new Request(`http://test/api/projects/${p.id}/chapters/99`, {
       method: 'PUT',
