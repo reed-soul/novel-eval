@@ -11,7 +11,7 @@
 import { createEngine, type AIAgentAdapter } from '@novel-eval/shared';
 import { loadWriterConfig } from './config.ts';
 import { loadEnv } from './load-env.ts';
-import { openDb, closeDb, writerDataDir } from './db.ts';
+import { openDb, closeDb, type DB } from './db.ts';
 import { createProject, getProject, listProjects, updateProjectStatus, type Project } from './project.ts';
 import { generateBible } from './bible/generator.ts';
 import { importBible, type ImportBibleInput } from './bible/importer.ts';
@@ -22,9 +22,22 @@ import { getBibleForChapter } from './chapter/store.ts';
 import { getAllOutlines, countOutlines, countChapters, getChapter } from './chapter/store.ts';
 import type { CharacterDynamic } from './bible/types.ts';
 import { readFileSync } from 'node:fs';
+import { dirname } from 'node:path';
 import * as readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import { isServerRunning, startApiJob, streamJobEvents } from './api-client.ts';
+
+function configuredDatabasePath(): string {
+  const path = process.env.WRITER_DB_PATH;
+  if (typeof path !== 'string' || path.trim() === '') {
+    throw new Error('WRITER_DB_PATH must be set to an explicit database path');
+  }
+  return path;
+}
+
+function openConfiguredDb(): DB {
+  return openDb({ path: configuredDatabasePath() });
+}
 
 interface InitArgs {
   command: 'init';
@@ -323,7 +336,7 @@ async function runInit(args: InitArgs): Promise<void> {
 
   console.log('\n开始生成 bible...\n');
 
-  const db = openDb();
+  const db = openConfiguredDb();
   try {
     const project = createProject(db, {
       title: args.title, genre: args.genre, audience: args.audience, topic: args.topic,
@@ -340,7 +353,7 @@ async function runInit(args: InitArgs): Promise<void> {
 
     console.log('\n✓ Bible 生成完成');
     console.log(`  项目 ID：${project.id}`);
-    console.log(`  数据库：${writerDataDir()}/writer.db`);
+    console.log(`  数据库：${configuredDatabasePath()}`);
     console.log(`  费用：¥${usage.costRmb.toFixed(4)}（in ${usage.inputTokens} / out ${usage.outputTokens} tok）`);
     console.log(`  角色：${bible.characterDynamics.length} 个`);
     console.log(`  伏笔：${bible.plotArchitecture.foreshadows.length} 个`);
@@ -386,7 +399,7 @@ async function runImportBible(args: ImportBibleArgs): Promise<void> {
     if (!ok) { console.log('已取消'); return; }
   }
 
-  const db = openDb();
+  const db = openConfiguredDb();
   try {
     const project = createProject(db, {
       title: args.title, genre: args.genre, audience: args.audience, topic: args.topic,
@@ -411,7 +424,7 @@ async function runImportBible(args: ImportBibleArgs): Promise<void> {
 }
 
 function runStatus(args: StatusArgs): void {
-  const db = openDb();
+  const db = openConfiguredDb();
   try {
     const project = getProject(db, args.projectId);
     if (!project) {
@@ -425,7 +438,7 @@ function runStatus(args: StatusArgs): void {
 }
 
 function runList(): void {
-  const db = openDb();
+  const db = openConfiguredDb();
   try {
     const projects = listProjects(db);
     if (!projects.length) {
@@ -473,7 +486,7 @@ function printProject(p: Project, db: ReturnType<typeof openDb>): void {
 
 async function runOutline(args: OutlineArgs): Promise<void> {
   const config = loadWriterConfig(args.engine ? { engine: args.engine } : undefined);
-  const db = openDb();
+  const db = openConfiguredDb();
   try {
     const project = getProject(db, args.projectId);
     if (!project) { console.error(`未找到项目：${args.projectId}`); process.exit(1); }
@@ -538,7 +551,7 @@ async function runOutline(args: OutlineArgs): Promise<void> {
 
 async function runChapter(args: ChapterArgs): Promise<void> {
   const config = loadWriterConfig(args.engine ? { engine: args.engine } : undefined);
-  const db = openDb();
+  const db = openConfiguredDb();
   try {
     const project = getProject(db, args.projectId);
     if (!project) { console.error(`未找到项目：${args.projectId}`); process.exit(1); }
@@ -578,7 +591,7 @@ async function runChapter(args: ChapterArgs): Promise<void> {
         await streamJobEvents(jobId);
 
         // Write human readable txt file after SSE done
-        const dbTemp = openDb();
+        const dbTemp = openConfiguredDb();
         try {
           const results: { number: number; title: string; content: string }[] = [];
           for (let num = from; num <= to; num++) {
@@ -588,7 +601,7 @@ async function runChapter(args: ChapterArgs): Promise<void> {
           if (results.length > 0) {
             const { writeFileSync } = await import('node:fs');
             const { resolve } = await import('node:path');
-            const outPath = resolve(writerDataDir(), `${args.projectId}-ch${from}-${to}.txt`);
+            const outPath = resolve(dirname(configuredDatabasePath()), `${args.projectId}-ch${from}-${to}.txt`);
             const text = results.map((r) => `第${r.number}章 ${r.title}\n\n${r.content}`).join('\n\n\n');
             writeFileSync(outPath, text, 'utf-8');
             console.log(`  导出：${outPath}`);
@@ -632,7 +645,7 @@ async function runChapter(args: ChapterArgs): Promise<void> {
     if (results.length > 0) {
       const { writeFileSync } = await import('node:fs');
       const { resolve } = await import('node:path');
-      const outPath = resolve(writerDataDir(), `${args.projectId}-ch${from}-${to}.txt`);
+      const outPath = resolve(dirname(configuredDatabasePath()), `${args.projectId}-ch${from}-${to}.txt`);
       const text = results.map((r) => `第${r.number}章 ${r.title}\n\n${r.content}`).join('\n\n\n');
       writeFileSync(outPath, text, 'utf-8');
       console.log(`  导出：${outPath}`);
@@ -644,7 +657,7 @@ async function runChapter(args: ChapterArgs): Promise<void> {
 
 async function runResume(args: ResumeArgs): Promise<void> {
   const config = loadWriterConfig(args.engine ? { engine: args.engine } : undefined);
-  const db = openDb();
+  const db = openConfiguredDb();
   try {
     const project = getProject(db, args.projectId);
     if (!project) { console.error(`未找到项目：${args.projectId}`); process.exit(1); }
@@ -671,7 +684,7 @@ async function runResume(args: ResumeArgs): Promise<void> {
             engineName: args.engine,
             maxRevise: args.maxRevise,
           });
-          const dbTemp = openDb();
+          const dbTemp = openConfiguredDb();
           try {
             toBound = countOutlines(dbTemp, args.projectId);
             const written = countChapters(dbTemp, args.projectId);
@@ -680,7 +693,7 @@ async function runResume(args: ResumeArgs): Promise<void> {
             closeDb(dbTemp);
           }
         } else {
-          const dbTemp = openDb();
+          const dbTemp = openConfiguredDb();
           try {
             toBound = countOutlines(dbTemp, args.projectId);
             const written = countChapters(dbTemp, args.projectId);
@@ -705,7 +718,7 @@ async function runResume(args: ResumeArgs): Promise<void> {
         await streamJobEvents(jobId);
 
         // Write human readable txt file after SSE done
-        const dbTemp = openDb();
+        const dbTemp = openConfiguredDb();
         try {
           const results: { number: number; title: string; content: string }[] = [];
           for (let num = fromBound; num <= toBound; num++) {
@@ -715,7 +728,7 @@ async function runResume(args: ResumeArgs): Promise<void> {
           if (results.length > 0) {
             const { writeFileSync } = await import('node:fs');
             const { resolve } = await import('node:path');
-            const outPath = resolve(writerDataDir(), `${args.projectId}-ch${fromBound}-${toBound}.txt`);
+            const outPath = resolve(dirname(configuredDatabasePath()), `${args.projectId}-ch${fromBound}-${toBound}.txt`);
             const text = results.map((r) => `第${r.number}章 ${r.title}\n\n${r.content}`).join('\n\n\n');
             writeFileSync(outPath, text, 'utf-8');
             console.log(`  导出：${outPath}`);
@@ -783,7 +796,7 @@ async function runResume(args: ResumeArgs): Promise<void> {
     if (results.length > 0) {
       const { writeFileSync } = await import('node:fs');
       const { resolve } = await import('node:path');
-      const outPath = resolve(writerDataDir(), `${args.projectId}-ch${from}-${to}.txt`);
+      const outPath = resolve(dirname(configuredDatabasePath()), `${args.projectId}-ch${from}-${to}.txt`);
       const text = results.map((r) => `第${r.number}章 ${r.title}\n\n${r.content}`).join('\n\n\n');
       writeFileSync(outPath, text, 'utf-8');
       console.log(`  导出：${outPath}`);
@@ -816,7 +829,7 @@ async function runAuto(args: AutoArgs): Promise<void> {
     if (!ok) { console.log('已取消'); return; }
   }
 
-  const db = openDb();
+  const db = openConfiguredDb();
   try {
     const engine: AIAgentAdapter = createEngine(config.engine);
     const log = (step: string, msg: string) => console.log(`  [${step}] ${msg}`);
@@ -858,7 +871,7 @@ async function runAuto(args: AutoArgs): Promise<void> {
     // 导出 txt
     const { writeFileSync } = await import('node:fs');
     const { resolve } = await import('node:path');
-    const outPath = resolve(writerDataDir(), `${project.id}-full.txt`);
+    const outPath = resolve(dirname(configuredDatabasePath()), `${project.id}-full.txt`);
     const text = results.map((r) => `第${r.number}章 ${r.title}\n\n${r.content}`).join('\n\n\n');
     writeFileSync(outPath, text, 'utf-8');
     console.log(`  导出：${outPath}`);

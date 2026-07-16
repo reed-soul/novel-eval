@@ -5,7 +5,7 @@
  */
 export { loadWriterConfig, type WriterConfig, type GenerationConfig } from './config.ts';
 export { loadEnv } from './load-env.ts';
-export { openDb, closeDb, writerDataDir, type DB } from './db.ts';
+export { openDb, closeDb, type DB } from './db.ts';
 export {
   createProject, getProject, listProjects, updateProjectStatus,
   type Project, type ProjectStatus,
