@@ -87,6 +87,7 @@ export {
   fail,
   parseEditChapterRequest,
   parseGenerateChaptersRequest,
+  parseJobStatusResponse,
   parseEvaluationReportResponse,
   toEvaluationReportResponse,
   unwrapEvaluationPayload,

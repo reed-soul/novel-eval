@@ -16,6 +16,7 @@ export type {
   JobStatusDto,
   JobTypeDto,
 } from './jobs.ts';
+export { parseJobStatusResponse } from './jobs.ts';
 
 export type {
   EvaluationReportResponse,

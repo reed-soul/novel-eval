@@ -4,6 +4,10 @@
  * 状态语义与 writer job-store 对齐：running | paused | completed | failed | cancelled
  */
 import { EventEmitter } from 'node:events';
+import {
+  parseJobStatusResponse,
+  type JobStatusResponse,
+} from '@novel-eval/shared';
 import type { DB, JobRow, JobType, JsonValue } from '@novel-eval/writer';
 import {
   appendJobEvent,
@@ -348,9 +352,9 @@ export function hasActiveJobForProject(db: DB, projectId: string): boolean {
   return getActiveJob(db, projectId) !== null;
 }
 
-export function jobToClientPayload(job: Job | JobRow): Record<string, unknown> {
-  if ('emitter' in job) {
-    return {
+export function jobToClientPayload(job: Job | JobRow): JobStatusResponse {
+  const raw: Record<string, unknown> = 'emitter' in job
+    ? {
       id: job.id,
       type: job.type,
       projectId: job.projectId,
@@ -361,23 +365,28 @@ export function jobToClientPayload(job: Job | JobRow): Record<string, unknown> {
       toChapter: job.toChapter,
       result: job.result,
       error: job.error,
+    }
+    : {
+      id: job.id,
+      type: job.type,
+      projectId: job.projectId,
+      status: job.status,
+      lastChapter: job.lastOutlinePosition,
+      fromChapter: job.scope.from,
+      toChapter: job.scope.to,
+      result: resultFromRow(job),
+      error: job.errorType,
+      qualityGate: budgetFlag(job, 'qualityGate') === true,
+      maxRevise: budgetFlag(job, 'maxRevise') ?? 0,
+      createdAt: job.createdAt,
+      updatedAt: job.updatedAt,
     };
+
+  const parsed = parseJobStatusResponse(raw);
+  if (!parsed.ok) {
+    throw new Error(`JobStatusResponse 构造失败: ${parsed.message}`);
   }
-  return {
-    id: job.id,
-    type: job.type,
-    projectId: job.projectId,
-    status: job.status,
-    lastChapter: job.lastOutlinePosition,
-    fromChapter: job.scope.from,
-    toChapter: job.scope.to,
-    result: resultFromRow(job),
-    error: job.errorType,
-    qualityGate: budgetFlag(job, 'qualityGate') === true,
-    maxRevise: budgetFlag(job, 'maxRevise') ?? 0,
-    createdAt: job.createdAt,
-    updatedAt: job.updatedAt,
-  };
+  return parsed.data;
 }
 
 export function parseAfterSeq(raw: string | undefined): number {
