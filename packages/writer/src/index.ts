@@ -768,13 +768,30 @@ async function runResume(args: ResumeArgs): Promise<void> {
     let wordCount = config.generation.chapterWordCount;
     let engineName = config.engineName;
     let model = config.engine.model;
+    let qualityProfile = 'default';
+    let promptVersion = 'chapter-v1';
+    let budget: import('./repositories/validation.ts').JsonValue = {};
+    let resumeJobId: string | undefined;
     if (persisted && (persisted.status === 'paused' || persisted.status === 'running')) {
       const snapshot = readJobResumeConfig(db, persisted.id);
       resumeFrom = Math.max(from, snapshot.lastOutlinePosition + 1);
       resumeTo = snapshot.scope.to;
+      if (resumeFrom > resumeTo) {
+        console.log(`\n✓ 任务 ${persisted.id} 原范围 ${snapshot.scope.from}-${snapshot.scope.to} 已完成，无需续写。`);
+        const { updateJobStatus } = await import('./job-store.ts');
+        updateJobStatus(db, persisted.id, 'completed');
+        if (project.status === 'writing') {
+          updateProjectStatus(db, args.projectId, 'completed');
+        }
+        return;
+      }
       wordCount = snapshot.wordCount || wordCount;
       engineName = snapshot.engine || engineName;
       model = snapshot.model || model;
+      qualityProfile = snapshot.qualityProfile || qualityProfile;
+      promptVersion = snapshot.promptVersion || promptVersion;
+      budget = snapshot.budget;
+      resumeJobId = persisted.id;
       console.log(`  恢复任务 ${persisted.id}：继续原始范围 ${snapshot.scope.from}-${snapshot.scope.to}`);
     }
 
@@ -789,12 +806,16 @@ async function runResume(args: ResumeArgs): Promise<void> {
     updateProjectStatus(db, args.projectId, 'writing');
     const { outcomes } = await app.generateChapterRange({
       projectId: projectId(args.projectId),
-      from: resumeFrom,
+      from: resumeJobId ? (readJobResumeConfig(db, resumeJobId).scope.from) : resumeFrom,
       to: resumeTo,
+      resumeJobId,
       engine,
       wordCount,
       engineName,
       model,
+      qualityProfile,
+      promptVersion,
+      budget,
       onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
     });
 

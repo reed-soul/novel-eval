@@ -82,6 +82,8 @@ export interface GenerateChapterRangeInput {
   to: number;
   engine: AIAgentAdapter;
   wordCount: number;
+  /** Resume a paused job in-place (same jobId); cancels other active jobs first when omitted. */
+  resumeJobId?: string;
   ownerId?: string;
   engineName?: string;
   model?: string;
@@ -179,13 +181,15 @@ export class WriterApplication {
     if (!Number.isInteger(fromOutlinePosition) || fromOutlinePosition <= 0) {
       throw new Error('fromOutlinePosition must be a positive integer');
     }
-    return {
-      affectedOutlinePositions: this.states
-        .listStale(id)
-        .filter((revision) => revision.sequence >= fromOutlinePosition)
-        .map((revision) => revision.sequence)
-        .sort((a, b) => a - b),
-    };
+    const staleSequences = this.states
+      .listStale(id)
+      .map((revision) => revision.sequence)
+      .filter((sequence) => sequence >= fromOutlinePosition);
+    const unique = [...new Set(staleSequences)].sort((a, b) => a - b);
+    const affectedOutlinePositions = unique.filter(
+      (sequence) => this.states.getCurrentAtPosition(id, sequence) === null,
+    );
+    return { affectedOutlinePositions };
   }
 
   async rebuildStoryState(input: RebuildStoryStateInput): Promise<RebuildResult> {
@@ -352,22 +356,38 @@ export class WriterApplication {
     const engineName = input.engineName ?? input.engine.name;
     const model = input.model ?? input.engine.name;
 
-    const jobId = createJobRow(this.db, {
-      projectId: input.projectId,
-      type: 'chapter',
-      scope: { from: input.from, to: input.to },
-      engine: engineName,
-      model,
-      wordCount: input.wordCount,
-      qualityProfile: input.qualityProfile ?? 'default',
-      budget: input.budget ?? {},
-      promptVersion: input.promptVersion ?? 'chapter-v1',
-      input: {
-        from: input.from,
-        to: input.to,
+    let jobId: string;
+    if (input.resumeJobId) {
+      const existing = getJobRow(this.db, input.resumeJobId);
+      if (!existing || existing.projectId !== input.projectId) {
+        throw new Error(`Resume job ${input.resumeJobId} not found for project`);
+      }
+      if (existing.status !== 'paused' && existing.status !== 'running') {
+        throw new Error(`Resume job ${input.resumeJobId} is ${existing.status}, expected paused`);
+      }
+      // Cancel any other active jobs so getActiveJob cannot be poisoned.
+      this.cancelOtherActiveJobs(input.projectId, input.resumeJobId);
+      updateJobStatus(this.db, input.resumeJobId, 'running');
+      jobId = input.resumeJobId;
+    } else {
+      this.cancelOtherActiveJobs(input.projectId, null);
+      jobId = createJobRow(this.db, {
+        projectId: input.projectId,
+        type: 'chapter',
+        scope: { from: input.from, to: input.to },
+        engine: engineName,
+        model,
         wordCount: input.wordCount,
-      },
-    });
+        qualityProfile: input.qualityProfile ?? 'default',
+        budget: input.budget ?? {},
+        promptVersion: input.promptVersion ?? 'chapter-v1',
+        input: {
+          from: input.from,
+          to: input.to,
+          wordCount: input.wordCount,
+        },
+      });
+    }
 
     let lease: ProjectWriteLease;
     try {
@@ -438,6 +458,20 @@ export class WriterApplication {
       throw error;
     } finally {
       this.leases.release({ leaseId: lease.id, ownerId });
+    }
+  }
+
+  private cancelOtherActiveJobs(id: ProjectId, keepJobId: string | null): void {
+    const rows: unknown[] = this.db.prepare(`
+      SELECT id FROM job
+      WHERE project_id = ?
+        AND status IN ('running', 'paused')
+        AND (? IS NULL OR id != ?)
+    `).all(id, keepJobId, keepJobId);
+    for (const row of rows) {
+      if (typeof row !== 'object' || row === null || !('id' in row)) continue;
+      const jobId = String((row as { id: string }).id);
+      updateJobStatus(this.db, jobId, 'cancelled');
     }
   }
 }

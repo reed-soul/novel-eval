@@ -235,10 +235,32 @@ export async function generateBlueprint(opts: GenerateBlueprintOptions): Promise
       const batchBudget = Math.min(chaptersPerBatch, remaining);
       const batchEnd = batchStart + batchBudget - 1;
 
-      if (planning.hasOutlineAtPosition(id, batchStart)) {
+      const missingPositions: number[] = [];
+      for (let position = batchStart; position <= batchEnd; position += 1) {
+        if (!planning.hasOutlineAtPosition(id, position)) {
+          missingPositions.push(position);
+        }
+      }
+      if (missingPositions.length === 0) {
         onProgress?.(`act${actNum}-chapters`, `（第${actNum}幕 ${batchStart}-${batchEnd} 已存在，跳过）`);
         continue;
       }
+
+      // Generate each contiguous missing run so mid-batch gaps are filled.
+      const runs: Array<{ start: number; end: number }> = [];
+      let runStart = missingPositions[0]!;
+      let prev = missingPositions[0]!;
+      for (let i = 1; i < missingPositions.length; i += 1) {
+        const position = missingPositions[i]!;
+        if (position === prev + 1) {
+          prev = position;
+          continue;
+        }
+        runs.push({ start: runStart, end: prev });
+        runStart = position;
+        prev = position;
+      }
+      runs.push({ start: runStart, end: prev });
 
       const beatStartIdx = Math.floor((batchIdx / batchCount) * actBeats.length);
       const beatEndIdx = Math.floor(((batchIdx + 1) / batchCount) * actBeats.length);
@@ -247,85 +269,91 @@ export async function generateBlueprint(opts: GenerateBlueprintOptions): Promise
         `段落${beatStartIdx + i + 1}【${b.position}】目标：${b.goal}（张力${b.tension}）伏笔：${b.foreshadows.join('、') || '无'}`,
       ).join('\n');
 
-      onProgress?.(
-        `act${actNum}-chapters`,
-        `生成第${actNum}幕章节（${batchStart}-${batchEnd}）${batchCount > 1 ? `[批次 ${batchIdx + 1}/${batchCount}]` : ''}...`,
-      );
-      const prompt = promptTpl
-        .replaceAll('{ACT}', String(actNum))
-        .replaceAll('{CHAPTER_BUDGET}', String(batchBudget))
-        .replaceAll('{START_NUMBER}', String(batchStart))
-        .replaceAll('{END_NUMBER}', String(batchEnd))
-        .replace('{BEATS}', beatsBlock)
-        .replace('{CHARACTERS}', charList)
-        .replace('{ACT_FORESHADOWS}', actForeshadows);
+      for (const run of runs) {
+        const runBudget = run.end - run.start + 1;
+        onProgress?.(
+          `act${actNum}-chapters`,
+          `生成第${actNum}幕章节（${run.start}-${run.end}）${batchCount > 1 ? `[批次 ${batchIdx + 1}/${batchCount}]` : ''}...`,
+        );
+        const prompt = promptTpl
+          .replaceAll('{ACT}', String(actNum))
+          .replaceAll('{CHAPTER_BUDGET}', String(runBudget))
+          .replaceAll('{START_NUMBER}', String(run.start))
+          .replaceAll('{END_NUMBER}', String(run.end))
+          .replace('{BEATS}', beatsBlock)
+          .replace('{CHARACTERS}', charList)
+          .replace('{ACT_FORESHADOWS}', actForeshadows);
 
-      const res = await callWithValidation<{
-        chapters: Array<{
-          number: number;
-          title: string;
-          beat: string;
-          role: string;
-          purpose: string;
-          suspense_level: number;
-          foreshadowing: string;
-          twist_level: number;
-          summary: string;
-        }>;
-      }>(engine, prompt, {
-        systemPrompt: '你是资深小说编辑。只输出 JSON。',
-        temperature: getRuntimeConfig().generation.temperatures.blueprint,
-        maxTokens: Math.max(6000, batchBudget * 400),
-        timeoutMs: Math.max(getRuntimeConfig().generation.timeouts.blueprintMs, batchBudget * 6000),
-        schema: {
-          chapters: {
-            type: 'array',
-            min: batchBudget,
-            required: true,
-            itemSpec: CHAPTER_ITEM_SCHEMA,
-          },
-        },
-        maxAttempts: 3,
-      });
-      if (!res.ok || !res.data) {
-        throw new Error(`第${actNum}幕章节生成失败（批次 ${batchIdx + 1}）：${res.errors.join('; ')}`);
-      }
-      addUsage(totalUsage, res.totalUsage);
-
-      const now = new Date().toISOString();
-      for (const chapter of res.data.chapters) {
-        const oid = outlineId(randomUUID());
-        planning.saveApprovedOutline({
-          outline: {
-            id: oid,
-            projectId: id,
-            position: chapter.number,
-            createdAt: now,
-            updatedAt: now,
-          },
-          revision: {
-            id: randomUUID(),
-            revisionNumber: 1,
-            title: chapter.title,
-            content: {
-              summary: chapter.summary,
-              beats: [chapter.beat],
-              act: actNum,
-              role: chapter.role,
-              purpose: chapter.purpose,
-              suspenseLevel: chapter.suspense_level,
-              foreshadowing: chapter.foreshadowing,
-              twistLevel: chapter.twist_level,
-              beatLabel: chapter.beat,
+        const res = await callWithValidation<{
+          chapters: Array<{
+            number: number;
+            title: string;
+            beat: string;
+            role: string;
+            purpose: string;
+            suspense_level: number;
+            foreshadowing: string;
+            twist_level: number;
+            summary: string;
+          }>;
+        }>(engine, prompt, {
+          systemPrompt: '你是资深小说编辑。只输出 JSON。',
+          temperature: getRuntimeConfig().generation.temperatures.blueprint,
+          maxTokens: Math.max(6000, runBudget * 400),
+          timeoutMs: Math.max(getRuntimeConfig().generation.timeouts.blueprintMs, runBudget * 6000),
+          schema: {
+            chapters: {
+              type: 'array',
+              min: runBudget,
+              required: true,
+              itemSpec: CHAPTER_ITEM_SCHEMA,
             },
-            createdAt: now,
           },
+          maxAttempts: 3,
         });
+        if (!res.ok || !res.data) {
+          throw new Error(`第${actNum}幕章节生成失败（批次 ${batchIdx + 1}）：${res.errors.join('; ')}`);
+        }
+        addUsage(totalUsage, res.totalUsage);
+
+        const now = new Date().toISOString();
+        for (const chapter of res.data.chapters) {
+          if (planning.hasOutlineAtPosition(id, chapter.number)) {
+            continue;
+          }
+          const oid = outlineId(randomUUID());
+          planning.saveApprovedOutline({
+            outline: {
+              id: oid,
+              projectId: id,
+              position: chapter.number,
+              createdAt: now,
+              updatedAt: now,
+            },
+            revision: {
+              id: randomUUID(),
+              revisionNumber: 1,
+              title: chapter.title,
+              content: {
+                summary: chapter.summary,
+                beats: [chapter.beat],
+                act: actNum,
+                role: chapter.role,
+                purpose: chapter.purpose,
+                suspenseLevel: chapter.suspense_level,
+                foreshadowing: chapter.foreshadowing,
+                twistLevel: chapter.twist_level,
+                beatLabel: chapter.beat,
+              },
+              createdAt: now,
+            },
+          });
+        }
+        onProgress?.(
+          `act${actNum}-chapters`,
+          `✓ 第${actNum}幕补齐 ${run.start}-${run.end}`,
+        );
       }
-      onProgress?.(
-        `act${actNum}-chapters`,
-        `✓ 第${actNum}幕累计 ${res.data.chapters.length} 章（本批）`,
-      );
     }
     startNumber += budget;
   }

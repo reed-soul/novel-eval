@@ -447,6 +447,13 @@ it('rebuildStoryState and getStaleImpact expose rebuild helpers', async (t) => {
   assert.equal(rebuilt.failedAtOutlinePosition, null);
   assert.equal(countLeases(testDb.db, fixtureProjectId), 0);
   assert.ok(states.getCurrentAtPosition(fixtureProjectId, 2));
+
+  // After rebuild, historical stale rows remain but impact must only list
+  // positions that still lack a current state.
+  assert.deepEqual(app.getStaleImpact(fixtureProjectId, 2), {
+    affectedOutlinePositions: [],
+  });
+  assert.ok(states.listStale(fixtureProjectId).some((row) => row.sequence === 2));
 });
 
 it('job resume reads the stored to value and configuration snapshot', async (t) => {
@@ -514,4 +521,160 @@ it('job resume reads the stored to value and configuration snapshot', async (t) 
   assert.equal(resume.qualityProfile, 'careful');
   assert.equal(resume.promptVersion, 'chapter-v2');
   assert.deepEqual(resume.budget, { maxCostRmb: 2 });
+});
+
+it('pause then resume completes the same job; later resume is not poisoned by old pause', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const app = seedProjectWithApprovedRange(testDb.db, [1, 2, 3]);
+  const { getActiveJob } = await import('../../src/job-store.ts');
+
+  const hooks = {
+    generateContent: async (context: {
+      outlinePosition: number;
+      outline: { revision: { title: string } };
+    }) => ({
+      title: context.outline.revision.title,
+      content: `正文${context.outlinePosition}`,
+      usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'mock', durationMs: 1 },
+      model: 'mock',
+    }),
+    extractState: async ({ context }: { context: { outlinePosition: number } }) => ({
+      state: emptyState(`状态${context.outlinePosition}`),
+      delta: emptyDelta(`状态${context.outlinePosition}`),
+      usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'extract', durationMs: 1 },
+      model: 'extract',
+      promptVersion: 'state-v1',
+    }),
+  };
+
+  // Pause before chapter 2: allow chapter 1, then pause.
+  let completed = 0;
+  await assert.rejects(
+    () => app.generateChapterRange({
+      projectId: fixtureProjectId,
+      from: 1,
+      to: 3,
+      engine: contentEngine('章节正文'),
+      wordCount: 800,
+      engineName: 'resume-engine',
+      model: 'resume-model',
+      qualityProfile: 'careful',
+      promptVersion: 'chapter-v2',
+      budget: { maxCostRmb: 2 },
+      control: {
+        shouldPause: () => completed >= 1,
+        onChapterComplete: () => {
+          completed += 1;
+        },
+      },
+      ...hooks,
+    }),
+    (error: unknown) => error instanceof Error && error.name === 'JobPausedError',
+  );
+
+  const paused = getActiveJob(testDb.db, fixtureProjectId);
+  assert.ok(paused);
+  assert.equal(paused.status, 'paused');
+  assert.equal(paused.lastOutlinePosition, 1);
+  const pausedId = paused.id;
+
+  // Resume in-place with the same job id and original scope/config.
+  const resumed = await app.generateChapterRange({
+    projectId: fixtureProjectId,
+    from: 1,
+    to: 3,
+    resumeJobId: pausedId,
+    engine: contentEngine('章节正文'),
+    wordCount: paused.wordCount,
+    engineName: paused.engine,
+    model: paused.model,
+    qualityProfile: paused.qualityProfile,
+    promptVersion: paused.promptVersion,
+    budget: paused.budget,
+    ...hooks,
+  });
+
+  assert.equal(resumed.jobId, pausedId);
+  assert.equal(getJobRow(testDb.db, pausedId)?.status, 'completed');
+  assert.equal(getActiveJob(testDb.db, fixtureProjectId), null);
+
+  // A second "resume" must not invent to < from from a poisoned paused job.
+  const activeAfter = getActiveJob(testDb.db, fixtureProjectId);
+  assert.equal(activeAfter, null);
+  const chapters = new ChapterRepository(testDb.db);
+  assert.ok(chapters.getByOutlinePosition(fixtureProjectId, 1)?.activeRevisionId);
+  assert.ok(chapters.getByOutlinePosition(fixtureProjectId, 2)?.activeRevisionId);
+  assert.ok(chapters.getByOutlinePosition(fixtureProjectId, 3)?.activeRevisionId);
+
+  // Starting another range while no active job is fine; creating a new job
+  // must not leave a parallel paused row.
+  const runningCount = testDb.db.prepare(
+    `SELECT COUNT(*) AS n FROM job WHERE project_id = ? AND status IN ('running', 'paused')`,
+  ).get(fixtureProjectId) as { n: number };
+  assert.equal(runningCount.n, 0);
+});
+
+it('starting a new range cancels a leftover paused job instead of poisoning getActiveJob', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const app = seedProjectWithApprovedRange(testDb.db, [1, 2, 3]);
+  const { getActiveJob } = await import('../../src/job-store.ts');
+
+  await assert.rejects(
+    () => app.generateChapterRange({
+      projectId: fixtureProjectId,
+      from: 1,
+      to: 3,
+      engine: contentEngine('章节正文'),
+      wordCount: 800,
+      control: { shouldPause: () => true },
+      generateContent: async (context) => ({
+        title: context.outline.revision.title,
+        content: 'x',
+        usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'm', durationMs: 1 },
+        model: 'm',
+      }),
+      extractState: async ({ context }) => ({
+        state: emptyState(`s${context.outlinePosition}`),
+        delta: emptyDelta(`s${context.outlinePosition}`),
+        usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'e', durationMs: 1 },
+        model: 'e',
+        promptVersion: 'state-v1',
+      }),
+    }),
+    (error: unknown) => error instanceof Error && error.name === 'JobPausedError',
+  );
+
+  const pausedId = getActiveJob(testDb.db, fixtureProjectId)?.id;
+  assert.ok(pausedId);
+
+  const next = await app.generateChapterRange({
+    projectId: fixtureProjectId,
+    from: 1,
+    to: 2,
+    engine: contentEngine('章节正文'),
+    wordCount: 500,
+    generateContent: async (context) => ({
+      title: context.outline.revision.title,
+      content: `正文${context.outlinePosition}`,
+      usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'm', durationMs: 1 },
+      model: 'm',
+    }),
+    extractState: async ({ context }) => ({
+      state: emptyState(`s${context.outlinePosition}`),
+      delta: emptyDelta(`s${context.outlinePosition}`),
+      usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'e', durationMs: 1 },
+      model: 'e',
+      promptVersion: 'state-v1',
+    }),
+  });
+
+  assert.notEqual(next.jobId, pausedId);
+  assert.equal(getJobRow(testDb.db, pausedId)?.status, 'cancelled');
+  assert.equal(getJobRow(testDb.db, next.jobId)?.status, 'completed');
+  const active = testDb.db.prepare(
+    `SELECT COUNT(*) AS n FROM job WHERE project_id = ? AND status IN ('running', 'paused')`,
+  ).get(fixtureProjectId) as { n: number };
+  assert.equal(active.n, 0);
 });

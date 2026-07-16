@@ -320,4 +320,83 @@ describe('generateBlueprint', () => {
       /段落生成失败/,
     );
   });
+
+  it('半批已写后重跑按位置补齐缺失 outline，不因 batchStart 存在而跳过整批', async (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const p = createProject(testDb.db, { title: 'T', genreProfile: 'g', targetAudience: 'a', premise: 't' });
+    seedActiveBible(testDb.db, p.id);
+    const planning = new PlanningRepository(testDb.db);
+
+    // totalChapters=12 → act budgets ~4/4/4; first act batch is positions 1-4.
+    // Persist only positions 1 and 2 (half batch), leave 3-4 missing.
+    const engine1 = mockEngine({
+      beats: beatResp,
+      chapters: (start, act, budget) => {
+        if (act === 1 && start === 1) {
+          // Return only first 2 of the requested batch, simulating interrupt mid-batch.
+          return chapResp(start, act, 2);
+        }
+        return chapResp(start, act, budget);
+      },
+      actStart: { 1: 1, 2: 5, 3: 9 },
+    });
+
+    // First run will fail schema min=batchBudget when we only return 2 chapters —
+    // instead seed partial outlines manually after beats, then rerun.
+    // Generate beats+full once is heavy; seed beats via a successful partial path:
+    // call generate, catch if needed — simpler: run full generation then delete 3,4.
+
+    const engineFull = mockEngine({ beats: beatResp, chapters: chapResp, actStart: { 1: 1, 2: 5, 3: 9 } });
+    await generateBlueprint({
+      engine: engineFull,
+      db: testDb.db,
+      projectId: p.id,
+      plot: PLOT,
+      characters: CHARS,
+      totalChapters: 12,
+    });
+
+    // Delete positions 3 and 4 to simulate half-batch persistence.
+    for (const position of [3, 4]) {
+      const outline = planning.getApprovedOutlineAtPosition(p.id, position);
+      assert.ok(outline);
+      testDb.db.prepare(
+        'UPDATE chapter_outline SET active_revision_id = NULL WHERE id = ?',
+      ).run(outline.outline.id);
+      testDb.db.prepare('DELETE FROM chapter_outline_revision WHERE outline_id = ?').run(outline.outline.id);
+      testDb.db.prepare('DELETE FROM chapter_outline WHERE id = ?').run(outline.outline.id);
+    }
+    assert.equal(planning.hasOutlineAtPosition(p.id, 1), true);
+    assert.equal(planning.hasOutlineAtPosition(p.id, 3), false);
+
+    const engine2 = mockEngine({
+      beats: () => JSON.stringify({
+        beats: [
+          { position: '铺垫', goal: '不应再生成的不同目标AAAAAAAA', foreshadows: [], tension: 1 },
+          { position: '高潮', goal: '不应再生成的不同目标BBBBBBBB', foreshadows: [], tension: 2 },
+        ],
+      }),
+      chapters: chapResp,
+      actStart: { 1: 1, 2: 5, 3: 9 },
+    });
+
+    const { outlines } = await generateBlueprint({
+      engine: engine2,
+      db: testDb.db,
+      projectId: p.id,
+      plot: PLOT,
+      characters: CHARS,
+      totalChapters: 12,
+    });
+
+    assert.equal(engine2.beatCalls, 0, 'beats 已存在不应重生成');
+    assert.ok(engine2.calls > 0, '应调用章节生成补齐缺口');
+    assert.equal(planning.hasOutlineAtPosition(p.id, 3), true);
+    assert.equal(planning.hasOutlineAtPosition(p.id, 4), true);
+    assert.equal(outlines.length, 12);
+    for (let i = 1; i <= 12; i++) {
+      assert.ok(planning.hasOutlineAtPosition(p.id, i), `position ${i} 应存在`);
+    }
+  });
 });
