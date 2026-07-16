@@ -308,4 +308,35 @@ describe('generateChapter', () => {
     });
     assert.equal(first.contextHash, second.contextHash);
   });
+
+  it('rejects qualityGate as unsupported (no silent no-op)', async (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const { projectId: pid, lease } = seedProject(testDb.db, 1);
+    const engine = contentEngine('不应生成');
+
+    await assert.rejects(
+      () => generateChapter({
+        engine,
+        db: testDb.db,
+        projectId: pid,
+        number: 1,
+        wordCount: 500,
+        lease,
+        extractState: passthroughExtract,
+        // Cast: option removed from the public type; runtime must still reject it.
+        ...({
+          qualityGate: {
+            metadata: { genre: '悬疑', targetAudience: '成人' },
+            maxRevise: 2,
+          },
+        } as object),
+      } as Parameters<typeof generateChapter>[0]),
+      (error: unknown) => {
+        assert.ok(error instanceof Error);
+        assert.match(error.message, /qualityGate|unsupported/i);
+        return true;
+      },
+    );
+  });
 });

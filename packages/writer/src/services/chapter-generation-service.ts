@@ -50,20 +50,13 @@ export interface GeneratedChapterContent {
   model: string;
 }
 
-export type GenerateChapterOutcome =
-  | {
-      kind: 'published';
-      chapterRevisionId: ChapterRevisionId;
-      storyStateRevisionId: StoryStateRevisionId;
-      outlineStatus: 'written';
-      contextHash: string;
-    }
-  | {
-      kind: 'rejected';
-      chapterRevisionId: ChapterRevisionId;
-      reason: string;
-      contextHash: string;
-    };
+export type GenerateChapterOutcome = {
+  kind: 'published';
+  chapterRevisionId: ChapterRevisionId;
+  storyStateRevisionId: StoryStateRevisionId;
+  outlineStatus: 'written';
+  contextHash: string;
+};
 
 function readPartialContent(error: unknown): string | null {
   if (typeof error !== 'object' || error === null || !('partialContent' in error)) {

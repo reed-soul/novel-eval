@@ -22,12 +22,6 @@ import type { ExtractStoryStateResult } from './finalizer.ts';
 
 export { buildChapterPrompts };
 
-export interface QualityGateConfig {
-  metadata: { genre: string; targetAudience: string };
-  profile?: string;
-  maxRevise: number;
-}
-
 export interface GenerateChapterOptions {
   engine: AIAgentAdapter;
   db: DB;
@@ -36,7 +30,6 @@ export interface GenerateChapterOptions {
   wordCount: number;
   /** 项目写租约；CLI 遗留路径在 Task 7 facade 接入前可暂缺，运行时会失败。 */
   lease?: ProjectWriteLease;
-  qualityGate?: QualityGateConfig;
   onProgress?: (step: string, msg: string) => void;
   extractState?: (input: {
     context: CompiledChapterContext;
@@ -58,9 +51,20 @@ export interface GenerateChapterResult {
   outcome: GenerateChapterOutcome;
 }
 
+function assertNoQualityGate(opts: object): void {
+  if (!('qualityGate' in opts)) return;
+  const value = (opts as { qualityGate?: unknown }).qualityGate;
+  if (value !== undefined) {
+    throw new Error(
+      'qualityGate is unsupported until the chapter quality system lands; do not enable it',
+    );
+  }
+}
+
 export async function generateChapter(
   opts: GenerateChapterOptions,
 ): Promise<GenerateChapterResult> {
+  assertNoQualityGate(opts);
   const { engine, db, number, wordCount, lease, onProgress } = opts;
   if (!lease) {
     throw new Error('generateChapter requires a project write lease');
@@ -78,10 +82,6 @@ export async function generateChapter(
     extractState: opts.extractState,
     generateContent: opts.generateContent,
   });
-
-  if (outcome.kind !== 'published') {
-    throw new Error(`第 ${number} 章生成被拒绝`);
-  }
 
   const chapters = new ChapterRepository(db);
   const published = chapters.getRevision(outcome.chapterRevisionId);
@@ -136,7 +136,6 @@ export interface GenerateRangeOptions {
   wordCount: number;
   /** 项目写租约；CLI 遗留路径在 Task 7 facade 接入前可暂缺，运行时会失败。 */
   lease?: ProjectWriteLease;
-  qualityGate?: QualityGateConfig;
   onProgress?: (step: string, msg: string) => void;
   control?: GenerationControl;
   extractState?: GenerateChapterOptions['extractState'];
@@ -146,6 +145,7 @@ export interface GenerateRangeOptions {
 export async function generateRange(
   opts: GenerateRangeOptions,
 ): Promise<GenerateChapterResult[]> {
+  assertNoQualityGate(opts);
   const results: GenerateChapterResult[] = [];
   const totalUsage = { ...zeroUsage };
   for (let n = opts.from; n <= opts.to; n++) {
@@ -158,7 +158,6 @@ export async function generateRange(
       number: n,
       wordCount: opts.wordCount,
       lease: opts.lease,
-      qualityGate: opts.qualityGate,
       onProgress: opts.onProgress,
       extractState: opts.extractState,
       generateContent: opts.generateContent,

@@ -572,8 +572,9 @@ async function runChapter(args: ChapterArgs): Promise<void> {
     console.log(`Novel Writer — 生成章节\n  项目：${project.title}（${args.projectId}）`);
     const wordCount = args.wordCount ?? config.generation.chapterWordCount;
     console.log(`  范围：第 ${from}-${to} 章（每章约 ${wordCount} 字）`);
-    const useGate = args.maxRevise !== undefined;
-    if (useGate) console.log(`  质量门槛：启用（maxRevise=${args.maxRevise ?? 2}）`);
+    if (args.maxRevise !== undefined) {
+      console.log('  质量门槛：暂未接入本地 kernel（忽略 --max-revise；后续质量体系落地后再启用）');
+    }
     console.log('');
 
     const serverActive = await isServerRunning();
@@ -583,8 +584,6 @@ async function runChapter(args: ChapterArgs): Promise<void> {
         const jobId = await startApiJob(`/api/projects/${args.projectId}/chapters/generate`, {
           from,
           to,
-          qualityGate: useGate,
-          maxRevise: args.maxRevise,
           engineName: args.engine,
           wordCount,
         });
@@ -625,10 +624,6 @@ async function runChapter(args: ChapterArgs): Promise<void> {
     const results = await generateRange({
       engine, db, projectId: args.projectId,
       from, to, wordCount,
-      qualityGate: useGate ? {
-        metadata: { genre: project.genreProfile, targetAudience: project.targetAudience },
-        maxRevise: args.maxRevise ?? 2,
-      } : undefined,
       onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
     });
 
@@ -709,8 +704,6 @@ async function runResume(args: ResumeArgs): Promise<void> {
           jobId = await startApiJob(`/api/projects/${args.projectId}/chapters/generate`, {
             from: fromBound,
             to: toBound,
-            qualityGate: args.maxRevise !== undefined,
-            maxRevise: args.maxRevise,
             engineName: args.engine,
           });
         }
@@ -767,18 +760,15 @@ async function runResume(args: ResumeArgs): Promise<void> {
     const resumeCount = to - from + 1;
     console.log(`  续写范围：第 ${from}-${to} 章（${resumeCount} 章待写，已完成章节自动跳过）`);
     console.log(`  每章约 ${config.generation.chapterWordCount} 字`);
-    const useGate = args.maxRevise !== undefined;
-    if (useGate) console.log(`  质量门槛：启用（maxRevise=${args.maxRevise ?? 2}）`);
+    if (args.maxRevise !== undefined) {
+      console.log('  质量门槛：暂未接入本地 kernel（忽略 --max-revise；后续质量体系落地后再启用）');
+    }
     console.log('');
 
     updateProjectStatus(db, args.projectId, 'writing');
     const results = await generateRange({
       engine, db, projectId: args.projectId,
       from, to, wordCount: config.generation.chapterWordCount,
-      qualityGate: useGate ? {
-        metadata: { genre: project.genreProfile, targetAudience: project.targetAudience },
-        maxRevise: args.maxRevise ?? 2,
-      } : undefined,
       onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
     });
 
@@ -820,12 +810,16 @@ async function runAuto(args: AutoArgs): Promise<void> {
   console.log(`  书名：${args.title} · ${args.genre} · ${args.audience}`);
   console.log(`  主题：${args.topic}`);
   console.log(`  目标：${args.chapters} 章 · 每章约 ${config.generation.chapterWordCount} 字`);
-  console.log(`  质量门槛：启用（maxRevise=${args.maxRevise ?? 2}）`);
+  if (args.maxRevise !== undefined) {
+    console.log('  质量门槛：暂未接入本地 kernel（忽略 --max-revise）');
+  } else {
+    console.log('  质量门槛：未启用');
+  }
   console.log(`  引擎：${config.engineName}（${config.engine.model}）`);
   console.log('');
 
   if (!args.yes) {
-    const ok = await confirmProceed(`将全自动生成（bible + 蓝图 + ${args.chapters} 章正文 + 质量门槛），预估 ¥${(args.chapters * 0.05).toFixed(1)}-${(args.chapters * 0.08).toFixed(1)}`);
+    const ok = await confirmProceed(`将全自动生成（bible + 蓝图 + ${args.chapters} 章正文），预估 ¥${(args.chapters * 0.05).toFixed(1)}-${(args.chapters * 0.08).toFixed(1)}`);
     if (!ok) { console.log('已取消'); return; }
   }
 
@@ -851,13 +845,15 @@ async function runAuto(args: AutoArgs): Promise<void> {
     updateProjectStatus(db, project.id, 'planning');
     console.log(`✓ 蓝图完成（${outlines.length} 章 / ¥${outlineUsage.costRmb.toFixed(4)}）`);
 
-    // 3. chapter（带质量门槛）
-    console.log('\n── 阶段 3：章节生成（带质量门槛）──');
+    // 3. chapter
+    console.log('\n── 阶段 3：章节生成 ──');
     updateProjectStatus(db, project.id, 'writing');
+    if (args.maxRevise !== undefined) {
+      console.log('  质量门槛：暂未接入本地 kernel（忽略 --max-revise）');
+    }
     const results = await generateRange({
       engine, db, projectId: project.id, from: 1, to: outlines.length,
       wordCount: config.generation.chapterWordCount,
-      qualityGate: { metadata: { genre: args.genre, targetAudience: args.audience }, maxRevise: args.maxRevise ?? 2 },
       onProgress: log,
     });
     updateProjectStatus(db, project.id, 'completed');

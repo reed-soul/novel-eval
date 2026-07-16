@@ -279,7 +279,8 @@ it('publishes chapter when provider and extraction succeed', async (t) => {
   });
 
   assert.equal(outcome.kind, 'published');
-  if (outcome.kind !== 'published') return;
+  // Outcome is published-only; failures throw after persisting rejected candidates.
+  assert.equal('reason' in outcome, false);
   const published = chapters.getRevision(outcome.chapterRevisionId);
   assert.ok(published);
   assert.equal(published.revision.status, 'published');
