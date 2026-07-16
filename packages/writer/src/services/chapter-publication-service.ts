@@ -18,6 +18,10 @@ import {
   stringField,
 } from '../repositories/validation.ts';
 
+export interface StaleImpact {
+  affectedOutlinePositions: number[];
+}
+
 export interface PublishCandidateInput {
   lease: ProjectWriteLease;
   candidateRevisionId: ChapterRevisionId;
@@ -36,6 +40,7 @@ export interface PublishResult {
   chapterRevisionId: ChapterRevisionId;
   storyStateRevisionId: StoryStateRevisionId;
   outlineStatus: 'written';
+  staleImpact: StaleImpact;
 }
 
 export class ChapterPublicationService {
@@ -51,6 +56,14 @@ export class ChapterPublicationService {
   }
 
   publishCandidate(input: PublishCandidateInput): PublishResult {
+    return this.publishRevision(input);
+  }
+
+  publishHistoricalRevision(input: PublishCandidateInput): PublishResult {
+    return this.publishRevision(input);
+  }
+
+  private publishRevision(input: PublishCandidateInput): PublishResult {
     this.assertActiveLease(input, this.publicationTime());
 
     const publish = this.db.transaction((): PublishResult => {
@@ -92,6 +105,9 @@ export class ChapterPublicationService {
 
       this.assertPreviousState(input, position);
 
+      const affectedOutlinePositions = this.states
+        .listCurrentFromPosition(input.lease.projectId, position)
+        .map((revision) => revision.sequence);
       this.states.invalidateCurrentFromPosition(input.lease.projectId, position);
       this.chapters.publishRevision(input.candidateRevisionId);
 
@@ -140,6 +156,7 @@ export class ChapterPublicationService {
         chapterRevisionId: input.candidateRevisionId,
         storyStateRevisionId: stateRevisionId,
         outlineStatus: 'written',
+        staleImpact: { affectedOutlinePositions },
       };
     });
 

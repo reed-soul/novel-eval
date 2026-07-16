@@ -7,11 +7,12 @@
  *   1. diagnoseChapter()  诊断：读最新 eval_history + 重复检测 + 经验，按得分选策略
  *   2. correctChapter()   编排：选 prompt → 生成修正稿 → 重新评估 → 暂存（原章不动）
  *   3. 预览 diff（前端）
- *   4. applyCorrectionDraft()    采纳：覆盖原文 + 记 eval_history + 反哺经验
+ *   4. applyCorrectionDraft()    采纳：发布 correction revision + 失效下游 + 可选 rebuild
  *      discardCorrectionDraft()  放弃：无副作用
  *
  * 核心原则：采纳前原章零修改，所有改动先进 correction_draft 暂存表。
  */
+import { randomUUID } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { AIAgentAdapter, NovelMetadata, TokenUsage } from '@novel-eval/shared';
@@ -22,15 +23,28 @@ import { DIMENSION_LABELS } from '@novel-eval/eval';
 import type { DB } from '../db.ts';
 import {
   getOutline, getChapter, getRecentChapters, getNarrativeState, getBibleForChapter,
-  countOutlines, getEvalHistory, saveChapter, saveEvalHistory,
+  countOutlines, getEvalHistory,
   getLessonsByPattern, saveCorrectionDraft, getDraft, updateDraftStatus,
-  type CorrectionStrategy, type CorrectionDraft,
+  type CorrectionStrategy,
 } from './store.ts';
 import { classifyChapter } from './lesson-aggregator.ts';
 import { aggregateLessons } from './lesson-aggregator.ts';
 import { detectRepetition } from './repetition.ts';
-import { buildFeedback } from './quality-gate.ts';
 import { getRuntimeConfig } from '../runtime-config.ts';
+import { chapterRevisionId, projectId } from '../domain/ids.ts';
+import type { StoryState, StoryStateDelta } from '../domain/story-state.ts';
+import { ChapterRepository } from '../repositories/chapter-repository.ts';
+import type { ProjectWriteLease } from '../repositories/lease-repository.ts';
+import { StoryStateRepository } from '../repositories/story-state-repository.ts';
+import {
+  ChapterPublicationService,
+  type PublishResult,
+} from '../services/chapter-publication-service.ts';
+import {
+  StateRebuildService,
+  type RebuildFromInput,
+  type RebuildResult,
+} from '../services/state-rebuild-service.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROMPTS_DIR = resolve(__dirname, 'prompts');
@@ -43,11 +57,6 @@ const LOW_DIM_THRESHOLD = 65;
 
 /** 走外科手术的维度集合：文笔/节奏类问题，局部改即可 */
 const SURGICAL_DIMS: ReadonlySet<DimensionKey> = new Set(['writingQuality', 'pacingRetention']);
-/** 走整章重写的维度集合：结构/情感/人物/市场/主题/原创类问题，需整体调整 */
-const REWRITE_DIMS: ReadonlySet<DimensionKey> = new Set([
-  'storyStructure', 'emotionalResonance', 'characterization', 'marketPotential',
-  'thematicDepth', 'originality',
-]);
 
 export type { CorrectionStrategy };
 
@@ -462,54 +471,118 @@ function buildCorrectionFeedback(diag: DiagnosisResult, db: DB, projectId: strin
 
 // ─── 采纳 / 放弃 ─────────────────────────────────────────────────
 
+export interface ApplyCorrectionDraftInput {
+  db: DB;
+  draftId: string;
+  lease: ProjectWriteLease;
+  state: StoryState;
+  delta: StoryStateDelta;
+  model: string;
+  promptVersion: string;
+  /** When provided, rebuilds from the edited outline position after publication. */
+  extractState?: RebuildFromInput['extractState'];
+  now?: () => Date;
+}
+
+export interface ApplyCorrectionDraftResult {
+  chapterNumber: number;
+  publish: PublishResult;
+  rebuild: RebuildResult | null;
+}
+
 /**
- * 采纳修正稿（闭环三步）：
- *   1. saveChapter 覆盖原文
- *   2. saveEvalHistory（attempt = 该章 max + 1）记录这次修正评估
- *   3. updateDraftStatus(adopted) + aggregateLessons 反哺经验
+ * 采纳修正稿：
+ *   1. append correction chapter revision（不 upsert 覆盖）
+ *   2. publishHistoricalRevision（失效下游状态，后文 revision 保留）
+ *   3. 可选 rebuildFrom
+ *   4. 标记 draft adopted + 反哺经验
  */
-export function applyCorrectionDraft(db: DB, draftId: string): { chapterNumber: number } {
-  const draft = getDraft(db, draftId);
+export async function applyCorrectionDraft(
+  input: ApplyCorrectionDraftInput,
+): Promise<ApplyCorrectionDraftResult> {
+  const draft = getDraft(input.db, input.draftId);
   if (!draft) throw new Error('修正草稿不存在');
   if (draft.status !== 'pending') throw new Error(`草稿状态为 ${draft.status}，无法采纳`);
 
-  const outline = getOutline(db, draft.projectId, draft.chapterNumber);
-  const wordCount = countChars(draft.revisedContent);
+  const brandedProjectId = projectId(draft.projectId);
+  if (input.lease.projectId !== brandedProjectId) {
+    throw new Error('Lease project does not match correction draft project');
+  }
 
-  // 1. 覆盖原文 + 2. 记录 eval_history + 3. 更新状态 + 反哺经验 (原子事务)
-  db.transaction(() => {
-    saveChapter(db, draft.projectId, draft.chapterNumber, {
-      outlineId: outline?.id,
-      title: outline?.title ?? `第${draft.chapterNumber}章`,
+  const chapters = new ChapterRepository(input.db);
+  const states = new StoryStateRepository(input.db);
+  const now = input.now ?? (() => new Date());
+  const createdAt = now().toISOString();
+
+  const chapter = chapters.getByOutlinePosition(brandedProjectId, draft.chapterNumber);
+  if (!chapter) {
+    throw new Error(`第 ${draft.chapterNumber} 章不存在，无法采纳修正`);
+  }
+
+  const active = chapter.activeRevisionId
+    ? chapters.getActiveRevision(chapter.id)
+    : null;
+  const title = active?.title ?? `第${draft.chapterNumber}章`;
+
+  const candidate = chapters.appendCandidate({
+    chapterId: chapter.id,
+    revision: {
+      id: chapterRevisionId(randomUUID()),
+      revisionNumber: chapters.nextRevisionNumber(chapter.id),
+      source: 'correction',
+      parentRevisionId: chapter.activeRevisionId,
+      title,
       content: draft.revisedContent,
-      wordCount,
+      wordCount: countChars(draft.revisedContent),
+      status: 'draft',
+      generationRunId: null,
+      createdAt,
+    },
+  });
+
+  const previousState = draft.chapterNumber === 1
+    ? null
+    : states.getCurrentAtPosition(brandedProjectId, draft.chapterNumber - 1);
+  if (draft.chapterNumber > 1 && !previousState) {
+    throw new Error(
+      `Chapter ${draft.chapterNumber} requires the current state from chapter ${draft.chapterNumber - 1}`,
+    );
+  }
+
+  const publication = new ChapterPublicationService(input.db, now);
+  const publish = publication.publishHistoricalRevision({
+    lease: input.lease,
+    candidateRevisionId: candidate.revision.id,
+    previousStateRevisionId: previousState?.id ?? null,
+    state: input.state,
+    delta: input.delta,
+    model: input.model,
+    promptVersion: input.promptVersion,
+    checkpoint: {
+      jobId: input.lease.jobId,
+      outlinePosition: draft.chapterNumber,
+    },
+  });
+
+  let rebuild: RebuildResult | null = null;
+  if (input.extractState) {
+    const rebuildService = new StateRebuildService(input.db, now);
+    rebuild = await rebuildService.rebuildFrom({
+      projectId: brandedProjectId,
+      fromOutlinePosition: draft.chapterNumber,
+      lease: input.lease,
+      extractState: input.extractState,
     });
+  }
 
-    const history = getEvalHistory(db, draft.projectId, draft.chapterNumber);
-    const maxAttempt = history.reduce((m, h) => Math.max(m, h.attempt), 0);
-    
-    // 从 draft.revisedResult 恢复完整评估报告 (grade, dimensions, suggestions, repetition)
-    const revisedRes = (draft.revisedResult as any) || null;
+  updateDraftStatus(input.db, input.draftId, 'adopted');
+  aggregateLessons(input.db, draft.projectId);
 
-    saveEvalHistory(db, {
-      projectId: draft.projectId,
-      chapterNumber: draft.chapterNumber,
-      attempt: maxAttempt + 1,
-      verdict: 'pass',  // 采纳视为人工确认通过
-      totalScore: draft.revisedScore,
-      grade: revisedRes?.grade ?? null,
-      dimensions: revisedRes?.dimensions ?? null,
-      suggestions: revisedRes?.suggestions ?? null,
-      repetition: revisedRes?.repetition ?? null,
-      model: draft.engine,
-      evaluatorModel: null,
-    });
-
-    updateDraftStatus(db, draftId, 'adopted');
-    aggregateLessons(db, draft.projectId);
-  })();
-
-  return { chapterNumber: draft.chapterNumber };
+  return {
+    chapterNumber: draft.chapterNumber,
+    publish,
+    rebuild,
+  };
 }
 
 /** 放弃修正稿：仅标记状态，无副作用 */

@@ -395,6 +395,29 @@ export class StoryStateRepository {
     return result.changes;
   }
 
+  listCurrentFromPosition(id: ProjectId, position: number): StoryStateRevision[] {
+    const rows: unknown[] = this.db.prepare(`
+      SELECT *
+      FROM story_state_revision
+      WHERE project_id = ?
+        AND status = 'current'
+        AND sequence >= ?
+      ORDER BY sequence ASC
+    `).all(id, position);
+    return rows.map((row) => readRevision(row));
+  }
+
+  listStale(id: ProjectId): StoryStateRevision[] {
+    const rows: unknown[] = this.db.prepare(`
+      SELECT *
+      FROM story_state_revision
+      WHERE project_id = ?
+        AND status = 'stale'
+      ORDER BY sequence ASC, created_at ASC
+    `).all(id);
+    return rows.map((row) => readRevision(row));
+  }
+
   listArcSummaries(
     id: ProjectId,
     beforePosition: number,

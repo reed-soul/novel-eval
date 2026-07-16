@@ -17,7 +17,6 @@ import { generateBible } from './bible/generator.ts';
 import { importBible, type ImportBibleInput } from './bible/importer.ts';
 import { generateBlueprint } from './chapter/blueprint.ts';
 import { generateChapter, generateRange } from './chapter/generator.ts';
-import { ensureChapterConsistency } from './chapter/consistency.ts';
 import { getBibleForChapter } from './chapter/store.ts';
 import { getAllOutlines, countOutlines, countChapters, getChapter } from './chapter/store.ts';
 import type { CharacterDynamic } from './bible/types.ts';
@@ -616,10 +615,6 @@ async function runChapter(args: ChapterArgs): Promise<void> {
 
     updateProjectStatus(db, args.projectId, 'writing');
     const engine: AIAgentAdapter = createEngine(config.engine);
-    
-    // 一致性检查：修复可能存在的狭窄窗口崩溃导致的脏数据
-    const { ensureChapterConsistency } = await import('./chapter/consistency.ts');
-    await ensureChapterConsistency(engine, db, args.projectId, (step, msg) => console.log(`  [${step}] ${msg}`));
 
     const results = await generateRange({
       engine, db, projectId: args.projectId,
@@ -737,15 +732,8 @@ async function runResume(args: ResumeArgs): Promise<void> {
 
     const engine: AIAgentAdapter = createEngine(config.engine);
 
-    // 一致性检查：补全半成品章节的叙事状态，返回 resume 起点
-    const { from, to, finalizedGap } = await ensureChapterConsistency(
-      engine, db, args.projectId,
-      (step, msg) => console.log(`  [${step}] ${msg}`),
-    );
-
-    if (finalizedGap > 0) {
-      console.log(`\n⚠ 检测到 ${finalizedGap} 章半成品（正文已存但叙事状态落后），已自动补全。`);
-    }
+    const to = countOutlines(db, args.projectId);
+    const from = countChapters(db, args.projectId) + 1;
 
     if (from > to) {
       console.log(`\n✓ 全部 ${to} 章已完成，无需续写。`);

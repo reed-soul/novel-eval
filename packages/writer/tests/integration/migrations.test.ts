@@ -578,18 +578,14 @@ it('enforces remaining phase-A domain uniqueness', (t) => {
     /UNIQUE constraint failed/,
     'chapter outline identity',
   );
-  assert.throws(
-    () => insertStoryState(testDb.db, {
-      id: 'state-3',
-      projectId: 'project-1',
-      chapterId: 'chapter-1',
-      chapterRevisionId: 'revision-1',
-      sequence: 3,
-      status: 'stale',
-    }),
-    /UNIQUE constraint failed/,
-    'story state chapter revision identity',
-  );
+  insertStoryState(testDb.db, {
+    id: 'state-3',
+    projectId: 'project-1',
+    chapterId: 'chapter-1',
+    chapterRevisionId: 'revision-1',
+    sequence: 3,
+    status: 'stale',
+  });
 
   insertProject(testDb.db, 'project-2');
   insertJob(testDb.db, { id: 'job-2', projectId: 'project-2' });
