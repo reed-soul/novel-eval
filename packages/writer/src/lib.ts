@@ -29,6 +29,9 @@ export {
 export {
   InvalidPersistenceDataError,
   InvalidStoryStateDeltaError,
+  ProjectLeaseConflictError,
+  StaleDependencyError,
+  StateExtractionError,
 } from './domain/errors.ts';
 export { applyStoryStateDelta } from './domain/story-state.ts';
 export type {

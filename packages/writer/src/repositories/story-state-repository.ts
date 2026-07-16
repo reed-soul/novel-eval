@@ -394,4 +394,31 @@ export class StoryStateRepository {
     `).run(id, position);
     return result.changes;
   }
+
+  listArcSummaries(
+    id: ProjectId,
+    beforePosition: number,
+    arcInterval: number,
+  ): Array<{ upToPosition: number; content: string }> {
+    if (!Number.isInteger(arcInterval) || arcInterval <= 0) {
+      throw new TypeError('arcInterval must be a positive integer');
+    }
+    const rows: unknown[] = this.db.prepare(`
+      SELECT sequence, summary
+      FROM story_state_revision
+      WHERE project_id = ?
+        AND status = 'current'
+        AND sequence < ?
+        AND sequence % ? = 0
+      ORDER BY sequence ASC
+    `).all(id, beforePosition, arcInterval);
+    return rows.map((value) => {
+      const entity = 'arc summary';
+      const row = persistedRecord(value, entity);
+      return {
+        upToPosition: numberField(row, 'sequence', entity),
+        content: stringField(row, 'summary', entity),
+      };
+    });
+  }
 }

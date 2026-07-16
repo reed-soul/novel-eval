@@ -286,4 +286,43 @@ export class PlanningRepository {
     `).get(id);
     return row === undefined ? null : readApprovedOutline(row);
   }
+
+  getApprovedOutlineAtPosition(
+    id: ProjectId,
+    position: number,
+  ): ApprovedOutline | null {
+    const row: unknown = this.db.prepare(`
+      SELECT
+        o.id AS outline_id,
+        o.project_id,
+        o.position,
+        o.status AS outline_status,
+        o.active_revision_id,
+        o.created_at AS outline_created_at,
+        o.updated_at,
+        r.id AS revision_id,
+        r.revision_number,
+        r.status AS revision_status,
+        r.title,
+        r.content_json,
+        r.created_at AS revision_created_at
+      FROM chapter_outline o
+      JOIN chapter_outline_revision r ON r.id = o.active_revision_id
+      WHERE o.project_id = ?
+        AND o.position = ?
+        AND o.status = 'approved'
+        AND r.status = 'approved'
+    `).get(id, position);
+    return row === undefined ? null : readApprovedOutline(row);
+  }
+
+  getActiveBibleForProject(id: ProjectId): BibleRevision | null {
+    const row: unknown = this.db.prepare(`
+      SELECT b.*
+      FROM project p
+      JOIN story_bible_revision b ON b.id = p.active_bible_revision_id
+      WHERE p.id = ?
+    `).get(id);
+    return row === undefined ? null : readBible(row);
+  }
 }

@@ -18,3 +18,17 @@ export class ProjectLeaseConflictError extends Error {
     this.name = 'ProjectLeaseConflictError';
   }
 }
+
+export class StaleDependencyError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'StaleDependencyError';
+  }
+}
+
+export class StateExtractionError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'StateExtractionError';
+  }
+}
