@@ -56,7 +56,7 @@ export function formatCompareTerminal(result: CompareResult): string {
     `当前：${result.current.title}（${result.current.overall} ${result.current.grade}）`,
     `总分变化：${result.overallDelta >= 0 ? '+' : ''}${result.overallDelta}`,
     '',
-    '五维变化：',
+    '八维变化：',
   ];
   for (const k of DIMENSION_KEYS) {
     const d = result.dimensionDeltas[k];

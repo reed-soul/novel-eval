@@ -1,25 +1,34 @@
-# 评估模式 preset（对齐设计文档 v2.2 第二章）
+# 评估模式 preset（八维，对齐设计文档 v2.2 第二章）
 profiles:
-  default:
+  default:    # 均衡模式：八维接近均衡
     weights:
-      storyStructure: 0.25
-      characterization: 0.25
-      writingQuality: 0.15
-      emotionalResonance: 0.20
-      marketPotential: 0.15
+      storyStructure: 0.13
+      characterization: 0.13
+      writingQuality: 0.10
+      emotionalResonance: 0.13
+      marketPotential: 0.12
+      thematicDepth: 0.13
+      originality: 0.13
+      pacingRetention: 0.13
 
-  revision:   # 改稿模式：市场潜力权重降低，文笔和结构权重提升
+  revision:   # 改稿模式：重文笔/结构/节奏，市场权重降低
     weights:
-      storyStructure: 0.30
-      characterization: 0.25
-      writingQuality: 0.25
-      emotionalResonance: 0.15
-      marketPotential: 0.05
+      storyStructure: 0.16
+      characterization: 0.13
+      writingQuality: 0.18
+      emotionalResonance: 0.13
+      marketPotential: 0.04
+      thematicDepth: 0.12
+      originality: 0.10
+      pacingRetention: 0.14
 
-  submission: # 投稿模式：市场潜力权重提升
+  submission: # 投稿模式：重市场/节奏/原创（商业化导向）
     weights:
-      storyStructure: 0.20
-      characterization: 0.20
-      writingQuality: 0.15
-      emotionalResonance: 0.15
-      marketPotential: 0.30
+      storyStructure: 0.11
+      characterization: 0.11
+      writingQuality: 0.10
+      emotionalResonance: 0.12
+      marketPotential: 0.20
+      thematicDepth: 0.08
+      originality: 0.13
+      pacingRetention: 0.15

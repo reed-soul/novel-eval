@@ -241,7 +241,7 @@ function buildHtml(result: EvaluationResult): string {
   </section>
 
   <section>
-    <h2>五维详细分析</h2>
+    <h2>八维详细分析</h2>
     ${dimensionCards}
   </section>
 
@@ -297,7 +297,7 @@ function buildHtml(result: EvaluationResult): string {
   radar.setOption({
     tooltip: { trigger: 'item' },
     radar: { indicator: [${radarIndicators}], radius: '65%' },
-    series: [{ type: 'radar', data: [{ value: [${radarValues}], name: '五维', areaStyle: { opacity: 0.25 } }] }],
+    series: [{ type: 'radar', data: [{ value: [${radarValues}], name: '八维', areaStyle: { opacity: 0.25 } }] }],
   });
 
   // 情绪曲线

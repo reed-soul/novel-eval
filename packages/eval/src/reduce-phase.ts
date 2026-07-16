@@ -3,7 +3,7 @@
  *
  * 依赖图（决定并行调度）：
  *   R1(人物) ─┐
- *              ├→ R2(五维) ─┬→ R4(建议，依赖 R2 dimensions + R1 characters)
+ *              ├→ R2(八维) ─┬→ R4(建议，依赖 R2 dimensions + R1 characters)
  *   R3(曲线) ──┘            └→ R5(市场，依赖 R2 marketPotential)
  *
  * 调度：`(R1 ‖ R3) → R2 → (R4 ‖ R5)`，比纯串行省 2 层等待。
@@ -149,7 +149,7 @@ export async function runReducePhase(
     `${c.name}（${c.role}）${c.aliases?.length ? `别名:${c.aliases.join('/')}` : ''}`,
   ).join('、');
 
-  // ─── R2 五维评分（致命，依赖 R1 的 charactersBlock）────────────────────────────────
+  // ─── R2 八维评分（致命，依赖 R1 的 charactersBlock）────────────────────────────────
   const weightsBlock = Object.entries(weights).map(([k, v]) => `${k}: ${v}`).join('  ');
   const r2Prompt = loadPrompt('reduce-r2', PROMPTS_DIR)
     .replace('{CHAPTERS}', chaptersBlock)
@@ -174,7 +174,7 @@ export async function runReducePhase(
     },
   };
   const r2 = await callWithValidation<{ dimensions: Record<DimensionKey, DimensionScore> }>(engine, r2Prompt, {
-    systemPrompt: '你是资深小说总编，做全局五维评判。只输出 JSON。analysis 里用 [chapterId#excerptIndex] 指针引用证据。',
+    systemPrompt: '你是资深小说总编，做全局八维评判。只输出 JSON。analysis 里用 [chapterId#excerptIndex] 指针引用证据。',
     outputSchema: { type: 'object' },
     temperature: 0.4, maxTokens: 8192, timeoutMs: 180_000,
     schema: r2Schema, maxAttempts: 3,
@@ -182,7 +182,7 @@ export async function runReducePhase(
   addUsage(totalUsage, r2.totalUsage);
   if (!r2.ok || !r2.data) {
     onProgress?.('r2', 'failed');
-    throw new Error(`R2 五维评分失败（致命）：${r2.errors.join('; ')}`);
+    throw new Error(`R2 八维评分失败（致命）：${r2.errors.join('; ')}`);
   }
   onProgress?.('r2', 'ok');
   const dimensions = r2.data.dimensions;

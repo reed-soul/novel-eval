@@ -49,6 +49,9 @@ const R2_RESP = JSON.stringify({
     writingQuality: { score: 80, analysis: '文笔精炼有个人风格辨识度，对话自然有潜台词，感官描写到位沉浸感强，但部分段落修辞略显堆砌可适当精简优化。' },
     emotionalResonance: { score: 72, analysis: '情感张力较强，代入感好，但情绪推进略显线性缺乏层次变化，高潮处可以更收敛以增强余韵和回味感与共鸣深度。' },
     marketPotential: { score: 68, analysis: '类型定位清晰，受众明确，但差异化卖点不够突出，需要在后续章节强化独特设定以形成市场竞争力与品牌辨识度。' },
+    thematicDepth: { score: 78, analysis: '主题深刻，信任滑坡的因果链从每一步合理决策中自然浮现，现实映照强烈，引发对AI治理的持久思考，全程零说教结论由读者自得。' },
+    originality: { score: 76, analysis: '空人非丧尸的空心镜像设定显著反套路，AI作为无意识过程而非反派的处理前所未见，叙事手法与结构均有独到创新之处。' },
+    pacingRetention: { score: 71, analysis: '开篇钩子强劲，但中段部分章节信息密度偏低推进略慢，爽点分布偶有断层，整体追读驱动尚可需加强中段悬念。' },
   },
 });
 const R3_RESP = JSON.stringify({
@@ -71,7 +74,7 @@ const FULL_ROUTES = [
   { systemContains: '出版市场', response: R5_RESP },
 ];
 
-const WEIGHTS = { storyStructure: 0.25, characterization: 0.2, writingQuality: 0.2, emotionalResonance: 0.15, marketPotential: 0.2 };
+const WEIGHTS = { storyStructure: 0.13, characterization: 0.13, writingQuality: 0.10, emotionalResonance: 0.13, marketPotential: 0.12, thematicDepth: 0.13, originality: 0.13, pacingRetention: 0.13 };
 const METADATA = { genre: '科幻', targetAudience: '青年男性' };
 
 describe('runReducePhase', () => {
@@ -81,7 +84,7 @@ describe('runReducePhase', () => {
       engine, [INPUT_CHAPTER], WEIGHTS, 'default', METADATA, undefined, 'full',
     );
 
-    // 五维分数齐全
+    // 八维分数齐全
     assert.ok(result.dimensions.storyStructure.score === 75);
     // full 模式 R3 真实执行：emotionalCurve 来自 LLM（annotation 非空）
     assert.equal(result.emotionalCurve.length, 1);
@@ -99,7 +102,7 @@ describe('runReducePhase', () => {
       engine, [INPUT_CHAPTER], WEIGHTS, 'default', METADATA, undefined, 'lite',
     );
 
-    // 五维分数仍齐全（R2 必跑）
+    // 八维分数仍齐全（R2 必跑）
     assert.ok(result.dimensions.storyStructure.score === 75);
     // lite 模式 R3 未跑：emotionalCurve 是 chapters 直映（无 annotation）
     assert.equal(result.emotionalCurve.length, 1);
@@ -127,7 +130,7 @@ describe('runReducePhase', () => {
     ]);
     await assert.rejects(
       runReducePhase(engine, [INPUT_CHAPTER], WEIGHTS, 'default', METADATA, undefined, 'full'),
-      /R2 五维评分失败/,
+      /R2 八维评分失败/,
     );
   });
 });

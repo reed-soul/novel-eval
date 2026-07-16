@@ -41,11 +41,12 @@ const LOW_DIM_THRESHOLD = 65;
 
 // ─── 策略路由 ─────────────────────────────────────────────────────
 
-/** 走外科手术的维度集合：文笔/重复类问题，局部改即可 */
-const SURGICAL_DIMS: ReadonlySet<DimensionKey> = new Set(['writingQuality']);
-/** 走整章重写的维度集合：结构/情感/人物/市场类问题，需整体调整 */
+/** 走外科手术的维度集合：文笔/节奏类问题，局部改即可 */
+const SURGICAL_DIMS: ReadonlySet<DimensionKey> = new Set(['writingQuality', 'pacingRetention']);
+/** 走整章重写的维度集合：结构/情感/人物/市场/主题/原创类问题，需整体调整 */
 const REWRITE_DIMS: ReadonlySet<DimensionKey> = new Set([
   'storyStructure', 'emotionalResonance', 'characterization', 'marketPotential',
+  'thematicDepth', 'originality',
 ]);
 
 export type { CorrectionStrategy };

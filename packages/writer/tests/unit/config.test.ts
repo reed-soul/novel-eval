@@ -9,8 +9,8 @@ describe('loadWriterConfig', () => {
   it('加载 writer.yml + shared engines.yml', () => {
     const config = loadWriterConfig();
     assert.ok(config.engine);
-    assert.equal(config.engineName, 'deepseek');
-    assert.equal(config.engine.model, 'deepseek-v4-pro');
+    assert.equal(config.engineName, 'bigmodel');
+    assert.equal(config.engine.model, 'glm-5.2');
     assert.ok(config.generation);
   });
 

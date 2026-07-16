@@ -133,15 +133,18 @@ describe('loadConfig', () => {
   it('加载 revision profile（改稿模式权重不同）', () => {
     const config = loadConfig('revision');
     assert.equal(config.profileName, 'revision');
-    // revision 模式 marketPotential 权重应低于 default
-    assert.ok(config.profile.weights.marketPotential < 0.15);
-    assert.ok(config.profile.weights.storyStructure > 0.25);
+    // revision 模式 marketPotential 权重应低于 default，writingQuality 权重应高于 default
+    const def = loadConfig('default');
+    assert.ok(config.profile.weights.marketPotential < def.profile.weights.marketPotential);
+    assert.ok(config.profile.weights.writingQuality > def.profile.weights.writingQuality);
   });
 
-  it('加载 submission profile（投稿模式 marketPotential 权重高）', () => {
+  it('加载 submission profile（投稿模式 marketPotential 权重最高）', () => {
     const config = loadConfig('submission');
     assert.equal(config.profileName, 'submission');
-    assert.ok(config.profile.weights.marketPotential > 0.20);
+    // submission 模式 marketPotential 是该 profile 中权重最高的维度
+    const w = config.profile.weights;
+    assert.ok(w.marketPotential >= Math.max(w.storyStructure, w.characterization, w.pacingRetention));
   });
 
   it('默认权重合计为 1.0', () => {

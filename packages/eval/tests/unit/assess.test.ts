@@ -1,7 +1,7 @@
 /**
  * assessChapters 单测（内存版评估，mock engine）
  *
- * 验证 assessChapters 串起 map + reduce + 聚合，返回五维分数 + 等级。
+ * 验证 assessChapters 串起 map + reduce + 聚合，返回八维分数 + 等级。
  * assess 走 lite 模式（跳过 R3/R5），故 reduce 只跑 R1→R2→R4。
  *
  * mock engine 按 systemPrompt 关键词路由响应（不依赖调用顺序，
@@ -53,6 +53,9 @@ const R2_RESP = JSON.stringify({
     writingQuality: { score: 80, analysis: '文笔精炼有个人风格辨识度，对话自然有潜台词，感官描写到位沉浸感强，但部分段落修辞略显堆砌可适当精简优化。' },
     emotionalResonance: { score: 72, analysis: '情感张力较强，代入感好，但情绪推进略显线性缺乏层次变化，高潮处可以更收敛以增强余韵和回味感与共鸣深度。' },
     marketPotential: { score: 68, analysis: '类型定位清晰，受众明确，但差异化卖点不够突出，需要在后续章节强化独特设定以形成市场竞争力与品牌辨识度。' },
+    thematicDepth: { score: 74, analysis: '主题有一定深度，现实映照可见，但表达上偶有直白处，整体尚可但未达深刻，结论浮现自然，仍有深化空间可言。' },
+    originality: { score: 72, analysis: '设定有一定新意，部分元素反套路，但整体框架仍在常见类型之内，创新点不够突出，需加强差异化的独特设定呈现。' },
+    pacingRetention: { score: 69, analysis: '钩子时有时无，部分章节信息密度偏低推进略慢，中段偶有拖沓但总体可读，追读驱动中等偏弱需要进一步强化悬念。' },
   },
 });
 const R3_RESP = JSON.stringify({
@@ -71,7 +74,7 @@ const R5_RESP = JSON.stringify({
 });
 
 describe('assessChapters', () => {
-  it('串联 map+reduce（lite：R1→R2→R4），返回五维分数+等级+suggestions', async () => {
+  it('串联 map+reduce（lite：R1→R2→R4），返回八维分数+等级+suggestions', async () => {
     // assess 走 lite 模式：reduce 只跑 R1/R2/R4，不跑 R3/R5
     const engine = mockEngine([
       { systemContains: '逐章细读', response: MAP_RESP },   // map

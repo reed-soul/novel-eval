@@ -3,7 +3,7 @@
  *
  * 流程：
  *   1. 防重复检测（detectRepetition）→ severe 直接 block
- *   2. 调 eval 的 assessChapters（map + reduce）拿五维分数 + 等级
+ *   2. 调 eval 的 assessChapters（map + reduce）拿八维分数 + 等级
  *   3. 判定：grade ≥ B 且 writingQuality ≥ 60 → pass
  *          grade C 或某关键维度 <60 → revise（feedback = suggestions + 低分维度 analysis）
  *          grade D → block

@@ -25,7 +25,7 @@ const MAP_SCHEMA: SchemaSpec = {
   keyEvents: { type: 'array', min: 1, max: 8, required: true, itemSpec: { type: 'string' } },
   characters: { type: 'array', max: 30, required: true, itemSpec: { type: 'string' } },
   excerpts: {
-    type: 'array', min: 3, max: 5, required: true,
+    type: 'array', min: 3, max: 8, required: true,
     itemSpec: {
       type: 'object', fields: {
         text: { type: 'string', min: 5, max: 200, required: true },

@@ -1,4 +1,4 @@
-# 五维评分默认规则 + 权重 + 等级阈值
+# 八维评分默认规则 + 权重 + 等级阈值
 gradeThresholds:
   S: 90
   A: 80
@@ -8,8 +8,11 @@ gradeThresholds:
 
 # 默认权重（合计 1.0）
 weights:
-  storyStructure: 0.25
-  characterization: 0.25
-  writingQuality: 0.15
-  emotionalResonance: 0.20
-  marketPotential: 0.15
+  storyStructure: 0.13
+  characterization: 0.13
+  writingQuality: 0.10
+  emotionalResonance: 0.13
+  marketPotential: 0.12
+  thematicDepth: 0.13
+  originality: 0.13
+  pacingRetention: 0.13

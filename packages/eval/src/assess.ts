@@ -3,7 +3,7 @@
  *
  * 区别于 evaluate()（文件版：parseTxt → splitChapters → map → reduce → 报告），
  * assessChapters 直接接收内存里的 ChapterInput[]，跑 map+reduce+聚合，
- * 返回五维分数+等级+suggestions。不碰文件/报告/preflight。
+ * 返回八维分数+等级+suggestions。不碰文件/报告/preflight。
  */
 import type { AIAgentAdapter, NovelMetadata, TokenUsage } from '@novel-eval/shared';
 import { addUsage, zeroUsage } from '@novel-eval/shared';

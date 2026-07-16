@@ -1,7 +1,7 @@
 /**
  * @novel-eval/eval — 评估专属类型
  *
- * 五维评分、证据机制、评估结果、评估配置。
+ * 八维评分、证据机制、评估结果、评估配置。
  * 共享类型（TokenUsage/EngineConfig/NovelMetadata/ChapterInput/BaseChapter/
  * CharacterProfile）从 @novel-eval/shared 重新导出，保持现有代码 import 路径不变。
  */
@@ -58,18 +58,26 @@ export interface EvaluationCheckpoint {
   sessionId?: string;
 }
 
-// ─── 五维评分 ──────────────────────────────────────────────────────
+// ─── 八维评分 ──────────────────────────────────────────────────────
+// 五维（故事架构/人物塑造/文笔质量/情感共鸣/市场潜力）+ 三维新增：
+//   thematicDepth  主题深度（文学奖维度：思想性、现实映照、不说教）
+//   originality     原创性（文学奖+学术：反套路、设定/结构/手法创新）
+//   pacingRetention 节奏留存（网文维度：章节钩子、爽点密度、中段拖沓）
 
 export type DimensionKey =
   | 'storyStructure'
   | 'characterization'
   | 'writingQuality'
   | 'emotionalResonance'
-  | 'marketPotential';
+  | 'marketPotential'
+  | 'thematicDepth'
+  | 'originality'
+  | 'pacingRetention';
 
 export const DIMENSION_KEYS: DimensionKey[] = [
   'storyStructure', 'characterization', 'writingQuality',
   'emotionalResonance', 'marketPotential',
+  'thematicDepth', 'originality', 'pacingRetention',
 ];
 
 export const DIMENSION_LABELS: Record<DimensionKey, string> = {
@@ -78,6 +86,9 @@ export const DIMENSION_LABELS: Record<DimensionKey, string> = {
   writingQuality: '文笔质量',
   emotionalResonance: '情感共鸣',
   marketPotential: '市场潜力',
+  thematicDepth: '主题深度',
+  originality: '原创性',
+  pacingRetention: '节奏留存',
 };
 
 export interface DimensionScore {

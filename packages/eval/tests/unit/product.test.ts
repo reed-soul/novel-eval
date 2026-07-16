@@ -16,6 +16,9 @@ function mockResult(overrides: Partial<EvaluationResult> & { id: string; title: 
     writingQuality: { score: 70, analysis: 'c' },
     emotionalResonance: { score: 70, analysis: 'd' },
     marketPotential: { score: 60, analysis: 'e' },
+    thematicDepth: { score: 65, analysis: 'f' },
+    originality: { score: 68, analysis: 'g' },
+    pacingRetention: { score: 66, analysis: 'h' },
   };
   return {
     schemaVersion: '1.1.0',
@@ -52,7 +55,7 @@ describe('estimateEvaluation', () => {
 });
 
 describe('compareResults', () => {
-  it('计算五维 delta 与总分变化', () => {
+  it('计算八维 delta 与总分变化', () => {
     const base = mockResult({ id: 'a', title: '初稿', score: 70, suggestions: [{ dimension: 'x', content: '建议A' }] });
     const curr = mockResult({
       id: 'b', title: '二稿', score: 76,

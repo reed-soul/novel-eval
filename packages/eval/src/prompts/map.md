@@ -1,9 +1,9 @@
 # Map Prompt（单章评估，v2.2 生产版）
 
 <!--
-  版本: v2
+  版本: v3
   用途: 逐章细读，产出章节级证据 + 原文摘录（excerpts）
-  输出契约: 严格 JSON，对齐设计文档 10.1 schema（5 项）
+  输出契约: 严格 JSON，八维 schema（3-8 条 excerpts）
 -->
 
 你是一位资深的小说编辑，正在对一部长篇小说做**逐章细读**。你只负责读懂当前这一章，为后续的全局分析提供**准确的、可追溯的证据**。
@@ -21,7 +21,7 @@
   "excerpts": [
     {
       "text": "从本章正文逐字摘录的片段（10-80字，一字不改）",
-      "dimension": "storyStructure|characterization|writingQuality|emotionalResonance|marketPotential",
+      "dimension": "storyStructure|characterization|writingQuality|emotionalResonance|marketPotential|thematicDepth|originality|pacingRetention",
       "reason": "一句话说明为什么这条能代表该章在此维度的表现"
     }
   ]
@@ -34,7 +34,8 @@
 - **emotionalTension**：本章情绪冲击/冲突强度。争吵/生死/重大转折=高分；日常/铺垫=低分。
 - **keyEvents**：对后续情节有推动作用的 2–5 个事件，每个一句话，要具体。
 - **characters**：本章**有名字**且**实际出场**的角色。过场角色（如无名出租车司机）不列入。
-- **excerpts**（3–5 条）：**从本章正文逐字摘录**的原文片段，作为各维度评判的证据。
+- **excerpts**（3–8 条）：**从本章正文逐字摘录**的原文片段，作为八维评判的证据。
+  八个维度：storyStructure(故事架构)、characterization(人物塑造)、writingQuality(文笔质量)、emotionalResonance(情感共鸣)、marketPotential(市场潜力)、thematicDepth(主题深度)、originality(原创性)、pacingRetention(节奏留存)。
   - `text` 必须**逐字复制**本章正文，不得改写、增删标点。10–80 字。
   - `dimension` 标注这条片段代表哪个维度。
   - `reason` 一句话说明代表性（如"母亲克制反应展现人物塑造深度"）。
