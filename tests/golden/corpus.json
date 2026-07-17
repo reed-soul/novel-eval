@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "1.0.0",
+  "cases": [
+    {
+      "id": "literary-bailuyuan",
+      "sourcePath": "data/novels/白鹿原.txt",
+      "metaPath": "tests/golden/cases/literary-bailuyuan/meta.json",
+      "expectPath": "tests/golden/cases/literary-bailuyuan/expect.json"
+    },
+    {
+      "id": "romance-heyi",
+      "sourcePath": "data/novels/何以笙箫默.txt",
+      "metaPath": "tests/golden/cases/romance-heyi/meta.json",
+      "expectPath": "tests/golden/cases/romance-heyi/expect.json"
+    },
+    {
+      "id": "romance-weiwei",
+      "sourcePath": "data/novels/微微一笑很倾城.txt",
+      "metaPath": "tests/golden/cases/romance-weiwei/meta.json",
+      "expectPath": "tests/golden/cases/romance-weiwei/expect.json"
+    },
+    {
+      "id": "scifi-qiuzhuang",
+      "sourcePath": "data/novels/球状闪电.txt",
+      "metaPath": "tests/golden/cases/scifi-qiuzhuang/meta.json",
+      "expectPath": "tests/golden/cases/scifi-qiuzhuang/expect.json"
+    },
+    {
+      "id": "scifi-santi",
+      "sourcePath": "data/novels/三体全集.txt",
+      "metaPath": "tests/golden/cases/scifi-santi/meta.json",
+      "expectPath": "tests/golden/cases/scifi-santi/expect.json"
+    },
+    {
+      "id": "mystery-changye",
+      "sourcePath": "data/novels/长夜难明.txt",
+      "metaPath": "tests/golden/cases/mystery-changye/meta.json",
+      "expectPath": "tests/golden/cases/mystery-changye/expect.json"
+    },
+    {
+      "id": "web-guimi",
+      "sourcePath": "data/novels/网络小说合集/诡秘之主.txt",
+      "metaPath": "tests/golden/cases/web-guimi/meta.json",
+      "expectPath": "tests/golden/cases/web-guimi/expect.json"
+    }
+  ]
+}

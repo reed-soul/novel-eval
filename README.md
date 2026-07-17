@@ -113,6 +113,16 @@ pnpm eval -- ./data/spike-samples/sample-novel.txt \
 
 评估前会显示字数、章节数、预估耗时与费用。完成后打开 `data/reports/<taskId>/report.html`。
 
+**Golden 回归**（真实长篇基准切片，全文不入库）：
+
+```bash
+pnpm golden check              # 检查 data/novels 语料能否切分
+pnpm golden run --dry-run      # check + 生成 tests/golden/slices/
+pnpm golden run --case literary-bailuyuan   # 评估切片（需 API key）
+```
+
+详见 `tests/golden/README.md` 与 `docs/superpowers/specs/2026-07-17-golden-corpus-design.md`。
+
 **改稿对比**——评估两版，生成差异报告：
 
 ```bash

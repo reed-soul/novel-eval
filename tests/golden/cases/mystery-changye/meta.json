@@ -1,0 +1,12 @@
+{
+  "id": "mystery-changye",
+  "title": "长夜难明",
+  "author": "紫金陈",
+  "genre": "悬疑推理",
+  "audience": "大众读者",
+  "profile": "default",
+  "slice": {
+    "maxChapters": 8,
+    "maxChars": 20000
+  }
+}

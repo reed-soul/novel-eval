@@ -1,0 +1,16 @@
+{
+  "status": "pending_annotation",
+  "toleranceNote": "人工标注后改为 active；单维建议容差 ±10。null 表示该维暂不校验。",
+  "overall": { "min": null, "max": null },
+  "gradeAllowlist": ["S", "A", "B", "C", "D"],
+  "dimensions": {
+    "storyStructure": { "min": null, "max": null },
+    "characterization": { "min": null, "max": null },
+    "writingQuality": { "min": null, "max": null },
+    "emotionalResonance": { "min": null, "max": null },
+    "marketPotential": { "min": null, "max": null },
+    "thematicDepth": { "min": null, "max": null },
+    "originality": { "min": null, "max": null },
+    "pacingRetention": { "min": null, "max": null }
+  }
+}

@@ -21,3 +21,23 @@ export type {
   ProfileConfig, GradeThresholds,
 } from './types.ts';
 export { DIMENSION_KEYS, DIMENSION_LABELS } from './types.ts';
+// Golden corpus
+export { assertScoreBands } from './golden/assert-bands.ts';
+export {
+  loadCorpusRegistry,
+  loadGoldenCases,
+  resolveRepoRoot,
+} from './golden/load-corpus.ts';
+export { checkCase, sliceCase, selectChapters, formatSliceText } from './golden/slice.ts';
+export {
+  runGoldenCheck,
+  runGoldenSlice,
+  runGoldenEvaluate,
+} from './golden/run-golden.ts';
+export type {
+  GoldenExpect,
+  GoldenCaseMeta,
+  BandAssertResult,
+  CorpusRegistry,
+  LoadedGoldenCase,
+} from './golden/types.ts';

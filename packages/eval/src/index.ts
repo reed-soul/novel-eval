@@ -4,12 +4,14 @@
  *
  *   novel-eval evaluate <file.txt> [options]
  *   novel-eval compare <baseline.json> <current.json> [--html]
+ *   novel-eval golden check|slice|run [options]
  */
 import { evaluate } from './evaluator.ts';
 import { generateReport } from './report/html-generator.ts';
 import { generateCompareReport } from './report/compare-html.ts';
 import { runPreflight, formatPreflightSummary } from './preflight.ts';
 import { loadResultJson, compareResults, formatCompareTerminal } from './compare.ts';
+import { runGoldenCheck, runGoldenEvaluate, runGoldenSlice } from './golden/run-golden.ts';
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -46,7 +48,16 @@ interface CompareArgs {
   outDir?: string;
 }
 
-type CliArgs = EvaluateArgs | CompareArgs | { command: 'help' };
+interface GoldenArgs {
+  command: 'golden';
+  subcommand: 'check' | 'slice' | 'run' | 'help';
+  caseIds?: string[];
+  dryRun?: boolean;
+  forceAssert?: boolean;
+  yes?: boolean;
+}
+
+type CliArgs = EvaluateArgs | CompareArgs | GoldenArgs | { command: 'help' };
 
 function parseArgs(argv: string[]): CliArgs {
   const [, , command, ...rest] = argv;
@@ -66,6 +77,27 @@ function parseArgs(argv: string[]): CliArgs {
     }
     if (positional.length < 2) return { command: 'help' };
     return { command: 'compare', baselinePath: positional[0], currentPath: positional[1], html, outDir };
+  }
+
+  if (command === 'golden') {
+    const sub = rest[0];
+    if (!sub || sub === 'help' || sub === '--help' || sub === '-h') {
+      return { command: 'golden', subcommand: 'help' };
+    }
+    if (sub !== 'check' && sub !== 'slice' && sub !== 'run') {
+      return { command: 'golden', subcommand: 'help' };
+    }
+    const args: GoldenArgs = { command: 'golden', subcommand: sub };
+    const caseIds: string[] = [];
+    for (let i = 1; i < rest.length; i++) {
+      const a = rest[i];
+      if (a === '--case') caseIds.push(rest[++i]);
+      else if (a === '--dry-run') args.dryRun = true;
+      else if (a === '--force-assert') args.forceAssert = true;
+      else if (a === '-y' || a === '--yes') args.yes = true;
+    }
+    if (caseIds.length) args.caseIds = caseIds;
+    return args;
   }
 
   const args: EvaluateArgs = { command: 'evaluate', filePath: '' };
@@ -90,6 +122,7 @@ function printHelp(): void {
 用法：
   novel-eval evaluate <文件.txt> [选项]
   novel-eval compare <基线.json> <当前.json> [--html] [--out 目录]
+  novel-eval golden check|slice|run [选项]
 
 evaluate 选项：
   --genre <类型>       小说类型（建议必填，如「都市言情」）
@@ -104,9 +137,29 @@ compare 选项：
   --html               生成 compare.html
   --out <目录>         HTML 输出目录（默认当前目录）
 
+golden 选项：
+  --case <id>          只跑指定 case（可重复）
+  --dry-run            run 时只 check+slice，不调 LLM
+  --force-assert       对 pending_annotation 也强制校验分数带
+  -y, --yes            评估时跳过确认（golden run 默认跳过）
+
 示例：
   novel-eval evaluate ./book.txt --genre 玄幻 --audience 青年男性
-  novel-eval compare ./reports/a/result.json ./reports/b/result.json --html`);
+  novel-eval compare ./reports/a/result.json ./reports/b/result.json --html
+  novel-eval golden check
+  novel-eval golden run --dry-run
+  novel-eval golden run --case literary-bailuyuan`);
+}
+
+function printGoldenHelp(): void {
+  console.log(`novel-eval golden — 真实长篇评估基准
+
+子命令：
+  check   检查语料是否存在、能否切分
+  slice   生成 tests/golden/slices/<id>.txt
+  run     评估切片；对 status=active 的 case 校验分数带
+
+详见 tests/golden/README.md`);
 }
 
 async function confirmProceed(message: string): Promise<boolean> {
@@ -192,6 +245,36 @@ function runCompare(args: CompareArgs): void {
   }
 }
 
+async function runGolden(args: GoldenArgs): Promise<void> {
+  if (args.subcommand === 'help') {
+    printGoldenHelp();
+    return;
+  }
+
+  const common = {
+    caseIds: args.caseIds,
+    dryRun: args.dryRun,
+    forceAssert: args.forceAssert,
+    yes: args.yes ?? true,
+    onLog: (msg: string) => console.log(msg),
+  };
+
+  if (args.subcommand === 'check') {
+    const result = runGoldenCheck(common);
+    process.exitCode = result.ok ? 0 : 1;
+    return;
+  }
+
+  if (args.subcommand === 'slice') {
+    const result = runGoldenSlice(common);
+    process.exitCode = result.ok ? 0 : 1;
+    return;
+  }
+
+  const result = await runGoldenEvaluate(common);
+  process.exitCode = result.ok ? 0 : 1;
+}
+
 async function main(): Promise<void> {
   loadEnv();
   const args = parseArgs(process.argv);
@@ -201,6 +284,10 @@ async function main(): Promise<void> {
   }
   if (args.command === 'compare') {
     runCompare(args);
+    return;
+  }
+  if (args.command === 'golden') {
+    await runGolden(args);
     return;
   }
   await runEvaluate(args);

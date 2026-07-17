@@ -1,0 +1,12 @@
+{
+  "id": "scifi-santi",
+  "title": "三体",
+  "author": "刘慈欣",
+  "genre": "硬科幻",
+  "audience": "青年男性",
+  "profile": "default",
+  "slice": {
+    "maxChapters": 8,
+    "maxChars": 20000
+  }
+}

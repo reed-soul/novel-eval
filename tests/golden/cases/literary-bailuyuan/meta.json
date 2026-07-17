@@ -1,0 +1,12 @@
+{
+  "id": "literary-bailuyuan",
+  "title": "白鹿原",
+  "author": "陈忠实",
+  "genre": "现实主义文学",
+  "audience": "文学读者",
+  "profile": "default",
+  "slice": {
+    "maxChapters": 8,
+    "maxChars": 20000
+  }
+}
