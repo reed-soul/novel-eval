@@ -9,6 +9,7 @@ import {
   StaleDependencyError,
   BudgetExceededError,
   EvaluationIncompleteError,
+  ChapterQualityRejectedError,
 } from '@novel-eval/writer';
 import { toHttpError } from '../../server/middleware/error-mapper.ts';
 
@@ -42,6 +43,18 @@ describe('toHttpError', () => {
     const mapped = toHttpError(new EvaluationIncompleteError('missing dims'));
     assert.equal(mapped.status, 422);
     assert.equal(mapped.code, 'EvaluationIncompleteError');
+  });
+
+  it('maps ChapterQualityRejectedError to 422', () => {
+    const mapped = toHttpError(new ChapterQualityRejectedError({
+      outlinePosition: 3,
+      verdict: 'reject',
+      reasons: ['等级 D'],
+      score: 40,
+      grade: 'D',
+    }));
+    assert.equal(mapped.status, 422);
+    assert.equal(mapped.code, 'ChapterQualityRejectedError');
   });
 
   it('maps unknown errors to 500 with opaque message', () => {

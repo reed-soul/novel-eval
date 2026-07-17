@@ -9,6 +9,7 @@ import {
   StaleDependencyError,
   BudgetExceededError,
   EvaluationIncompleteError,
+  ChapterQualityRejectedError,
 } from '@novel-eval/writer';
 
 export interface HttpErrorBody {
@@ -62,6 +63,16 @@ export function toHttpError(error: unknown): HttpErrorBody {
     return {
       status: 422,
       code: 'EvaluationIncompleteError',
+      message: errorMessage(error),
+    };
+  }
+  if (
+    error instanceof ChapterQualityRejectedError
+    || errorName(error) === 'ChapterQualityRejectedError'
+  ) {
+    return {
+      status: 422,
+      code: 'ChapterQualityRejectedError',
       message: errorMessage(error),
     };
   }

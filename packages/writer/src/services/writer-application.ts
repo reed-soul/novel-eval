@@ -43,6 +43,7 @@ import {
 } from '../domain/ids.ts';
 import { BudgetExceededError, ValidationError } from '../domain/errors.ts';
 import type { StoryState, StoryStateDelta } from '../domain/story-state.ts';
+import { getProject } from '../project.ts';
 import {
   createJobRow,
   getJobRow,
@@ -70,6 +71,7 @@ import {
   ChapterGenerationService,
   type GenerateChapterOutcome,
   type GeneratedChapterContent,
+  type QualityReviewOptions,
 } from './chapter-generation-service.ts';
 import {
   ChapterPublicationService,
@@ -158,7 +160,10 @@ export interface GenerateChapterRangeInput {
   ttlMs?: number;
   onProgress?: (step: string, msg: string) => void;
   control?: GenerationControl;
-  generateContent?: (context: CompiledChapterContext) => Promise<GeneratedChapterContent>;
+  generateContent?: (
+    context: CompiledChapterContext,
+    revision?: { attempt: number; feedback?: string },
+  ) => Promise<GeneratedChapterContent>;
   extractState?: (input: {
     context: CompiledChapterContext;
     content: string;
@@ -914,6 +919,20 @@ export class WriterApplication {
         });
 
         input.onProgress?.(`chapter:${position}`, `生成第 ${position} 章...`);
+        const project = getProject(this.db, input.projectId);
+        const qualityFlags = readQualityReviewFlags(budget);
+        const qualityReview: QualityReviewOptions | undefined = qualityFlags.enabled
+          ? {
+              enabled: true,
+              maxRevise: qualityFlags.maxRevise,
+              metadata: {
+                genre: project?.genreProfile ?? '未指定',
+                targetAudience: project?.targetAudience ?? '未指定',
+              },
+              profile: qualityProfile,
+              onProgress: (msg) => input.onProgress?.(`chapter:${position}:review`, msg),
+            }
+          : undefined;
         const outcome = await this.generation.generateNext({
           projectId: input.projectId,
           outlinePosition: position,
@@ -921,6 +940,7 @@ export class WriterApplication {
           engine: input.engine,
           wordCount,
           promptTemplateVersion: promptVersion,
+          qualityReview,
           generateContent: input.generateContent,
           extractState: input.extractState,
         });
@@ -1056,6 +1076,19 @@ function readMaxCostRmb(budget: JsonValue): number | null {
     return null;
   }
   return value;
+}
+
+function readQualityReviewFlags(budget: JsonValue): { enabled: boolean; maxRevise: number } {
+  if (typeof budget !== 'object' || budget === null || Array.isArray(budget)) {
+    return { enabled: false, maxRevise: 0 };
+  }
+  const enabled = budget.qualityGate === true;
+  const rawMax = budget.maxRevise;
+  const maxRevise =
+    typeof rawMax === 'number' && Number.isFinite(rawMax) && rawMax >= 0
+      ? Math.floor(rawMax)
+      : 0;
+  return { enabled, maxRevise };
 }
 
 function readPersistedUsage(usage: JsonValue | null): TokenUsage {
