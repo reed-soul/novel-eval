@@ -32,12 +32,36 @@ function evalArtifactPath(taskId: string, extension: 'txt' | 'json'): string {
 
 function completeReportResponse(raw: unknown) {
   const report = toEvaluationReportResponse(raw);
-  const coverage = evaluationCoverageFor(report);
+  const coverage = evaluationCoverageFor({
+    dimensions: report.dimensions,
+    excerpts: report.excerpts,
+    chapters: report.chapters,
+    skippedChapterIds: report.coverage.skippedChapterIds,
+    task: {
+      chapterCount: report.coverage.chapterCount,
+      sourceWordCount: report.coverage.sourceWordCount,
+    },
+  });
   if (!coverage.complete) {
-    throw new EvaluationIncompleteError(
-      `Evaluation report missing dimensions: ${coverage.missingDimensions.join(', ')}`,
-    );
+    const reasons = coverage.incompleteReasons?.join('; ') || 'incomplete coverage';
+    throw new EvaluationIncompleteError(`Evaluation report incomplete: ${reasons}`);
   }
+  return { ...report, coverage };
+}
+
+function persistReportResponse(raw: unknown) {
+  // Always persist flat DTO including incomplete coverage for later GET gating.
+  const report = toEvaluationReportResponse(raw);
+  const coverage = evaluationCoverageFor({
+    dimensions: report.dimensions,
+    excerpts: report.excerpts,
+    chapters: report.chapters,
+    skippedChapterIds: report.coverage.skippedChapterIds,
+    task: {
+      chapterCount: report.coverage.chapterCount,
+      sourceWordCount: report.coverage.sourceWordCount,
+    },
+  });
   return { ...report, coverage };
 }
 
@@ -76,8 +100,8 @@ evalTasksRouter.post('/upload', async (c) => {
     },
   }).then(async (result) => {
     const resultPath = evalArtifactPath(taskId, 'json');
-    // Persist the stable flat report DTO (unwrap evaluate() envelope)
-    const report = completeReportResponse(result);
+    // Persist flat report even when incomplete; GET /result enforces the gate.
+    const report = persistReportResponse(result);
     await fs.writeFile(resultPath, JSON.stringify(report, null, 2));
   }).catch((err: unknown) => {
     const message = err instanceof Error ? err.message : String(err);

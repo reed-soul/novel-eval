@@ -183,6 +183,30 @@ export function EvaluationReport() {
         </div>
       </div>
 
+      {report.coverage && (
+        <div
+          className={`coverage-banner ${report.coverage.complete ? 'coverage-ok' : 'coverage-warn'}`}
+          role="status"
+        >
+          <strong>{report.coverage.complete ? '覆盖完整' : '覆盖不完整'}</strong>
+          <span>
+            证据回链 {report.coverage.evidenceLinkedCount ?? 0}/{report.coverage.excerptCount}
+            {report.coverage.evidenceLinkRate !== undefined
+              ? `（${Math.round(report.coverage.evidenceLinkRate * 100)}%）`
+              : ''}
+          </span>
+          <span>
+            跳章 {report.coverage.skippedChapterCount ?? 0}
+            {report.coverage.chapterSkipRate !== undefined
+              ? `（${Math.round(report.coverage.chapterSkipRate * 100)}%）`
+              : ''}
+          </span>
+          {!report.coverage.complete && (report.coverage.incompleteReasons?.length ?? 0) > 0 && (
+            <span className="coverage-reasons">{report.coverage.incompleteReasons!.join('；')}</span>
+          )}
+        </div>
+      )}
+
       <div className="report-grid">
         <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <h2 style={{ alignSelf: 'flex-start', marginBottom: 16 }}>维度解析</h2>

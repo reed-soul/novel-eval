@@ -915,6 +915,37 @@ select.input {
   text-align: right;
 }
 
+.coverage-banner {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: baseline;
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  border-left: 3px solid var(--border);
+  background: color-mix(in srgb, var(--bg-elevated, #f5f5f5) 88%, transparent);
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.coverage-banner.coverage-ok {
+  border-left-color: var(--green, #16a34a);
+}
+
+.coverage-banner.coverage-warn {
+  border-left-color: var(--amber, #d97706);
+  color: var(--text);
+}
+
+.coverage-banner strong {
+  color: var(--text);
+}
+
+.coverage-reasons {
+  flex-basis: 100%;
+  opacity: 0.9;
+}
+
 .report-grade-value {
   font-size: 56px;
   font-weight: 900;
