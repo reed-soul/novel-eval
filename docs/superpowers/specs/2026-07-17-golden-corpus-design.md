@@ -118,6 +118,7 @@ pnpm golden run --dry-run  # 只 check+slice，不调 LLM
 ## 8. 后续（完整 Stage C）
 
 - 双人独立标注与一致性度量。
-- Evidence 覆盖率门槛与 incomplete 门禁。
-- Prompt-hash 索引的 VCR 回放。
+- Evidence 覆盖率门槛与 incomplete 门禁。 ~~（C2 已落地）~~
+- Prompt-hash 索引的 VCR 回放。 ~~（见 `2026-07-17-golden-active-vcr-design.md`）~~
 - 盲评（对模型隐藏作品来源）。
+- 人工收紧 `active` 分数带（当前为确认后的 ±10 种子带）。

@@ -10,6 +10,14 @@ export { BigModelAdapter } from './engine/bigmodel.ts';
 export { DeepSeekAdapter } from './engine/deepseek.ts';
 export { createEngine } from './engine/factory.ts';
 export {
+  CassetteAdapter,
+  CassetteMissError,
+  cassettePromptHash,
+  type CassetteMode,
+  type CassetteAdapterOptions,
+  type CassetteEntry,
+} from './engine/cassette.ts';
+export {
   callWithValidation,
   validate,
   type ValidateResult,

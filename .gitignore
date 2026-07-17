@@ -51,3 +51,4 @@ packages/web/data/
 # Golden corpus: generated slices and run summaries (source novels stay under data/)
 tests/golden/slices/
 tests/golden/runs/
+tests/golden/cassettes/

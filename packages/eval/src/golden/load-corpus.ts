@@ -74,3 +74,7 @@ export function sliceOutputPath(repoRoot: string, caseId: string): string {
 export function runSummaryPath(repoRoot: string, caseId: string): string {
   return resolve(repoRoot, 'tests/golden/runs', `${caseId}.summary.json`);
 }
+
+export function cassetteDirPath(repoRoot: string, caseId: string): string {
+  return resolve(repoRoot, 'tests/golden/cassettes', caseId);
+}
