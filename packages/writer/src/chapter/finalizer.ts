@@ -37,6 +37,8 @@ const PROMPTS_DIR = resolve(__dirname, 'prompts');
 
 const DELTA_SCHEMA: SchemaSpec = {
   summary: { type: 'string', min: 1, required: true },
+  // Arrays are optional in schema: models often omit empty lists.
+  // extractStoryState normalizes missing keys to [] before parseDelta.
   characterChanges: { type: 'array' },
   factChanges: { type: 'array' },
   foreshadowChanges: { type: 'array' },
@@ -315,7 +317,15 @@ export async function extractStoryState(
   }
 
   addUsage(totalUsage, result.totalUsage);
-  const delta = parseDelta(result.data, chapterRevisionId);
+  // Coerce absent arrays only if a caller bypasses schema; required arrays are enforced above.
+  const normalized = {
+    ...result.data,
+    characterChanges: Array.isArray(result.data.characterChanges) ? result.data.characterChanges : [],
+    factChanges: Array.isArray(result.data.factChanges) ? result.data.factChanges : [],
+    foreshadowChanges: Array.isArray(result.data.foreshadowChanges) ? result.data.foreshadowChanges : [],
+    timelineEvents: Array.isArray(result.data.timelineEvents) ? result.data.timelineEvents : [],
+  };
+  const delta = parseDelta(normalized, chapterRevisionId);
   const state = applyStoryStateDelta(baseline, delta);
   return {
     state,
