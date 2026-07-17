@@ -1,0 +1,24 @@
+{
+  "caseId": "romance-weiwei",
+  "totalScore": 79,
+  "grade": "B",
+  "dimensions": {
+    "storyStructure": 82,
+    "characterization": 86,
+    "writingQuality": 84,
+    "emotionalResonance": 90,
+    "marketPotential": 88,
+    "thematicDepth": 68,
+    "originality": 64,
+    "pacingRetention": 72
+  },
+  "costRmb": 0.69922,
+  "seededAt": "2026-07-17",
+  "slice": {
+    "chapterCount": 1,
+    "charCount": 20066,
+    "titles": [
+      "注意：加入【5万小说迷】超大邮件列表群之后，需要和大家分享你读过的好小说，做不到的别加。"
+    ]
+  }
+}

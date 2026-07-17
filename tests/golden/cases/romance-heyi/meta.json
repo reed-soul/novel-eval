@@ -1,0 +1,12 @@
+{
+  "id": "romance-heyi",
+  "title": "何以笙箫默",
+  "author": "顾漫",
+  "genre": "都市言情",
+  "audience": "青年女性",
+  "profile": "default",
+  "slice": {
+    "maxChapters": 8,
+    "maxChars": 20000
+  }
+}

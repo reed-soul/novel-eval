@@ -1,0 +1,12 @@
+{
+  "id": "web-guimi",
+  "title": "诡秘之主",
+  "author": "爱潜水的乌贼",
+  "genre": "玄幻奇幻",
+  "audience": "青年男性",
+  "profile": "default",
+  "slice": {
+    "maxChapters": 8,
+    "maxChars": 20000
+  }
+}

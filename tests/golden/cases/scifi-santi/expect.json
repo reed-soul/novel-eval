@@ -1,0 +1,64 @@
+{
+  "status": "seeded_baseline",
+  "toleranceNote": "机器首跑种子基线（±10）。人工审阅后改为 active，可收紧区间。",
+  "seededFrom": {
+    "totalScore": 86,
+    "grade": "A",
+    "dimensions": {
+      "storyStructure": 88,
+      "characterization": 85,
+      "writingQuality": 87,
+      "emotionalResonance": 82,
+      "marketPotential": 78,
+      "thematicDepth": 91,
+      "originality": 89,
+      "pacingRetention": 84
+    },
+    "seededAt": "2026-07-17"
+  },
+  "overall": {
+    "min": 76,
+    "max": 96
+  },
+  "gradeAllowlist": [
+    "S",
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
+  "dimensions": {
+    "storyStructure": {
+      "min": 78,
+      "max": 98
+    },
+    "characterization": {
+      "min": 75,
+      "max": 95
+    },
+    "writingQuality": {
+      "min": 77,
+      "max": 97
+    },
+    "emotionalResonance": {
+      "min": 72,
+      "max": 92
+    },
+    "marketPotential": {
+      "min": 68,
+      "max": 88
+    },
+    "thematicDepth": {
+      "min": 81,
+      "max": 100
+    },
+    "originality": {
+      "min": 79,
+      "max": 99
+    },
+    "pacingRetention": {
+      "min": 74,
+      "max": 94
+    }
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "caseId": "scifi-santi",
+  "totalScore": 86,
+  "grade": "A",
+  "dimensions": {
+    "storyStructure": 88,
+    "characterization": 85,
+    "writingQuality": 87,
+    "emotionalResonance": 82,
+    "marketPotential": 78,
+    "thematicDepth": 91,
+    "originality": 89,
+    "pacingRetention": 84
+  },
+  "costRmb": 0.20845000000000002,
+  "seededAt": "2026-07-17",
+  "slice": {
+    "chapterCount": 2,
+    "charCount": 10551,
+    "titles": [
+      "第一章 科学边界",
+      "第二章 台　球"
+    ]
+  }
+}

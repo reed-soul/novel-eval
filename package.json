@@ -13,6 +13,7 @@
     "preinstall": "npx only-allow pnpm",
     "eval": "tsx packages/eval/src/index.ts evaluate",
     "compare": "tsx packages/eval/src/index.ts compare",
+    "golden": "tsx packages/eval/src/index.ts golden",
     "write": "tsx packages/writer/src/index.ts write",
     "web": "tsx packages/web/server/index.ts",
     "web:dev": "pnpm --filter @novel-eval/web dev",
