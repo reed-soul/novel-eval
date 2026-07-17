@@ -21,11 +21,16 @@ import { projectId } from './domain/ids.ts';
 import { PlanningRepository } from './repositories/planning-repository.ts';
 import { WriterApplication } from './services/writer-application.ts';
 import {
+  RevisionTaskService,
+  isRevisionTaskStatus,
+} from './services/revision-task-service.ts';
+import { REVISION_TASK_STATUSES } from './repositories/revision-task-repository.ts';
+import {
   completeProjectIfFullyWritten,
   finalizeExhaustedResumeJob,
 } from './project-completion.ts';
 import { readFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import * as readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import { isServerRunning, startApiJob, streamJobEvents } from './api-client.ts';
@@ -129,7 +134,46 @@ interface ResumeArgs {
   engine?: string;
 }
 
-type CliArgs = InitArgs | ImportBibleArgs | OutlineArgs | ChapterArgs | AutoArgs | ApprovePlanningArgs | StatusArgs | ResumeArgs | { command: 'list' } | { command: 'help' };
+interface RevisionTasksImportArgs {
+  command: 'revision-tasks';
+  action: 'import';
+  projectId: string;
+  fromEval: string;
+  replaceOpen?: boolean;
+}
+
+interface RevisionTasksListArgs {
+  command: 'revision-tasks';
+  action: 'list';
+  projectId: string;
+  status?: string;
+}
+
+interface RevisionTasksSetStatusArgs {
+  command: 'revision-tasks';
+  action: 'set-status';
+  projectId: string;
+  taskId: string;
+  status: string;
+}
+
+type RevisionTasksArgs =
+  | RevisionTasksImportArgs
+  | RevisionTasksListArgs
+  | RevisionTasksSetStatusArgs;
+
+type CliArgs =
+  | InitArgs
+  | ImportBibleArgs
+  | OutlineArgs
+  | ChapterArgs
+  | AutoArgs
+  | ApprovePlanningArgs
+  | StatusArgs
+  | ResumeArgs
+  | RevisionTasksArgs
+  | { command: 'list' }
+  | { command: 'help' };
 
 function parseArgs(argv: string[]): CliArgs {
   // argv = [node, script, ('write'), ('--'), command, ...rest]
@@ -253,6 +297,51 @@ function parseArgs(argv: string[]): CliArgs {
     return args;
   }
 
+  if (cmd === 'revision-tasks') {
+    const [action, ...actionRest] = rest;
+    if (action === 'import') {
+      const projectIdValue = actionRest.find((a) => !a.startsWith('--'));
+      if (!projectIdValue) return { command: 'help' };
+      const args: RevisionTasksImportArgs = {
+        command: 'revision-tasks',
+        action: 'import',
+        projectId: projectIdValue,
+        fromEval: '',
+      };
+      for (let i = 0; i < actionRest.length; i++) {
+        if (actionRest[i] === '--from-eval') args.fromEval = actionRest[++i] ?? '';
+        else if (actionRest[i] === '--replace-open') args.replaceOpen = true;
+      }
+      return args;
+    }
+    if (action === 'list') {
+      const projectIdValue = actionRest.find((a) => !a.startsWith('--'));
+      if (!projectIdValue) return { command: 'help' };
+      const args: RevisionTasksListArgs = {
+        command: 'revision-tasks',
+        action: 'list',
+        projectId: projectIdValue,
+      };
+      for (let i = 0; i < actionRest.length; i++) {
+        if (actionRest[i] === '--status') args.status = actionRest[++i];
+      }
+      return args;
+    }
+    if (action === 'set-status') {
+      const positionals = actionRest.filter((a) => !a.startsWith('--'));
+      const [projectIdValue, taskId, status] = positionals;
+      if (!projectIdValue || !taskId || !status) return { command: 'help' };
+      return {
+        command: 'revision-tasks',
+        action: 'set-status',
+        projectId: projectIdValue,
+        taskId,
+        status,
+      };
+    }
+    return { command: 'help' };
+  }
+
   return { command: 'help' };
 }
 
@@ -269,6 +358,9 @@ function printHelp(): void {
   novel-eval write auto         --title ... --genre ... --audience ... --topic ... --chapters N
   novel-eval write status       <projectId>
   novel-eval write list
+  novel-eval write revision-tasks import <projectId> --from-eval <result.json> [--replace-open]
+  novel-eval write revision-tasks list <projectId> [--status open]
+  novel-eval write revision-tasks set-status <projectId> <taskId> <status>
 
 【两种创作模式】
   init        适合「只有一句话/一个想法」的创作者——AI 用雪花法从 topic 自动发散出角色/世界观/情节。
@@ -315,6 +407,11 @@ auto（全自动：bible → 蓝图 → 章节 + 质量门槛）：
   --max-revise <N>    质量门槛重写上限（默认 2）
   --approve-planning  必填：在 bible 和 outline 生成后显式批准规划
   -y, --yes           跳过确认屏
+
+revision-tasks（评估建议 → 可审阅修订清单，不自动改写正文）：
+  import              从评估 result JSON 导入 suggestions
+  list                列出项目修订任务
+  set-status          更新任务状态（open|in_progress|done|dismissed）
 
 通用选项（适用于 init/outline/chapter/resume/auto）：
   --engine <name>     指定引擎覆盖 engines.yml 默认值（如 bigmodel | deepseek）
@@ -528,6 +625,72 @@ function runList(): void {
     for (const p of projects) {
       console.log(`  ${p.id.slice(0, 8)}  ${p.title.padEnd(20)} ${p.status.padEnd(12)} ${p.createdAt.slice(0, 10)}`);
     }
+  } finally {
+    closeDb(db);
+  }
+}
+
+function runRevisionTasks(args: RevisionTasksArgs): void {
+  const db = openConfiguredDb();
+  try {
+    const service = new RevisionTaskService(db);
+    if (args.action === 'import') {
+      if (!args.fromEval) {
+        console.error('错误：revision-tasks import 需要 --from-eval <result.json>');
+        process.exit(1);
+      }
+      const raw = JSON.parse(readFileSync(resolve(args.fromEval), 'utf-8')) as unknown;
+      const envelope = (typeof raw === 'object' && raw !== null ? raw : {}) as {
+        suggestions?: unknown[];
+        result?: { suggestions?: unknown[] };
+      };
+      const outcome = service.importFromEval({
+        projectId: args.projectId,
+        suggestions: Array.isArray(envelope.suggestions) ? envelope.suggestions : undefined,
+        result: envelope.result
+          ?? (Array.isArray(envelope.suggestions) ? undefined : envelope),
+        replaceOpen: args.replaceOpen === true,
+      });
+      console.log(`✓ 导入修订任务 ${outcome.created.length} 条（dismissed open: ${outcome.dismissedOpenCount}）`);
+      for (const task of outcome.created) {
+        console.log(`  ${task.id.slice(0, 8)}  [${task.scope}] ${task.dimension ?? '-'}  ${task.content.slice(0, 60)}`);
+      }
+      return;
+    }
+
+    if (args.action === 'list') {
+      if (args.status !== undefined && !isRevisionTaskStatus(args.status)) {
+        console.error(`错误：非法 status ${args.status}；期望 ${REVISION_TASK_STATUSES.join('|')}`);
+        process.exit(1);
+      }
+      const tasks = service.list(
+        args.projectId,
+        args.status && isRevisionTaskStatus(args.status) ? { status: args.status } : undefined,
+      );
+      if (!tasks.length) {
+        console.log('暂无修订任务。');
+        return;
+      }
+      console.log(`修订任务（${tasks.length}）：\n`);
+      for (const task of tasks) {
+        console.log(
+          `  ${task.id.slice(0, 8)}  ${task.status.padEnd(12)} [${task.scope}] ${task.dimension ?? '-'}`,
+        );
+        console.log(`           ${task.content}`);
+      }
+      return;
+    }
+
+    if (!isRevisionTaskStatus(args.status)) {
+      console.error(`错误：非法 status ${args.status}；期望 ${REVISION_TASK_STATUSES.join('|')}`);
+      process.exit(1);
+    }
+    const task = service.setStatus({
+      projectId: args.projectId,
+      taskId: args.taskId,
+      status: args.status,
+    });
+    console.log(`✓ ${task.id.slice(0, 8)} → ${task.status}`);
   } finally {
     closeDb(db);
   }
@@ -1115,6 +1278,7 @@ async function main(): Promise<void> {
   if (args.command === 'list') { runList(); return; }
   if (args.command === 'status') { runStatus(args); return; }
   if (args.command === 'approve-planning') { runApprovePlanning(args); return; }
+  if (args.command === 'revision-tasks') { runRevisionTasks(args); return; }
   if (args.command === 'outline') { await runOutline(args); return; }
   if (args.command === 'chapter') { await runChapter(args); return; }
   if (args.command === 'resume') { await runResume(args); return; }

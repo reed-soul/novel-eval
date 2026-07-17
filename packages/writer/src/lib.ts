@@ -166,3 +166,22 @@ export {
   finalizeExhaustedResumeJob,
   isProjectFullyWritten,
 } from './project-completion.ts';
+export {
+  REVISION_TASK_STATUSES,
+  REVISION_TASK_SCOPES,
+  REVISION_TASK_SOURCE_KINDS,
+  RevisionTaskRepository,
+  type RevisionTask,
+  type RevisionTaskStatus,
+  type RevisionTaskScope,
+  type RevisionTaskSourceKind,
+  type RevisionTaskExcerptRef,
+  type CreateRevisionTaskInput,
+} from './repositories/revision-task-repository.ts';
+export {
+  RevisionTaskService,
+  isRevisionTaskStatus,
+  type ImportFromEvalInput,
+  type ImportFromEvalResult,
+  type SetRevisionTaskStatusInput,
+} from './services/revision-task-service.ts';
