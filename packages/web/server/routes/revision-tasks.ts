@@ -39,6 +39,7 @@ export function revisionTaskRoutes(db: DB) {
       result?: { suggestions?: unknown[] } | null;
       sourceEvalTaskId?: string | null;
       replaceOpen?: boolean;
+      maxSuggestions?: number;
     };
     try {
       body = await c.req.json();
@@ -53,6 +54,9 @@ export function revisionTaskRoutes(db: DB) {
         result: body.result,
         sourceEvalTaskId: body.sourceEvalTaskId,
         replaceOpen: body.replaceOpen === true,
+        maxSuggestions: typeof body.maxSuggestions === 'number'
+          ? body.maxSuggestions
+          : undefined,
       });
       return c.json({
         tasks: outcome.created,
@@ -115,6 +119,17 @@ export function revisionTaskRoutes(db: DB) {
       }
       const task = service.setStatus({ projectId, taskId, status: body.status });
       return c.json({ task });
+    } catch (error: unknown) {
+      return mapError(error);
+    }
+  });
+
+  app.post('/:id/revision-tasks/:taskId/open-correction', (c) => {
+    const projectId = c.req.param('id');
+    const taskId = c.req.param('taskId');
+    try {
+      const opened = service.openCorrection({ projectId, taskId });
+      return c.json(opened);
     } catch (error: unknown) {
       return mapError(error);
     }

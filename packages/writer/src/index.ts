@@ -25,6 +25,8 @@ import {
   isRevisionTaskStatus,
 } from './services/revision-task-service.ts';
 import { REVISION_TASK_STATUSES } from './repositories/revision-task-repository.ts';
+import { extractStoryState } from './chapter/finalizer.ts';
+import { chapterRevisionId } from './domain/ids.ts';
 import {
   completeProjectIfFullyWritten,
   finalizeExhaustedResumeJob,
@@ -140,6 +142,7 @@ interface RevisionTasksImportArgs {
   projectId: string;
   fromEval: string;
   replaceOpen?: boolean;
+  maxSuggestions?: number;
 }
 
 interface RevisionTasksListArgs {
@@ -157,10 +160,25 @@ interface RevisionTasksSetStatusArgs {
   status: string;
 }
 
+interface RevisionTasksOpenCorrectionArgs {
+  command: 'revision-tasks';
+  action: 'open-correction';
+  projectId: string;
+  taskId: string;
+}
+
 type RevisionTasksArgs =
   | RevisionTasksImportArgs
   | RevisionTasksListArgs
-  | RevisionTasksSetStatusArgs;
+  | RevisionTasksSetStatusArgs
+  | RevisionTasksOpenCorrectionArgs;
+
+interface FinalizeDraftArgs {
+  command: 'finalize-draft';
+  projectId: string;
+  revisionId: string;
+  engine?: string;
+}
 
 type CliArgs =
   | InitArgs
@@ -172,6 +190,7 @@ type CliArgs =
   | StatusArgs
   | ResumeArgs
   | RevisionTasksArgs
+  | FinalizeDraftArgs
   | { command: 'list' }
   | { command: 'help' };
 
@@ -311,6 +330,9 @@ function parseArgs(argv: string[]): CliArgs {
       for (let i = 0; i < actionRest.length; i++) {
         if (actionRest[i] === '--from-eval') args.fromEval = actionRest[++i] ?? '';
         else if (actionRest[i] === '--replace-open') args.replaceOpen = true;
+        else if (actionRest[i] === '--max-suggestions') {
+          args.maxSuggestions = parseInt(actionRest[++i] ?? '', 10);
+        }
       }
       return args;
     }
@@ -339,7 +361,34 @@ function parseArgs(argv: string[]): CliArgs {
         status,
       };
     }
+    if (action === 'open-correction') {
+      const positionals = actionRest.filter((a) => !a.startsWith('--'));
+      const [projectIdValue, taskId] = positionals;
+      if (!projectIdValue || !taskId) return { command: 'help' };
+      return {
+        command: 'revision-tasks',
+        action: 'open-correction',
+        projectId: projectIdValue,
+        taskId,
+      };
+    }
     return { command: 'help' };
+  }
+
+  if (cmd === 'finalize-draft') {
+    const projectIdValue = rest.find((a) => !a.startsWith('--'));
+    if (!projectIdValue) return { command: 'help' };
+    const args: FinalizeDraftArgs = {
+      command: 'finalize-draft',
+      projectId: projectIdValue,
+      revisionId: '',
+    };
+    for (let i = 0; i < rest.length; i++) {
+      if (rest[i] === '--revision') args.revisionId = rest[++i] ?? '';
+      else if (rest[i] === '--engine') args.engine = rest[++i];
+    }
+    if (!args.revisionId) return { command: 'help' };
+    return args;
   }
 
   return { command: 'help' };
@@ -358,9 +407,11 @@ function printHelp(): void {
   novel-eval write auto         --title ... --genre ... --audience ... --topic ... --chapters N
   novel-eval write status       <projectId>
   novel-eval write list
-  novel-eval write revision-tasks import <projectId> --from-eval <result.json> [--replace-open]
+  novel-eval write revision-tasks import <projectId> --from-eval <result.json> [--replace-open] [--max-suggestions N]
   novel-eval write revision-tasks list <projectId> [--status open]
   novel-eval write revision-tasks set-status <projectId> <taskId> <status>
+  novel-eval write revision-tasks open-correction <projectId> <taskId>
+  novel-eval write finalize-draft <projectId> --revision <draftRevisionId>
 
 【两种创作模式】
   init        适合「只有一句话/一个想法」的创作者——AI 用雪花法从 topic 自动发散出角色/世界观/情节。
@@ -650,6 +701,7 @@ function runRevisionTasks(args: RevisionTasksArgs): void {
         result: envelope.result
           ?? (Array.isArray(envelope.suggestions) ? undefined : envelope),
         replaceOpen: args.replaceOpen === true,
+        maxSuggestions: args.maxSuggestions,
       });
       console.log(`✓ 导入修订任务 ${outcome.created.length} 条（dismissed open: ${outcome.dismissedOpenCount}）`);
       for (const task of outcome.created) {
@@ -681,6 +733,18 @@ function runRevisionTasks(args: RevisionTasksArgs): void {
       return;
     }
 
+    if (args.action === 'open-correction') {
+      const opened = service.openCorrection({
+        projectId: args.projectId,
+        taskId: args.taskId,
+      });
+      console.log(`✓ 修订任务 → 第 ${opened.chapterNumber} 章修正`);
+      console.log(`  task：${opened.task.id.slice(0, 8)} → ${opened.task.status}`);
+      console.log(`  path：${opened.path}`);
+      console.log(`  下一步：在 Web 打开该 path，或 POST /api/projects/.../chapters/${opened.chapterNumber}/correct`);
+      return;
+    }
+
     if (!isRevisionTaskStatus(args.status)) {
       console.error(`错误：非法 status ${args.status}；期望 ${REVISION_TASK_STATUSES.join('|')}`);
       process.exit(1);
@@ -691,6 +755,36 @@ function runRevisionTasks(args: RevisionTasksArgs): void {
       status: args.status,
     });
     console.log(`✓ ${task.id.slice(0, 8)} → ${task.status}`);
+  } finally {
+    closeDb(db);
+  }
+}
+
+async function runFinalizeDraft(args: FinalizeDraftArgs): Promise<void> {
+  const config = loadWriterConfig(args.engine ? { engine: args.engine } : undefined);
+  const db = openConfiguredDb();
+  try {
+    const app = createApp(db);
+    const engine = createEngine(config.engine);
+    const published = await app.finalizeDraftRevision({
+      projectId: projectId(args.projectId),
+      candidateRevisionId: chapterRevisionId(args.revisionId),
+      model: config.engine.model,
+      promptVersion: 'state-v1',
+      onProgress: (step, msg) => console.log(`  [${step}] ${msg}`),
+      extractState: async (input) => extractStoryState({
+        engine,
+        previousState: input.previousState,
+        chapterTitle: input.title,
+        chapterContent: input.content,
+        chapterRevisionId: input.chapterRevisionId,
+        outlinePosition: input.outlinePosition,
+        promptVersion: 'state-v1',
+      }),
+    });
+    console.log(`✓ draft 已 finalize / 发布`);
+    console.log(`  chapterRevision：${published.chapterRevisionId}`);
+    console.log(`  storyStateRevision：${published.storyStateRevisionId}`);
   } finally {
     closeDb(db);
   }
@@ -1293,6 +1387,7 @@ async function main(): Promise<void> {
   if (args.command === 'status') { runStatus(args); return; }
   if (args.command === 'approve-planning') { runApprovePlanning(args); return; }
   if (args.command === 'revision-tasks') { runRevisionTasks(args); return; }
+  if (args.command === 'finalize-draft') { await runFinalizeDraft(args); return; }
   if (args.command === 'outline') { await runOutline(args); return; }
   if (args.command === 'chapter') { await runChapter(args); return; }
   if (args.command === 'resume') { await runResume(args); return; }

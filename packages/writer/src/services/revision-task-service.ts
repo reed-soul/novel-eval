@@ -13,6 +13,9 @@ import {
   type RevisionTaskStatus,
 } from '../repositories/revision-task-repository.ts';
 import { projectId as toProjectId } from '../domain/ids.ts';
+import {
+  resolveSingleChapterFromTask,
+} from '../lib/eval-chapter-ref.ts';
 
 export interface ImportFromEvalInput {
   projectId: string;
@@ -22,6 +25,11 @@ export interface ImportFromEvalInput {
   sourceEvalTaskId?: string | null;
   /** When true, dismiss existing `open` tasks before inserting. */
   replaceOpen?: boolean;
+  /**
+   * Cap imported suggestions after prioritizing chapter-scoped ones.
+   * Default: no cap. E2E found 18 suggestions for 3 chapters — callers may pass 8–12.
+   */
+  maxSuggestions?: number;
   now?: string;
 }
 
@@ -77,6 +85,21 @@ function normalizeSuggestion(raw: unknown): EvaluationSuggestionDto | null {
   return suggestion;
 }
 
+function prioritizeSuggestions(
+  suggestions: EvaluationSuggestionDto[],
+): EvaluationSuggestionDto[] {
+  const chapterScoped: EvaluationSuggestionDto[] = [];
+  const multiScoped: EvaluationSuggestionDto[] = [];
+  const bookScoped: EvaluationSuggestionDto[] = [];
+  for (const suggestion of suggestions) {
+    const count = suggestion.relatedChapters?.length ?? 0;
+    if (count === 1) chapterScoped.push(suggestion);
+    else if (count > 1) multiScoped.push(suggestion);
+    else bookScoped.push(suggestion);
+  }
+  return [...chapterScoped, ...multiScoped, ...bookScoped];
+}
+
 function resolveSuggestions(input: ImportFromEvalInput): EvaluationSuggestionDto[] {
   const fromList = input.suggestions;
   const fromResult = input.result?.suggestions;
@@ -89,7 +112,15 @@ function resolveSuggestions(input: ImportFromEvalInput): EvaluationSuggestionDto
     const normalized = normalizeSuggestion(item);
     if (normalized) suggestions.push(normalized);
   }
-  return suggestions;
+  const ordered = prioritizeSuggestions(suggestions);
+  if (
+    typeof input.maxSuggestions === 'number'
+    && Number.isInteger(input.maxSuggestions)
+    && input.maxSuggestions >= 0
+  ) {
+    return ordered.slice(0, input.maxSuggestions);
+  }
+  return ordered;
 }
 
 export function isRevisionTaskStatus(value: unknown): value is RevisionTaskStatus {
@@ -181,5 +212,43 @@ export class RevisionTaskService {
       throw new ValidationError(`revision task not found: ${input.taskId}`);
     }
     return updated;
+  }
+
+  /**
+   * Resolve a chapter-scoped revision task to an outline chapter number and
+   * mark the task in_progress. Does not start LLM correction.
+   */
+  openCorrection(input: {
+    projectId: string;
+    taskId: string;
+    now?: string;
+  }): {
+    task: RevisionTask;
+    chapterNumber: number;
+    path: string;
+  } {
+    const task = this.get(input.projectId, input.taskId);
+    if (!task) {
+      throw new ValidationError(`revision task not found: ${input.taskId}`);
+    }
+    const resolved = resolveSingleChapterFromTask({
+      excerptRef: task.excerptRef,
+      relatedChapters: task.relatedChapters,
+      scope: task.scope,
+    });
+    if ('error' in resolved) {
+      throw new ValidationError(resolved.error);
+    }
+    const updated = this.setStatus({
+      projectId: input.projectId,
+      taskId: input.taskId,
+      status: 'in_progress',
+      now: input.now,
+    });
+    return {
+      task: updated,
+      chapterNumber: resolved.chapterNumber,
+      path: `/projects/${input.projectId}/chapters/${resolved.chapterNumber}/correction`,
+    };
   }
 }

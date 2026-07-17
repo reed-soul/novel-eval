@@ -41,7 +41,7 @@ import {
   type ChapterRevisionId,
   type ProjectId,
 } from '../domain/ids.ts';
-import { BudgetExceededError, ValidationError } from '../domain/errors.ts';
+import { BudgetExceededError, StateExtractionError, ValidationError } from '../domain/errors.ts';
 import type { StoryState, StoryStateDelta } from '../domain/story-state.ts';
 import { getProject } from '../project.ts';
 import {
@@ -213,6 +213,18 @@ export interface RebuildStoryStateInput {
   extractState: (input: RebuildExtractInput) => Promise<ExtractStoryStateResult>;
   ownerId?: string;
   ttlMs?: number;
+}
+
+export interface FinalizeDraftRevisionInput {
+  projectId: ProjectId;
+  candidateRevisionId: ChapterRevisionId;
+  extractState: (input: RebuildExtractInput) => Promise<ExtractStoryStateResult>;
+  extractAttempts?: number;
+  model?: string;
+  promptVersion?: string;
+  ownerId?: string;
+  ttlMs?: number;
+  onProgress?: (step: string, msg: string) => void;
 }
 
 export class WriterApplication {
@@ -733,6 +745,135 @@ export class WriterApplication {
       updateJobStatus(this.db, jobId, 'failed', {
         errorType: error instanceof Error ? error.name : 'Error',
         error: error instanceof Error ? error.message : 'publish edit failed',
+      });
+      throw error;
+    } finally {
+      this.leases.release({ leaseId: lease.id, ownerId });
+    }
+  }
+
+  /**
+   * Re-run story-state extract + publish for an existing draft revision
+   * (no content regeneration). Used after StateExtractionError keep-draft.
+   */
+  async finalizeDraftRevision(input: FinalizeDraftRevisionInput): Promise<PublishResult> {
+    const ownerId = input.ownerId ?? this.defaultOwnerId;
+    const ttlMs = input.ttlMs ?? this.leaseTtlMs;
+    const extractAttempts = Math.max(1, Math.floor(input.extractAttempts ?? 3));
+    const promptVersion = input.promptVersion ?? 'state-v1';
+    const model = input.model ?? 'finalize';
+
+    const candidate = this.chapters.getRevision(input.candidateRevisionId);
+    if (!candidate) {
+      throw new ValidationError(`draft revision not found: ${input.candidateRevisionId}`);
+    }
+    if (candidate.chapter.projectId !== input.projectId) {
+      throw new ValidationError('draft revision does not belong to this project');
+    }
+    if (candidate.revision.status !== 'draft') {
+      throw new ValidationError(
+        `revision ${input.candidateRevisionId} is ${candidate.revision.status}, expected draft`,
+      );
+    }
+
+    const outlineValue: unknown = this.db.prepare(`
+      SELECT position FROM chapter_outline
+      WHERE id = ? AND project_id = ?
+    `).get(candidate.chapter.outlineId, input.projectId);
+    if (outlineValue === undefined || typeof outlineValue !== 'object' || outlineValue === null) {
+      throw new ValidationError('outline for draft revision not found');
+    }
+    const outlinePosition = Number((outlineValue as { position: unknown }).position);
+    if (!Number.isInteger(outlinePosition) || outlinePosition <= 0) {
+      throw new ValidationError('invalid outline position for draft revision');
+    }
+
+    const jobId = createJobRow(this.db, {
+      projectId: input.projectId,
+      type: 'edit',
+      scope: { from: outlinePosition, to: outlinePosition },
+      engine: 'finalize-draft',
+      model,
+      wordCount: candidate.revision.wordCount,
+      promptVersion,
+    });
+    const lease = this.leases.acquire({
+      projectId: input.projectId,
+      jobId,
+      ownerId,
+      ttlMs,
+      now: this.now(),
+    });
+
+    try {
+      const previousState = outlinePosition === 1
+        ? null
+        : this.states.getCurrentAtPosition(input.projectId, outlinePosition - 1);
+
+      let extraction: ExtractStoryStateResult | null = null;
+      let lastError: unknown;
+      for (let attempt = 1; attempt <= extractAttempts; attempt += 1) {
+        try {
+          input.onProgress?.(
+            `finalize:${outlinePosition}`,
+            attempt === 1
+              ? `状态抽取：第 ${outlinePosition} 章 draft…`
+              : `状态抽取重试 ${attempt}/${extractAttempts}…`,
+          );
+          extraction = await input.extractState({
+            outlinePosition,
+            previousState: previousState?.state ?? null,
+            previousStateRevisionId: previousState?.id ?? null,
+            chapterRevisionId: candidate.revision.id,
+            title: candidate.revision.title,
+            content: candidate.revision.content,
+          });
+          break;
+        } catch (error: unknown) {
+          lastError = error;
+          const detail = error instanceof Error ? error.message : 'state extraction failed';
+          input.onProgress?.(
+            `finalize:${outlinePosition}`,
+            `状态抽取失败（${attempt}/${extractAttempts}）：${detail}`,
+          );
+        }
+      }
+
+      if (!extraction) {
+        const detail = lastError instanceof Error ? lastError.message : 'state extraction failed';
+        throw new StateExtractionError(detail, {
+          draftRevisionId: candidate.revision.id,
+          attempts: extractAttempts,
+        });
+      }
+
+      updateJobUsage(this.db, jobId, {
+        inputTokens: extraction.usage.inputTokens,
+        outputTokens: extraction.usage.outputTokens,
+        costRmb: extraction.usage.costRmb,
+        model: extraction.usage.model,
+        durationMs: extraction.usage.durationMs,
+      });
+
+      const published = this.publication.publishCandidate({
+        lease,
+        candidateRevisionId: candidate.revision.id,
+        previousStateRevisionId: previousState?.id ?? null,
+        state: extraction.state,
+        delta: extraction.delta,
+        model: extraction.model,
+        promptVersion: extraction.promptVersion,
+        checkpoint: {
+          jobId,
+          outlinePosition,
+        },
+      });
+      updateJobStatus(this.db, jobId, 'completed');
+      return published;
+    } catch (error: unknown) {
+      updateJobStatus(this.db, jobId, 'failed', {
+        errorType: error instanceof Error ? error.name : 'Error',
+        error: error instanceof Error ? error.message : 'finalize draft failed',
       });
       throw error;
     } finally {

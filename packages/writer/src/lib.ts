@@ -111,6 +111,7 @@ export {
   type PublishChapterEditWithExtractInput,
   type RebuildStoryStateInput,
   type AdoptCorrectionDraftInput,
+  type FinalizeDraftRevisionInput,
 } from './services/writer-application.ts';
 export type { StaleImpact, PublishResult } from './services/chapter-publication-service.ts';
 export type { RebuildResult } from './services/state-rebuild-service.ts';
@@ -199,3 +200,7 @@ export {
   type ImportFromEvalResult,
   type SetRevisionTaskStatusInput,
 } from './services/revision-task-service.ts';
+export {
+  resolveEvalChapterRef,
+  resolveSingleChapterFromTask,
+} from './lib/eval-chapter-ref.ts';

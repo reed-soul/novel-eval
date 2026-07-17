@@ -4,6 +4,7 @@ import { it } from 'node:test';
 import type { AIAgentAdapter, CallResult, RunOptions } from '@novel-eval/shared';
 
 import type { DB } from '../../src/db.ts';
+import { StateExtractionError } from '../../src/domain/errors.ts';
 import {
   chapterId,
   chapterRevisionId,
@@ -1169,4 +1170,109 @@ it('importBible acquires and releases a project write lease', (t) => {
     }),
     (error: unknown) => error instanceof Error && /lease/i.test(error.message),
   );
+});
+
+it('finalizeDraftRevision publishes a kept draft after extract succeeds', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const app = seedProjectWithApprovedRange(testDb.db, [1]);
+  const chapters = new ChapterRepository(testDb.db);
+  const draftId = fixtureChapterRevisionId;
+  chapters.saveCandidate({
+    chapter: {
+      id: fixtureChapterId,
+      projectId: fixtureProjectId,
+      outlineId: outlineId('outline-1'),
+      createdAt: fixtureTime,
+    },
+    revision: {
+      id: draftId,
+      revisionNumber: 1,
+      source: 'generated',
+      parentRevisionId: null,
+      title: '第 1 章',
+      content: '被保留的 draft 正文',
+      wordCount: 10,
+      status: 'draft',
+      generationRunId: 'run-draft-1',
+      createdAt: fixtureTime,
+    },
+  });
+
+  let extractCalls = 0;
+  const published = await app.finalizeDraftRevision({
+    projectId: fixtureProjectId,
+    candidateRevisionId: draftId,
+    extractAttempts: 3,
+    extractState: async () => {
+      extractCalls += 1;
+      if (extractCalls < 2) throw new Error('transient');
+      return {
+        state: emptyState('draft-finalize'),
+        delta: emptyDelta('draft-finalize'),
+        usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'extract', durationMs: 1 },
+        model: 'extract',
+        promptVersion: 'state-v1',
+      };
+    },
+  });
+
+  assert.equal(extractCalls, 2);
+  assert.equal(published.chapterRevisionId, draftId);
+  const revision = chapters.getRevision(draftId);
+  assert.ok(revision);
+  assert.equal(revision.revision.status, 'published');
+  assert.equal(revision.chapter.activeRevisionId, draftId);
+  assert.equal(countLeases(testDb.db, fixtureProjectId), 0);
+});
+
+it('finalizeDraftRevision keeps draft when extract still fails', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const app = seedProjectWithApprovedRange(testDb.db, [1]);
+  const chapters = new ChapterRepository(testDb.db);
+  const draftId = chapterRevisionId('draft-keep-on-fail');
+  chapters.saveCandidate({
+    chapter: {
+      id: chapterId('chapter-keep-on-fail'),
+      projectId: fixtureProjectId,
+      outlineId: outlineId('outline-1'),
+      createdAt: fixtureTime,
+    },
+    revision: {
+      id: draftId,
+      revisionNumber: 1,
+      source: 'generated',
+      parentRevisionId: null,
+      title: '第 1 章',
+      content: '仍应保留的 draft',
+      wordCount: 8,
+      status: 'draft',
+      generationRunId: null,
+      createdAt: fixtureTime,
+    },
+  });
+
+  await assert.rejects(
+    () => app.finalizeDraftRevision({
+      projectId: fixtureProjectId,
+      candidateRevisionId: draftId,
+      extractAttempts: 2,
+      extractState: async () => {
+        throw new Error('still broken');
+      },
+    }),
+    (error: unknown) => {
+      assert.ok(error instanceof StateExtractionError);
+      assert.equal(error.draftRevisionId, draftId);
+      assert.equal(error.attempts, 2);
+      return true;
+    },
+  );
+
+  const revision = chapters.getRevision(draftId);
+  assert.ok(revision);
+  assert.equal(revision.revision.status, 'draft');
+  assert.equal(revision.chapter.activeRevisionId, null);
+  assert.equal(countLeases(testDb.db, fixtureProjectId), 0);
 });
