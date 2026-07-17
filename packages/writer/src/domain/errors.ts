@@ -41,9 +41,17 @@ export class StaleDependencyError extends Error {
 }
 
 export class StateExtractionError extends Error {
-  constructor(message: string) {
+  readonly draftRevisionId?: string;
+  readonly attempts?: number;
+
+  constructor(
+    message: string,
+    options?: { draftRevisionId?: string; attempts?: number },
+  ) {
     super(message);
     this.name = 'StateExtractionError';
+    this.draftRevisionId = options?.draftRevisionId;
+    this.attempts = options?.attempts;
   }
 }
 

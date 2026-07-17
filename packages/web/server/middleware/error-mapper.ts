@@ -10,12 +10,15 @@ import {
   BudgetExceededError,
   EvaluationIncompleteError,
   ChapterQualityRejectedError,
+  StateExtractionError,
 } from '@novel-eval/writer';
 
 export interface HttpErrorBody {
   status: number;
   code: string;
   message: string;
+  draftRevisionId?: string;
+  attempts?: number;
 }
 
 function errorName(error: unknown): string | undefined {
@@ -76,6 +79,19 @@ export function toHttpError(error: unknown): HttpErrorBody {
       message: errorMessage(error),
     };
   }
+  if (
+    error instanceof StateExtractionError
+    || errorName(error) === 'StateExtractionError'
+  ) {
+    const extraction = error as StateExtractionError;
+    return {
+      status: 422,
+      code: 'StateExtractionError',
+      message: errorMessage(error),
+      draftRevisionId: extraction.draftRevisionId,
+      attempts: extraction.attempts,
+    };
+  }
 
   return {
     status: 500,
@@ -89,10 +105,16 @@ export function httpErrorJson(mapped: HttpErrorBody): {
   code: string;
   message: string;
   error: string;
+  draftRevisionId?: string;
+  attempts?: number;
 } {
   return {
     code: mapped.code,
     message: mapped.message,
     error: mapped.message,
+    ...(mapped.draftRevisionId !== undefined
+      ? { draftRevisionId: mapped.draftRevisionId }
+      : {}),
+    ...(mapped.attempts !== undefined ? { attempts: mapped.attempts } : {}),
   };
 }

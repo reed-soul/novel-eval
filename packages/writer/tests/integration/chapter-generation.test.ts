@@ -4,7 +4,7 @@ import { it } from 'node:test';
 import type { AIAgentAdapter, CallResult, RunOptions } from '@novel-eval/shared';
 
 import type { DB } from '../../src/db.ts';
-import { ChapterQualityRejectedError, StaleDependencyError } from '../../src/domain/errors.ts';
+import { ChapterQualityRejectedError, StaleDependencyError, StateExtractionError } from '../../src/domain/errors.ts';
 import {
   chapterId,
   chapterRevisionId,
@@ -279,8 +279,6 @@ it('publishes chapter when provider and extraction succeed', async (t) => {
   });
 
   assert.equal(outcome.kind, 'published');
-  // Outcome is published-only; failures throw after persisting rejected candidates.
-  assert.equal('reason' in outcome, false);
   const published = chapters.getRevision(outcome.chapterRevisionId);
   assert.ok(published);
   assert.equal(published.revision.status, 'published');
@@ -288,13 +286,14 @@ it('publishes chapter when provider and extraction succeed', async (t) => {
   assert.ok(states.getCurrentAtPosition(fixtureProjectId, 3));
 });
 
-it('saves rejected candidate when extraction fails after content exists', async (t) => {
+it('keeps draft candidate when extraction fails after retries', async (t) => {
   const testDb = createTestDb();
   t.after(() => testDb.cleanup());
   const { lease, chapters, states, generation } = seedProject(testDb.db);
   const activeBefore = chapters.getByOutlinePosition(fixtureProjectId, 2)?.activeRevisionId
     ?? null;
   const stateBefore = states.getCurrentAtPosition(fixtureProjectId, 2);
+  let extractCalls = 0;
 
   await assert.rejects(
     () => generation.generateNext({
@@ -303,22 +302,27 @@ it('saves rejected candidate when extraction fails after content exists', async 
       lease,
       engine: contentEngine('已生成但定稿失败的正文'),
       wordCount: 100,
+      extractAttempts: 3,
       extractState: async () => {
+        extractCalls += 1;
         throw new Error('state extraction failed');
       },
     }),
     (error: unknown) => {
-      assert.ok(error instanceof Error);
+      assert.ok(error instanceof StateExtractionError);
       assert.match(error.message, /extraction|state/i);
+      assert.equal(typeof error.draftRevisionId, 'string');
+      assert.equal(error.attempts, 3);
       return true;
     },
   );
 
+  assert.equal(extractCalls, 3);
   const chapterThree = chapters.getByOutlinePosition(fixtureProjectId, 3);
   assert.ok(chapterThree);
   const revisions = chapters.listRevisions(chapterThree.id);
   assert.equal(revisions.length, 1);
-  assert.equal(revisions[0]?.status, 'rejected');
+  assert.equal(revisions[0]?.status, 'draft');
   assert.ok(revisions[0]?.content.includes('已生成但定稿失败'));
   assert.equal(chapterThree.activeRevisionId, null);
   assert.deepEqual(
@@ -330,6 +334,51 @@ it('saves rejected candidate when extraction fails after content exists', async 
     chapters.getByOutlinePosition(fixtureProjectId, 2)?.activeRevisionId,
     activeBefore,
   );
+});
+
+it('retries finalize and publishes when a later extract attempt succeeds', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const { lease, chapters, states, generation } = seedProject(testDb.db);
+  let extractCalls = 0;
+  const progress: string[] = [];
+
+  const outcome = await generation.generateNext({
+    projectId: fixtureProjectId,
+    outlinePosition: 3,
+    lease,
+    engine: contentEngine('重试后定稿成功的正文'),
+    wordCount: 100,
+    extractAttempts: 3,
+    onProgress: (_step, msg) => progress.push(msg),
+    extractState: async () => {
+      extractCalls += 1;
+      if (extractCalls < 3) {
+        throw new Error(`transient extract failure ${extractCalls}`);
+      }
+      return {
+        state: emptyState('第3章状态'),
+        delta: emptyDelta('第3章状态'),
+        usage: {
+          inputTokens: 1,
+          outputTokens: 1,
+          costRmb: 0.001,
+          model: 'mock',
+          durationMs: 1,
+        },
+        model: 'mock',
+        promptVersion: 'state-v1',
+      };
+    },
+  });
+
+  assert.equal(extractCalls, 3);
+  assert.equal(outcome.kind, 'published');
+  assert.ok(progress.some((msg) => /状态抽取|重试|finalize/i.test(msg)));
+  const published = chapters.getRevision(outcome.chapterRevisionId);
+  assert.ok(published);
+  assert.equal(published.revision.status, 'published');
+  assert.ok(states.getCurrentAtPosition(fixtureProjectId, 3));
 });
 
 it('saves rejected candidate when provider fails after partial content', async (t) => {

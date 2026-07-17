@@ -66,6 +66,12 @@ export interface GenerateNextInput {
   wordCount: number;
   promptTemplateVersion?: string;
   qualityReview?: QualityReviewOptions;
+  /**
+   * How many times to attempt story-state extraction before failing.
+   * Default 3. Draft candidate is kept on exhaustion (not rejected).
+   */
+  extractAttempts?: number;
+  onProgress?: (step: string, msg: string) => void;
   generateContent?: (
     context: CompiledChapterContext,
     revision?: { attempt: number; feedback?: string },
@@ -299,27 +305,57 @@ export class ChapterGenerationService {
       throw new Error(`Chapter ${input.outlinePosition} has no draft candidate after generation`);
     }
 
-    let extraction: ExtractStoryStateResult;
-    try {
-      extraction = input.extractState
-        ? await input.extractState({
-            context,
-            content,
-            title,
-            chapterRevisionId: candidateRevisionId,
-          })
-        : await extractStoryState({
-            engine: input.engine,
-            previousState: context.previousState,
-            chapterTitle: title,
-            chapterContent: content,
-            chapterRevisionId: candidateRevisionId,
-            outlinePosition: input.outlinePosition,
-          });
-    } catch (error: unknown) {
-      this.markRevisionRejected(candidateRevisionId);
-      const message = error instanceof Error ? error.message : 'state extraction failed';
-      throw new StateExtractionError(message);
+    const extractAttempts = Math.max(1, Math.floor(input.extractAttempts ?? 3));
+    let extraction: ExtractStoryStateResult | null = null;
+    let lastExtractError: unknown;
+    for (let attempt = 1; attempt <= extractAttempts; attempt += 1) {
+      try {
+        if (attempt > 1) {
+          input.onProgress?.(
+            `chapter:${input.outlinePosition}:extract`,
+            `状态抽取重试 ${attempt}/${extractAttempts}…`,
+          );
+        } else {
+          input.onProgress?.(
+            `chapter:${input.outlinePosition}:extract`,
+            `状态抽取：第 ${input.outlinePosition} 章…`,
+          );
+        }
+        extraction = input.extractState
+          ? await input.extractState({
+              context,
+              content,
+              title,
+              chapterRevisionId: candidateRevisionId,
+            })
+          : await extractStoryState({
+              engine: input.engine,
+              previousState: context.previousState,
+              chapterTitle: title,
+              chapterContent: content,
+              chapterRevisionId: candidateRevisionId,
+              outlinePosition: input.outlinePosition,
+            });
+        break;
+      } catch (error: unknown) {
+        lastExtractError = error;
+        const detail = error instanceof Error ? error.message : 'state extraction failed';
+        input.onProgress?.(
+          `chapter:${input.outlinePosition}:extract`,
+          `状态抽取失败（${attempt}/${extractAttempts}）：${detail}`,
+        );
+      }
+    }
+
+    if (!extraction) {
+      // Keep draft so quality-accepted / generated content is not discarded.
+      const detail = lastExtractError instanceof Error
+        ? lastExtractError.message
+        : 'state extraction failed';
+      throw new StateExtractionError(detail, {
+        draftRevisionId: candidateRevisionId,
+        attempts: extractAttempts,
+      });
     }
     addUsage(totalUsage, extraction.usage);
 

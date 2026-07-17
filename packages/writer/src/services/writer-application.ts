@@ -941,6 +941,7 @@ export class WriterApplication {
           wordCount,
           promptTemplateVersion: promptVersion,
           qualityReview,
+          onProgress: (step, msg) => input.onProgress?.(step, msg),
           generateContent: input.generateContent,
           extractState: input.extractState,
         });
