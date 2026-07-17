@@ -105,4 +105,58 @@ describe('revision-task routes', () => {
     const patched = await patchRes.json() as { task: { status: string } };
     assert.equal(patched.task.status, 'done');
   });
+
+  it('open-correction marks chapter-scoped task in_progress', async () => {
+    const project = createProject(db, {
+      title: '打开修正',
+      genreProfile: '都市',
+      targetAudience: '成年',
+      premise: 'open-correction route',
+    });
+    const app = testApp(db);
+
+    const importRes = await app.fetch(new Request(
+      `http://test/api/projects/${project.id}/revision-tasks/from-eval`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          maxSuggestions: 1,
+          suggestions: [
+            {
+              dimension: 'characterization',
+              content: '单章可打开',
+              relatedChapters: ['ch003'],
+            },
+            {
+              dimension: 'thematicDepth',
+              content: '全书应被截断',
+            },
+          ],
+        }),
+      },
+    ));
+    assert.equal(importRes.status, 201);
+    const imported = await importRes.json() as {
+      createdCount: number;
+      tasks: Array<{ id: string; scope: string }>;
+    };
+    assert.equal(imported.createdCount, 1);
+    assert.equal(imported.tasks[0]?.scope, 'chapter');
+    const taskId = imported.tasks[0]!.id;
+
+    const openRes = await app.fetch(new Request(
+      `http://test/api/projects/${project.id}/revision-tasks/${taskId}/open-correction`,
+      { method: 'POST' },
+    ));
+    assert.equal(openRes.status, 200);
+    const opened = await openRes.json() as {
+      chapterNumber: number;
+      path: string;
+      task: { status: string };
+    };
+    assert.equal(opened.chapterNumber, 3);
+    assert.equal(opened.task.status, 'in_progress');
+    assert.match(opened.path, /\/chapters\/3\/correction$/);
+  });
 });

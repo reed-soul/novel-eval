@@ -51,8 +51,9 @@ describe('RevisionTaskService', () => {
 
     assert.equal(outcome.created.length, 3);
     assert.equal(outcome.dismissedOpenCount, 0);
-    assert.equal(outcome.created[0]?.scope, 'volume');
-    assert.equal(outcome.created[1]?.scope, 'chapter');
+    // Chapter-scoped first, then multi-chapter, then book-scoped.
+    assert.equal(outcome.created[0]?.scope, 'chapter');
+    assert.equal(outcome.created[1]?.scope, 'volume');
     assert.equal(outcome.created[2]?.scope, 'book');
 
     const listed = service.list(projectId, { status: 'open' });
@@ -89,6 +90,76 @@ describe('RevisionTaskService', () => {
     assert.equal(done.length, 1);
     assert.equal(dismissed.length, 2);
     assert.equal(open[0]?.content, '对白可再精炼');
+  });
+
+  it('maxSuggestions caps after chapter-scoped prioritization', () => {
+    const outcome = service.importFromEval({
+      projectId,
+      replaceOpen: true,
+      maxSuggestions: 2,
+      suggestions: [
+        { dimension: 'thematicDepth', content: '全书主题弱' },
+        { dimension: 'pacingRetention', content: '跨章节奏', relatedChapters: ['ch-1', 'ch-2'] },
+        { dimension: 'characterization', content: '单章人物', relatedChapters: ['ch-3'] },
+        { dimension: 'writingQuality', content: '另一单章', relatedChapters: ['ch-4'] },
+      ],
+      now: '2026-07-17T12:00:30.000Z',
+    });
+
+    assert.equal(outcome.created.length, 2);
+    assert.equal(outcome.created[0]?.scope, 'chapter');
+    assert.equal(outcome.created[0]?.content, '单章人物');
+    assert.equal(outcome.created[1]?.scope, 'chapter');
+    assert.equal(outcome.created[1]?.content, '另一单章');
+  });
+
+  it('openCorrection resolves chapter-scoped tasks and marks in_progress', () => {
+    const outcome = service.importFromEval({
+      projectId,
+      replaceOpen: true,
+      suggestions: [
+        {
+          dimension: 'characterization',
+          content: '打开修正目标章',
+          relatedChapters: ['ch007'],
+        },
+      ],
+      now: '2026-07-17T12:03:00.000Z',
+    });
+    const taskId = outcome.created[0]?.id;
+    assert.ok(taskId);
+
+    const opened = service.openCorrection({
+      projectId,
+      taskId,
+      now: '2026-07-17T12:03:01.000Z',
+    });
+    assert.equal(opened.chapterNumber, 7);
+    assert.equal(opened.task.status, 'in_progress');
+    assert.match(opened.path, /\/chapters\/7\/correction$/);
+  });
+
+  it('openCorrection rejects multi-chapter tasks', () => {
+    const outcome = service.importFromEval({
+      projectId,
+      replaceOpen: true,
+      suggestions: [
+        {
+          dimension: 'pacingRetention',
+          content: '跨章不可直接打开',
+          relatedChapters: ['ch-1', 'ch-2'],
+        },
+      ],
+      now: '2026-07-17T12:04:00.000Z',
+    });
+    const taskId = outcome.created[0]?.id;
+    assert.ok(taskId);
+
+    assert.throws(
+      () => service.openCorrection({ projectId, taskId }),
+      (error: unknown) => error instanceof ValidationError
+        && /spans 2 chapters|chapter-scoped/i.test(error.message),
+    );
   });
 
   it('rejects invalid status updates', () => {
