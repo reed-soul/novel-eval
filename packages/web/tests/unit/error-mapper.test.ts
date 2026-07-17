@@ -10,8 +10,9 @@ import {
   BudgetExceededError,
   EvaluationIncompleteError,
   ChapterQualityRejectedError,
+  StateExtractionError,
 } from '@novel-eval/writer';
-import { toHttpError } from '../../server/middleware/error-mapper.ts';
+import { toHttpError, httpErrorJson } from '../../server/middleware/error-mapper.ts';
 
 describe('toHttpError', () => {
   it('maps ValidationError to 400', () => {
@@ -55,6 +56,20 @@ describe('toHttpError', () => {
     }));
     assert.equal(mapped.status, 422);
     assert.equal(mapped.code, 'ChapterQualityRejectedError');
+  });
+
+  it('maps StateExtractionError to 422 and preserves draftRevisionId', () => {
+    const mapped = toHttpError(new StateExtractionError('delta broken', {
+      draftRevisionId: 'rev-keep-me',
+      attempts: 3,
+    }));
+    assert.equal(mapped.status, 422);
+    assert.equal(mapped.code, 'StateExtractionError');
+    assert.equal(mapped.draftRevisionId, 'rev-keep-me');
+    assert.equal(mapped.attempts, 3);
+    const body = httpErrorJson(mapped);
+    assert.equal(body.draftRevisionId, 'rev-keep-me');
+    assert.equal(body.attempts, 3);
   });
 
   it('maps unknown errors to 500 with opaque message', () => {
