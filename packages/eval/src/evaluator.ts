@@ -3,6 +3,7 @@
  */
 import { randomUUID } from 'node:crypto';
 import { createEngine } from '@novel-eval/shared';
+import { evaluationCoverageFor } from '@novel-eval/shared';
 import { runMapPhase } from './map-phase.ts';
 import { runReducePhase } from './reduce-phase.ts';
 import { splitChaptersWithMeta, countChars } from '@novel-eval/shared';
@@ -121,7 +122,25 @@ export async function evaluate(opts: EvaluateOptions): Promise<EvaluateResult> {
     opts.onProgress?.('聚合评分...');
     const totalScore = computeOverall(reduceResult.dimensions, config.profile.weights);
     const grade = lookupGrade(totalScore, config.gradeThresholds);
-    const allExcerpts = mapResult.chapters.flatMap((c) => c.excerpts);
+    const allExcerpts = mapResult.chapters.flatMap((chapter) =>
+      chapter.excerpts.map((excerpt, excerptIndex) => ({
+        ...excerpt,
+        chapterId: excerpt.chapterId || chapter.id,
+        excerptIndex,
+      })),
+    );
+
+    const skippedChapterIds = [...mapResult.skippedChapters];
+    const coverage = evaluationCoverageFor({
+      dimensions: reduceResult.dimensions,
+      excerpts: allExcerpts,
+      chapters: mapResult.chapters,
+      task: {
+        sourceWordCount: task.sourceWordCount,
+        chapterCount: task.chapterCount,
+      },
+      skippedChapterIds,
+    });
 
     const result: EvaluationResult = {
       schemaVersion: '1.1.0',
@@ -143,6 +162,8 @@ export async function evaluate(opts: EvaluateOptions): Promise<EvaluateResult> {
       suggestions: reduceResult.suggestions,
       marketBenchmark: reduceResult.marketBenchmark,
       baselineTaskId: opts.baselineTaskId,
+      coverage,
+      skippedChapterIds,
       task: {
         id: taskId,
         error: null,
@@ -159,6 +180,11 @@ export async function evaluate(opts: EvaluateOptions): Promise<EvaluateResult> {
 
     task.status = 'completed';
     task.completedAt = new Date();
+    if (!coverage.complete) {
+      opts.onProgress?.(
+        `⚠ 覆盖不完整：${(coverage.incompleteReasons ?? []).join('; ') || 'unknown'}`,
+      );
+    }
     opts.onProgress?.(`✓ 评估完成：总分 ${totalScore}（${grade}），费用 ¥${task.cost.totalRmb.toFixed(4)}`);
 
     return { task, result };

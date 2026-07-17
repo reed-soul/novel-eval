@@ -226,6 +226,15 @@ async function runEvaluate(args: EvaluateArgs): Promise<void> {
   console.log('');
   console.log('✓ 完成');
   console.log(`  总分：${result.overall.totalScore}（${result.overall.grade}）`);
+  if (result.coverage && !result.coverage.complete) {
+    console.log(`  ⚠ 覆盖不完整：${(result.coverage.incompleteReasons ?? []).join('; ')}`);
+    console.log(
+      `  证据回链：${result.coverage.evidenceLinkedCount ?? 0}/${result.coverage.excerptCount}` +
+        (result.coverage.evidenceLinkRate !== undefined
+          ? `（${(result.coverage.evidenceLinkRate * 100).toFixed(0)}%）`
+          : ''),
+    );
+  }
   console.log(`  费用：¥${task.cost.totalRmb.toFixed(4)}`);
   console.log(`  结果：${resultPath}`);
   console.log(`  报告：${htmlPath}`);

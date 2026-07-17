@@ -98,6 +98,38 @@ export interface EvaluationCoverageDto {
   excerptCount: number;
   chapterCount?: number;
   sourceWordCount?: number;
+  /** Map-phase chapters that failed and were placeholder-skipped. */
+  skippedChapterIds?: string[];
+  skippedChapterCount?: number;
+  /** skippedChapterCount / chapterCount, 0..1 */
+  chapterSkipRate?: number;
+  /** Excerpts with matchedBy exact|fuzzy (or offset != null when matchedBy absent). */
+  evidenceLinkedCount?: number;
+  evidenceUnlinkedCount?: number;
+  /** linked / excerptCount, 0..1; undefined when excerptCount === 0 */
+  evidenceLinkRate?: number;
+  /** Human-readable incomplete reasons (empty when complete). */
+  incompleteReasons?: string[];
+}
+
+/** Default Stage C2 coverage gates. */
+export const DEFAULT_COVERAGE_THRESHOLDS = {
+  minEvidenceLinkRate: 0.5,
+  maxChapterSkipRate: 0.3,
+} as const;
+
+export interface CoverageThresholds {
+  minEvidenceLinkRate: number;
+  maxChapterSkipRate: number;
+}
+
+export interface EvaluationCoverageInput {
+  dimensions: Record<string, EvaluationDimensionDto>;
+  excerpts?: readonly EvaluationExcerptDto[];
+  chapters?: readonly unknown[];
+  task?: { sourceWordCount?: number; chapterCount?: number };
+  skippedChapterIds?: readonly string[];
+  thresholds?: Partial<CoverageThresholds>;
 }
 
 /**
@@ -277,24 +309,85 @@ export function unwrapEvaluationPayload(raw: unknown): unknown {
   return raw;
 }
 
-export function evaluationCoverageFor(report: {
-  dimensions: Record<string, EvaluationDimensionDto>;
-  excerpts?: readonly EvaluationExcerptDto[];
-  chapters?: readonly unknown[];
-  task?: { sourceWordCount?: number; chapterCount?: number };
-}): EvaluationCoverageDto {
+export function isExcerptLinked(excerpt: EvaluationExcerptDto): boolean {
+  if (excerpt.matchedBy === 'exact' || excerpt.matchedBy === 'fuzzy') return true;
+  if (excerpt.matchedBy === 'none') return false;
+  // Legacy payloads without matchedBy: treat numeric offset as linked.
+  return typeof excerpt.offset === 'number';
+}
+
+export function evaluationCoverageFor(
+  report: EvaluationCoverageInput,
+): EvaluationCoverageDto {
+  const thresholds: CoverageThresholds = {
+    minEvidenceLinkRate:
+      report.thresholds?.minEvidenceLinkRate ?? DEFAULT_COVERAGE_THRESHOLDS.minEvidenceLinkRate,
+    maxChapterSkipRate:
+      report.thresholds?.maxChapterSkipRate ?? DEFAULT_COVERAGE_THRESHOLDS.maxChapterSkipRate,
+  };
+
   const dimensionsPresent = Object.keys(report.dimensions);
   const missingDimensions = EVALUATION_DIMENSION_KEYS.filter((key) => !report.dimensions[key]);
+  const excerpts = report.excerpts ?? [];
+  const excerptCount = excerpts.length;
+  const linked = excerpts.filter(isExcerptLinked);
+  const evidenceLinkedCount = linked.length;
+  const evidenceUnlinkedCount = excerptCount - evidenceLinkedCount;
+  const evidenceLinkRate = excerptCount > 0 ? evidenceLinkedCount / excerptCount : undefined;
+
+  const skippedChapterIds = [...(report.skippedChapterIds ?? [])];
+  const skippedChapterCount = skippedChapterIds.length;
+
+  let chapterCount: number | undefined;
+  if (Array.isArray(report.chapters)) chapterCount = report.chapters.length;
+  if (typeof report.task?.chapterCount === 'number') chapterCount = report.task.chapterCount;
+
+  const chapterSkipRate =
+    typeof chapterCount === 'number' && chapterCount > 0
+      ? skippedChapterCount / chapterCount
+      : skippedChapterCount > 0
+        ? 1
+        : 0;
+
+  const incompleteReasons: string[] = [];
+  if (missingDimensions.length > 0) {
+    incompleteReasons.push(`missing dimensions: ${missingDimensions.join(', ')}`);
+  }
+  if (typeof chapterCount === 'number' && chapterCount > 0 && excerptCount === 0) {
+    incompleteReasons.push('no evidence excerpts produced');
+  }
+  if (
+    evidenceLinkRate !== undefined &&
+    evidenceLinkRate < thresholds.minEvidenceLinkRate
+  ) {
+    incompleteReasons.push(
+      `evidence link rate ${evidenceLinkRate.toFixed(2)} < ${thresholds.minEvidenceLinkRate}`,
+    );
+  }
+  if (chapterSkipRate > thresholds.maxChapterSkipRate) {
+    incompleteReasons.push(
+      `chapter skip rate ${chapterSkipRate.toFixed(2)} > ${thresholds.maxChapterSkipRate}`,
+    );
+  }
+
   const coverage: EvaluationCoverageDto = {
-    complete: missingDimensions.length === 0,
+    complete: incompleteReasons.length === 0,
     dimensionsExpected: [...EVALUATION_DIMENSION_KEYS],
     dimensionsPresent,
     missingDimensions,
-    excerptCount: report.excerpts?.length ?? 0,
+    excerptCount,
+    incompleteReasons,
+    skippedChapterIds,
+    skippedChapterCount,
+    chapterSkipRate,
+    evidenceLinkedCount,
+    evidenceUnlinkedCount,
   };
-  if (Array.isArray(report.chapters)) coverage.chapterCount = report.chapters.length;
-  if (typeof report.task?.chapterCount === 'number') coverage.chapterCount = report.task.chapterCount;
-  if (typeof report.task?.sourceWordCount === 'number') coverage.sourceWordCount = report.task.sourceWordCount;
+  if (evidenceLinkRate !== undefined) coverage.evidenceLinkRate = evidenceLinkRate;
+  if (typeof chapterCount === 'number') coverage.chapterCount = chapterCount;
+  if (typeof report.task?.sourceWordCount === 'number') {
+    coverage.sourceWordCount = report.task.sourceWordCount;
+  }
   return coverage;
 }
 
@@ -375,17 +468,23 @@ export function parseEvaluationReportResponse(raw: unknown): ParseResult<Evaluat
     if (typeof flat.task.sourceWordCount === 'number') taskCoverage.sourceWordCount = flat.task.sourceWordCount;
     if (typeof flat.task.chapterCount === 'number') taskCoverage.chapterCount = flat.task.chapterCount;
   }
-  const coverageInput: {
-    dimensions: Record<string, EvaluationDimensionDto>;
-    excerpts: readonly EvaluationExcerptDto[];
-    chapters?: readonly unknown[];
-    task?: { sourceWordCount?: number; chapterCount?: number };
-  } = {
+
+  let skippedChapterIds: string[] | undefined;
+  if (isRecord(flat.coverage) && Array.isArray(flat.coverage.skippedChapterIds)) {
+    skippedChapterIds = flat.coverage.skippedChapterIds.filter(
+      (id): id is string => typeof id === 'string',
+    );
+  } else if (Array.isArray(flat.skippedChapterIds)) {
+    skippedChapterIds = flat.skippedChapterIds.filter((id): id is string => typeof id === 'string');
+  }
+
+  const coverageInput: EvaluationCoverageInput = {
     dimensions: report.dimensions,
     excerpts: report.excerpts,
   };
   if (report.chapters) coverageInput.chapters = report.chapters;
   if (Object.keys(taskCoverage).length > 0) coverageInput.task = taskCoverage;
+  if (skippedChapterIds) coverageInput.skippedChapterIds = skippedChapterIds;
   report.coverage = evaluationCoverageFor(coverageInput);
 
   return { ok: true, data: report };

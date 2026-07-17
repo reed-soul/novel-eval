@@ -82,6 +82,8 @@ export type {
   EvaluationSuggestionDto,
   EvaluationExcerptDto,
   EvaluationCoverageDto,
+  EvaluationCoverageInput,
+  CoverageThresholds,
   EvaluationMarketBenchmarkDto,
   EvaluationMarketComparableDto,
 } from './dto/index.ts';
@@ -93,6 +95,8 @@ export {
   parseJobStatusResponse,
   EVALUATION_DIMENSION_KEYS,
   EVALUATION_DIMENSION_LABELS,
+  DEFAULT_COVERAGE_THRESHOLDS,
+  isExcerptLinked,
   evaluationCoverageFor,
   parseEvaluationReportResponse,
   toEvaluationReportResponse,

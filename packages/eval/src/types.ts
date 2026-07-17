@@ -22,6 +22,7 @@ import type {
   CharacterProfile,
   ChapterInput,
 } from '@novel-eval/shared';
+import type { EvaluationCoverageDto } from '@novel-eval/shared';
 
 // ─── 任务与状态 ────────────────────────────────────────────────────
 
@@ -110,6 +111,7 @@ export interface Excerpt extends RawExcerpt {
   offset: number | null;
   matchedBy: 'exact' | 'fuzzy' | 'none';
   length?: number;
+  excerptIndex?: number;
 }
 
 // ─── Reduce 阶段引用证据的指针 ─────────────────────────────────────
@@ -214,6 +216,9 @@ export interface EvaluationResult {
   suggestions: Suggestion[];
   marketBenchmark?: MarketBenchmark | null;
   baselineTaskId?: string;
+  /** Stage C2 coverage snapshot (dimensions + evidence + skips). */
+  coverage?: EvaluationCoverageDto;
+  skippedChapterIds?: string[];
   task: {
     id: string;
     error: string | null;

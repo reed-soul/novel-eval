@@ -117,4 +117,92 @@ describe('eval report contract', () => {
     assert.ok(isRecord(report.json));
     assert.equal(report.json.code, 'EvaluationIncompleteError');
   });
+
+  it('rejects low evidence link rate even when all dimensions are present', async () => {
+    const taskId = 'low-link-rate';
+    const reportBody = {
+      schemaVersion: '1.1.0',
+      novel: { title: '弱证据书', author: '作者', totalChapters: 2, wordCount: 200 },
+      overall: { totalScore: 88, grade: 'A' },
+      dimensions: dimensionsFor(DIMENSION_KEYS),
+      characters: [],
+      emotionalCurve: [],
+      excerpts: [
+        {
+          text: '命中',
+          dimension: 'writingQuality',
+          reason: 'ok',
+          chapterId: 'ch001',
+          matchedBy: 'exact',
+          offset: 1,
+        },
+        {
+          text: '未命中1',
+          dimension: 'writingQuality',
+          reason: 'bad',
+          chapterId: 'ch001',
+          matchedBy: 'none',
+          offset: null,
+        },
+        {
+          text: '未命中2',
+          dimension: 'storyStructure',
+          reason: 'bad',
+          chapterId: 'ch002',
+          matchedBy: 'none',
+          offset: null,
+        },
+        {
+          text: '未命中3',
+          dimension: 'characterization',
+          reason: 'bad',
+          chapterId: 'ch002',
+          matchedBy: 'none',
+          offset: null,
+        },
+      ],
+      suggestions: [],
+      task: { chapterCount: 2, sourceWordCount: 200 },
+    };
+    writeFileSync(join(evalDataDir, `${taskId}.json`), JSON.stringify(reportBody));
+
+    const report = await fetchEvalResult(taskId);
+    assert.equal(report.status, 422);
+    assert.ok(isRecord(report.json));
+    assert.equal(report.json.code, 'EvaluationIncompleteError');
+    assert.match(String(report.json.error ?? report.json.message ?? ''), /link rate|incomplete/i);
+  });
+
+  it('rejects high chapter skip rate', async () => {
+    const taskId = 'high-skip-rate';
+    const reportBody = {
+      schemaVersion: '1.1.0',
+      novel: { title: '跳章书', author: '作者', totalChapters: 10, wordCount: 1000 },
+      overall: { totalScore: 90, grade: 'S' },
+      dimensions: dimensionsFor(DIMENSION_KEYS),
+      characters: [],
+      emotionalCurve: [],
+      excerpts: [
+        {
+          text: '命中',
+          dimension: 'writingQuality',
+          reason: 'ok',
+          chapterId: 'ch001',
+          matchedBy: 'exact',
+          offset: 1,
+        },
+      ],
+      suggestions: [],
+      coverage: {
+        skippedChapterIds: ['ch001', 'ch002', 'ch003', 'ch004'],
+      },
+      task: { chapterCount: 10, sourceWordCount: 1000 },
+    };
+    writeFileSync(join(evalDataDir, `${taskId}.json`), JSON.stringify(reportBody));
+
+    const report = await fetchEvalResult(taskId);
+    assert.equal(report.status, 422);
+    assert.ok(isRecord(report.json));
+    assert.equal(report.json.code, 'EvaluationIncompleteError');
+  });
 });
