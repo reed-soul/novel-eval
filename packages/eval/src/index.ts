@@ -55,6 +55,7 @@ interface GoldenArgs {
   dryRun?: boolean;
   forceAssert?: boolean;
   yes?: boolean;
+  vcrMode?: 'record' | 'replay';
 }
 
 type CliArgs = EvaluateArgs | CompareArgs | GoldenArgs | { command: 'help' };
@@ -94,7 +95,12 @@ function parseArgs(argv: string[]): CliArgs {
       if (a === '--case') caseIds.push(rest[++i]);
       else if (a === '--dry-run') args.dryRun = true;
       else if (a === '--force-assert') args.forceAssert = true;
+      else if (a === '--vcr-record') args.vcrMode = 'record';
+      else if (a === '--vcr-replay') args.vcrMode = 'replay';
       else if (a === '-y' || a === '--yes') args.yes = true;
+    }
+    if (args.vcrMode === 'record' && args.dryRun) {
+      // dry-run wins for safety; run-golden logs a note
     }
     if (caseIds.length) args.caseIds = caseIds;
     return args;
@@ -140,6 +146,8 @@ compare 选项：
 golden 选项：
   --case <id>          只跑指定 case（可重复）
   --dry-run            run 时只 check+slice，不调 LLM
+  --vcr-record         录制 LLM 响应到 tests/golden/cassettes/<id>/
+  --vcr-replay         仅回放 cassette（缺卡带则失败，不打网）
   --force-assert       对 pending_annotation 也强制校验分数带
   -y, --yes            评估时跳过确认（golden run 默认跳过）
 
@@ -148,6 +156,7 @@ golden 选项：
   novel-eval compare ./reports/a/result.json ./reports/b/result.json --html
   novel-eval golden check
   novel-eval golden run --dry-run
+  novel-eval golden run --vcr-replay --case literary-bailuyuan
   novel-eval golden run --case literary-bailuyuan`);
 }
 
@@ -157,7 +166,11 @@ function printGoldenHelp(): void {
 子命令：
   check   检查语料是否存在、能否切分
   slice   生成 tests/golden/slices/<id>.txt
-  run     评估切片；对 status=active 的 case 校验分数带
+  run     评估切片；对 status=active|seeded_baseline 校验分数带
+
+VCR：
+  --vcr-record  首次/刷新录制（需 API key）
+  --vcr-replay  无网回放（需已有 cassettes）
 
 详见 tests/golden/README.md`);
 }
@@ -265,6 +278,7 @@ async function runGolden(args: GoldenArgs): Promise<void> {
     dryRun: args.dryRun,
     forceAssert: args.forceAssert,
     yes: args.yes ?? true,
+    vcrMode: args.vcrMode,
     onLog: (msg: string) => console.log(msg),
   };
 

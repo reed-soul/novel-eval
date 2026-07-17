@@ -2,7 +2,7 @@
  * 评估主流程编排
  */
 import { randomUUID } from 'node:crypto';
-import { createEngine } from '@novel-eval/shared';
+import { createEngine, type AIAgentAdapter } from '@novel-eval/shared';
 import { evaluationCoverageFor } from '@novel-eval/shared';
 import { runMapPhase } from './map-phase.ts';
 import { runReducePhase } from './reduce-phase.ts';
@@ -20,6 +20,8 @@ export interface EvaluateOptions {
   metadata: NovelMetadata;
   baselineTaskId?: string;
   onProgress?: (msg: string) => void;
+  /** Injected engine (tests / VCR). When omitted, createEngine(config.engine). */
+  engine?: AIAgentAdapter;
 }
 
 export interface EvaluateResult {
@@ -29,7 +31,7 @@ export interface EvaluateResult {
 
 export async function evaluate(opts: EvaluateOptions): Promise<EvaluateResult> {
   const config = loadConfig(opts.profile ?? 'default');
-  const engine = createEngine(config.engine);
+  const engine = opts.engine ?? createEngine(config.engine);
   const taskId = randomUUID();
   const createdAt = new Date();
 

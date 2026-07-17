@@ -27,6 +27,7 @@ export {
   loadCorpusRegistry,
   loadGoldenCases,
   resolveRepoRoot,
+  cassetteDirPath,
 } from './golden/load-corpus.ts';
 export { checkCase, sliceCase, selectChapters, formatSliceText } from './golden/slice.ts';
 export {

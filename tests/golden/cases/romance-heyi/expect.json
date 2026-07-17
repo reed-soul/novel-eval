@@ -1,6 +1,6 @@
 {
-  "status": "seeded_baseline",
-  "toleranceNote": "机器首跑种子基线（±10）。人工审阅后改为 active，可收紧区间。",
+  "status": "active",
+  "toleranceNote": "人工确认机器种子基线为正式回归期望（±10）。后续可收紧区间。",
   "seededFrom": {
     "totalScore": 79,
     "grade": "B",
@@ -60,5 +60,10 @@
       "min": 66,
       "max": 86
     }
+  },
+  "promotedFrom": {
+    "previousStatus": "seeded_baseline",
+    "promotedAt": "2026-07-17",
+    "note": "Accepted machine-seeded ±10 bands after Stage C review; tighten after deeper human annotation."
   }
 }

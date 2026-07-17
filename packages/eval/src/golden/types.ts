@@ -19,6 +19,11 @@ export interface GoldenExpect {
     dimensions: Partial<Record<DimensionKey, number>>;
     seededAt: string;
   };
+  promotedFrom?: {
+    previousStatus: ExpectStatus;
+    promotedAt: string;
+    note?: string;
+  };
   overall: ScoreBand;
   gradeAllowlist: string[];
   dimensions: Partial<Record<DimensionKey, ScoreBand>>;

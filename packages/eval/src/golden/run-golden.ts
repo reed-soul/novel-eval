@@ -3,9 +3,22 @@
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
+import {
+  CassetteAdapter,
+  createEngine,
+  type AIAgentAdapter,
+  type CassetteMode,
+} from '@novel-eval/shared';
 import { evaluate } from '../evaluator.ts';
+import { loadConfig } from '../config.ts';
 import { assertScoreBands } from './assert-bands.ts';
-import { loadGoldenCases, resolveRepoRoot, runSummaryPath, sliceOutputPath } from './load-corpus.ts';
+import {
+  cassetteDirPath,
+  loadGoldenCases,
+  resolveRepoRoot,
+  runSummaryPath,
+  sliceOutputPath,
+} from './load-corpus.ts';
 import { checkCase, sliceCase } from './slice.ts';
 import type { CheckReport, LoadedGoldenCase, SliceReport } from './types.ts';
 
@@ -15,6 +28,8 @@ export interface GoldenRunOptions {
   dryRun?: boolean;
   forceAssert?: boolean;
   yes?: boolean;
+  /** Prompt-hash VCR: record live responses or replay from disk. */
+  vcrMode?: CassetteMode;
   onLog?: (msg: string) => void;
 }
 
@@ -29,6 +44,7 @@ export interface GoldenCaseRunResult {
   error?: string;
   totalScore?: number;
   grade?: string;
+  vcrMode?: CassetteMode;
 }
 
 export interface GoldenCommandResult {
@@ -38,6 +54,21 @@ export interface GoldenCommandResult {
 
 function log(opts: GoldenRunOptions, msg: string): void {
   opts.onLog?.(msg);
+}
+
+function resolveEngineForCase(
+  repoRoot: string,
+  caseId: string,
+  vcrMode: CassetteMode | undefined,
+): AIAgentAdapter | undefined {
+  if (!vcrMode) return undefined;
+  const directory = cassetteDirPath(repoRoot, caseId);
+  if (vcrMode === 'replay') {
+    return new CassetteAdapter({ mode: 'replay', directory });
+  }
+  const config = loadConfig('default');
+  const live = createEngine(config.engine);
+  return new CassetteAdapter({ mode: 'record', directory, inner: live });
 }
 
 export function runGoldenCheck(options: GoldenRunOptions = {}): GoldenCommandResult {
@@ -93,6 +124,7 @@ async function evaluateLoaded(
 ): Promise<GoldenCaseRunResult> {
   const slice = sliceCase(repoRoot, loaded);
   const slicePath = sliceOutputPath(repoRoot, loaded.ref.id);
+  const engine = resolveEngineForCase(repoRoot, loaded.ref.id, options.vcrMode);
 
   const { task, result } = await evaluate({
     filePath: slicePath,
@@ -103,6 +135,7 @@ async function evaluateLoaded(
       genre: loaded.meta.genre,
       targetAudience: loaded.meta.audience,
     },
+    engine,
     onProgress: (msg) => log(options, `  [${loaded.ref.id}] ${msg}`),
   });
 
@@ -126,6 +159,7 @@ async function evaluateLoaded(
         costRmb: task.cost.totalRmb,
         assert: assertResult,
         expectStatus: loaded.expect.status,
+        vcrMode: options.vcrMode ?? null,
         slice,
       },
       null,
@@ -143,6 +177,7 @@ async function evaluateLoaded(
     violations: assertResult.violations.map((v) => v.message),
     totalScore: result.overall.totalScore,
     grade: result.overall.grade,
+    vcrMode: options.vcrMode,
     error: assertResult.ok ? undefined : assertResult.violations.map((v) => v.message).join('; '),
   };
 }
@@ -156,6 +191,9 @@ export async function runGoldenEvaluate(
   let ok = true;
 
   if (options.dryRun) {
+    if (options.vcrMode) {
+      log(options, 'note: --dry-run ignores --vcr-* (check+slice only)');
+    }
     const check = runGoldenCheck(options);
     const slice = runGoldenSlice(options);
     return { ok: check.ok && slice.ok, results: [...check.results, ...slice.results] };
@@ -163,7 +201,8 @@ export async function runGoldenEvaluate(
 
   for (const loaded of cases) {
     try {
-      log(options, `→ evaluate ${loaded.ref.id} (${loaded.expect.status})`);
+      const vcrLabel = options.vcrMode ? ` vcr=${options.vcrMode}` : '';
+      log(options, `→ evaluate ${loaded.ref.id} (${loaded.expect.status}${vcrLabel})`);
       const one = await evaluateLoaded(repoRoot, loaded, options);
       if (one.error) ok = false;
       if (one.assertOk === false) ok = false;
@@ -180,7 +219,7 @@ export async function runGoldenEvaluate(
       ok = false;
       const error = (e as Error).message;
       log(options, `✗ ${loaded.ref.id}: ${error}`);
-      results.push({ caseId: loaded.ref.id, error });
+      results.push({ caseId: loaded.ref.id, error, vcrMode: options.vcrMode });
     }
   }
 
