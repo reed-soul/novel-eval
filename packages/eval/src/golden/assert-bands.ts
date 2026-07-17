@@ -50,7 +50,7 @@ export function assertScoreBands(
   expect: GoldenExpect,
   options: { forceAssert?: boolean } = {},
 ): BandAssertResult {
-  if (expect.status !== 'active' && !options.forceAssert) {
+  if (expect.status !== 'active' && expect.status !== 'seeded_baseline' && !options.forceAssert) {
     return { ok: true, skipped: true, violations: [] };
   }
 

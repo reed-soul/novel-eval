@@ -1,0 +1,27 @@
+{
+  "caseId": "scifi-qiuzhuang",
+  "totalScore": 86,
+  "grade": "A",
+  "dimensions": {
+    "storyStructure": 88,
+    "characterization": 82,
+    "writingQuality": 92,
+    "emotionalResonance": 90,
+    "marketPotential": 75,
+    "thematicDepth": 93,
+    "originality": 91,
+    "pacingRetention": 76
+  },
+  "costRmb": 0.37703,
+  "seededAt": "2026-07-17",
+  "slice": {
+    "chapterCount": 4,
+    "charCount": 17163,
+    "titles": [
+      "第1章 序曲",
+      "第2章 大学",
+      "第3章 异象之一",
+      "第4章 张彬"
+    ]
+  }
+}

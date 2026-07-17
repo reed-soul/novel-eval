@@ -14,15 +14,15 @@ const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..'
 describe('selectChapters / formatSliceText', () => {
   it('respects maxChapters and maxChars', () => {
     const chapters = [
-      { id: 'ch001', title: '第一章 A', content: '甲'.repeat(100) },
-      { id: 'ch002', title: '第二章 B', content: '乙'.repeat(100) },
-      { id: 'ch003', title: '第三章 C', content: '丙'.repeat(100) },
+      { id: 'ch001', title: '第一章 A', content: '甲'.repeat(500) },
+      { id: 'ch002', title: '第二章 B', content: '乙'.repeat(500) },
+      { id: 'ch003', title: '第三章 C', content: '丙'.repeat(500) },
     ];
-    const selected = selectChapters(chapters, { maxChapters: 2, maxChars: 10000 });
+    const selected = selectChapters(chapters, { maxChapters: 2, maxChars: 10000, minChars: 100 });
     assert.equal(selected.length, 2);
     assert.equal(selected[1].id, 'ch002');
 
-    const byChars = selectChapters(chapters, { maxChapters: 8, maxChars: 250 });
+    const byChars = selectChapters(chapters, { maxChapters: 8, maxChars: 1200, minChars: 100 });
     assert.equal(byChars.length, 2);
   });
 
@@ -35,6 +35,20 @@ describe('selectChapters / formatSliceText', () => {
     const split = splitChaptersWithMeta(text);
     assert.ok(split.chapters.length >= 2);
     assert.match(split.chapters[0].title, /归乡/);
+  });
+
+  it('skips junk TOC and empty shells', () => {
+    const chapters = [
+      { id: 'ch001', title: 'Table of Contents', content: '目录页'.repeat(10) },
+      { id: 'ch002', title: '第1章 序曲', content: '' },
+      { id: 'ch003', title: '第1章 序曲', content: '正文'.repeat(500) },
+      { id: 'ch004', title: '第2章 大学', content: '继续'.repeat(500) },
+      { id: 'ch005', title: '第3章 异象', content: '再写'.repeat(500) },
+    ];
+    const selected = selectChapters(chapters, { maxChapters: 8, maxChars: 20000, minChars: 400 });
+    assert.equal(selected.length, 3);
+    assert.equal(selected[0].title, '第1章 序曲');
+    assert.ok(countChars(selected[0].content) >= 400);
   });
 
   it('truncates a single oversized chapter to maxChars', () => {

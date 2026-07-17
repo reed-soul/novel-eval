@@ -1,0 +1,31 @@
+{
+  "caseId": "web-guimi",
+  "totalScore": 84,
+  "grade": "A",
+  "dimensions": {
+    "storyStructure": 88,
+    "characterization": 85,
+    "writingQuality": 86,
+    "emotionalResonance": 78,
+    "marketPotential": 82,
+    "thematicDepth": 84,
+    "originality": 89,
+    "pacingRetention": 80
+  },
+  "costRmb": 0.72392,
+  "seededAt": "2026-07-17",
+  "slice": {
+    "chapterCount": 8,
+    "charCount": 10110,
+    "titles": [
+      "第一章 绯红",
+      "第二章 情况",
+      "第三章 梅丽莎（第一更求推荐票）",
+      "第四章 占卜（第二更求推荐票）",
+      "第五章 仪式（第三更求推荐票）",
+      "第六章 非凡者",
+      "第七章 代号",
+      "第八章 新的时代"
+    ]
+  }
+}

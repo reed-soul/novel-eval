@@ -60,6 +60,15 @@ describe('assertScoreBands', () => {
     assert.ok(result.violations.some((v) => v.field === 'overall.totalScore'));
   });
 
+  it('asserts seeded_baseline like active', () => {
+    const seeded: GoldenExpect = { ...baseExpect, status: 'seeded_baseline' };
+    const ok = assertScoreBands(fakeResult({ writingQuality: 80 }), seeded);
+    assert.equal(ok.ok, true);
+    assert.equal(ok.skipped, false);
+    const bad = assertScoreBands(fakeResult({ writingQuality: 10 }), seeded);
+    assert.equal(bad.ok, false);
+  });
+
   it('skips pending_annotation unless forceAssert', () => {
     const pending: GoldenExpect = { ...baseExpect, status: 'pending_annotation' };
     const skipped = assertScoreBands(fakeResult({ writingQuality: 10 }), pending);

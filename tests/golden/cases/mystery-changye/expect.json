@@ -1,16 +1,64 @@
 {
-  "status": "pending_annotation",
-  "toleranceNote": "人工标注后改为 active；单维建议容差 ±10。null 表示该维暂不校验。",
-  "overall": { "min": null, "max": null },
-  "gradeAllowlist": ["S", "A", "B", "C", "D"],
+  "status": "seeded_baseline",
+  "toleranceNote": "机器首跑种子基线（±10）。人工审阅后改为 active，可收紧区间。",
+  "seededFrom": {
+    "totalScore": 88,
+    "grade": "A",
+    "dimensions": {
+      "storyStructure": 92,
+      "characterization": 88,
+      "writingQuality": 85,
+      "emotionalResonance": 83,
+      "marketPotential": 90,
+      "thematicDepth": 86,
+      "originality": 89,
+      "pacingRetention": 91
+    },
+    "seededAt": "2026-07-17"
+  },
+  "overall": {
+    "min": 78,
+    "max": 98
+  },
+  "gradeAllowlist": [
+    "S",
+    "A",
+    "B",
+    "C",
+    "D"
+  ],
   "dimensions": {
-    "storyStructure": { "min": null, "max": null },
-    "characterization": { "min": null, "max": null },
-    "writingQuality": { "min": null, "max": null },
-    "emotionalResonance": { "min": null, "max": null },
-    "marketPotential": { "min": null, "max": null },
-    "thematicDepth": { "min": null, "max": null },
-    "originality": { "min": null, "max": null },
-    "pacingRetention": { "min": null, "max": null }
+    "storyStructure": {
+      "min": 82,
+      "max": 100
+    },
+    "characterization": {
+      "min": 78,
+      "max": 98
+    },
+    "writingQuality": {
+      "min": 75,
+      "max": 95
+    },
+    "emotionalResonance": {
+      "min": 73,
+      "max": 93
+    },
+    "marketPotential": {
+      "min": 80,
+      "max": 100
+    },
+    "thematicDepth": {
+      "min": 76,
+      "max": 96
+    },
+    "originality": {
+      "min": 79,
+      "max": 99
+    },
+    "pacingRetention": {
+      "min": 81,
+      "max": 100
+    }
   }
 }

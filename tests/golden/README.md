@@ -24,7 +24,11 @@ pnpm golden run --case literary-bailuyuan
 
 1. `pnpm golden slice && pnpm golden run --case <id>`（需 API key）
 2. 读报告，编辑 `cases/<id>/expect.json` 各维 `min`/`max`（建议 ±10）
-3. 将 `status` 改为 `active`
+3. 将 `status` 改为 `active`（或保留 `seeded_baseline` 作为机器种子基线门禁）
 4. 之后改 prompt/模型再跑 `pnpm golden run`；越界非零退出
 
-未标注 case 保持 `pending_annotation`，默认不做分数断言。
+状态说明：
+- `pending_annotation`：不校验分数
+- `seeded_baseline`：首跑机器种子，按 ±10 带校验（可回归）
+- `active`：人工确认后的正式期望
+

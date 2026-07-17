@@ -3,7 +3,7 @@
  */
 import type { DimensionKey } from '../types.ts';
 
-export type ExpectStatus = 'pending_annotation' | 'active';
+export type ExpectStatus = 'pending_annotation' | 'seeded_baseline' | 'active';
 
 export interface ScoreBand {
   min: number | null;
@@ -13,6 +13,12 @@ export interface ScoreBand {
 export interface GoldenExpect {
   status: ExpectStatus;
   toleranceNote?: string;
+  seededFrom?: {
+    totalScore: number;
+    grade: string;
+    dimensions: Partial<Record<DimensionKey, number>>;
+    seededAt: string;
+  };
   overall: ScoreBand;
   gradeAllowlist: string[];
   dimensions: Partial<Record<DimensionKey, ScoreBand>>;
@@ -21,6 +27,8 @@ export interface GoldenExpect {
 export interface SlicePolicy {
   maxChapters: number;
   maxChars: number;
+  /** Skip chapters shorter than this (filters TOC shells). Default 400. */
+  minChars?: number;
 }
 
 export interface GoldenCaseMeta {

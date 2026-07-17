@@ -1,0 +1,26 @@
+{
+  "caseId": "literary-bailuyuan",
+  "totalScore": 85,
+  "grade": "A",
+  "dimensions": {
+    "storyStructure": 88,
+    "characterization": 90,
+    "writingQuality": 89,
+    "emotionalResonance": 87,
+    "marketPotential": 72,
+    "thematicDepth": 92,
+    "originality": 86,
+    "pacingRetention": 78
+  },
+  "costRmb": 0.33776,
+  "seededAt": "2026-07-17",
+  "slice": {
+    "chapterCount": 3,
+    "charCount": 19031,
+    "titles": [
+      "白鹿原",
+      "第一章",
+      "第二章"
+    ]
+  }
+}

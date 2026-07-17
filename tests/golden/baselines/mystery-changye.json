@@ -1,0 +1,30 @@
+{
+  "caseId": "mystery-changye",
+  "totalScore": 88,
+  "grade": "A",
+  "dimensions": {
+    "storyStructure": 92,
+    "characterization": 88,
+    "writingQuality": 85,
+    "emotionalResonance": 83,
+    "marketPotential": 90,
+    "thematicDepth": 86,
+    "originality": 89,
+    "pacingRetention": 91
+  },
+  "costRmb": 0.47052,
+  "seededAt": "2026-07-17",
+  "slice": {
+    "chapterCount": 7,
+    "charCount": 18356,
+    "titles": [
+      "前言/序言",
+      "第一章",
+      "第二章",
+      "第三章",
+      "第四章",
+      "第五章",
+      "第六章"
+    ]
+  }
+}

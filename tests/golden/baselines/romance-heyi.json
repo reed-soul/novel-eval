@@ -1,0 +1,30 @@
+{
+  "caseId": "romance-heyi",
+  "totalScore": 79,
+  "grade": "B",
+  "dimensions": {
+    "storyStructure": 85,
+    "characterization": 88,
+    "writingQuality": 82,
+    "emotionalResonance": 92,
+    "marketPotential": 86,
+    "thematicDepth": 68,
+    "originality": 58,
+    "pacingRetention": 76
+  },
+  "costRmb": 0.51017,
+  "seededAt": "2026-07-17",
+  "slice": {
+    "chapterCount": 7,
+    "charCount": 19730,
+    "titles": [
+      "《何以笙箫默》",
+      "第一章 重逢（一）",
+      "第一章 重逢（二）",
+      "第二章 转身（一）",
+      "第二章 转身（二）",
+      "第三章 靠近（一）",
+      "第三章 靠近（二）"
+    ]
+  }
+}
