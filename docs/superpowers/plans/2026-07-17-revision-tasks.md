@@ -21,4 +21,4 @@
 - [x] `routes/revision-tasks.ts`, mount in `server/index.ts`
 - [x] CLI subcommands under `write revision-tasks`
 - [x] Export from `lib.ts`
-- [ ] Commit, push, PR
+- [x] Commit, push, PR
