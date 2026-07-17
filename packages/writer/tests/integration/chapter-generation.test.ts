@@ -4,7 +4,7 @@ import { it } from 'node:test';
 import type { AIAgentAdapter, CallResult, RunOptions } from '@novel-eval/shared';
 
 import type { DB } from '../../src/db.ts';
-import { StaleDependencyError } from '../../src/domain/errors.ts';
+import { ChapterQualityRejectedError, StaleDependencyError } from '../../src/domain/errors.ts';
 import {
   chapterId,
   chapterRevisionId,
@@ -359,6 +359,124 @@ it('saves rejected candidate when provider fails after partial content', async (
   assert.equal(revisions.length, 1);
   assert.equal(revisions[0]?.status, 'rejected');
   assert.ok(revisions[0]?.content.includes('半成品正文'));
+  assert.equal(chapterThree.activeRevisionId, null);
+  assert.equal(states.getCurrentAtPosition(fixtureProjectId, 3), null);
+});
+
+it('revises once via quality reviewer then publishes accepted draft', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const { lease, chapters, states, generation } = seedProject(testDb.db);
+  let reviewCalls = 0;
+  let generateCalls = 0;
+
+  const outcome = await generation.generateNext({
+    projectId: fixtureProjectId,
+    outlinePosition: 3,
+    lease,
+    engine: contentEngine('unused'),
+    wordCount: 100,
+    qualityReview: {
+      enabled: true,
+      maxRevise: 1,
+      metadata: { genre: '科幻', targetAudience: '青年' },
+      review: async ({ attempt }) => {
+        reviewCalls += 1;
+        if (attempt === 1) {
+          return {
+            verdict: 'revise',
+            reasons: ['开篇冲突不足'],
+            reason: '开篇冲突不足',
+            feedback: '加强开篇冲突',
+            evidence: [],
+            usage: { inputTokens: 0, outputTokens: 0, costRmb: 0, model: 'review', durationMs: 1 },
+          };
+        }
+        return {
+          verdict: 'accept',
+          reasons: ['达标'],
+          reason: '达标',
+          score: 80,
+          grade: 'B',
+          evidence: [],
+          usage: { inputTokens: 0, outputTokens: 0, costRmb: 0, model: 'review', durationMs: 1 },
+        };
+      },
+    },
+    generateContent: async (_ctx, revision) => {
+      generateCalls += 1;
+      return {
+        title: '第三章',
+        content: revision?.feedback
+          ? '第三章修订正文，冲突加强。'
+          : '第三章初稿正文。',
+        usage: { inputTokens: 1, outputTokens: 2, costRmb: 0.001, model: 'mock', durationMs: 1 },
+        model: 'mock',
+      };
+    },
+    extractState: async () => ({
+      state: emptyState('第三章'),
+      delta: emptyDelta('第三章'),
+      usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'extract-mock', durationMs: 1 },
+      model: 'extract-mock',
+      promptVersion: 'state-v1',
+    }),
+  });
+
+  assert.equal(outcome.kind, 'published');
+  assert.equal(generateCalls, 2);
+  assert.equal(reviewCalls, 2);
+  const chapterThree = chapters.getByOutlinePosition(fixtureProjectId, 3);
+  assert.ok(chapterThree);
+  const revisions = chapters.listRevisions(chapterThree.id);
+  assert.equal(revisions.length, 2);
+  assert.equal(revisions.filter((r) => r.status === 'rejected').length, 1);
+  assert.equal(revisions.filter((r) => r.status === 'published').length, 1);
+  assert.ok(states.getCurrentAtPosition(fixtureProjectId, 3));
+});
+
+it('rejects chapter when quality reviewer blocks without remaining revises', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const { lease, chapters, states, generation } = seedProject(testDb.db);
+
+  await assert.rejects(
+    () => generation.generateNext({
+      projectId: fixtureProjectId,
+      outlinePosition: 3,
+      lease,
+      engine: contentEngine('第三章会被拒绝'),
+      wordCount: 100,
+      qualityReview: {
+        enabled: true,
+        maxRevise: 0,
+        metadata: { genre: '科幻', targetAudience: '青年' },
+        review: async () => ({
+          verdict: 'reject',
+          reasons: ['等级 D'],
+          reason: '等级 D',
+          score: 40,
+          grade: 'D',
+          evidence: [],
+          usage: { inputTokens: 0, outputTokens: 0, costRmb: 0, model: 'review', durationMs: 1 },
+        }),
+      },
+      extractState: async () => ({
+        state: emptyState('不应发布'),
+        delta: emptyDelta('不应发布'),
+        usage: { inputTokens: 0, outputTokens: 0, costRmb: 0, model: 'extract', durationMs: 1 },
+        model: 'extract',
+        promptVersion: 'state-v1',
+      }),
+    }),
+    ChapterQualityRejectedError,
+  );
+
+  const chapterThree = chapters.getByOutlinePosition(fixtureProjectId, 3);
+  assert.ok(chapterThree);
+  const revisions = chapters.listRevisions(chapterThree.id);
+  assert.equal(revisions.length, 1);
+  assert.equal(revisions[0]?.status, 'rejected');
   assert.equal(chapterThree.activeRevisionId, null);
   assert.equal(states.getCurrentAtPosition(fixtureProjectId, 3), null);
 });

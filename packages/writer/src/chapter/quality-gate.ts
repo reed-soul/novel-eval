@@ -35,14 +35,26 @@ function gateConfig() {
   };
 }
 
+export interface QualityGateEvidence {
+  chapterId: string;
+  excerptIndex?: number;
+  text: string;
+  dimension: string;
+  reason: string;
+  matchedBy?: string;
+  offset?: number | null;
+}
+
 export interface QualityGateResult {
   verdict: 'pass' | 'revise' | 'block';
   reason: string;
+  reasons: string[];
   score?: number;
   grade?: string;
   /** revise 时注入 prompt 的反馈（suggestions + 低分维度 + 重复 hotspots）*/
   feedback?: string;
   repetition?: { within: number; cross: number; verdict: string };
+  evidence: QualityGateEvidence[];
 }
 
 export interface QualityGateOptions {
@@ -95,9 +107,12 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
       verdict: 'block',
       repetition: { within: rep.withinChapter, cross: rep.crossChapter, hotspots: rep.hotspots },
     });
+    const reason = `重复率严重：章内 ${(rep.withinChapter * 100).toFixed(1)}% / 跨章 ${(rep.crossChapter * 100).toFixed(1)}%`;
     return {
       verdict: 'block',
-      reason: `重复率严重：章内 ${(rep.withinChapter * 100).toFixed(1)}% / 跨章 ${(rep.crossChapter * 100).toFixed(1)}%`,
+      reason,
+      reasons: [reason],
+      evidence: [],
       repetition: { within: rep.withinChapter, cross: rep.crossChapter, verdict: rep.verdict },
       usage: totalUsage,
     };
@@ -113,6 +128,17 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
   addUsage(totalUsage, assessResult.usage);
 
   const { totalScore, grade, dimensions, suggestions } = assessResult;
+  const evidence: QualityGateEvidence[] = assessResult.chapters.flatMap((ch) =>
+    (ch.excerpts ?? []).map((ex, excerptIndex) => ({
+      chapterId: ch.id,
+      excerptIndex,
+      text: ex.text,
+      dimension: ex.dimension,
+      reason: ex.reason,
+      matchedBy: ex.matchedBy,
+      offset: ex.offset,
+    })),
+  );
 
   // ─── 3. 判定 ────────────────────────────────────────────────────
   const gc = gateConfig();
@@ -134,11 +160,14 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
       verdict: 'block', score: totalScore, grade, dimensions, suggestions,
       repetition: { within: rep.withinChapter, cross: rep.crossChapter, hotspots: rep.hotspots },
     });
+    const reason = `等级 ${grade}（${totalScore} 分）低于 ${gc.BLOCK_GRADE} 线`;
     return {
       verdict: 'block',
-      reason: `等级 ${grade}（${totalScore} 分）低于 ${gc.BLOCK_GRADE} 线`,
+      reason,
+      reasons: [reason],
       score: totalScore, grade,
       feedback: buildFeedback(suggestions.map((s) => s.content), lowDims, dimensions, rep.hotspots),
+      evidence,
       repetition: { within: rep.withinChapter, cross: rep.crossChapter, verdict: rep.verdict },
       usage: totalUsage,
     };
@@ -149,10 +178,13 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
       verdict: 'pass', score: totalScore, grade, dimensions, suggestions,
       repetition: { within: rep.withinChapter, cross: rep.crossChapter, hotspots: rep.hotspots },
     });
+    const reason = `等级 ${grade}（${totalScore} 分），各维度达标`;
     return {
       verdict: 'pass',
-      reason: `等级 ${grade}（${totalScore} 分），各维度达标`,
+      reason,
+      reasons: [reason],
       score: totalScore, grade,
+      evidence,
       repetition: { within: rep.withinChapter, cross: rep.crossChapter, verdict: rep.verdict },
       usage: totalUsage,
     };
@@ -172,8 +204,10 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
   return {
     verdict: 'revise',
     reason: reasons.join('；'),
+    reasons,
     score: totalScore, grade,
     feedback: buildFeedback(suggestions.map((s) => s.content), lowDims, dimensions, rep.hotspots),
+    evidence,
     repetition: { within: rep.withinChapter, cross: rep.crossChapter, verdict: rep.verdict },
     usage: totalUsage,
   };

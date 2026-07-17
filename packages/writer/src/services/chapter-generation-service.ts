@@ -1,11 +1,15 @@
 import { randomUUID } from 'node:crypto';
 
-import type { AIAgentAdapter, TokenUsage } from '@novel-eval/shared';
+import type { AIAgentAdapter, NovelMetadata, TokenUsage } from '@novel-eval/shared';
 import { addUsage, countChars, zeroUsage } from '@novel-eval/shared';
 
 import { extractStoryState, type ExtractStoryStateResult } from '../chapter/finalizer.ts';
 import type { DB } from '../db.ts';
-import { StaleDependencyError, StateExtractionError } from '../domain/errors.ts';
+import {
+  ChapterQualityRejectedError,
+  StaleDependencyError,
+  StateExtractionError,
+} from '../domain/errors.ts';
 import {
   chapterId,
   chapterRevisionId,
@@ -26,6 +30,33 @@ import {
   ContextCompiler,
   type CompiledChapterContext,
 } from './context-compiler.ts';
+import {
+  ChapterReviewerService,
+  type ChapterReviewResult,
+} from './chapter-reviewer-service.ts';
+
+export interface QualityReviewOptions {
+  enabled: boolean;
+  maxRevise: number;
+  metadata: NovelMetadata;
+  profile?: string;
+  onProgress?: (msg: string) => void;
+  /** Test seam */
+  review?: (input: {
+    chapter: {
+      id: string;
+      projectId: string;
+      number: number;
+      outlineId: string;
+      title: string;
+      content: string;
+      wordCount: number;
+      createdAt: string;
+      updatedAt: string;
+    };
+    attempt: number;
+  }) => Promise<ChapterReviewResult>;
+}
 
 export interface GenerateNextInput {
   projectId: ProjectId;
@@ -34,7 +65,11 @@ export interface GenerateNextInput {
   engine: AIAgentAdapter;
   wordCount: number;
   promptTemplateVersion?: string;
-  generateContent?: (context: CompiledChapterContext) => Promise<GeneratedChapterContent>;
+  qualityReview?: QualityReviewOptions;
+  generateContent?: (
+    context: CompiledChapterContext,
+    revision?: { attempt: number; feedback?: string },
+  ) => Promise<GeneratedChapterContent>;
   extractState?: (input: {
     context: CompiledChapterContext;
     content: string;
@@ -70,6 +105,7 @@ function readPartialContent(error: unknown): string | null {
 function buildPrompts(
   context: CompiledChapterContext,
   wordCount: number,
+  revisionFeedback?: string,
 ): { systemPrompt: string; userPrompt: string } {
   const systemPrompt = [
     '你是畅销小说作家。直接输出正文，不要任何解释、标题或元说明。',
@@ -108,6 +144,9 @@ function buildPrompts(
       ),
     );
   }
+  if (revisionFeedback && revisionFeedback.trim().length > 0) {
+    lines.push('', '【质量审阅反馈——请按此修订重写本章】', revisionFeedback.trim());
+  }
 
   return { systemPrompt, userPrompt: lines.join('\n') };
 }
@@ -117,6 +156,7 @@ export class ChapterGenerationService {
   private readonly states: StoryStateRepository;
   private readonly compiler: ContextCompiler;
   private readonly publication: ChapterPublicationService;
+  private readonly reviewer: ChapterReviewerService;
 
   constructor(
     private readonly db: DB,
@@ -126,6 +166,7 @@ export class ChapterGenerationService {
     this.states = new StoryStateRepository(db);
     this.compiler = new ContextCompiler(db);
     this.publication = new ChapterPublicationService(db, now);
+    this.reviewer = new ChapterReviewerService(db);
   }
 
   async generateNext(input: GenerateNextInput): Promise<GenerateChapterOutcome> {
@@ -146,40 +187,117 @@ export class ChapterGenerationService {
     });
 
     const outline = context.outline;
-    let content: string;
-    let title = outline.revision.title;
     const totalUsage: TokenUsage = { ...zeroUsage };
+    const quality = input.qualityReview;
+    const maxAttempts = quality?.enabled
+      ? Math.max(1, Math.floor(quality.maxRevise) + 1)
+      : 1;
 
-    try {
-      const generated = input.generateContent
-        ? await input.generateContent(context)
-        : await this.defaultGenerateContent(input.engine, context, input.wordCount);
-      content = generated.content;
-      title = generated.title;
-      addUsage(totalUsage, generated.usage);
-    } catch (error: unknown) {
-      const partial = readPartialContent(error);
-      if (partial !== null) {
-        this.persistCandidate({
-          outlineId: outline.outline.id,
-          outlinePosition: input.outlinePosition,
-          projectId: input.projectId,
-          title,
-          content: partial,
-          status: 'rejected',
-        });
+    let content = '';
+    let title = outline.revision.title;
+    let candidateRevisionId: ChapterRevisionId | null = null;
+    let lastReview: ChapterReviewResult | null = null;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      const revisionFeedback = lastReview?.feedback;
+      try {
+        const generated = input.generateContent
+          ? await input.generateContent(context, { attempt, feedback: revisionFeedback })
+          : await this.defaultGenerateContent(
+              input.engine,
+              context,
+              input.wordCount,
+              revisionFeedback,
+            );
+        content = generated.content;
+        title = generated.title;
+        addUsage(totalUsage, generated.usage);
+      } catch (error: unknown) {
+        const partial = readPartialContent(error);
+        if (partial !== null) {
+          this.persistCandidate({
+            outlineId: outline.outline.id,
+            outlinePosition: input.outlinePosition,
+            projectId: input.projectId,
+            title,
+            content: partial,
+            status: 'rejected',
+          });
+        }
+        throw error;
       }
-      throw error;
+
+      const candidate = this.persistCandidate({
+        outlineId: outline.outline.id,
+        outlinePosition: input.outlinePosition,
+        projectId: input.projectId,
+        title,
+        content,
+        status: 'draft',
+      });
+      candidateRevisionId = candidate.revision.id;
+
+      if (!quality?.enabled) {
+        break;
+      }
+
+      const chapterForReview = {
+        id: candidate.revision.id,
+        projectId: input.projectId,
+        number: input.outlinePosition,
+        outlineId: outline.outline.id,
+        title,
+        content,
+        wordCount: countChars(content),
+        createdAt: candidate.revision.createdAt,
+        updatedAt: candidate.revision.createdAt,
+      };
+
+      quality.onProgress?.(
+        `质量审阅：第 ${input.outlinePosition} 章 attempt ${attempt}/${maxAttempts}`,
+      );
+      const review = quality.review
+        ? await quality.review({ chapter: chapterForReview, attempt })
+        : await this.reviewer.reviewChapter({
+            engine: input.engine,
+            db: this.db,
+            projectId: input.projectId,
+            chapter: chapterForReview,
+            metadata: quality.metadata,
+            profile: quality.profile,
+            attempt,
+            onProgress: quality.onProgress,
+          });
+      addUsage(totalUsage, review.usage);
+      lastReview = review;
+
+      if (review.verdict === 'accept') {
+        quality.onProgress?.(
+          `质量审阅通过：${review.grade ?? ''} ${review.score ?? ''}`.trim(),
+        );
+        break;
+      }
+
+      this.markRevisionRejected(candidate.revision.id);
+      candidateRevisionId = null;
+
+      if (review.verdict === 'revise' && attempt < maxAttempts) {
+        quality.onProgress?.(`质量审阅要求重写：${review.reason}`);
+        continue;
+      }
+
+      throw new ChapterQualityRejectedError({
+        outlinePosition: input.outlinePosition,
+        verdict: review.verdict === 'revise' ? 'revise' : 'reject',
+        reasons: review.reasons,
+        score: review.score,
+        grade: review.grade,
+      });
     }
 
-    const candidate = this.persistCandidate({
-      outlineId: outline.outline.id,
-      outlinePosition: input.outlinePosition,
-      projectId: input.projectId,
-      title,
-      content,
-      status: 'draft',
-    });
+    if (candidateRevisionId === null) {
+      throw new Error(`Chapter ${input.outlinePosition} has no draft candidate after generation`);
+    }
 
     let extraction: ExtractStoryStateResult;
     try {
@@ -188,18 +306,18 @@ export class ChapterGenerationService {
             context,
             content,
             title,
-            chapterRevisionId: candidate.revision.id,
+            chapterRevisionId: candidateRevisionId,
           })
         : await extractStoryState({
             engine: input.engine,
             previousState: context.previousState,
             chapterTitle: title,
             chapterContent: content,
-            chapterRevisionId: candidate.revision.id,
+            chapterRevisionId: candidateRevisionId,
             outlinePosition: input.outlinePosition,
           });
     } catch (error: unknown) {
-      this.markRevisionRejected(candidate.revision.id);
+      this.markRevisionRejected(candidateRevisionId);
       const message = error instanceof Error ? error.message : 'state extraction failed';
       throw new StateExtractionError(message);
     }
@@ -207,7 +325,7 @@ export class ChapterGenerationService {
 
     const published: PublishResult = this.publication.publishCandidate({
       lease: input.lease,
-      candidateRevisionId: candidate.revision.id,
+      candidateRevisionId,
       previousStateRevisionId: context.previousStateRevisionId,
       state: extraction.state,
       delta: extraction.delta,
@@ -243,8 +361,9 @@ export class ChapterGenerationService {
     engine: AIAgentAdapter,
     context: CompiledChapterContext,
     wordCount: number,
+    revisionFeedback?: string,
   ): Promise<GeneratedChapterContent> {
-    const prompts = buildPrompts(context, wordCount);
+    const prompts = buildPrompts(context, wordCount, revisionFeedback);
     const temperature = getRuntimeConfig().generation.temperatures.chapter;
     const timeoutMs = getRuntimeConfig().generation.timeouts.chapterMs;
     const result = await engine.run(prompts.userPrompt, {

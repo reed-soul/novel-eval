@@ -35,6 +35,7 @@ export {
   StaleDependencyError,
   StateExtractionError,
   BudgetExceededError,
+  ChapterQualityRejectedError,
 } from './domain/errors.ts';
 export { applyStoryStateDelta } from './domain/story-state.ts';
 export type {
@@ -113,6 +114,19 @@ export {
 } from './services/writer-application.ts';
 export type { StaleImpact, PublishResult } from './services/chapter-publication-service.ts';
 export type { RebuildResult } from './services/state-rebuild-service.ts';
+export {
+  ChapterReviewerService,
+  mapQualityVerdict,
+  type ChapterReviewResult,
+  type ChapterReviewVerdict,
+  type ChapterReviewEvidence,
+  type ChapterReviewInput,
+} from './services/chapter-reviewer-service.ts';
+export type {
+  QualityReviewOptions,
+  GenerateNextInput,
+  GenerateChapterOutcome,
+} from './services/chapter-generation-service.ts';
 export { ChapterRepository } from './repositories/chapter-repository.ts';
 export { PlanningRepository } from './repositories/planning-repository.ts';
 export { StoryStateRepository } from './repositories/story-state-repository.ts';

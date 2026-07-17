@@ -60,3 +60,28 @@ export class BudgetExceededError extends Error {
     this.maxCostRmb = maxCostRmb;
   }
 }
+
+export class ChapterQualityRejectedError extends Error {
+  readonly outlinePosition: number;
+  readonly verdict: 'reject' | 'revise';
+  readonly reasons: string[];
+  readonly score?: number;
+  readonly grade?: string;
+
+  constructor(input: {
+    outlinePosition: number;
+    verdict: 'reject' | 'revise';
+    reasons: string[];
+    score?: number;
+    grade?: string;
+  }) {
+    const detail = input.reasons.join('；') || input.verdict;
+    super(`Chapter ${input.outlinePosition} rejected by quality reviewer: ${detail}`);
+    this.name = 'ChapterQualityRejectedError';
+    this.outlinePosition = input.outlinePosition;
+    this.verdict = input.verdict;
+    this.reasons = input.reasons;
+    this.score = input.score;
+    this.grade = input.grade;
+  }
+}

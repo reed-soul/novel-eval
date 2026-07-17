@@ -257,8 +257,8 @@ export function generateRoutes(
     }
     const body = parsed.data;
 
-    if (body.qualityGate) {
-      return c.json({ error: 'qualityGate is unsupported until the chapter quality system lands' }, 400);
+    if (body.qualityGate === true && (body.maxRevise ?? 0) < 0) {
+      return c.json({ error: 'maxRevise must be >= 0 when qualityGate is enabled' }, 400);
     }
 
     try {
@@ -276,7 +276,7 @@ export function generateRoutes(
     const wordCount = body.wordCount ?? config.generation.chapterWordCount;
     const engine = resolveEngine(body);
     const budget: { [key: string]: boolean | number } = {
-      qualityGate: false,
+      qualityGate: body.qualityGate === true,
       maxRevise: body.maxRevise ?? 0,
     };
     if (typeof body.maxCostRmb === 'number' && Number.isFinite(body.maxCostRmb)) {
@@ -288,7 +288,7 @@ export function generateRoutes(
       projectId: id,
       fromChapter: body.from,
       toChapter: body.to,
-      qualityGate: false,
+      qualityGate: body.qualityGate === true,
       maxRevise: body.maxRevise ?? 0,
       engine: engine.name,
       model: body.model ?? engine.name,
