@@ -52,3 +52,4 @@ packages/web/data/
 tests/golden/slices/
 tests/golden/runs/
 tests/golden/cassettes/
+packages/eval/data/
