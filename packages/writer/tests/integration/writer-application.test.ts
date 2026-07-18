@@ -262,6 +262,93 @@ it('generateChapterRange acquires one lease, generates approved positions, persi
   assert.ok(chapters.getByOutlinePosition(fixtureProjectId, 3)?.activeRevisionId);
 });
 
+it('generateChapterRange renews lease across slow quality review past TTL', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  seedProjectWithApprovedRange(testDb.db, [1]);
+
+  const ttlMs = 1_000;
+  let nowMs = fixedNow.getTime();
+  const renewNows: number[] = [];
+  const proto = ProjectWriteLeaseRepository.prototype;
+  const originalRenew = proto.renew;
+  proto.renew = function renewWithSpy(this: ProjectWriteLeaseRepository, input) {
+    renewNows.push(input.now.getTime());
+    return originalRenew.call(this, input);
+  };
+  t.after(() => {
+    proto.renew = originalRenew;
+  });
+
+  const { ChapterReviewerService } = await import('../../src/services/chapter-reviewer-service.ts');
+  const originalReview = ChapterReviewerService.prototype.reviewChapter;
+  ChapterReviewerService.prototype.reviewChapter = async function reviewWithClock(input) {
+    // Simulate a long QG that would expire a 1s lease without heartbeats.
+    nowMs += ttlMs + 500;
+    input.onProgress?.('质量门槛：评估第 1 章...');
+    nowMs += ttlMs + 500;
+    input.onProgress?.('评估完成：82（A）');
+    return {
+      verdict: 'accept',
+      reasons: ['等级 A（82 分），各维度达标'],
+      reason: '等级 A（82 分），各维度达标',
+      score: 82,
+      grade: 'A',
+      evidence: [],
+      usage: { inputTokens: 0, outputTokens: 0, costRmb: 0, model: 'review', durationMs: 1 },
+    };
+  };
+  t.after(() => {
+    ChapterReviewerService.prototype.reviewChapter = originalReview;
+  });
+
+  const app = new WriterApplication(testDb.db, {
+    now: () => new Date(nowMs),
+    defaultOwnerId: ownerId,
+    leaseTtlMs: ttlMs,
+  });
+
+  const result = await app.generateChapterRange({
+    projectId: fixtureProjectId,
+    from: 1,
+    to: 1,
+    engine: contentEngine('慢审阅后仍应发布'),
+    wordCount: 200,
+    engineName: 'mock-engine',
+    model: 'mock-model',
+    budget: { qualityGate: true, maxRevise: 0 },
+    generateContent: async (context) => {
+      nowMs += ttlMs + 200;
+      return {
+        title: context.outline.revision.title,
+        content: '质量审阅很长之后的正文',
+        usage: { inputTokens: 1, outputTokens: 2, costRmb: 0, model: 'mock', durationMs: 1 },
+        model: 'mock',
+      };
+    },
+    extractState: async () => {
+      nowMs += ttlMs + 200;
+      return {
+        state: emptyState('状态1'),
+        delta: emptyDelta('状态1'),
+        usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'extract', durationMs: 1 },
+        model: 'extract',
+        promptVersion: 'state-v1',
+      };
+    },
+  });
+
+  assert.equal(result.outcomes.length, 1);
+  assert.equal(result.outcomes[0]?.kind, 'published');
+  assert.ok(renewNows.length >= 3, `expected multiple lease renewals, got ${renewNows.length}`);
+  assert.ok(
+    renewNows.some((ts) => ts > fixedNow.getTime() + ttlMs),
+    'renew must run after the clock advances past the initial TTL',
+  );
+  assert.equal(countLeases(testDb.db, fixtureProjectId), 0);
+  assert.ok(new ChapterRepository(testDb.db).getByOutlinePosition(fixtureProjectId, 1)?.activeRevisionId);
+});
+
 it('generateChapterRange releases the lease when generation fails', async (t) => {
   const testDb = createTestDb();
   t.after(() => testDb.cleanup());
