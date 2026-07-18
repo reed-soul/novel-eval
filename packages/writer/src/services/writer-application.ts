@@ -1039,6 +1039,17 @@ export class WriterApplication {
       ? { ...resumedUsage }
       : { ...zeroUsage };
     const maxCostRmb = readMaxCostRmb(budget);
+    // Quality review / extract can exceed lease TTL; renew on every progress tick
+    // (same pattern as generateBible / generateBlueprint).
+    const onProgress = this.bindLeaseHeartbeat(lease, ownerId, ttlMs, input.onProgress);
+    const renewLease = (): void => {
+      this.leases.renew({
+        leaseId: lease.id,
+        ownerId,
+        ttlMs,
+        now: this.now(),
+      });
+    };
     try {
       for (const position of approvedPositions) {
         if (input.control?.shouldCancel?.()) {
@@ -1052,14 +1063,9 @@ export class WriterApplication {
           throw new BudgetExceededError(cumulativeUsage.costRmb, maxCostRmb);
         }
 
-        this.leases.renew({
-          leaseId: lease.id,
-          ownerId,
-          ttlMs,
-          now: this.now(),
-        });
+        renewLease();
 
-        input.onProgress?.(`chapter:${position}`, `生成第 ${position} 章...`);
+        onProgress(`chapter:${position}`, `生成第 ${position} 章...`);
         const project = getProject(this.db, input.projectId);
         const qualityFlags = readQualityReviewFlags(budget);
         const qualityReview: QualityReviewOptions | undefined = qualityFlags.enabled
@@ -1071,7 +1077,7 @@ export class WriterApplication {
                 targetAudience: project?.targetAudience ?? '未指定',
               },
               profile: qualityProfile,
-              onProgress: (msg) => input.onProgress?.(`chapter:${position}:review`, msg),
+              onProgress: (msg) => onProgress(`chapter:${position}:review`, msg),
             }
           : undefined;
         const outcome = await this.generation.generateNext({
@@ -1082,7 +1088,8 @@ export class WriterApplication {
           wordCount,
           promptTemplateVersion: promptVersion,
           qualityReview,
-          onProgress: (step, msg) => input.onProgress?.(step, msg),
+          renewLease,
+          onProgress,
           generateContent: input.generateContent,
           extractState: input.extractState,
         });

@@ -71,6 +71,11 @@ export interface GenerateNextInput {
    * Default 3. Draft candidate is kept on exhaustion (not rejected).
    */
   extractAttempts?: number;
+  /**
+   * Extend the project write lease before long LLM steps / publish.
+   * Required when quality review or extract can exceed the lease TTL.
+   */
+  renewLease?: () => void;
   onProgress?: (step: string, msg: string) => void;
   generateContent?: (
     context: CompiledChapterContext,
@@ -207,6 +212,7 @@ export class ChapterGenerationService {
     for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
       const revisionFeedback = lastReview?.feedback;
       try {
+        input.renewLease?.();
         const generated = input.generateContent
           ? await input.generateContent(context, { attempt, feedback: revisionFeedback })
           : await this.defaultGenerateContent(
@@ -259,6 +265,7 @@ export class ChapterGenerationService {
         updatedAt: candidate.revision.createdAt,
       };
 
+      input.renewLease?.();
       quality.onProgress?.(
         `质量审阅：第 ${input.outlinePosition} 章 attempt ${attempt}/${maxAttempts}`,
       );
@@ -319,6 +326,7 @@ export class ChapterGenerationService {
     let lastExtractError: unknown;
     for (let attempt = 1; attempt <= extractAttempts; attempt += 1) {
       try {
+        input.renewLease?.();
         if (attempt > 1) {
           input.onProgress?.(
             `chapter:${input.outlinePosition}:extract`,
@@ -368,6 +376,7 @@ export class ChapterGenerationService {
     }
     addUsage(totalUsage, extraction.usage);
 
+    input.renewLease?.();
     const published: PublishResult = this.publication.publishCandidate({
       lease: input.lease,
       candidateRevisionId,
