@@ -620,6 +620,7 @@ export async function applyCorrectionDraft(
     dimensions: revised.dimensions,
     suggestions: revised.suggestions,
     repetition: revised.repetition,
+    assessRaw: null,
     model: draft.engine,
     evaluatorModel: null,
   });

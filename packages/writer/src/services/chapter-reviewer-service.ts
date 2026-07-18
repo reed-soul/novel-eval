@@ -27,6 +27,8 @@ export interface ChapterReviewResult {
   score?: number;
   grade?: string;
   feedback?: string;
+  /** Severe repetition — generation must not consume maxRevise. */
+  hardBlock?: boolean;
   evidence: ChapterReviewEvidence[];
   repetition?: QualityGateResult['repetition'];
   usage: TokenUsage;
@@ -78,6 +80,7 @@ export class ChapterReviewerService {
       score: gate.score,
       grade: gate.grade,
       feedback: gate.feedback,
+      hardBlock: gate.hardBlock === true,
       evidence: gate.evidence ?? [],
       repetition: gate.repetition,
       usage,

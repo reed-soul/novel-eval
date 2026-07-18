@@ -109,7 +109,7 @@ describe('ChapterReviewerService', () => {
     assert.equal(result.reasons.length, 2);
   });
 
-  it('returns reject for block verdict', async () => {
+  it('returns reject for soft block verdict without hardBlock', async () => {
     const db = createTestDb();
     const reviewer = new ChapterReviewerService(db);
     const result = await reviewer.reviewChapter({
@@ -120,15 +120,41 @@ describe('ChapterReviewerService', () => {
       metadata: { genre: '科幻', targetAudience: '青年' },
       assess: async () => ({
         verdict: 'block',
+        hardBlock: false,
         reason: '等级 D',
         reasons: ['等级 D（40 分）低于 D 线'],
         score: 40,
         grade: 'D',
+        feedback: '【改进建议】',
         evidence: [],
         usage,
       }),
     });
 
     assert.equal(result.verdict, 'reject');
+    assert.equal(result.hardBlock, false);
+  });
+
+  it('forwards hardBlock for severe repetition block', async () => {
+    const db = createTestDb();
+    const reviewer = new ChapterReviewerService(db);
+    const result = await reviewer.reviewChapter({
+      engine: fakeEngine(),
+      db,
+      projectId: 'proj-1',
+      chapter,
+      metadata: { genre: '科幻', targetAudience: '青年' },
+      assess: async () => ({
+        verdict: 'block',
+        hardBlock: true,
+        reason: '重复率严重',
+        reasons: ['重复率严重'],
+        evidence: [],
+        usage,
+      }),
+    });
+
+    assert.equal(result.verdict, 'reject');
+    assert.equal(result.hardBlock, true);
   });
 });

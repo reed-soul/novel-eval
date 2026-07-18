@@ -75,6 +75,9 @@ export class ChapterQualityRejectedError extends Error {
   readonly reasons: string[];
   readonly score?: number;
   readonly grade?: string;
+  /** Kept draft revision when quality reject does not discard content. */
+  readonly draftRevisionId?: string;
+  readonly hardBlock?: boolean;
 
   constructor(input: {
     outlinePosition: number;
@@ -82,6 +85,8 @@ export class ChapterQualityRejectedError extends Error {
     reasons: string[];
     score?: number;
     grade?: string;
+    draftRevisionId?: string;
+    hardBlock?: boolean;
   }) {
     const detail = input.reasons.join('；') || input.verdict;
     super(`Chapter ${input.outlinePosition} rejected by quality reviewer: ${detail}`);
@@ -91,5 +96,7 @@ export class ChapterQualityRejectedError extends Error {
     this.reasons = input.reasons;
     this.score = input.score;
     this.grade = input.grade;
+    this.draftRevisionId = input.draftRevisionId;
+    this.hardBlock = input.hardBlock;
   }
 }

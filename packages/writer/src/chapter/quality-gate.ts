@@ -1,17 +1,13 @@
 /**
  * 质量门槛 — pass/revise/block 判定
  *
- * 当前生成内核尚未接回质量门槛（WriterApplication / ChapterGenerationService
- * 拒绝 qualityGate）。本模块保留只读评估能力：最近章窗口只读 active published
- * revision（getRecentChapters → revision id），候选章以 chapter.id 作为
- * chapterRevisionId 写入 eval_history。
- *
  * 流程：
- *   1. 防重复检测（detectRepetition）→ severe 直接 block
- *   2. 调 eval 的 assessChapters（map + reduce）拿八维分数 + 等级
- *   3. 判定：grade ≥ B 且 writingQuality ≥ 60 → pass
- *          grade C 或某关键维度 <60 → revise（feedback = suggestions + 低分维度 analysis）
- *          grade D → block
+ *   1. 防重复检测 → severe → block + hardBlock（不可消耗 maxRevise）
+ *   2. assessChapters（map + reduce）拿八维分数 + 等级；结果写入 eval_history.assess_raw
+ *   3. 判定（阈值见 writer.yml qualityGate）：
+ *      - grade/score/维度达标且无 mild 重复 → pass
+ *      - grade ≥ blockGrade → block（软挡：带 feedback，可消耗 maxRevise）
+ *      - 其余未达标 → revise
  */
 import type { AIAgentAdapter, NovelMetadata, TokenUsage } from '@novel-eval/shared';
 import { addUsage, zeroUsage } from '@novel-eval/shared';
@@ -53,6 +49,11 @@ export interface QualityGateResult {
   grade?: string;
   /** revise 时注入 prompt 的反馈（suggestions + 低分维度 + 重复 hotspots）*/
   feedback?: string;
+  /**
+   * When true, generation must not consume maxRevise (severe repetition).
+   * Grade-based block stays soft (hardBlock false/undefined).
+   */
+  hardBlock?: boolean;
   repetition?: { within: number; cross: number; verdict: string };
   evidence: QualityGateEvidence[];
 }
@@ -85,6 +86,7 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
     dimensions?: Record<string, { score: number; analysis: string }>;
     suggestions?: Array<{ dimension?: string; content: string }>;
     repetition?: { within: number; cross: number; hotspots: string[] };
+    assessRaw?: unknown | null;
   }) => {
     saveEvalHistory(db, {
       projectId, chapterNumber: chapter.number, attempt,
@@ -93,6 +95,7 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
       repetition: result.repetition ? {
         within: result.repetition.within, cross: result.repetition.cross, hotspots: result.repetition.hotspots,
       } : null,
+      assessRaw: result.assessRaw ?? null,
       model, evaluatorModel: null,  // 自评
     });
   };
@@ -110,6 +113,7 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
     const reason = `重复率严重：章内 ${(rep.withinChapter * 100).toFixed(1)}% / 跨章 ${(rep.crossChapter * 100).toFixed(1)}%`;
     return {
       verdict: 'block',
+      hardBlock: true,
       reason,
       reasons: [reason],
       evidence: [],
@@ -128,6 +132,18 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
   addUsage(totalUsage, assessResult.usage);
 
   const { totalScore, grade, dimensions, suggestions } = assessResult;
+  const assessRaw = {
+    totalScore,
+    grade,
+    dimensions,
+    suggestions,
+    failures: assessResult.failures,
+    chapters: assessResult.chapters.map((ch) => ({
+      id: ch.id,
+      title: ch.title,
+      excerpts: ch.excerpts,
+    })),
+  };
   const evidence: QualityGateEvidence[] = assessResult.chapters.flatMap((ch) =>
     (ch.excerpts ?? []).map((ex, excerptIndex) => ({
       chapterId: ch.id,
@@ -152,17 +168,21 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
     .map(([k, d]) => `${DIMENSION_LABELS[k as DimensionKey] ?? k}（${d.score}）`);
 
   const hasRepetition = rep.verdict === 'mild';
+  const repPersist = {
+    within: rep.withinChapter, cross: rep.crossChapter, hotspots: rep.hotspots,
+  };
 
-  // block：grade ≥ BLOCK_GRADE（C/D 直接淘汰）
+  // Soft block：grade ≥ BLOCK_GRADE（可消耗 maxRevise；仅 severe 复读 hardBlock）
   const blockOrder = gradeOrder.indexOf(gc.BLOCK_GRADE);
   if (gradeOrder.indexOf(grade) >= blockOrder) {
     persistEval({
       verdict: 'block', score: totalScore, grade, dimensions, suggestions,
-      repetition: { within: rep.withinChapter, cross: rep.crossChapter, hotspots: rep.hotspots },
+      repetition: repPersist, assessRaw,
     });
     const reason = `等级 ${grade}（${totalScore} 分）低于 ${gc.BLOCK_GRADE} 线`;
     return {
       verdict: 'block',
+      hardBlock: false,
       reason,
       reasons: [reason],
       score: totalScore, grade,
@@ -176,7 +196,7 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
   if (gradeOk && scoreOk && lowDims.length === 0 && !hasRepetition) {
     persistEval({
       verdict: 'pass', score: totalScore, grade, dimensions, suggestions,
-      repetition: { within: rep.withinChapter, cross: rep.crossChapter, hotspots: rep.hotspots },
+      repetition: repPersist, assessRaw,
     });
     const reason = `等级 ${grade}（${totalScore} 分），各维度达标`;
     return {
@@ -199,7 +219,7 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
 
   persistEval({
     verdict: 'revise', score: totalScore, grade, dimensions, suggestions,
-    repetition: { within: rep.withinChapter, cross: rep.crossChapter, hotspots: rep.hotspots },
+    repetition: repPersist, assessRaw,
   });
   return {
     verdict: 'revise',
