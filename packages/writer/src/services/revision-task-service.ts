@@ -248,7 +248,7 @@ export class RevisionTaskService {
     return {
       task: updated,
       chapterNumber: resolved.chapterNumber,
-      path: `/projects/${input.projectId}/chapters/${resolved.chapterNumber}/correction`,
+      path: `/projects/${input.projectId}/chapters/${resolved.chapterNumber}/correction?revisionTaskId=${encodeURIComponent(input.taskId)}`,
     };
   }
 }

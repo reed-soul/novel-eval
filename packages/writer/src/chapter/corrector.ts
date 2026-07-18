@@ -45,6 +45,9 @@ import {
   type RebuildFromInput,
   type RebuildResult,
 } from '../services/state-rebuild-service.ts';
+import { RevisionTaskService } from '../services/revision-task-service.ts';
+import { ValidationError } from '../domain/errors.ts';
+import { resolveSingleChapterFromTask } from '../lib/eval-chapter-ref.ts';
 import {
   numberField,
   persistedRecord,
@@ -184,6 +187,10 @@ export interface CorrectChapterOptions {
   metadata: NovelMetadata;
   /** 强制策略（覆盖自动诊断）。不传则自动判断 */
   strategy?: CorrectionStrategy;
+  /** Explicit instruction text appended into rewrite/surgical prompts. */
+  feedback?: string;
+  /** Load revision-task.content as feedback (must match chapterNumber). */
+  revisionTaskId?: string;
   onProgress?: (step: string, msg: string) => void;
 }
 
@@ -196,9 +203,63 @@ export interface CorrectResult {
   changes: Array<{ original: string; revised: string; reason: string }>;
 }
 
+/** Append revision-task / caller feedback into corrector prompt blocks. */
+export function appendTaskFeedback(base: string, taskContent?: string | null): string {
+  const trimmed = typeof taskContent === 'string' ? taskContent.trim() : '';
+  if (trimmed === '') return base;
+  const clipped = trimmed.length > 800 ? `${trimmed.slice(0, 800)}…` : trimmed;
+  const suffix = `【修订任务建议】\n  ${clipped}`;
+  if (base.trim() === '' || base === '（无具体修正依据）' || base === '（无特定经验提示）') {
+    return suffix;
+  }
+  return `${base}\n\n${suffix}`;
+}
+
+function resolveCorrectionFeedback(input: {
+  db: DB;
+  projectId: string;
+  chapterNumber: number;
+  feedback?: string;
+  revisionTaskId?: string;
+}): string | undefined {
+  const parts: string[] = [];
+  if (typeof input.feedback === 'string' && input.feedback.trim() !== '') {
+    parts.push(input.feedback.trim());
+  }
+  if (typeof input.revisionTaskId === 'string' && input.revisionTaskId.trim() !== '') {
+    const task = new RevisionTaskService(input.db).get(input.projectId, input.revisionTaskId);
+    if (!task) {
+      throw new ValidationError(`revision task not found: ${input.revisionTaskId}`);
+    }
+    const resolved = resolveSingleChapterFromTask({
+      excerptRef: task.excerptRef,
+      relatedChapters: task.relatedChapters,
+      scope: task.scope,
+    });
+    if ('error' in resolved) {
+      throw new ValidationError(resolved.error);
+    }
+    if (resolved.chapterNumber !== input.chapterNumber) {
+      throw new ValidationError(
+        `revision task targets chapter ${resolved.chapterNumber}, not ${input.chapterNumber}`,
+      );
+    }
+    if (task.content.trim() !== '') parts.push(task.content.trim());
+  }
+  if (parts.length === 0) return undefined;
+  return parts.join('\n');
+}
+
 export async function correctChapter(opts: CorrectChapterOptions): Promise<CorrectResult> {
   const { engine, db, projectId, chapterNumber, metadata, onProgress } = opts;
   const totalUsage: TokenUsage = { ...zeroUsage };
+  const taskFeedback = resolveCorrectionFeedback({
+    db,
+    projectId,
+    chapterNumber,
+    feedback: opts.feedback,
+    revisionTaskId: opts.revisionTaskId,
+  });
 
   // 1. 诊断（或用强制策略）
   onProgress?.('diagnose', '诊断章节问题...');
@@ -217,6 +278,7 @@ export async function correctChapter(opts: CorrectChapterOptions): Promise<Corre
   const { revisedContent, rawOutput } = await generateRevision({
     engine, db, projectId, chapterNumber, strategy, wordCount, diag,
     title: chapter.title, originalContent: chapter.content, outline, totalUsage, onProgress,
+    taskFeedback,
   });
   addUsage(totalUsage, { ...zeroUsage });
 
@@ -287,6 +349,7 @@ interface GenerateRevisionArgs {
   originalContent: string;
   outline: { act: number; suspenseLevel: number; twistLevel: number; role: string; purpose: string; foreshadowing: string; summary: string };
   totalUsage: TokenUsage;
+  taskFeedback?: string;
   onProgress?: (step: string, msg: string) => void;
 }
 
@@ -300,9 +363,12 @@ async function generateRevision(args: GenerateRevisionArgs): Promise<{ revisedCo
 
   if (strategy === 'surgical') {
     // 外科手术：只解决重复/措辞
-    const issuesText = diag.repetition.hotspots.length
-      ? diag.repetition.hotspots.join('\n')
-      : '（未检测到明显重复，按经验提示处理）';
+    const issuesText = appendTaskFeedback(
+      diag.repetition.hotspots.length
+        ? diag.repetition.hotspots.join('\n')
+        : '（未检测到明显重复，按经验提示处理）',
+      args.taskFeedback,
+    );
     const lessonIssues = collectLessonIssues(diag);
     userPrompt = loadPrompt('correct-surgical', PROMPTS_DIR)
       .replace('{NUMBER}', String(args.chapterNumber))
@@ -321,7 +387,10 @@ async function generateRevision(args: GenerateRevisionArgs): Promise<{ revisedCo
     const stateText = characterState.characters.map((c) =>
       `${c.name}：[${c.items.join('、')}] 能力[${c.abilities.join('、')}] 状态：${c.status} 事件[${c.events.join('；')}]`,
     ).join('\n');
-    const feedback = buildCorrectionFeedback(diag, args.db, projectId);
+    const feedback = appendTaskFeedback(
+      buildCorrectionFeedback(diag, args.db, projectId),
+      args.taskFeedback,
+    );
 
     userPrompt = loadPrompt('correct-rewrite', PROMPTS_DIR)
       .replace('{MACRO_SUMMARY}', macroSummary)

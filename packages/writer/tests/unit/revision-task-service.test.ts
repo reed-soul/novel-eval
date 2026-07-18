@@ -136,7 +136,8 @@ describe('RevisionTaskService', () => {
     });
     assert.equal(opened.chapterNumber, 7);
     assert.equal(opened.task.status, 'in_progress');
-    assert.match(opened.path, /\/chapters\/7\/correction$/);
+    assert.match(opened.path, /\/chapters\/7\/correction\?revisionTaskId=/);
+    assert.ok(opened.path.includes(encodeURIComponent(taskId)));
   });
 
   it('openCorrection rejects multi-chapter tasks', () => {
