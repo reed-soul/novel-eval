@@ -170,6 +170,25 @@ export async function getChapterRevisions(chapterId: string): Promise<ChapterRev
   return api<ChapterRevisionsResponse>(`/chapters/${chapterId}/revisions`);
 }
 
+export interface FinalizeDraftRevisionResponse {
+  chapterRevisionId: string;
+  storyStateRevisionId: string;
+  outlineStatus: string;
+  staleImpact: { affectedOutlinePositions: number[] };
+}
+
+/** Publish a kept draft revision (extract + activate, no regen). */
+export async function finalizeDraftRevision(
+  projectId: string,
+  revisionId: string,
+  body: { model?: string; promptVersion?: string; extractAttempts?: number } = {},
+): Promise<FinalizeDraftRevisionResponse> {
+  return apiPost<FinalizeDraftRevisionResponse>(
+    `/projects/${projectId}/revisions/${revisionId}/finalize`,
+    body,
+  );
+}
+
 export interface EditChapterExtractResponse {
   number: number;
   wordCount: number;

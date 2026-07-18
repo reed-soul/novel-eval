@@ -93,16 +93,16 @@
 
 ### Task B1: Generate knobs on ProjectDetail
 
-- [ ] Inputs: outline `chapters`, chapter `wordCount`, `maxRevise` (when gate on)
-- [ ] Wire to existing generate API bodies
-- [ ] Commit: `feat(web): expose wordCount maxRevise outline chapters`
+- [x] Inputs: outline `chapters`, chapter `wordCount`, `maxRevise` (when gate on)
+- [x] Wire to existing generate API bodies
+- [x] Commit: `feat(web): expose wordCount maxRevise outline chapters`
 
 ### Task B2: Finalize draft in RevisionHistory
 
-- [ ] Add client `finalizeDraftRevision(projectId, revisionId)`
-- [ ] Button on `status === 'draft'` → call finalize → refresh list
-- [ ] Surface `draftRevisionId` from QG/extract errors if already in UI error paths
-- [ ] Commit: `feat(web): finalize kept draft revisions`
+- [x] Add client `finalizeDraftRevision(projectId, revisionId)`
+- [x] Button on `status === 'draft'` → call finalize → refresh list
+- [x] Surface `draftRevisionId` from QG/extract errors if already in UI error paths
+- [x] Commit: `feat(web): finalize kept draft revisions`
 
 ---
 

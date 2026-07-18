@@ -106,7 +106,12 @@ export function ChapterReader() {
           <div className="chapter-content">{chapter.content}</div>
         </div>
       ) : (
-        <div className="empty">本章尚未生成。用 CLI 生成：<code>pnpm write -- chapter {id} --number {chapter.number}</code></div>
+        <div className="empty">
+          本章尚未发布。
+          {chapter.chapterId
+            ? '若质量门槛或状态抽取留下了草稿，可在下方修订历史「继续定稿」。'
+            : '可在项目页生成该章，或返回项目后使用生成操作。'}
+        </div>
       )}
 
       <div className="chapter-nav">
@@ -118,7 +123,7 @@ export function ChapterReader() {
         ) : <span />}
       </div>
 
-      {chapter.written && id && (
+      {id && chapter.chapterId && (
         <RevisionHistory
           projectId={id}
           chapterNumber={chapter.number}

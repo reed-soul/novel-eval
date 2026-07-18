@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   editChapterWithExtract,
+  finalizeDraftRevision,
   getChapterRevisions,
   type ChapterRevision,
 } from '../api/client.ts';
@@ -10,6 +11,12 @@ export interface RevisionHistoryProps {
   chapterNumber: number;
   chapterId: string | null;
   onRestored?: () => void;
+}
+
+function statusLabel(status: ChapterRevision['status']): string {
+  if (status === 'draft') return '草稿';
+  if (status === 'rejected') return '已拒绝';
+  return '已发布';
 }
 
 export function RevisionHistory({
@@ -53,6 +60,23 @@ export function RevisionHistory({
     }
   };
 
+  const finalize = async (revision: ChapterRevision) => {
+    if (!window.confirm(`继续定稿 #${revision.revisionNumber}？将抽取叙事状态并发布为当前正文（不重新生成）。`)) {
+      return;
+    }
+    setActingId(revision.id);
+    setError('');
+    try {
+      await finalizeDraftRevision(projectId, revision.id);
+      load();
+      onRestored?.();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setActingId(null);
+    }
+  };
+
   if (!chapterId) return null;
 
   return (
@@ -79,17 +103,31 @@ export function RevisionHistory({
               <div>
                 <strong>#{revision.revisionNumber} {revision.title}</strong>
                 <div style={{ color: 'var(--muted)', fontSize: 13, marginTop: 4 }}>
-                  {revision.source} · {revision.wordCount} 字 · {new Date(revision.createdAt).toLocaleString()}
+                  {revision.source} · {statusLabel(revision.status)} · {revision.wordCount} 字 ·{' '}
+                  {new Date(revision.createdAt).toLocaleString()}
                   {revision.active ? ' · 当前发布' : ''}
                 </div>
               </div>
-              <button
-                className="btn"
-                onClick={() => restore(revision)}
-                disabled={revision.active || actingId !== null}
-              >
-                {actingId === revision.id ? '恢复中...' : '恢复'}
-              </button>
+              <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                {revision.status === 'draft' && (
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => finalize(revision)}
+                    disabled={actingId !== null}
+                  >
+                    {actingId === revision.id ? '定稿中...' : '继续定稿'}
+                  </button>
+                )}
+                {revision.status === 'published' && (
+                  <button
+                    className="btn"
+                    onClick={() => restore(revision)}
+                    disabled={revision.active || actingId !== null}
+                  >
+                    {actingId === revision.id ? '恢复中...' : '恢复'}
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

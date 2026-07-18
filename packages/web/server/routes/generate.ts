@@ -475,8 +475,23 @@ export function generateRoutes(
             }),
           });
         } else if (row.status === 'failed') {
+          const persistedResult = jobToClientPayload(row).result;
+          const draftRevisionId = typeof persistedResult === 'object'
+            && persistedResult !== null
+            && 'draftRevisionId' in persistedResult
+            && typeof (persistedResult as { draftRevisionId: unknown }).draftRevisionId === 'string'
+            ? (persistedResult as { draftRevisionId: string }).draftRevisionId
+            : undefined;
           await stream.writeSSE({
-            data: JSON.stringify({ event: 'failed', error: row.errorType }),
+            data: JSON.stringify({
+              event: 'failed',
+              error: draftRevisionId
+                ? {
+                    message: row.errorType ?? 'job failed',
+                    draftRevisionId,
+                  }
+                : row.errorType,
+            }),
           });
         }
       });
@@ -515,7 +530,7 @@ export function generateRoutes(
       const onCompleted = (result: unknown) => {
         stream.writeSSE({ data: JSON.stringify({ event: 'completed', result }) }).catch(() => {});
       };
-      const onFailed = (error: string) => {
+      const onFailed = (error: unknown) => {
         stream.writeSSE({ data: JSON.stringify({ event: 'failed', error }) }).catch(() => {});
       };
       const onPaused = () => {
