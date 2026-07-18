@@ -393,7 +393,13 @@ export interface CorrectionDraft {
 export async function correctChapter(
   projectId: string,
   chapterNumber: number,
-  opts?: { engineName?: string; model?: string; strategy?: CorrectionStrategy },
+  opts?: {
+    engineName?: string;
+    model?: string;
+    strategy?: CorrectionStrategy;
+    feedback?: string;
+    revisionTaskId?: string;
+  },
 ): Promise<{ jobId: string }> {
   return apiPost<{ jobId: string }>(`/projects/${projectId}/chapters/${chapterNumber}/correct`, opts);
 }

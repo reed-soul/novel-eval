@@ -157,6 +157,7 @@ describe('revision-task routes', () => {
     };
     assert.equal(opened.chapterNumber, 3);
     assert.equal(opened.task.status, 'in_progress');
-    assert.match(opened.path, /\/chapters\/3\/correction$/);
+    assert.match(opened.path, /\/chapters\/3\/correction\?revisionTaskId=/);
+    assert.ok(opened.path.includes(taskId));
   });
 });

@@ -115,8 +115,20 @@ export function correctionRoutes(
     if (!chapter) return c.json({ error: `第 ${n} 章不存在，无法修正` }, 404);
     if (hasActiveJobForProject(db, id)) return c.json({ error: '项目有正在运行的任务' }, 409);
 
-    const body = await c.req.json<{ engineName?: string; model?: string; strategy?: CorrectionStrategy }>()
-      .catch(() => ({}) as { engineName?: string; model?: string; strategy?: CorrectionStrategy });
+    const body = await c.req.json<{
+      engineName?: string;
+      model?: string;
+      strategy?: CorrectionStrategy;
+      feedback?: string;
+      revisionTaskId?: string;
+    }>()
+      .catch(() => ({} as {
+        engineName?: string;
+        model?: string;
+        strategy?: CorrectionStrategy;
+        feedback?: string;
+        revisionTaskId?: string;
+      }));
     const metadata: NovelMetadata = { genre: project.genreProfile, targetAudience: project.targetAudience };
     const engine = resolveEngine(body);
 
@@ -135,6 +147,8 @@ export function correctionRoutes(
         chapterNumber: n,
         metadata,
         strategy: body.strategy,
+        feedback: typeof body.feedback === 'string' ? body.feedback : undefined,
+        revisionTaskId: typeof body.revisionTaskId === 'string' ? body.revisionTaskId : undefined,
         onProgress,
       });
       return result;

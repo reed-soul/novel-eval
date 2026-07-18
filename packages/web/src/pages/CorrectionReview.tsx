@@ -8,7 +8,7 @@
  *   4. 采纳（覆盖原文 + 反哺经验）/ 放弃（无副作用）
  */
 import { useState, useEffect, useRef } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   correctChapter, getPendingCorrection, adoptCorrection, discardCorrection,
   type CorrectionDraft,
@@ -17,6 +17,8 @@ import { useJobProgress } from '../hooks/useJobProgress.ts';
 
 export function CorrectionReview() {
   const { id, n } = useParams<{ id: string; n: string }>();
+  const [searchParams] = useSearchParams();
+  const revisionTaskId = searchParams.get('revisionTaskId') ?? undefined;
   const navigate = useNavigate();
   const chapterNumber = n ? parseInt(n, 10) : NaN;
 
@@ -34,7 +36,7 @@ export function CorrectionReview() {
     setDraftError('');
     setDraft(null);
     setJobId(null);
-    correctChapter(id!, chapterNumber)
+    correctChapter(id!, chapterNumber, revisionTaskId ? { revisionTaskId } : undefined)
       .then((res) => setJobId(res.jobId))
       .catch((e: unknown) => setTriggerError(e instanceof Error ? e.message : String(e)));
   };

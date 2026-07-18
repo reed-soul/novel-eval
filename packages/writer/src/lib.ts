@@ -170,6 +170,7 @@ export {
   applyCorrectionDraft,
   discardCorrectionDraft,
   diagnoseChapter,
+  appendTaskFeedback,
   type ApplyCorrectionDraftResult,
 } from './chapter/corrector.ts';
 export {

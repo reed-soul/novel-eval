@@ -741,7 +741,10 @@ function runRevisionTasks(args: RevisionTasksArgs): void {
       console.log(`✓ 修订任务 → 第 ${opened.chapterNumber} 章修正`);
       console.log(`  task：${opened.task.id.slice(0, 8)} → ${opened.task.status}`);
       console.log(`  path：${opened.path}`);
-      console.log(`  下一步：在 Web 打开该 path，或 POST /api/projects/.../chapters/${opened.chapterNumber}/correct`);
+      console.log(
+        `  下一步：在 Web 打开该 path（会带 revisionTaskId），或 POST .../chapters/${opened.chapterNumber}/correct` +
+          ` {"revisionTaskId":"${opened.task.id}"}`,
+      );
       return;
     }
 
