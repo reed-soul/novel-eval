@@ -86,7 +86,10 @@ export function Evaluation() {
       
       // 稍微延迟一下让用户看到完成消息
       setTimeout(() => {
-        navigate(`/eval/${taskId}`);
+        const q = selectedProjectId
+          ? `?projectId=${encodeURIComponent(selectedProjectId)}`
+          : '';
+        navigate(`/eval/${taskId}${q}`);
       }, 1500);
     });
 
@@ -99,7 +102,7 @@ export function Evaluation() {
     return () => {
       eventSource.close();
     };
-  }, [taskId, status, navigate]);
+  }, [taskId, status, navigate, selectedProjectId]);
 
   return (
     <div className="container">

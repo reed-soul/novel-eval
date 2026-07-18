@@ -15,6 +15,7 @@ import {
   getBibleForChapter,
   countOutlines,
   getActiveJob,
+  listActiveJobs,
   getJobRow as getJobRowDb,
   readJobResumeConfig,
   listJobEventsAfter,
@@ -324,6 +325,20 @@ export function generateRoutes(
       return { chapters: outcomes.length };
     });
     return c.json({ jobId });
+  });
+
+  // ─── 全库活动 job（顶栏跨页进度）────────────────────────────────
+  // Must register before /:id so "jobs" is not captured as a project id.
+  app.get('/jobs/active', (c) => {
+    const rows = listActiveJobs(db, 20);
+    const jobs = rows.map((row) => {
+      const project = getProject(db, row.projectId);
+      return {
+        ...jobToClientPayload(row),
+        projectTitle: project?.title ?? row.projectId,
+      };
+    });
+    return c.json({ jobs });
   });
 
   // ─── 暂停 job（章节边界生效）──────────────────────────────────

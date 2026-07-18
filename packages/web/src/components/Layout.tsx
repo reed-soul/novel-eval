@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Logo } from './Logo.tsx';
+import { ActiveJobsBanner } from './ActiveJobsBanner.tsx';
 
 export function Layout() {
   const location = useLocation();
@@ -61,6 +62,7 @@ export function Layout() {
           </nav>
         </div>
       </header>
+      <ActiveJobsBanner />
       <main className="main-content">
         <Outlet />
       </main>

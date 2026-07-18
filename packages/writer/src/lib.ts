@@ -76,6 +76,7 @@ export {
   createJobRow,
   getJobRow,
   getActiveJob,
+  listActiveJobs,
   listJobsByProject,
   updateJobStatus,
   updateJobProgress,

@@ -8,6 +8,7 @@ import { ProgressPanel } from '../components/ProgressPanel.tsx';
 import { QualityPanel } from '../components/QualityPanel.tsx';
 import { PlanningApproval } from '../components/PlanningApproval.tsx';
 import { StaleImpactPanel } from '../components/StaleImpactPanel.tsx';
+import { RevisionTaskInbox } from '../components/RevisionTaskInbox.tsx';
 
 export function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -168,9 +169,7 @@ export function ProjectDetail() {
               {activeJob.type === 'chapter' && activeJob.status === 'paused' && (
                 <button className="btn btn-primary" onClick={() => handleResume(activeJob.id)}>▶ 继续</button>
               )}
-              {activeJob.type === 'chapter' && (
-                <button className="btn" onClick={handleCancel} title="放弃当前任务">⏹ 取消</button>
-              )}
+              <button className="btn" onClick={handleCancel} title="放弃当前任务">⏹ 取消</button>
             </div>
           </div>
         </div>
@@ -221,9 +220,11 @@ export function ProjectDetail() {
           onDone={reload}
           onPause={chapterJobActive ? handlePause : undefined}
           onResume={chapterJobActive ? handleResume : undefined}
-          onCancel={chapterJobActive ? handleCancel : undefined}
+          onCancel={jobActive ? handleCancel : undefined}
         />
       )}
+
+      {id && <RevisionTaskInbox projectId={id} />}
 
       {chapters.length > 0 && (
         <div className="card">

@@ -192,6 +192,18 @@ export function getActiveJob(db: DB, projectId: string): JobRow | null {
   return row === undefined ? null : readJob(row);
 }
 
+/** 全库活动任务（Web 顶栏跨页看进度）*/
+export function listActiveJobs(db: DB, limit = 20): JobRow[] {
+  const capped = Number.isInteger(limit) && limit > 0 ? Math.min(limit, 50) : 20;
+  const rows: unknown[] = db.prepare(`
+    SELECT * FROM job
+    WHERE status IN ('running', 'paused', 'queued')
+    ORDER BY updated_at DESC, rowid DESC
+    LIMIT ?
+  `).all(capped);
+  return rows.map(readJob);
+}
+
 export function updateJobStatus(
   db: DB,
   jobId: string,
