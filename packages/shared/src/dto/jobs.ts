@@ -14,7 +14,8 @@ export type JobTypeDto =
   | 'chapter'
   | 'correction'
   | 'rebuild'
-  | 'edit';
+  | 'edit'
+  | 'auto';
 
 const JOB_STATUSES = new Set<JobStatusDto>([
   'queued',
@@ -32,6 +33,7 @@ const JOB_TYPES = new Set<JobTypeDto>([
   'correction',
   'rebuild',
   'edit',
+  'auto',
 ]);
 
 /** Stable job status payload returned by GET /api/projects/jobs/:jobId */

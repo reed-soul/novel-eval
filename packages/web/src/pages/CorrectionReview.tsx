@@ -11,7 +11,9 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   correctChapter, getPendingCorrection, adoptCorrection, discardCorrection,
+  getRevisionTask,
   type CorrectionDraft,
+  type RevisionTask,
 } from '../api/client.ts';
 import { useJobProgress } from '../hooks/useJobProgress.ts';
 
@@ -28,8 +30,19 @@ export function CorrectionReview() {
   const [draftError, setDraftError] = useState('');
   const [acting, setActing] = useState(false);
   const [checkingPending, setCheckingPending] = useState(true);
+  const [revisionTask, setRevisionTask] = useState<RevisionTask | null>(null);
 
   const { events, status, result } = useJobProgress(jobId);
+
+  useEffect(() => {
+    if (!id || !revisionTaskId) {
+      setRevisionTask(null);
+      return;
+    }
+    getRevisionTask(id, revisionTaskId)
+      .then((res) => setRevisionTask(res.task))
+      .catch(() => setRevisionTask(null));
+  }, [id, revisionTaskId]);
 
   const startCorrection = () => {
     setTriggerError('');
@@ -131,6 +144,12 @@ export function CorrectionReview() {
           </div>
           <Link to={`/projects/${id}/chapters/${n}`} className="back-link">← 返回章节</Link>
         </div>
+        {revisionTask && (
+          <div className="card" style={{ marginBottom: 12 }}>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>修订任务建议</div>
+            <p style={{ margin: 0, lineHeight: 1.6 }}>{revisionTask.content}</p>
+          </div>
+        )}
         <div className="card">
           <div className="job-progress">
             {events.length === 0 && !jobId && <div className="loading">准备中...</div>}
@@ -198,6 +217,13 @@ export function CorrectionReview() {
         </div>
         <Link to={`/projects/${id}/chapters/${n}`} className="back-link">← 返回章节</Link>
       </div>
+
+      {revisionTask && (
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>修订任务建议</div>
+          <p style={{ margin: 0, lineHeight: 1.6 }}>{revisionTask.content}</p>
+        </div>
+      )}
 
       {/* 改动点说明（仅 surgical）*/}
       {draft.strategy === 'surgical' && draft.changes.length > 0 && (

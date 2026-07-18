@@ -9,6 +9,21 @@ export interface ProgressPanelProps {
   onCancel?: () => void;
 }
 
+function readFailureInfo(result: unknown): { message: string; draftRevisionId?: string } {
+  if (typeof result === 'string') return { message: result };
+  if (typeof result === 'object' && result !== null) {
+    const record = result as { message?: unknown; draftRevisionId?: unknown };
+    const message = typeof record.message === 'string'
+      ? record.message
+      : JSON.stringify(result);
+    const draftRevisionId = typeof record.draftRevisionId === 'string'
+      ? record.draftRevisionId
+      : undefined;
+    return { message, draftRevisionId };
+  }
+  return { message: String(result) };
+}
+
 export function ProgressPanel({ jobId, onDone, onPause, onResume, onCancel }: ProgressPanelProps) {
   const { events, status, result } = useJobProgress(jobId);
 
@@ -56,9 +71,20 @@ export function ProgressPanel({ jobId, onDone, onPause, onResume, onCancel }: Pr
             ✅ 完成：{JSON.stringify(result)}
           </div>
         )}
-        {status === 'failed' && result != null && (
-          <div style={{ color: 'var(--red)', marginTop: 8 }}>❌ 失败：{String(result)}</div>
-        )}
+        {status === 'failed' && result != null && (() => {
+          const failure = readFailureInfo(result);
+          return (
+            <div style={{ color: 'var(--red)', marginTop: 8 }}>
+              ❌ 失败：{failure.message}
+              {failure.draftRevisionId && (
+                <div style={{ color: 'var(--muted)', marginTop: 6, fontFamily: 'inherit' }}>
+                  已保留草稿 <code>{failure.draftRevisionId}</code>
+                  ，打开对应章节的修订历史可「继续定稿」。
+                </div>
+              )}
+            </div>
+          );
+        })()}
         {status === 'running' && events.length === 0 && (
           <div style={{ color: 'var(--muted)' }}>等待开始...</div>
         )}

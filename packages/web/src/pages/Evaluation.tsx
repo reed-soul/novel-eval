@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import type { Project } from '../api/client.ts';
 
 export function Evaluation() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [file, setFile] = useState<File | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(
+    searchParams.get('projectId') ?? '',
+  );
   
   // New input states
   const [genre, setGenre] = useState<string>('都市');
@@ -24,6 +27,23 @@ export function Evaluation() {
       .then((data: unknown) => setProjects(Array.isArray(data) ? data.filter(isProject) : []))
       .catch((e: unknown) => console.error('Failed to load projects:', e));
   }, []);
+
+  useEffect(() => {
+    const fromQuery = searchParams.get('projectId') ?? '';
+    if (!fromQuery) return;
+    setSelectedProjectId(fromQuery);
+    setFile(null);
+  }, [searchParams]);
+
+  const bindProjectId = (projectId: string) => {
+    setSelectedProjectId(projectId);
+    if (projectId) {
+      setFile(null);
+      setSearchParams({ projectId }, { replace: true });
+    } else {
+      setSearchParams({}, { replace: true });
+    }
+  };
 
   const handleUpload = async () => {
     if (!file && !selectedProjectId) {
@@ -51,6 +71,11 @@ export function Evaluation() {
       formData.append('genre', genre);
       formData.append('audience', audience);
       formData.append('profile', profile);
+      if (selectedProjectId) {
+        formData.append('projectId', selectedProjectId);
+        const selected = projects.find((p) => p.id === selectedProjectId);
+        if (selected) formData.append('title', selected.title);
+      }
 
       const res = await fetch('/api/eval/upload', {
         method: 'POST',
@@ -86,7 +111,10 @@ export function Evaluation() {
       
       // 稍微延迟一下让用户看到完成消息
       setTimeout(() => {
-        navigate(`/eval/${taskId}`);
+        const q = selectedProjectId
+          ? `?projectId=${encodeURIComponent(selectedProjectId)}`
+          : '';
+        navigate(`/eval/${taskId}${q}`);
       }, 1500);
     });
 
@@ -99,7 +127,7 @@ export function Evaluation() {
     return () => {
       eventSource.close();
     };
-  }, [taskId, status, navigate]);
+  }, [taskId, status, navigate, selectedProjectId]);
 
   return (
     <div className="container">
@@ -163,7 +191,7 @@ export function Evaluation() {
                   onChange={(e) => {
                     setFile(e.target.files?.[0] || null);
                     if (e.target.files?.[0]) {
-                      setSelectedProjectId('');
+                      bindProjectId('');
                     }
                   }}
                   className="upload-input"
@@ -210,12 +238,7 @@ export function Evaluation() {
               <label>方式 B：选择已有工作区项目进行评估</label>
               <select
                 value={selectedProjectId}
-                onChange={(e) => {
-                  setSelectedProjectId(e.target.value);
-                  if (e.target.value) {
-                    setFile(null);
-                  }
-                }}
+                onChange={(e) => bindProjectId(e.target.value)}
                 className="input"
               >
                 <option value="">-- 请选择项目 --</option>
@@ -223,6 +246,12 @@ export function Evaluation() {
                   <option key={p.id} value={p.id}>{p.title} ({p.status})</option>
                 ))}
               </select>
+              {projects.length === 0 && (
+                <p style={{ marginTop: 8, fontSize: 13, color: 'var(--muted)' }}>
+                  还没有写作项目。
+                  <Link to="/projects/new" style={{ marginLeft: 6 }}>先新建项目 →</Link>
+                </p>
+              )}
             </div>
 
             <button 

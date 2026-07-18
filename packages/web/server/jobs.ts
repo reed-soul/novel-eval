@@ -148,13 +148,23 @@ function wireJobRunner(
         job.emitter.emit('cancelled');
       } else {
         const message = err instanceof Error ? err.message : 'job failed';
+        const draftRevisionId = readDraftRevisionId(err);
+        const failurePayload = draftRevisionId
+          ? { message, draftRevisionId }
+          : message;
         job.status = 'failed';
         job.error = message;
+        if (draftRevisionId) {
+          job.result = { draftRevisionId, message };
+        }
         updateJobStatus(db, job.id, 'failed', {
           error: message,
           errorType: err instanceof Error ? err.name : 'Error',
+          ...(draftRevisionId
+            ? { result: { draftRevisionId, message } }
+            : {}),
         });
-        job.emitter.emit('failed', message);
+        job.emitter.emit('failed', failurePayload);
       }
     })
     .finally(() => {
@@ -394,4 +404,12 @@ export function parseAfterSeq(raw: string | undefined): number {
   const value = Number.parseInt(raw, 10);
   if (!Number.isInteger(value) || value < 0) return 0;
   return value;
+}
+
+function readDraftRevisionId(err: unknown): string | undefined {
+  if (typeof err !== 'object' || err === null || !('draftRevisionId' in err)) {
+    return undefined;
+  }
+  const value = (err as { draftRevisionId: unknown }).draftRevisionId;
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
 }

@@ -1,9 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { RadarChart } from '../components/RadarChart.tsx';
 import {
   getEvaluationReport,
+  importRevisionTasks,
+  api,
   type EvaluationReportResponse,
+  type Project,
 } from '../api/client.ts';
 import type {
   EvaluationDimensionKey,
@@ -63,12 +66,19 @@ function excerptLabel(excerpt: EvaluationExcerptDto, fallbackIndex: number): str
 
 export function EvaluationReport() {
   const { taskId } = useParams();
+  const [searchParams] = useSearchParams();
 
   const [report, setReport] = useState<EvaluationReportResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTensionPoint, setActiveTensionPoint] = useState<ActiveTensionPoint | null>(null);
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [importProjectId, setImportProjectId] = useState(searchParams.get('projectId') ?? '');
+  const [maxSuggestions, setMaxSuggestions] = useState(8);
+  const [replaceOpen, setReplaceOpen] = useState(false);
+  const [importBusy, setImportBusy] = useState(false);
+  const [importMsg, setImportMsg] = useState('');
 
   useEffect(() => {
     if (!taskId) return;
@@ -83,6 +93,46 @@ export function EvaluationReport() {
       });
   }, [taskId]);
 
+  useEffect(() => {
+    api<Project[]>('/projects')
+      .then((list) => setProjects(Array.isArray(list) ? list : []))
+      .catch(() => setProjects([]));
+  }, []);
+
+  useEffect(() => {
+    const fromQuery = searchParams.get('projectId') ?? '';
+    if (fromQuery) setImportProjectId(fromQuery);
+  }, [searchParams]);
+
+  const evalHomePath = importProjectId
+    ? `/eval?projectId=${encodeURIComponent(importProjectId)}`
+    : '/eval';
+
+  const importSuggestions = async () => {
+    if (!report || !importProjectId) {
+      setImportMsg('请先选择要导入的写作项目');
+      return;
+    }
+    setImportBusy(true);
+    setImportMsg('');
+    try {
+      const outcome = await importRevisionTasks(importProjectId, {
+        suggestions: report.suggestions ?? [],
+        sourceEvalTaskId: taskId ?? null,
+        replaceOpen,
+        maxSuggestions,
+      });
+      setImportMsg(
+        `已导入 ${outcome.createdCount} 条修订任务` +
+          (outcome.dismissedOpenCount > 0 ? `（关闭旧 open ${outcome.dismissedOpenCount}）` : ''),
+      );
+    } catch (e: unknown) {
+      setImportMsg(e instanceof Error ? e.message : String(e));
+    } finally {
+      setImportBusy(false);
+    }
+  };
+
   if (loading) {
     return <div className="container loading">正在加载评估报告...</div>;
   }
@@ -92,7 +142,7 @@ export function EvaluationReport() {
       <div className="container error" style={{ textAlign: 'center' }}>
         <h3>获取报告失败</h3>
         <p>{error}</p>
-        <Link to="/eval" className="btn btn-primary" style={{ marginTop: 16 }}>返回评估列表</Link>
+        <Link to={evalHomePath} className="btn btn-primary" style={{ marginTop: 16 }}>返回评估列表</Link>
       </div>
     );
   }
@@ -160,7 +210,7 @@ export function EvaluationReport() {
     <div className="container">
       <div className="eval-report-header">
         <div>
-          <Link to="/eval" className="back-link" style={{ marginBottom: 12 }}>
+          <Link to={evalHomePath} className="back-link" style={{ marginBottom: 12 }}>
             ← 返回评估中心
           </Link>
           <div className="eval-title" style={{ fontSize: 32 }}>{novel.title}</div>
@@ -487,6 +537,70 @@ export function EvaluationReport() {
       {suggestions && suggestions.length > 0 && (
         <div className="card" style={{ marginTop: 32 }}>
           <h2>核心优化建议</h2>
+          <div
+            style={{
+              marginTop: 16,
+              padding: 14,
+              border: '1px solid var(--border)',
+              borderRadius: 8,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10,
+            }}
+          >
+            <div style={{ fontWeight: 600, fontSize: 14 }}>导入为修订清单 → 在项目里打开修正</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center' }}>
+              <label style={{ fontSize: 13 }}>
+                写作项目{' '}
+                <select
+                  value={importProjectId}
+                  onChange={(e) => setImportProjectId(e.target.value)}
+                  style={{ marginLeft: 6, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)' }}
+                >
+                  <option value="">选择项目…</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>{p.title}</option>
+                  ))}
+                </select>
+              </label>
+              <label style={{ fontSize: 13 }}>
+                最多导入{' '}
+                <input
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={maxSuggestions}
+                  onChange={(e) => setMaxSuggestions(parseInt(e.target.value, 10) || 8)}
+                  style={{ width: 64, marginLeft: 6, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)' }}
+                />
+              </label>
+              <label style={{ fontSize: 13 }}>
+                <input
+                  type="checkbox"
+                  checked={replaceOpen}
+                  onChange={(e) => setReplaceOpen(e.target.checked)}
+                />{' '}
+                替换现有 open 任务
+              </label>
+              <button
+                className="btn btn-primary"
+                disabled={importBusy || !importProjectId}
+                onClick={() => void importSuggestions()}
+              >
+                {importBusy ? '导入中…' : '导入修订任务'}
+              </button>
+              {importProjectId && (
+                <Link to={`/projects/${importProjectId}`} className="btn">
+                  打开项目 →
+                </Link>
+              )}
+            </div>
+            {importMsg && (
+              <div style={{ fontSize: 13, color: importMsg.startsWith('已导入') ? 'var(--green)' : 'var(--red)' }}>
+                {importMsg}
+              </div>
+            )}
+          </div>
           <div className="suggestions-grid" style={{ marginTop: 24 }}>
             {suggestions.map((sugg: EvaluationSuggestionDto, i: number) => (
               <div key={i} className="suggestion-card">

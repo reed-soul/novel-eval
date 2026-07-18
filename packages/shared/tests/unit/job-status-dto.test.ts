@@ -4,8 +4,8 @@ import { describe, it } from 'node:test';
 import { parseJobStatusResponse } from '../../src/dto/jobs.ts';
 
 describe('parseJobStatusResponse', () => {
-  it('accepts rebuild and edit job types', () => {
-    for (const type of ['rebuild', 'edit'] as const) {
+  it('accepts rebuild, edit, and auto job types', () => {
+    for (const type of ['rebuild', 'edit', 'auto'] as const) {
       const parsed = parseJobStatusResponse({
         id: 'job-1',
         type,

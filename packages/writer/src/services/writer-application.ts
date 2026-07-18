@@ -101,12 +101,18 @@ export interface GenerateBibleAppInput extends Omit<GenerateBibleOptions, 'db'> 
   existingJobId?: string;
   ownerId?: string;
   ttlMs?: number;
+  /**
+   * When true with an outer orchestrator job, do not write terminal job status.
+   * The caller owns completed/failed/paused transitions.
+   */
+  leaveJobOpen?: boolean;
 }
 
 export interface GenerateBlueprintAppInput extends Omit<GenerateBlueprintOptions, 'db'> {
   existingJobId?: string;
   ownerId?: string;
   ttlMs?: number;
+  leaveJobOpen?: boolean;
 }
 
 export interface ApproveBibleRevisionInput {
@@ -160,6 +166,8 @@ export interface GenerateChapterRangeInput {
   ttlMs?: number;
   onProgress?: (step: string, msg: string) => void;
   control?: GenerationControl;
+  /** See GenerateBibleAppInput.leaveJobOpen */
+  leaveJobOpen?: boolean;
   generateContent?: (
     context: CompiledChapterContext,
     revision?: { attempt: number; feedback?: string },
@@ -170,6 +178,29 @@ export interface GenerateChapterRangeInput {
     title: string;
     chapterRevisionId: ChapterRevisionId;
   }) => Promise<ExtractStoryStateResult>;
+}
+
+export interface RunAutoInput {
+  projectId: string;
+  engine: AIAgentAdapter;
+  topic: string;
+  genre: string;
+  audience: string;
+  totalChapters: number;
+  wordCount: number;
+  existingJobId: string;
+  ownerId?: string;
+  engineName?: string;
+  model?: string;
+  budget?: JsonValue;
+  onProgress?: (step: string, msg: string) => void;
+  control?: GenerationControl;
+}
+
+export interface RunAutoResult {
+  bibleRevisionId: string;
+  outlineCount: number;
+  outcomes: GenerateChapterOutcome[];
 }
 
 export interface AdoptCorrectionDraftInput {
@@ -291,22 +322,28 @@ export class WriterApplication {
         now: this.now(),
       });
     } catch (error: unknown) {
-      updateJobStatus(this.db, jobId, 'failed', {
-        errorType: error instanceof Error ? error.name : 'Error',
-        error: error instanceof Error ? error.message : 'lease acquire failed',
-      });
+      if (!opts.leaveJobOpen) {
+        updateJobStatus(this.db, jobId, 'failed', {
+          errorType: error instanceof Error ? error.name : 'Error',
+          error: error instanceof Error ? error.message : 'lease acquire failed',
+        });
+      }
       throw error;
     }
     try {
       const onProgress = this.bindLeaseHeartbeat(lease, ownerId, ttlMs, opts.onProgress);
       const result = await generateBibleImpl({ ...opts, db: this.db, onProgress });
-      updateJobStatus(this.db, jobId, 'completed');
+      if (!opts.leaveJobOpen) {
+        updateJobStatus(this.db, jobId, 'completed');
+      }
       return result;
     } catch (error: unknown) {
-      updateJobStatus(this.db, jobId, 'failed', {
-        errorType: error instanceof Error ? error.name : 'Error',
-        error: error instanceof Error ? error.message : 'generate bible failed',
-      });
+      if (!opts.leaveJobOpen) {
+        updateJobStatus(this.db, jobId, 'failed', {
+          errorType: error instanceof Error ? error.name : 'Error',
+          error: error instanceof Error ? error.message : 'generate bible failed',
+        });
+      }
       throw error;
     } finally {
       this.leases.release({ leaseId: lease.id, ownerId });
@@ -397,22 +434,28 @@ export class WriterApplication {
         now: this.now(),
       });
     } catch (error: unknown) {
-      updateJobStatus(this.db, jobId, 'failed', {
-        errorType: error instanceof Error ? error.name : 'Error',
-        error: error instanceof Error ? error.message : 'lease acquire failed',
-      });
+      if (!opts.leaveJobOpen) {
+        updateJobStatus(this.db, jobId, 'failed', {
+          errorType: error instanceof Error ? error.name : 'Error',
+          error: error instanceof Error ? error.message : 'lease acquire failed',
+        });
+      }
       throw error;
     }
     try {
       const onProgress = this.bindLeaseHeartbeat(lease, ownerId, ttlMs, opts.onProgress);
       const result = await generateBlueprintImpl({ ...opts, db: this.db, onProgress });
-      updateJobStatus(this.db, jobId, 'completed');
+      if (!opts.leaveJobOpen) {
+        updateJobStatus(this.db, jobId, 'completed');
+      }
       return result;
     } catch (error: unknown) {
-      updateJobStatus(this.db, jobId, 'failed', {
-        errorType: error instanceof Error ? error.name : 'Error',
-        error: error instanceof Error ? error.message : 'generate blueprint failed',
-      });
+      if (!opts.leaveJobOpen) {
+        updateJobStatus(this.db, jobId, 'failed', {
+          errorType: error instanceof Error ? error.name : 'Error',
+          error: error instanceof Error ? error.message : 'generate blueprint failed',
+        });
+      }
       throw error;
     } finally {
       this.leases.release({ leaseId: lease.id, ownerId });
@@ -1027,10 +1070,12 @@ export class WriterApplication {
         now: this.now(),
       });
     } catch (error: unknown) {
-      updateJobStatus(this.db, jobId, 'failed', {
-        errorType: error instanceof Error ? error.name : 'Error',
-        error: error instanceof Error ? error.message : 'lease acquire failed',
-      });
+      if (!input.leaveJobOpen) {
+        updateJobStatus(this.db, jobId, 'failed', {
+          errorType: error instanceof Error ? error.name : 'Error',
+          error: error instanceof Error ? error.message : 'lease acquire failed',
+        });
+      }
       throw error;
     }
 
@@ -1114,27 +1159,138 @@ export class WriterApplication {
         input.control?.onChapterComplete?.(position);
       }
 
-      updateJobStatus(this.db, jobId, 'completed', {
-        result: { generated: outcomes.length },
-      });
+      if (!input.leaveJobOpen) {
+        updateJobStatus(this.db, jobId, 'completed', {
+          result: { generated: outcomes.length },
+        });
+      }
       return { jobId, outcomes };
     } catch (error: unknown) {
       if (error instanceof JobPausedError) {
-        updateJobStatus(this.db, jobId, 'paused');
+        if (!input.leaveJobOpen) {
+          updateJobStatus(this.db, jobId, 'paused');
+        }
         throw error;
       }
       if (error instanceof JobCancelledError) {
-        updateJobStatus(this.db, jobId, 'cancelled');
+        if (!input.leaveJobOpen) {
+          updateJobStatus(this.db, jobId, 'cancelled');
+        }
         throw error;
       }
-      updateJobStatus(this.db, jobId, 'failed', {
-        errorType: error instanceof Error ? error.name : 'Error',
-        error: error instanceof Error ? error.message : 'generate range failed',
-      });
+      if (!input.leaveJobOpen) {
+        updateJobStatus(this.db, jobId, 'failed', {
+          errorType: error instanceof Error ? error.name : 'Error',
+          error: error instanceof Error ? error.message : 'generate range failed',
+        });
+      }
       throw error;
     } finally {
       this.leases.release({ leaseId: lease.id, ownerId });
     }
+  }
+
+  /**
+   * Full auto pipeline (bible → approve → outline → approve → chapters)
+   * under one outer job id. Does not write terminal job status — caller owns it.
+   */
+  async runAuto(input: RunAutoInput): Promise<RunAutoResult> {
+    const ownerId = input.ownerId ?? this.defaultOwnerId;
+    const existing = getJobRow(this.db, input.existingJobId);
+    if (!existing || existing.projectId !== input.projectId) {
+      throw new Error(`Job ${input.existingJobId} not found for project`);
+    }
+    if (existing.type !== 'auto') {
+      throw new Error(`Job ${input.existingJobId} type is ${existing.type}, expected auto`);
+    }
+
+    const totalChapters = Math.floor(input.totalChapters);
+    if (!Number.isInteger(totalChapters) || totalChapters < 1) {
+      throw new ValidationError('totalChapters must be a positive integer');
+    }
+    if (!Number.isInteger(input.wordCount) || input.wordCount < 1) {
+      throw new ValidationError('wordCount must be a positive integer');
+    }
+
+    input.onProgress?.('auto:bible', '阶段 1/3：生成 Bible…');
+    const bibleResult = await this.generateBible({
+      engine: input.engine,
+      projectId: input.projectId,
+      topic: input.topic,
+      genre: input.genre,
+      audience: input.audience,
+      existingJobId: input.existingJobId,
+      ownerId,
+      onProgress: input.onProgress,
+      leaveJobOpen: true,
+    });
+
+    input.onProgress?.('auto:approve-bible', '批准 Bible draft…');
+    this.approveBibleRevision({
+      projectId: projectId(input.projectId),
+      revisionId: bibleResult.bibleRevisionId,
+      ownerId,
+    });
+
+    input.onProgress?.('auto:outline', `阶段 2/3：生成 ${totalChapters} 章蓝图…`);
+    const blueprint = await this.generateBlueprint({
+      engine: input.engine,
+      projectId: input.projectId,
+      plot: bibleResult.bible.plotArchitecture,
+      characters: bibleResult.bible.characterDynamics,
+      totalChapters,
+      existingJobId: input.existingJobId,
+      ownerId,
+      onProgress: input.onProgress,
+      leaveJobOpen: true,
+    });
+
+    if (blueprint.outlines.length > 0) {
+      input.onProgress?.(
+        'auto:approve-outline',
+        `批准蓝图 draft（1–${blueprint.outlines.length}）…`,
+      );
+      this.approveOutlines({
+        projectId: projectId(input.projectId),
+        from: 1,
+        to: blueprint.outlines.length,
+        ownerId,
+      });
+    }
+
+    if (blueprint.outlines.length === 0) {
+      return {
+        bibleRevisionId: bibleResult.bibleRevisionId,
+        outlineCount: 0,
+        outcomes: [],
+      };
+    }
+
+    input.onProgress?.(
+      'auto:chapters',
+      `阶段 3/3：生成正文（1–${blueprint.outlines.length}）…`,
+    );
+    const chapterResult = await this.generateChapterRange({
+      projectId: projectId(input.projectId),
+      from: 1,
+      to: blueprint.outlines.length,
+      engine: input.engine,
+      wordCount: input.wordCount,
+      existingJobId: input.existingJobId,
+      ownerId,
+      engineName: input.engineName ?? input.engine.name,
+      model: input.model ?? input.engine.name,
+      budget: input.budget ?? {},
+      onProgress: input.onProgress,
+      control: input.control,
+      leaveJobOpen: true,
+    });
+
+    return {
+      bibleRevisionId: bibleResult.bibleRevisionId,
+      outlineCount: blueprint.outlines.length,
+      outcomes: chapterResult.outcomes,
+    };
   }
 
   private bindLeaseHeartbeat(

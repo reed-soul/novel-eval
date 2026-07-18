@@ -8,6 +8,7 @@ import { ProgressPanel } from '../components/ProgressPanel.tsx';
 import { QualityPanel } from '../components/QualityPanel.tsx';
 import { PlanningApproval } from '../components/PlanningApproval.tsx';
 import { StaleImpactPanel } from '../components/StaleImpactPanel.tsx';
+import { RevisionTaskInbox } from '../components/RevisionTaskInbox.tsx';
 
 export function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -19,7 +20,10 @@ export function ProjectDetail() {
   const [activeJob, setActiveJob] = useState<JobInfo | null>(null);
   const [genFrom, setGenFrom] = useState(1);
   const [genTo, setGenTo] = useState(5);
+  const [outlineChapters, setOutlineChapters] = useState(60);
+  const [wordCount, setWordCount] = useState(2800);
   const [useGate, setUseGate] = useState(true);
+  const [maxRevise, setMaxRevise] = useState(1);
   const [maxCostRmb, setMaxCostRmb] = useState('');
   const [planningApproved, setPlanningApproved] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -83,15 +87,24 @@ export function ProjectDetail() {
 
   const startOutline = async () => {
     if (!confirmBudget('蓝图生成')) return;
-    const data = await apiPost<{ jobId: string }>(`/projects/${id}/outline/generate`, { chapters: 12 });
+    const chapters = Number.isFinite(outlineChapters) && outlineChapters > 0 ? outlineChapters : 60;
+    const data = await apiPost<{ jobId: string }>(`/projects/${id}/outline/generate`, { chapters });
     if (data.jobId) { setJobId(data.jobId); setActiveJob({ id: data.jobId, type: 'outline', projectId: id!, status: 'running' }); }
   };
 
   const startChapters = async () => {
     if (!confirmBudget('章节生成')) return;
     const maxCost = configuredMaxCost();
+    const targetWords = Number.isFinite(wordCount) && wordCount > 0 ? wordCount : 2800;
+    const revise = useGate
+      ? (Number.isFinite(maxRevise) && maxRevise >= 0 ? maxRevise : 0)
+      : 0;
     const data = await apiPost<{ jobId: string }>(`/projects/${id}/chapters/generate`, {
-      from: genFrom, to: genTo, qualityGate: useGate, maxRevise: 1,
+      from: genFrom,
+      to: genTo,
+      wordCount: targetWords,
+      qualityGate: useGate,
+      maxRevise: revise,
       ...(maxCost === null ? {} : { maxCostRmb: maxCost }),
     });
     if (data.jobId) {
@@ -168,9 +181,7 @@ export function ProjectDetail() {
               {activeJob.type === 'chapter' && activeJob.status === 'paused' && (
                 <button className="btn btn-primary" onClick={() => handleResume(activeJob.id)}>▶ 继续</button>
               )}
-              {activeJob.type === 'chapter' && (
-                <button className="btn" onClick={handleCancel} title="放弃当前任务">⏹ 取消</button>
-              )}
+              <button className="btn" onClick={handleCancel} title="放弃当前任务">⏹ 取消</button>
             </div>
           </div>
         </div>
@@ -181,7 +192,19 @@ export function ProjectDetail() {
         <h2>生成操作</h2>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
           <button className="btn btn-primary" onClick={startBible} disabled={!!jobActive}>📖 生成 Bible</button>
-          <button className="btn btn-primary" onClick={startOutline} disabled={!!jobActive}>📋 生成蓝图（12章）</button>
+          <label style={{ fontSize: 14 }}>
+            蓝图章数
+            <input
+              type="number"
+              min={1}
+              value={outlineChapters}
+              onChange={(e) => setOutlineChapters(parseInt(e.target.value, 10) || 1)}
+              style={{ width: 72, marginLeft: 6, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)' }}
+            />
+          </label>
+          <button className="btn btn-primary" onClick={startOutline} disabled={!!jobActive}>
+            📋 生成蓝图（{outlineChapters}章）
+          </button>
           <label style={{ fontSize: 14 }}>
             预算上限 ¥
             <input
@@ -202,8 +225,30 @@ export function ProjectDetail() {
             <span>到</span>
             <input type="number" value={genTo} onChange={(e) => setGenTo(parseInt(e.target.value) || 1)} style={{ width: 60, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)' }} />
             <label style={{ fontSize: 14 }}>
+              目标字数
+              <input
+                type="number"
+                min={1}
+                value={wordCount}
+                onChange={(e) => setWordCount(parseInt(e.target.value, 10) || 1)}
+                style={{ width: 80, marginLeft: 6, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)' }}
+              />
+            </label>
+            <label style={{ fontSize: 14 }}>
               <input type="checkbox" checked={useGate} onChange={(e) => setUseGate(e.target.checked)} /> 质量门槛
             </label>
+            {useGate && (
+              <label style={{ fontSize: 14 }}>
+                最大改写
+                <input
+                  type="number"
+                  min={0}
+                  value={maxRevise}
+                  onChange={(e) => setMaxRevise(parseInt(e.target.value, 10) || 0)}
+                  style={{ width: 60, marginLeft: 6, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)' }}
+                />
+              </label>
+            )}
             <button className="btn btn-primary" onClick={startChapters} disabled={!!jobActive}>✍️ 生成</button>
           </div>
         ) : (
@@ -221,9 +266,11 @@ export function ProjectDetail() {
           onDone={reload}
           onPause={chapterJobActive ? handlePause : undefined}
           onResume={chapterJobActive ? handleResume : undefined}
-          onCancel={chapterJobActive ? handleCancel : undefined}
+          onCancel={jobActive ? handleCancel : undefined}
         />
       )}
+
+      {id && <RevisionTaskInbox projectId={id} />}
 
       {chapters.length > 0 && (
         <div className="card">
@@ -251,7 +298,19 @@ export function ProjectDetail() {
 
       {id && (
         <div className="card">
-          <h2>质量分析 <Link to={`/projects/${id}/dashboard`} className="btn" style={{ fontSize: 13, marginLeft: 8 }}>📊 打开评估仪表盘 →</Link></h2>
+          <h2>
+            质量分析
+            <Link to={`/projects/${id}/dashboard`} className="btn" style={{ fontSize: 13, marginLeft: 8 }}>
+              📊 打开评估仪表盘 →
+            </Link>
+            <Link
+              to={`/eval?projectId=${encodeURIComponent(id)}`}
+              className="btn"
+              style={{ fontSize: 13, marginLeft: 8 }}
+            >
+              全书评估 →
+            </Link>
+          </h2>
           <QualityPanel projectId={id} />
         </div>
       )}

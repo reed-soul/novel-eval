@@ -45,6 +45,16 @@ export async function apiPut<T>(path: string, body?: unknown): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+export async function apiPatch<T>(path: string, body?: unknown): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+  return res.json() as Promise<T>;
+}
+
 // 类型定义（与后端对齐）
 export interface Project {
   id: string; title: string; genreProfile: string; targetAudience: string; premise: string;
@@ -158,6 +168,25 @@ export async function rebuildStoryState(
 
 export async function getChapterRevisions(chapterId: string): Promise<ChapterRevisionsResponse> {
   return api<ChapterRevisionsResponse>(`/chapters/${chapterId}/revisions`);
+}
+
+export interface FinalizeDraftRevisionResponse {
+  chapterRevisionId: string;
+  storyStateRevisionId: string;
+  outlineStatus: string;
+  staleImpact: { affectedOutlinePositions: number[] };
+}
+
+/** Publish a kept draft revision (extract + activate, no regen). */
+export async function finalizeDraftRevision(
+  projectId: string,
+  revisionId: string,
+  body: { model?: string; promptVersion?: string; extractAttempts?: number } = {},
+): Promise<FinalizeDraftRevisionResponse> {
+  return apiPost<FinalizeDraftRevisionResponse>(
+    `/projects/${projectId}/revisions/${revisionId}/finalize`,
+    body,
+  );
 }
 
 export interface EditChapterExtractResponse {
@@ -325,6 +354,114 @@ export interface ActiveJobResponse {
 
 export async function getActiveJob(projectId: string): Promise<ActiveJobResponse> {
   return api<ActiveJobResponse>(`/projects/${projectId}/active-job`);
+}
+
+export interface ActiveJobListItem extends JobStatusResponse {
+  projectTitle: string;
+  fromChapter?: number | null;
+  toChapter?: number | null;
+  lastChapter?: number | null;
+}
+
+export async function listActiveJobs(): Promise<{ jobs: ActiveJobListItem[] }> {
+  return api<{ jobs: ActiveJobListItem[] }>('/projects/jobs/active');
+}
+
+export interface ActiveEvalJobListItem {
+  taskId: string;
+  status: 'running' | 'completed' | 'failed';
+  latestMessage: string | null;
+  updatedAt: number;
+  projectId: string | null;
+  title: string | null;
+}
+
+export async function listActiveEvalJobs(): Promise<{ jobs: ActiveEvalJobListItem[] }> {
+  return api<{ jobs: ActiveEvalJobListItem[] }>('/eval/jobs/active');
+}
+
+// ─── 修订任务（评估建议 → 改稿清单）──────────────────────────────
+
+export type RevisionTaskStatus = 'open' | 'in_progress' | 'done' | 'dismissed';
+export type RevisionTaskScope = 'chapter' | 'volume' | 'book';
+
+export interface RevisionTask {
+  id: string;
+  projectId: string;
+  status: RevisionTaskStatus;
+  scope: RevisionTaskScope;
+  dimension: string | null;
+  content: string;
+  type: string | null;
+  relatedChapters: string[];
+  excerptRef: { chapterId: string; excerptIndex: number } | null;
+  sourceEvalTaskId: string | null;
+  sourceKind: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ImportRevisionTasksResult {
+  tasks: RevisionTask[];
+  createdCount: number;
+  dismissedOpenCount: number;
+}
+
+export interface OpenCorrectionResult {
+  task: RevisionTask;
+  chapterNumber: number;
+  path: string;
+}
+
+export async function importRevisionTasks(
+  projectId: string,
+  body: {
+    suggestions?: unknown[];
+    result?: { suggestions?: unknown[] } | null;
+    sourceEvalTaskId?: string | null;
+    replaceOpen?: boolean;
+    maxSuggestions?: number;
+  },
+): Promise<ImportRevisionTasksResult> {
+  return apiPost<ImportRevisionTasksResult>(
+    `/projects/${projectId}/revision-tasks/from-eval`,
+    body,
+  );
+}
+
+export async function listRevisionTasks(
+  projectId: string,
+  status?: RevisionTaskStatus,
+): Promise<{ tasks: RevisionTask[] }> {
+  const q = status ? `?status=${encodeURIComponent(status)}` : '';
+  return api<{ tasks: RevisionTask[] }>(`/projects/${projectId}/revision-tasks${q}`);
+}
+
+export async function getRevisionTask(
+  projectId: string,
+  taskId: string,
+): Promise<{ task: RevisionTask }> {
+  return api<{ task: RevisionTask }>(`/projects/${projectId}/revision-tasks/${taskId}`);
+}
+
+export async function setRevisionTaskStatus(
+  projectId: string,
+  taskId: string,
+  status: RevisionTaskStatus,
+): Promise<{ task: RevisionTask }> {
+  return apiPatch<{ task: RevisionTask }>(
+    `/projects/${projectId}/revision-tasks/${taskId}`,
+    { status },
+  );
+}
+
+export async function openCorrection(
+  projectId: string,
+  taskId: string,
+): Promise<OpenCorrectionResult> {
+  return apiPost<OpenCorrectionResult>(
+    `/projects/${projectId}/revision-tasks/${taskId}/open-correction`,
+  );
 }
 
 export async function pauseJob(jobId: string): Promise<void> {

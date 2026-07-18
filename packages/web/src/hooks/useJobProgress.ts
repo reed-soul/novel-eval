@@ -28,6 +28,14 @@ function isTerminalStatus(status: string): status is Exclude<JobProgressStatus, 
     || status === 'cancelled';
 }
 
+function readDraftRevisionId(value: unknown): string | undefined {
+  if (typeof value !== 'object' || value === null || !('draftRevisionId' in value)) {
+    return undefined;
+  }
+  const id = (value as { draftRevisionId: unknown }).draftRevisionId;
+  return typeof id === 'string' && id.length > 0 ? id : undefined;
+}
+
 /**
  * 订阅 job 进度（SSE）。
  *
@@ -87,10 +95,17 @@ export function useJobProgress(jobId: string | null) {
         const data = await res.json() as JobStatusPayload;
         const remoteStatus = typeof data.status === 'string' ? data.status : '';
         if (isTerminalStatus(remoteStatus)) {
-          applyTerminal(
-            remoteStatus,
-            remoteStatus === 'failed' ? data.error : data.result,
-          );
+          let payload: unknown = data.result;
+          if (remoteStatus === 'failed') {
+            const draftFromResult = readDraftRevisionId(data.result);
+            payload = draftFromResult
+              ? {
+                  message: typeof data.error === 'string' ? data.error : 'job failed',
+                  draftRevisionId: draftFromResult,
+                }
+              : data.error;
+          }
+          applyTerminal(remoteStatus, payload);
           return;
         }
         if (remoteStatus === 'running' || remoteStatus === 'queued') {
