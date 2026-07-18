@@ -184,6 +184,8 @@ export interface EvalHistoryRecord {
   dimensions: Record<string, { score: number; analysis: string }> | null;
   suggestions: Array<{ dimension?: string; content: string }> | null;
   repetition: { within: number; cross: number; hotspots: string[] } | null;
+  /** Slim assessChapters JSON for forensics (nullable for pre-migration rows). */
+  assessRaw: unknown | null;
   model: string | null;
   evaluatorModel: string | null;
   createdAt: string;
@@ -193,6 +195,7 @@ interface EvalHistoryRow {
   id: string; project_id: string; chapter_number: number; attempt: number;
   verdict: string; total_score: number | null; grade: string | null;
   dimensions: string | null; suggestions: string | null; repetition: string | null;
+  assess_raw?: string | null;
   model: string | null; evaluator_model: string | null; created_at: string;
 }
 
@@ -204,6 +207,7 @@ function rowToEvalHistory(row: EvalHistoryRow): EvalHistoryRecord {
     dimensions: row.dimensions ? JSON.parse(row.dimensions) : null,
     suggestions: row.suggestions ? JSON.parse(row.suggestions) : null,
     repetition: row.repetition ? JSON.parse(row.repetition) : null,
+    assessRaw: row.assess_raw ? JSON.parse(row.assess_raw) : null,
     model: row.model, evaluatorModel: row.evaluator_model,
     createdAt: row.created_at,
   };
@@ -212,14 +216,18 @@ function rowToEvalHistory(row: EvalHistoryRow): EvalHistoryRecord {
 export function saveEvalHistory(db: DB, record: Omit<EvalHistoryRecord, 'id' | 'createdAt'>): void {
   db.prepare(
     `INSERT INTO eval_history (id, project_id, chapter_number, attempt, verdict,
-       total_score, grade, dimensions, suggestions, repetition, model, evaluator_model, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       total_score, grade, dimensions, suggestions, repetition, assess_raw,
+       model, evaluator_model, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   ).run(
     randomUUID(), record.projectId, record.chapterNumber, record.attempt, record.verdict,
     record.totalScore, record.grade,
     record.dimensions ? JSON.stringify(record.dimensions) : null,
     record.suggestions ? JSON.stringify(record.suggestions) : null,
     record.repetition ? JSON.stringify(record.repetition) : null,
+    record.assessRaw !== undefined && record.assessRaw !== null
+      ? JSON.stringify(record.assessRaw)
+      : null,
     record.model, record.evaluatorModel,
     new Date().toISOString(),
   );

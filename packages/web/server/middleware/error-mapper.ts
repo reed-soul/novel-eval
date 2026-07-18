@@ -73,10 +73,12 @@ export function toHttpError(error: unknown): HttpErrorBody {
     error instanceof ChapterQualityRejectedError
     || errorName(error) === 'ChapterQualityRejectedError'
   ) {
+    const rejected = error as ChapterQualityRejectedError;
     return {
       status: 422,
       code: 'ChapterQualityRejectedError',
       message: errorMessage(error),
+      draftRevisionId: rejected.draftRevisionId,
     };
   }
   if (

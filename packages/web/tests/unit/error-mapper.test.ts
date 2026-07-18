@@ -46,16 +46,19 @@ describe('toHttpError', () => {
     assert.equal(mapped.code, 'EvaluationIncompleteError');
   });
 
-  it('maps ChapterQualityRejectedError to 422', () => {
+  it('maps ChapterQualityRejectedError to 422 and preserves draftRevisionId', () => {
     const mapped = toHttpError(new ChapterQualityRejectedError({
       outlinePosition: 3,
       verdict: 'reject',
       reasons: ['等级 D'],
       score: 40,
       grade: 'D',
+      draftRevisionId: 'rev-qg-keep',
     }));
     assert.equal(mapped.status, 422);
     assert.equal(mapped.code, 'ChapterQualityRejectedError');
+    assert.equal(mapped.draftRevisionId, 'rev-qg-keep');
+    assert.equal(httpErrorJson(mapped).draftRevisionId, 'rev-qg-keep');
   });
 
   it('maps StateExtractionError to 422 and preserves draftRevisionId', () => {

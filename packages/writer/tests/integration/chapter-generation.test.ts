@@ -484,7 +484,7 @@ it('revises once via quality reviewer then publishes accepted draft', async (t) 
   assert.ok(states.getCurrentAtPosition(fixtureProjectId, 3));
 });
 
-it('rejects chapter when quality reviewer blocks without remaining revises', async (t) => {
+it('keeps draft when quality reject has no remaining revises', async (t) => {
   const testDb = createTestDb();
   t.after(() => testDb.cleanup());
   const { lease, chapters, states, generation } = seedProject(testDb.db);
@@ -506,6 +506,7 @@ it('rejects chapter when quality reviewer blocks without remaining revises', asy
           reason: '等级 D',
           score: 40,
           grade: 'D',
+          feedback: '【改进建议】\n  - 加强冲突',
           evidence: [],
           usage: { inputTokens: 0, outputTokens: 0, costRmb: 0, model: 'review', durationMs: 1 },
         }),
@@ -518,14 +519,149 @@ it('rejects chapter when quality reviewer blocks without remaining revises', asy
         promptVersion: 'state-v1',
       }),
     }),
-    ChapterQualityRejectedError,
+    (error: unknown) => {
+      assert.ok(error instanceof ChapterQualityRejectedError);
+      assert.equal(typeof error.draftRevisionId, 'string');
+      return true;
+    },
   );
 
   const chapterThree = chapters.getByOutlinePosition(fixtureProjectId, 3);
   assert.ok(chapterThree);
   const revisions = chapters.listRevisions(chapterThree.id);
   assert.equal(revisions.length, 1);
-  assert.equal(revisions[0]?.status, 'rejected');
+  assert.equal(revisions[0]?.status, 'draft');
   assert.equal(chapterThree.activeRevisionId, null);
   assert.equal(states.getCurrentAtPosition(fixtureProjectId, 3), null);
+});
+
+it('soft quality reject consumes maxRevise then publishes', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const { lease, chapters, states, generation } = seedProject(testDb.db);
+  let reviewCalls = 0;
+  let generateCalls = 0;
+
+  const outcome = await generation.generateNext({
+    projectId: fixtureProjectId,
+    outlinePosition: 3,
+    lease,
+    engine: contentEngine('unused'),
+    wordCount: 100,
+    qualityReview: {
+      enabled: true,
+      maxRevise: 1,
+      metadata: { genre: '科幻', targetAudience: '青年' },
+      review: async () => {
+        reviewCalls += 1;
+        if (reviewCalls === 1) {
+          return {
+            verdict: 'reject' as const,
+            reasons: ['等级 D（15 分）低于 D 线'],
+            reason: '等级 D（15 分）低于 D 线',
+            score: 15,
+            grade: 'D',
+            hardBlock: false,
+            feedback: '【改进建议】\n  - 开篇加强冲突',
+            evidence: [],
+            usage: { inputTokens: 0, outputTokens: 0, costRmb: 0, model: 'review', durationMs: 1 },
+          };
+        }
+        return {
+          verdict: 'accept' as const,
+          reasons: ['通过'],
+          reason: '通过',
+          score: 82,
+          grade: 'A',
+          evidence: [],
+          usage: { inputTokens: 0, outputTokens: 0, costRmb: 0, model: 'review', durationMs: 1 },
+        };
+      },
+    },
+    generateContent: async (_ctx, revision) => {
+      generateCalls += 1;
+      return {
+        title: '第三章',
+        content: revision?.feedback
+          ? '第三章软挡后重写正文。'
+          : '第三章灾难分初稿。',
+        usage: { inputTokens: 1, outputTokens: 2, costRmb: 0.001, model: 'mock', durationMs: 1 },
+        model: 'mock',
+      };
+    },
+    extractState: async () => ({
+      state: emptyState('第三章'),
+      delta: emptyDelta('第三章'),
+      usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'extract-mock', durationMs: 1 },
+      model: 'extract-mock',
+      promptVersion: 'state-v1',
+    }),
+  });
+
+  assert.equal(outcome.kind, 'published');
+  assert.equal(generateCalls, 2);
+  assert.equal(reviewCalls, 2);
+  const chapterThree = chapters.getByOutlinePosition(fixtureProjectId, 3);
+  assert.ok(chapterThree);
+  const revisions = chapters.listRevisions(chapterThree.id);
+  assert.equal(revisions.filter((r) => r.status === 'rejected').length, 1);
+  assert.equal(revisions.filter((r) => r.status === 'published').length, 1);
+  assert.ok(states.getCurrentAtPosition(fixtureProjectId, 3));
+});
+
+it('hardBlock quality reject does not consume maxRevise and keeps draft', async (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+  const { lease, chapters, generation } = seedProject(testDb.db);
+  let generateCalls = 0;
+
+  await assert.rejects(
+    () => generation.generateNext({
+      projectId: fixtureProjectId,
+      outlinePosition: 3,
+      lease,
+      engine: contentEngine('unused'),
+      wordCount: 100,
+      qualityReview: {
+        enabled: true,
+        maxRevise: 2,
+        metadata: { genre: '科幻', targetAudience: '青年' },
+        review: async () => ({
+          verdict: 'reject',
+          hardBlock: true,
+          reasons: ['重复率严重'],
+          reason: '重复率严重',
+          evidence: [],
+          usage: { inputTokens: 0, outputTokens: 0, costRmb: 0, model: 'review', durationMs: 1 },
+        }),
+      },
+      generateContent: async () => {
+        generateCalls += 1;
+        return {
+          title: '第三章',
+          content: '严重复读正文',
+          usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'mock', durationMs: 1 },
+          model: 'mock',
+        };
+      },
+      extractState: async () => ({
+        state: emptyState('x'),
+        delta: emptyDelta('x'),
+        usage: { inputTokens: 0, outputTokens: 0, costRmb: 0, model: 'e', durationMs: 1 },
+        model: 'e',
+        promptVersion: 'state-v1',
+      }),
+    }),
+    (error: unknown) => {
+      assert.ok(error instanceof ChapterQualityRejectedError);
+      assert.equal(error.hardBlock, true);
+      assert.equal(typeof error.draftRevisionId, 'string');
+      return true;
+    },
+  );
+
+  assert.equal(generateCalls, 1);
+  const chapterThree = chapters.getByOutlinePosition(fixtureProjectId, 3);
+  assert.ok(chapterThree);
+  assert.equal(chapters.listRevisions(chapterThree.id)[0]?.status, 'draft');
 });

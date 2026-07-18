@@ -284,20 +284,29 @@ export class ChapterGenerationService {
         break;
       }
 
-      this.markRevisionRejected(candidate.revision.id);
-      candidateRevisionId = null;
-
-      if (review.verdict === 'revise' && attempt < maxAttempts) {
-        quality.onProgress?.(`质量审阅要求重写：${review.reason}`);
+      const hardBlock = review.hardBlock === true;
+      const softFail = review.verdict === 'revise'
+        || (review.verdict === 'reject' && !hardBlock);
+      if (softFail && attempt < maxAttempts) {
+        this.markRevisionRejected(candidate.revision.id);
+        candidateRevisionId = null;
+        quality.onProgress?.(
+          review.verdict === 'revise'
+            ? `质量审阅要求重写：${review.reason}`
+            : `质量审阅软挡（${review.grade ?? review.verdict}），尝试重写：${review.reason}`,
+        );
         continue;
       }
 
+      // Terminal quality fail: keep draft for finalize / manual review.
       throw new ChapterQualityRejectedError({
         outlinePosition: input.outlinePosition,
         verdict: review.verdict === 'revise' ? 'revise' : 'reject',
         reasons: review.reasons,
         score: review.score,
         grade: review.grade,
+        draftRevisionId: candidate.revision.id,
+        hardBlock,
       });
     }
 
