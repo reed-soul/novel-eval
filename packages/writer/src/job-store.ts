@@ -16,7 +16,7 @@ import {
   type JsonValue,
 } from './repositories/validation.ts';
 
-export type JobType = 'bible' | 'outline' | 'chapter' | 'correction' | 'rebuild' | 'edit';
+export type JobType = 'bible' | 'outline' | 'chapter' | 'correction' | 'rebuild' | 'edit' | 'auto';
 export type JobStatus = 'queued' | 'running' | 'paused' | 'completed' | 'failed' | 'cancelled';
 
 export interface JobScope {

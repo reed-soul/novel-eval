@@ -2,7 +2,7 @@ import { Hono, type Context } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import { evaluationCoverageFor, toEvaluationReportResponse } from '@novel-eval/shared';
 import { EvaluationIncompleteError } from '@novel-eval/writer';
-import { getEvalJob, runEvalTaskInBackground } from '../eval-jobs.ts';
+import { getEvalJob, listActiveEvalJobs, runEvalTaskInBackground } from '../eval-jobs.ts';
 import { httpErrorJson, toHttpError } from '../middleware/error-mapper.ts';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -89,6 +89,12 @@ evalTasksRouter.post('/upload', async (c) => {
   const profile = typeof body['profile'] === 'string' ? body['profile'] : 'default';
   const genre = typeof body['genre'] === 'string' ? body['genre'] : '未知';
   const audience = typeof body['audience'] === 'string' ? body['audience'] : '全年龄';
+  const projectId = typeof body['projectId'] === 'string' && body['projectId'].trim() !== ''
+    ? body['projectId'].trim()
+    : null;
+  const title = typeof body['title'] === 'string' && body['title'].trim() !== ''
+    ? body['title'].trim()
+    : (file instanceof File ? file.name : null);
 
   runEvalTaskInBackground(taskId, {
     filePath,
@@ -98,7 +104,7 @@ evalTasksRouter.post('/upload', async (c) => {
       targetAudience: audience,
       platform: 'web',
     },
-  }).then(async (result) => {
+  }, { projectId, title }).then(async (result) => {
     const resultPath = evalArtifactPath(taskId, 'json');
     // Persist flat report even when incomplete; GET /result enforces the gate.
     const report = persistReportResponse(result);
@@ -109,6 +115,10 @@ evalTasksRouter.post('/upload', async (c) => {
   });
 
   return c.json({ taskId });
+});
+
+evalTasksRouter.get('/jobs/active', (c) => {
+  return c.json({ jobs: listActiveEvalJobs(20) });
 });
 
 evalTasksRouter.get('/:taskId/stream', (c) => {

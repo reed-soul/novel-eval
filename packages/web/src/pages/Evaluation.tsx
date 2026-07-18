@@ -71,6 +71,11 @@ export function Evaluation() {
       formData.append('genre', genre);
       formData.append('audience', audience);
       formData.append('profile', profile);
+      if (selectedProjectId) {
+        formData.append('projectId', selectedProjectId);
+        const selected = projects.find((p) => p.id === selectedProjectId);
+        if (selected) formData.append('title', selected.title);
+      }
 
       const res = await fetch('/api/eval/upload', {
         method: 'POST',

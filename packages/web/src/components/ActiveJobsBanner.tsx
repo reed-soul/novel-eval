@@ -1,9 +1,14 @@
 /**
- * Global banner: show running/paused writer jobs across projects with live SSE lines.
+ * Global banner: show running writer jobs + eval tasks with live progress.
  */
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { listActiveJobs, type ActiveJobListItem } from '../api/client.ts';
+import {
+  listActiveEvalJobs,
+  listActiveJobs,
+  type ActiveEvalJobListItem,
+  type ActiveJobListItem,
+} from '../api/client.ts';
 import { useJobProgress } from '../hooks/useJobProgress.ts';
 
 const POLL_MS = 4000;
@@ -15,15 +20,16 @@ function jobTypeLabel(type: string): string {
   if (type === 'correction') return '修正';
   if (type === 'rebuild') return '状态重建';
   if (type === 'edit') return '编辑';
+  if (type === 'auto') return '全自动';
   return type;
 }
 
-function JobProgressLine({ job }: { job: ActiveJobListItem }) {
+function WriterJobProgressLine({ job }: { job: ActiveJobListItem }) {
   const { events, status } = useJobProgress(
     job.status === 'running' || job.status === 'paused' ? job.id : null,
   );
   const latest = events.length > 0 ? events[events.length - 1] : null;
-  const chapterHint = job.type === 'chapter' && job.toChapter
+  const chapterHint = (job.type === 'chapter' || job.type === 'auto') && job.toChapter
     ? ` · 第 ${(job.lastChapter ?? (job.fromChapter ?? 1) - 1) + 1}/${job.toChapter} 章`
     : '';
 
@@ -57,20 +63,55 @@ function JobProgressLine({ job }: { job: ActiveJobListItem }) {
   );
 }
 
+function EvalJobProgressLine({ job }: { job: ActiveEvalJobListItem }) {
+  const label = job.title?.trim() || `评估 ${job.taskId.slice(0, 8)}`;
+  const href = job.projectId
+    ? `/eval/${job.taskId}?projectId=${encodeURIComponent(job.projectId)}`
+    : `/eval/${job.taskId}`;
+
+  return (
+    <div style={{
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: 8,
+      alignItems: 'baseline',
+      fontSize: 13,
+      lineHeight: 1.5,
+    }}>
+      <Link to={href} style={{ fontWeight: 600 }}>{label}</Link>
+      <span style={{ color: 'var(--muted)' }}>全书评估</span>
+      {job.latestMessage ? (
+        <span style={{ color: 'var(--text)', flex: '1 1 200px', minWidth: 0 }}>
+          {job.latestMessage}
+        </span>
+      ) : (
+        <span style={{ color: 'var(--muted)' }}>等待进度…</span>
+      )}
+      {job.projectId && (
+        <Link to={`/projects/${job.projectId}`} style={{ color: 'var(--muted)', fontSize: 12 }}>
+          项目 →
+        </Link>
+      )}
+    </div>
+  );
+}
+
 export function ActiveJobsBanner() {
   const location = useLocation();
-  const [jobs, setJobs] = useState<ActiveJobListItem[]>([]);
+  const [writerJobs, setWriterJobs] = useState<ActiveJobListItem[]>([]);
+  const [evalJobs, setEvalJobs] = useState<ActiveEvalJobListItem[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     const tick = () => {
-      listActiveJobs()
-        .then((res) => {
-          if (!cancelled) setJobs(res.jobs);
-        })
-        .catch(() => {
-          if (!cancelled) setJobs([]);
-        });
+      Promise.all([
+        listActiveJobs().catch(() => ({ jobs: [] as ActiveJobListItem[] })),
+        listActiveEvalJobs().catch(() => ({ jobs: [] as ActiveEvalJobListItem[] })),
+      ]).then(([writer, evalRes]) => {
+        if (cancelled) return;
+        setWriterJobs(writer.jobs);
+        setEvalJobs(evalRes.jobs);
+      });
     };
     tick();
     const timer = setInterval(tick, POLL_MS);
@@ -80,7 +121,8 @@ export function ActiveJobsBanner() {
     };
   }, [location.pathname]);
 
-  if (jobs.length === 0) return null;
+  const total = writerJobs.length + evalJobs.length;
+  if (total === 0) return null;
 
   return (
     <div
@@ -93,10 +135,13 @@ export function ActiveJobsBanner() {
     >
       <div className="header-container" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600 }}>
-          运行中的任务（{jobs.length}）
+          运行中的任务（{total}）
         </div>
-        {jobs.map((job) => (
-          <JobProgressLine key={job.id} job={job} />
+        {writerJobs.map((job) => (
+          <WriterJobProgressLine key={job.id} job={job} />
+        ))}
+        {evalJobs.map((job) => (
+          <EvalJobProgressLine key={job.taskId} job={job} />
         ))}
       </div>
     </div>

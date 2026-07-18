@@ -367,6 +367,19 @@ export async function listActiveJobs(): Promise<{ jobs: ActiveJobListItem[] }> {
   return api<{ jobs: ActiveJobListItem[] }>('/projects/jobs/active');
 }
 
+export interface ActiveEvalJobListItem {
+  taskId: string;
+  status: 'running' | 'completed' | 'failed';
+  latestMessage: string | null;
+  updatedAt: number;
+  projectId: string | null;
+  title: string | null;
+}
+
+export async function listActiveEvalJobs(): Promise<{ jobs: ActiveEvalJobListItem[] }> {
+  return api<{ jobs: ActiveEvalJobListItem[] }>('/eval/jobs/active');
+}
+
 // ─── 修订任务（评估建议 → 改稿清单）──────────────────────────────
 
 export type RevisionTaskStatus = 'open' | 'in_progress' | 'done' | 'dismissed';

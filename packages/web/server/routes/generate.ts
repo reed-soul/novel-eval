@@ -136,6 +136,143 @@ export function generateRoutes(
     return c.json({ project, jobId });
   });
 
+  // ─── 全自动：bible → 批准 → 蓝图 → 批准 → 写章（单 job）──────────
+  // Must register before /:id so "auto" is not captured as a project id.
+  app.post('/auto', async (c) => {
+    let raw: unknown;
+    try {
+      raw = await c.req.json();
+    } catch {
+      const mapped = toHttpError(new ValidationError('请求体必须是合法 JSON'));
+      return c.json(httpErrorJson(mapped), mapped.status as 400);
+    }
+    if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+      const mapped = toHttpError(new ValidationError('请求体必须是对象'));
+      return c.json(httpErrorJson(mapped), mapped.status as 400);
+    }
+    const body = raw as {
+      title?: unknown;
+      genre?: unknown;
+      audience?: unknown;
+      topic?: unknown;
+      chapters?: unknown;
+      wordCount?: unknown;
+      qualityGate?: unknown;
+      maxRevise?: unknown;
+      maxCostRmb?: unknown;
+      approvePlanning?: unknown;
+      engineName?: string;
+      model?: string;
+    };
+
+    const missing: string[] = [];
+    if (typeof body.title !== 'string' || body.title.trim() === '') missing.push('title');
+    if (typeof body.genre !== 'string' || body.genre.trim() === '') missing.push('genre');
+    if (typeof body.audience !== 'string' || body.audience.trim() === '') missing.push('audience');
+    if (typeof body.topic !== 'string' || body.topic.trim() === '') missing.push('topic');
+    if (missing.length > 0) {
+      const mapped = toHttpError(new ValidationError(`缺少必填字段：${missing.join(', ')}`));
+      return c.json(httpErrorJson(mapped), mapped.status as 400);
+    }
+    if (body.approvePlanning !== true) {
+      const mapped = toHttpError(new ValidationError(
+        'write auto 需要 approvePlanning: true（明确批准生成的 bible/outline 后再写章）',
+      ));
+      return c.json(httpErrorJson(mapped), mapped.status as 400);
+    }
+
+    const title = (body.title as string).trim();
+    const genre = (body.genre as string).trim();
+    const audience = (body.audience as string).trim();
+    const topic = (body.topic as string).trim();
+
+    const config = loadWriterConfig();
+    const chapters = typeof body.chapters === 'number' && Number.isInteger(body.chapters) && body.chapters > 0
+      ? body.chapters
+      : config.generation.defaultChapters;
+    const wordCount = typeof body.wordCount === 'number' && Number.isInteger(body.wordCount) && body.wordCount > 0
+      ? body.wordCount
+      : config.generation.chapterWordCount;
+    const qualityGate = body.qualityGate === true;
+    const maxRevise = qualityGate
+      ? (typeof body.maxRevise === 'number' && Number.isInteger(body.maxRevise) && body.maxRevise >= 0
+        ? body.maxRevise
+        : 1)
+      : 0;
+
+    const project = createProject(db, {
+      title,
+      genreProfile: genre,
+      targetAudience: audience,
+      premise: topic,
+    });
+
+    if (hasActiveJobForProject(db, project.id)) {
+      return c.json({ error: '项目有正在运行的任务，请稍后再试' }, 409);
+    }
+
+    const engine = resolveEngine(body);
+    const budget: { [key: string]: boolean | number } = {
+      qualityGate,
+      maxRevise,
+    };
+    if (typeof body.maxCostRmb === 'number' && Number.isFinite(body.maxCostRmb) && body.maxCostRmb > 0) {
+      budget.maxCostRmb = body.maxCostRmb;
+    }
+
+    const jobId = createJob(db, {
+      type: 'auto',
+      projectId: project.id,
+      fromChapter: 1,
+      toChapter: chapters,
+      wordCount,
+      qualityGate,
+      maxRevise,
+      engine: engine.name,
+      model: body.model ?? engine.name,
+      promptVersion: 'auto-v1',
+      input: {
+        title,
+        genre,
+        audience,
+        topic,
+        chapters,
+        wordCount,
+        engineName: body.engineName ?? engine.name,
+        model: body.model ?? engine.name,
+        approvePlanning: true,
+      },
+      budget,
+    }, async (ctx: JobRunnerContext) => {
+      updateProjectStatus(db, project.id, 'writing');
+      const result = await writer.runAuto({
+        projectId: project.id,
+        engine,
+        topic,
+        genre,
+        audience,
+        totalChapters: chapters,
+        wordCount,
+        existingJobId: ctx.job.id,
+        ownerId: 'web',
+        engineName: body.engineName ?? engine.name,
+        model: body.model ?? engine.name,
+        budget,
+        onProgress: ctx.onProgress,
+        control: ctx.control,
+      });
+      completeProjectIfFullyWritten(db, project.id);
+      updateProjectStatus(db, project.id, 'completed');
+      return {
+        bibleRevisionId: result.bibleRevisionId,
+        outlines: result.outlineCount,
+        chapters: result.outcomes.length,
+      };
+    });
+
+    return c.json({ project, jobId });
+  });
+
   // ─── 生成 bible ────────────────────────────────────────────────────
   app.post('/:id/bible/generate', async (c) => {
     const id = c.req.param('id');
