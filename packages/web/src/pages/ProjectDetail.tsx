@@ -298,7 +298,19 @@ export function ProjectDetail() {
 
       {id && (
         <div className="card">
-          <h2>质量分析 <Link to={`/projects/${id}/dashboard`} className="btn" style={{ fontSize: 13, marginLeft: 8 }}>📊 打开评估仪表盘 →</Link></h2>
+          <h2>
+            质量分析
+            <Link to={`/projects/${id}/dashboard`} className="btn" style={{ fontSize: 13, marginLeft: 8 }}>
+              📊 打开评估仪表盘 →
+            </Link>
+            <Link
+              to={`/eval?projectId=${encodeURIComponent(id)}`}
+              className="btn"
+              style={{ fontSize: 13, marginLeft: 8 }}
+            >
+              全书评估 →
+            </Link>
+          </h2>
           <QualityPanel projectId={id} />
         </div>
       )}

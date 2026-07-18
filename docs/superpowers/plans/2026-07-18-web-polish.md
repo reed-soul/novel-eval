@@ -110,9 +110,9 @@
 
 ### Task C1: Empty states + eval projectId binding
 
-- [ ] ProjectList / ChapterReader copy → in-app links
-- [ ] Evaluation upload flow keeps `?projectId=`
-- [ ] QualityPanel error visible; link to `/chapters/:n/correction`
+- [x] ProjectList / ChapterReader copy → in-app links
+- [x] Evaluation upload flow keeps `?projectId=`
+- [x] QualityPanel error visible; link to `/chapters/:n/correction`
 
 ---
 

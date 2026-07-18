@@ -108,9 +108,18 @@ export function ChapterReader() {
       ) : (
         <div className="empty">
           本章尚未发布。
-          {chapter.chapterId
-            ? '若质量门槛或状态抽取留下了草稿，可在下方修订历史「继续定稿」。'
-            : '可在项目页生成该章，或返回项目后使用生成操作。'}
+          {chapter.chapterId ? (
+            <>若质量门槛或状态抽取留下了草稿，可在下方修订历史「继续定稿」。</>
+          ) : (
+            <>
+              可返回项目页用「生成操作」写这一章。
+              {id && (
+                <div style={{ marginTop: 8 }}>
+                  <Link to={`/projects/${id}`}>← 返回项目生成</Link>
+                </div>
+              )}
+            </>
+          )}
         </div>
       )}
 

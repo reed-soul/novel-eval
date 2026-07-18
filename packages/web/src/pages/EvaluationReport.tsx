@@ -99,6 +99,15 @@ export function EvaluationReport() {
       .catch(() => setProjects([]));
   }, []);
 
+  useEffect(() => {
+    const fromQuery = searchParams.get('projectId') ?? '';
+    if (fromQuery) setImportProjectId(fromQuery);
+  }, [searchParams]);
+
+  const evalHomePath = importProjectId
+    ? `/eval?projectId=${encodeURIComponent(importProjectId)}`
+    : '/eval';
+
   const importSuggestions = async () => {
     if (!report || !importProjectId) {
       setImportMsg('请先选择要导入的写作项目');
@@ -133,7 +142,7 @@ export function EvaluationReport() {
       <div className="container error" style={{ textAlign: 'center' }}>
         <h3>获取报告失败</h3>
         <p>{error}</p>
-        <Link to="/eval" className="btn btn-primary" style={{ marginTop: 16 }}>返回评估列表</Link>
+        <Link to={evalHomePath} className="btn btn-primary" style={{ marginTop: 16 }}>返回评估列表</Link>
       </div>
     );
   }
@@ -201,7 +210,7 @@ export function EvaluationReport() {
     <div className="container">
       <div className="eval-report-header">
         <div>
-          <Link to="/eval" className="back-link" style={{ marginBottom: 12 }}>
+          <Link to={evalHomePath} className="back-link" style={{ marginBottom: 12 }}>
             ← 返回评估中心
           </Link>
           <div className="eval-title" style={{ fontSize: 32 }}>{novel.title}</div>

@@ -35,7 +35,10 @@ export function ProjectList() {
         <Link to="/projects/new"><button className="btn btn-primary">✍️ 新建项目</button></Link>
       </div>
       {projects.length === 0 ? (
-        <div className="empty">暂无项目。用 CLI 创建：<code>pnpm write -- init ...</code></div>
+        <div className="empty">
+          暂无项目。
+          <Link to="/projects/new" style={{ marginLeft: 8 }}>新建项目 →</Link>
+        </div>
       ) : (
         <div className="project-list">
           {projects.map((p) => (

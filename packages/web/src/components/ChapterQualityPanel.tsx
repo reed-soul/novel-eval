@@ -8,6 +8,7 @@
  * 不塞全书统计——那是项目级视图的事，不该混进单章页面。
  */
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   getChapterEval, diagnoseChapter,
   type EvalHistoryRecord, type ChapterDiagnosis,
@@ -55,12 +56,22 @@ export function ChapterQualityPanel({ projectId, chapterNumber }: Props) {
     return <div className="quality-panel-placeholder">加载本章评估数据...</div>;
   }
   if (error) {
-    return <div className="quality-panel-placeholder">评估数据加载失败：{error}</div>;
+    return (
+      <div className="quality-panel-placeholder error" style={{ color: 'var(--danger, #e5484d)' }}>
+        评估数据加载失败：{error}
+      </div>
+    );
   }
   if (evalHistory.length === 0) {
     return (
       <div className="quality-panel-empty">
-        本章暂无评估数据（质量门槛评估后自动生成）
+        本章暂无评估数据（质量门槛评估后自动生成）。
+        <Link
+          to={`/projects/${projectId}/chapters/${chapterNumber}/correction`}
+          style={{ marginLeft: 8 }}
+        >
+          按经验修正 →
+        </Link>
       </div>
     );
   }
@@ -104,9 +115,20 @@ export function ChapterQualityPanel({ projectId, chapterNumber }: Props) {
               </div>
             ))}
           </div>
-          {lowDims.length > 0 && (
-            <div className="quality-hint">
-              低分维度：{lowDims.map((d) => `${d.label}(${d.score})`).join('、')}
+          {(lowDims.length > 0 || (latest.totalScore != null && latest.totalScore < LOW_THRESHOLD)) && (
+            <div className="quality-hint" style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+              {lowDims.length > 0 && (
+                <span>
+                  低分维度：{lowDims.map((d) => `${d.label}(${d.score})`).join('、')}
+                </span>
+              )}
+              <Link
+                to={`/projects/${projectId}/chapters/${chapterNumber}/correction`}
+                className="btn"
+                style={{ fontSize: 13 }}
+              >
+                按经验修正 →
+              </Link>
             </div>
           )}
         </div>
