@@ -38,15 +38,11 @@ spike/output/
 # Dependencies (spike 本地安装)
 spike/node_modules/
 
-# 例外：评估示例样本（README 演示用，版权自有）
-!data/
-data/*
-!data/spike-samples/
-data/spike-samples/*
-!data/spike-samples/sample-novel.txt
-
 # Web runtime data
 packages/web/data/
+
+# Writer runtime data (writer.db / writer.db-shm / writer.db-wal，运行时生成，不入库)
+packages/writer/data/
 
 # Golden corpus: generated slices and run summaries (source novels stay under data/)
 tests/golden/slices/
