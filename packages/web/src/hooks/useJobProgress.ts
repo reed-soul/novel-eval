@@ -131,10 +131,18 @@ export function useJobProgress(jobId: string | null) {
       esRef.current = es;
 
       es.onmessage = (e) => {
+        // 防御：SSE 偶发畸形数据（代理注入/中断残包）会让 JSON.parse 抛错，
+        // 不 catch 会静默杀掉整个 onmessage 监听器，后续进度全部丢失。
+        // 对齐 CLI api-client 的处理：解析失败时跳过该事件。
+        let data: ProgressEvent;
+        try {
+          data = JSON.parse(e.data) as ProgressEvent;
+        } catch {
+          return;
+        }
         if (e.lastEventId) {
           lastEventIdRef.current = e.lastEventId;
         }
-        const data = JSON.parse(e.data) as ProgressEvent;
         if (typeof data.seq === 'number') {
           lastEventIdRef.current = String(data.seq);
         }

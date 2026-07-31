@@ -104,13 +104,16 @@ export function Evaluation() {
       setLogs(prev => [...prev, e.data]);
     });
 
+    // 保存跳转定时器句柄，卸载时清理，避免在已卸载组件上触发 navigate
+    let doneTimer: ReturnType<typeof setTimeout> | null = null;
+
     eventSource.addEventListener('done', () => {
       setStatus('completed');
       setLogs(prev => [...prev, '[系统] 评估完成！正在跳转至报告页...']);
       eventSource.close();
-      
+
       // 稍微延迟一下让用户看到完成消息
-      setTimeout(() => {
+      doneTimer = setTimeout(() => {
         const q = selectedProjectId
           ? `?projectId=${encodeURIComponent(selectedProjectId)}`
           : '';
@@ -126,6 +129,7 @@ export function Evaluation() {
 
     return () => {
       eventSource.close();
+      if (doneTimer !== null) clearTimeout(doneTimer);
     };
   }, [taskId, status, navigate, selectedProjectId]);
 

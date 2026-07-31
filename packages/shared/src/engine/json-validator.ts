@@ -103,7 +103,6 @@ export async function callWithValidation<T>(
   userPrompt: string,
   options: CallWithValidationOptions,
 ): Promise<ValidateResult<T> & { lastUsage: TokenUsage; totalUsage: TokenUsage }> {
-  const { parseJSONRobust } = await import('./json-util.ts');
   const maxAttempts = options.maxAttempts ?? 3;
   let lastError = '';
   const zeroUsage = { inputTokens: 0, outputTokens: 0, costRmb: 0, model: '', durationMs: 0 };

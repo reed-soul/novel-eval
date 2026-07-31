@@ -14,6 +14,19 @@ import { buildRelationGraph } from './charts/relation-graph.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+/**
+ * echarts.min.js（~1MB）的源码，用于内联进报告 HTML。
+ * 提到模块级懒加载：避免每次 generateReport 都同步读盘 ~1MB（阻塞事件循环 + 重复 IO）。
+ * 仅在首次生成报告时读取一次，进程内复用。
+ */
+let echartsJsCache: string | null = null;
+function getEchartsJs(): string {
+  if (echartsJsCache === null) {
+    echartsJsCache = readFileSync(resolve(__dirname, 'echarts.min.js'), 'utf-8');
+  }
+  return echartsJsCache;
+}
+
 export interface ReportOutput {
   htmlPath: string;
   dataPath: string;
@@ -98,7 +111,7 @@ function renderTimeline(result: EvaluationResult): string {
 }
 
 function buildHtml(result: EvaluationResult): string {
-  const echartsJs = readFileSync(resolve(__dirname, 'echarts.min.js'), 'utf-8');
+  const echartsJs = getEchartsJs();
   const dataBlock = JSON.stringify(result).replace(/</g, '\\u003c');
   const graph = buildRelationGraph(result.characters);
 
