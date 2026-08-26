@@ -1,20 +1,58 @@
 import { resolveWriterApiUrl } from '@novel-eval/shared';
 
+/**
+ * Writer Web API 客户端 —— SSRF 防护（与 packages/audiobook 同模式）：
+ *  1. base URL 解析后断言协议 + 域名白名单（https 任意主机，http 仅本机回环——本地开发服务）；
+ *  2. 端点路径只允许 /api/ 前缀 + 安全文档路径段，拒绝 '..' 穿越；
+ *  3. 所有 fetch 禁止跟随重定向（redirect: 'error'），杜绝被引导至内网；
+ *  4. jobId 在出入口均做字符集白名单校验。
+ */
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
+const API_PATH_PATTERN = /^\/api\/[A-Za-z0-9/_.-]*$/;
+const JOB_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
+
+/** 断言 URL 协议与主机在白名单内（https，或 http 且为本机回环） */
+export function assertSafeEndpoint(url: string): void {
+  const u = new URL(url);
+  if (u.protocol === 'https:') return;
+  if (u.protocol === 'http:' && LOOPBACK_HOSTS.has(u.hostname)) return;
+  throw new Error(`API 地址不在白名单（仅允许 https 或本机回环 http）：${u.protocol}//${u.hostname}`);
+}
+
+/** 断言端点路径合法：/api/ 前缀 + 白名字符集，拒绝 '..' 穿越与控制字符 */
+function assertApiPath(endpoint: string): void {
+  if (!API_PATH_PATTERN.test(endpoint) || endpoint.includes('..')) {
+    throw new Error(`非法 API 端点路径：${endpoint}`);
+  }
+}
+
+function assertJobId(jobId: string): void {
+  if (!JOB_ID_PATTERN.test(jobId)) {
+    throw new Error(`非法 jobId（仅允许 [A-Za-z0-9_-]，长度≤64）：${jobId}`);
+  }
+}
+
 function serverUrl(): string {
   return resolveWriterApiUrl(process.env);
 }
 
-export async function isServerRunning(): Promise<boolean> {
-  try {
-    const res = await fetch(`${serverUrl()}/api/config`, { signal: AbortSignal.timeout(1000) });
-    return res.ok;
-  } catch {
-    return false;
-  }
+async function apiRequest(endpoint: string, init: RequestInit): Promise<Response> {
+  assertApiPath(endpoint);
+  const url = `${serverUrl()}${endpoint}`;
+  assertSafeEndpoint(url);
+  return fetch(url, { ...init, redirect: 'error' });
 }
 
-export async function startApiJob(endpoint: string, body: unknown): Promise<string> {
-  const res = await fetch(`${serverUrl()}${endpoint}`, {
+export async function apiGetJson<T>(endpoint: string): Promise<T> {
+  const res = await apiRequest(endpoint, { method: 'GET' });
+  if (!res.ok) {
+    throw new Error(`HTTP error ${res.status}: ${endpoint}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+export async function apiPostJson<T>(endpoint: string, body: unknown): Promise<T> {
+  const res = await apiRequest(endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
@@ -23,13 +61,30 @@ export async function startApiJob(endpoint: string, body: unknown): Promise<stri
     const err = await res.json().catch(() => ({ error: 'Unknown API error' })) as { error?: string };
     throw new Error(err.error || `HTTP error ${res.status}`);
   }
-  const data = await res.json() as { jobId: string };
+  return res.json() as Promise<T>;
+}
+
+export async function isServerRunning(): Promise<boolean> {
+  try {
+    const url = `${serverUrl()}/api/config`;
+    assertSafeEndpoint(url);
+    const res = await fetch(url, { signal: AbortSignal.timeout(1000), redirect: 'error' });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export async function startApiJob(endpoint: string, body: unknown): Promise<string> {
+  const data = await apiPostJson<{ jobId: string }>(endpoint, body);
+  assertJobId(data.jobId);
   return data.jobId;
 }
 
 export async function requestApiPause(jobId: string): Promise<boolean> {
   try {
-    const res = await fetch(`${serverUrl()}/api/projects/jobs/${jobId}/pause`, { method: 'POST' });
+    assertJobId(jobId);
+    const res = await apiRequest(`/api/projects/jobs/${jobId}/pause`, { method: 'POST' });
     return res.ok;
   } catch {
     return false;
@@ -37,7 +92,8 @@ export async function requestApiPause(jobId: string): Promise<boolean> {
 }
 
 export async function streamJobEvents(jobId: string): Promise<void> {
-  const res = await fetch(`${serverUrl()}/api/projects/jobs/${jobId}/events`);
+  assertJobId(jobId);
+  const res = await apiRequest(`/api/projects/jobs/${jobId}/events`, { method: 'GET' });
   if (!res.ok || !res.body) {
     throw new Error(`Failed to stream events: ${res.statusText}`);
   }

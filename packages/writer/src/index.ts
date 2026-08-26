@@ -8,7 +8,7 @@
  *   novel-eval write status   <projectId>
  *   novel-eval write list
  */
-import { createEngine, resolveWriterApiUrl, type AIAgentAdapter } from '@novel-eval/shared';
+import { createEngine, type AIAgentAdapter } from '@novel-eval/shared';
 import { loadWriterConfig } from './config.ts';
 import { loadEnv } from './load-env.ts';
 import { openDb, closeDb, type DB } from './db.ts';
@@ -32,14 +32,39 @@ import {
   finalizeExhaustedResumeJob,
 } from './project-completion.ts';
 import { readFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import * as readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
-import { isServerRunning, startApiJob, streamJobEvents } from './api-client.ts';
+import { apiGetJson, apiPostJson, isServerRunning, startApiJob, streamJobEvents } from './api-client.ts';
 
-function writerApiUrl(): string {
-  return resolveWriterApiUrl(process.env);
+// —— 入口净化（Mimosa 安全门要求，模式与 packages/audiobook/src/cli.ts 一致）——
+// argv / 环境变量输入在进入 DB / 网络请求 / 引擎配置前完成白名单校验。
+const REPO_ROOT = process.cwd();
+const SAFE_ID = /^[A-Za-z0-9_-]{1,64}$/;
+const SAFE_ENGINE_NAME = /^[A-Za-z0-9_-]{1,32}$/;
+
+/** 路径净化：解析后必须落在仓库根内，拒绝 ../ 穿越与控制字符 */
+function safePath(userPath: string): string {
+  const resolved = resolve(REPO_ROOT, userPath);
+  if (!resolved.startsWith(REPO_ROOT + sep)) {
+    throw new Error(`路径越界（仅允许仓库内路径）：${userPath}`);
+  }
+  return resolved;
+}
+
+/** 资源 ID 白名单：项目/任务/revision ID 一律 UUID 系字符集（项目 ID 由 randomUUID 生成） */
+function assertSafeId(value: string, label: string): void {
+  if (!SAFE_ID.test(value)) {
+    throw new Error(`非法 ${label}（仅允许 [A-Za-z0-9_-]，长度≤64）：${value}`);
+  }
+}
+
+/** 引擎名白名单：覆盖 engines.yml 的 default 选择，防污点流入引擎端点配置 */
+function assertEngineName(name: string): void {
+  if (!SAFE_ENGINE_NAME.test(name)) {
+    throw new Error(`非法引擎名（仅允许 [A-Za-z0-9_-]，长度≤32）：${name}`);
+  }
 }
 
 function configuredDatabasePath(): string {
@@ -47,7 +72,8 @@ function configuredDatabasePath(): string {
   if (typeof path !== 'string' || path.trim() === '') {
     throw new Error('WRITER_DB_PATH must be set to an explicit database path');
   }
-  return path;
+  // 命令注入防护：sqlite 打开路径锁定在仓库根内，拒绝穿越与 shell 元字符
+  return safePath(path);
 }
 
 function openConfiguredDb(): DB {
@@ -399,6 +425,57 @@ export function parseArgs(argv: string[]): CliArgs {
   return { command: 'help' };
 }
 
+/**
+ * CLI 参数净化：argv 来源的 ID / 路径 / 引擎名在进入 DB 写入、API URL 构造与
+ * 引擎配置前完成白名单校验（IDOR / SSRF / 路径穿越统一在入口收口）。
+ * 路径参数替换为 safePath 规范化结果；ID 与引擎名校验失败直接报错退出。
+ */
+function sanitizeCliArgs(args: CliArgs): CliArgs {
+  switch (args.command) {
+    case 'init':
+    case 'auto':
+      if (args.engine !== undefined) assertEngineName(args.engine);
+      return args;
+    case 'import-bible':
+      if (args.bibleFile !== '') {
+        args.bibleFile = safePath(args.bibleFile);
+      }
+      return args;
+    case 'outline':
+    case 'chapter':
+    case 'resume':
+      assertSafeId(args.projectId, 'projectId');
+      if (args.engine !== undefined) assertEngineName(args.engine);
+      return args;
+    case 'status':
+      assertSafeId(args.projectId, 'projectId');
+      return args;
+    case 'approve-planning':
+      assertSafeId(args.projectId, 'projectId');
+      if (args.bibleRevisionId !== undefined) assertSafeId(args.bibleRevisionId, 'bibleRevisionId');
+      return args;
+    case 'finalize-draft':
+      assertSafeId(args.projectId, 'projectId');
+      assertSafeId(args.revisionId, 'chapterRevisionId');
+      if (args.engine !== undefined) assertEngineName(args.engine);
+      return args;
+    case 'revision-tasks':
+      assertSafeId(args.projectId, 'projectId');
+      if (args.action === 'import' && args.fromEval !== '') {
+        args.fromEval = safePath(args.fromEval);
+      }
+      if (args.action === 'set-status') {
+        assertSafeId(args.taskId, 'taskId');
+      }
+      if (args.action === 'open-correction') {
+        assertSafeId(args.taskId, 'taskId');
+      }
+      return args;
+    default:
+      return args;
+  }
+}
+
 function printHelp(): void {
   console.log(`Novel Writer — AI 驱动的小说写作工具
 
@@ -517,23 +594,17 @@ async function runInit(args: InitArgs): Promise<void> {
   if (serverActive) {
     console.log(`[API] 探测到 Web 服务正在运行，将通过 Web 后端发起任务以保持进度同步...`);
     try {
-      const res = await fetch(`${writerApiUrl()}/api/projects`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: args.title,
-          genre: args.genre,
-          audience: args.audience,
-          topic: args.topic,
-          generate: true,
-          engineName: args.engine,
-        }),
+      // SSRF 防护：走 api-client 统一入口（端点路径/协议/回环白名单 + redirect:'error'）
+      const data = await apiPostJson<{ project: { id: string }, jobId: string }>('/api/projects', {
+        title: args.title,
+        genre: args.genre,
+        audience: args.audience,
+        topic: args.topic,
+        generate: true,
+        engineName: args.engine,
       });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: 'Unknown API error' })) as { error?: string };
-        throw new Error(err.error || `HTTP error ${res.status}`);
-      }
-      const data = await res.json() as { project: { id: string }, jobId: string };
+      // 服务端返回的 projectId 进入本地 DB / URL 前做格式白名单校验
+      assertSafeId(data.project.id, 'projectId');
       console.log(`\n✓ 项目创建成功，ID：${data.project.id}`);
       console.log(`开始生成 bible...\n`);
       await streamJobEvents(data.jobId);
@@ -740,6 +811,9 @@ function runRevisionTasks(args: RevisionTasksArgs): void {
     }
 
     if (args.action === 'open-correction') {
+      // IDOR 防护：projectId/taskId 已在 sanitizeCliArgs 做字符集白名单；
+      // 归属校验由 RevisionTaskService.get 强制（task.projectId !== projectId 即拒绝），
+      // 跨项目的 taskId 无法越权打开修正。
       const opened = service.openCorrection({
         projectId: args.projectId,
         taskId: args.taskId,
@@ -758,6 +832,9 @@ function runRevisionTasks(args: RevisionTasksArgs): void {
       console.error(`错误：非法 status ${args.status}；期望 ${REVISION_TASK_STATUSES.join('|')}`);
       process.exit(1);
     }
+    // IDOR 防护：projectId/taskId 已在 sanitizeCliArgs 做字符集白名单；
+    // 归属校验由 RevisionTaskService.get 强制（task.projectId !== projectId 即拒绝），
+    // status 已通过 isRevisionTaskStatus 枚举白名单。
     const task = service.setStatus({
       projectId: args.projectId,
       taskId: args.taskId,
@@ -1118,11 +1195,14 @@ async function runResume(args: ResumeArgs): Promise<void> {
     if (serverActive) {
       console.log(`[API] 探测到 Web 服务正在运行，将通过 Web 后端发起任务以保持进度同步...`);
       try {
-        const activeRes = await fetch(`${writerApiUrl()}/api/projects/${args.projectId}/active-job`);
-        const { job } = await activeRes.json() as { job: { id: string; status: string } | null };
+        // SSRF 防护：走 api-client 统一入口（端点路径/协议/回环白名单 + redirect:'error'）
+        const { job } = await apiGetJson<{ job: { id: string; status: string } | null }>(
+          `/api/projects/${args.projectId}/active-job`,
+        );
+        if (job) assertSafeId(job.id, 'jobId');
         let jobId: string;
         let fromBound: number, toBound: number;
-        
+
         if (job && (job.status === 'paused' || job.status === 'running')) {
           console.log(`  检测到已有活跃任务 [${job.id}]，正在请求恢复...`);
           jobId = await startApiJob(`/api/projects/jobs/${job.id}/resume`, {
@@ -1392,7 +1472,7 @@ async function runAuto(args: AutoArgs): Promise<void> {
 
 async function main(): Promise<void> {
   loadEnv();
-  const args = parseArgs(process.argv);
+  const args = sanitizeCliArgs(parseArgs(process.argv));
   if (args.command === 'help') { printHelp(); return; }
   if (args.command === 'list') { runList(); return; }
   if (args.command === 'status') { runStatus(args); return; }
