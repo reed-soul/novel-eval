@@ -30,6 +30,13 @@ export interface VoiceConfig {
   dialoguePitch: string;
 }
 
+// ── 豆包侧音色对应（volcengine 引擎，tts/volcengine.ts 的 VOICE_MAP 同步维护）──
+//   zh-CN-YunjianNeural（低沉旁白）→ zh_male_xuanyijieshuo_uranus_bigtts（悬疑解说，plan 路线实测可用）
+//   zh-CN-YunxiNeural（清爽对白）  → zh_male_m191_uranus_bigtts（云舟，实测可用）
+//   zh-CN-YunyangNeural（中年男角）→ zh_male_m191_uranus_bigtts（plan 路线暂无中年男声，退云舟）
+//   zh-CN-XiaoyiNeural（女主）      → zh_male_m191_uranus_bigtts（plan 路线暂无可用女声，退云舟）
+//   其余 2.0 音色（官方表 volcengine.com/docs/6561/1257544）在 Agent Plan 路线报 55000000，
+//   plan 扩充后先在 VOICE_MAP 补映射，再回这里更新注释。
 export const DEFAULT_VOICE_CONFIG: VoiceConfig = {
   // 云健：低沉男声，悬疑旁白首选；云希：清爽男声，默认对白
   narrator: 'zh-CN-YunjianNeural',

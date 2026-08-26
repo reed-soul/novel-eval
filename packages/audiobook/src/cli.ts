@@ -89,7 +89,9 @@ function cleanArgs(raw: Record<string, string>, skipVideo: boolean): CleanArgs {
   if (chars !== undefined && (!Number.isInteger(chars) || chars < 50 || chars > 200000)) throw new Error('chars 需在 50-200000');
   const group = c.group ? Number(c.group) : 1;
   if (!Number.isInteger(group) || group < 1 || group > 5) throw new Error('group 需在 1-5（每集章数）');
-  if (c.engine && c.engine !== 'edge' && c.engine !== 'minimax') throw new Error('引擎仅允许 edge | minimax');
+  if (c.engine && c.engine !== 'edge' && c.engine !== 'minimax' && c.engine !== 'volcengine') {
+    throw new Error('引擎仅允许 edge | minimax | volcengine');
+  }
   return {
     project: c.project,
     chapters: c.chapters,
@@ -112,6 +114,7 @@ function pickEngine(kind: string): Promise<TtsEngine> {
   switch (kind) {
     case 'edge': return createEngine('edge');
     case 'minimax': return createEngine('minimax');
+    case 'volcengine': return createEngine('volcengine');
     default: throw new Error(`未知 TTS 引擎：${kind}`);
   }
 }
@@ -150,7 +153,7 @@ interface ChapterProduct {
 async function main() {
   const { command, raw, skipVideo } = parseArgs(process.argv.slice(2));
   if (command !== 'build') {
-    console.log('用法：pnpm audiobook build --project <名称或id> [--chapters 1|1-15] [--group 3] [--chars 600] [--engine edge|minimax] [--cover 图.jpg] [--cover-dir 目录] [--no-cold-open] [--no-snow] [--skip-video] [--tagline 一句话钩子]');
+    console.log('用法：pnpm audiobook build --project <名称或id> [--chapters 1|1-15] [--group 3] [--chars 600] [--engine edge|minimax|volcengine] [--cover 图.jpg] [--cover-dir 目录] [--no-cold-open] [--no-snow] [--skip-video] [--tagline 一句话钩子]');
     process.exit(0);
   }
   const args = cleanArgs(raw, skipVideo);
