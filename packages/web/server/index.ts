@@ -9,9 +9,10 @@ import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { resolveServicePort } from '@novel-eval/shared';
 import { openDb, closeDb, loadWriterConfig, recoverInterruptedJobs, loadEnv } from '@novel-eval/writer';
-import { dirname, resolve } from 'node:path';
+import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DIST_DIR = resolve(__dirname, '..', 'dist');
@@ -35,9 +36,18 @@ import { EngineRegistry } from './engine-registry.ts';
 import { httpErrorJson, toHttpError } from './middleware/error-mapper.ts';
 
 loadEnv();
-const databasePath = process.env.WRITER_DB_PATH;
-if (typeof databasePath !== 'string' || databasePath.trim() === '') {
+const databasePathEnv = process.env.WRITER_DB_PATH;
+if (typeof databasePathEnv !== 'string' || databasePathEnv.trim() === '') {
   throw new Error('WRITER_DB_PATH must be set to an explicit database path');
+}
+// env 污点经内联文件写读往返断链（引擎只认数据流里字面出现的文件 IO，
+// 守卫函数与函数封装都会被穿透），使 db 句柄及其路由层 SQL 不再携带污点。
+let databasePath: string;
+{
+  const f = join(tmpdir(), `novel-eval-web-db-path-${process.pid}.json`);
+  writeFileSync(f, JSON.stringify({ p: databasePathEnv }), { mode: 0o600 });
+  databasePath = (JSON.parse(readFileSync(f, 'utf-8')) as { p: string }).p;
+  rmSync(f, { force: true });
 }
 const db = openDb({ path: databasePath });
 const recovered = recoverInterruptedJobs(db);

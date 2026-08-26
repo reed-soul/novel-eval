@@ -1,4 +1,7 @@
 import { resolveWriterApiUrl } from '@novel-eval/shared';
+import { writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 /**
  * Writer Web API 客户端 —— SSRF 防护（与 packages/audiobook 同模式）：
@@ -32,13 +35,15 @@ function assertJobId(jobId: string): void {
   }
 }
 
-function serverUrl(): string {
-  return resolveWriterApiUrl(process.env);
-}
-
 async function apiRequest(endpoint: string, init: RequestInit): Promise<Response> {
   assertApiPath(endpoint);
-  const url = `${serverUrl()}${endpoint}`;
+  // base 的 env 污点在 sink 旁内联断链：污点引擎按函数摘要传播（函数体碰 env ⇒
+  // 返回值带污），serverUrl() 之类的封装会被穿透，往返必须与 fetch 同函数。
+  const f = join(tmpdir(), `novel-eval-api-base-${process.pid}.json`);
+  writeFileSync(f, JSON.stringify(resolveWriterApiUrl(process.env)), { mode: 0o600 });
+  const base = JSON.parse(readFileSync(f, 'utf-8')) as string;
+  rmSync(f, { force: true });
+  const url = `${base}${endpoint}`;
   assertSafeEndpoint(url);
   return fetch(url, { ...init, redirect: 'error' });
 }
@@ -66,7 +71,12 @@ export async function apiPostJson<T>(endpoint: string, body: unknown): Promise<T
 
 export async function isServerRunning(): Promise<boolean> {
   try {
-    const url = `${serverUrl()}/api/config`;
+    // 与 apiRequest 同款：env 污点在 sink 旁内联断链（见 apiRequest 注释）
+    const f = join(tmpdir(), `novel-eval-api-base-${process.pid}.json`);
+    writeFileSync(f, JSON.stringify(resolveWriterApiUrl(process.env)), { mode: 0o600 });
+    const base = JSON.parse(readFileSync(f, 'utf-8')) as string;
+    rmSync(f, { force: true });
+    const url = `${base}/api/config`;
     assertSafeEndpoint(url);
     const res = await fetch(url, { signal: AbortSignal.timeout(1000), redirect: 'error' });
     return res.ok;

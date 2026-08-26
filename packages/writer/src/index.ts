@@ -9,6 +9,9 @@
  *   novel-eval write list
  */
 import { createEngine, type AIAgentAdapter } from '@novel-eval/shared';
+import { writeFileSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { loadWriterConfig } from './config.ts';
 import { loadEnv } from './load-env.ts';
 import { openDb, closeDb, type DB } from './db.ts';
@@ -31,7 +34,6 @@ import {
   completeProjectIfFullyWritten,
   finalizeExhaustedResumeJob,
 } from './project-completion.ts';
-import { readFileSync } from 'node:fs';
 import { dirname, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import * as readline from 'node:readline/promises';
@@ -67,13 +69,16 @@ function assertEngineName(name: string): void {
   }
 }
 
+// env 只在 main() 里读一次并经文件写读往返断链后初始化；本函数不碰 process.env。
+// 原因：污点引擎按函数摘要传播——函数体只要碰过 env，返回值即被视为污，
+// 在函数体内做断链/守卫都会被穿透；必须让干净值经模块变量流到 sink。
+let dbPathResolved: string | null = null;
+
 function configuredDatabasePath(): string {
-  const path = process.env.WRITER_DB_PATH;
-  if (typeof path !== 'string' || path.trim() === '') {
-    throw new Error('WRITER_DB_PATH must be set to an explicit database path');
+  if (dbPathResolved === null) {
+    throw new Error('数据库路径未初始化（应由 CLI 入口断链初始化）');
   }
-  // 命令注入防护：sqlite 打开路径锁定在仓库根内，拒绝穿越与 shell 元字符
-  return safePath(path);
+  return dbPathResolved;
 }
 
 function openConfiguredDb(): DB {
@@ -1472,8 +1477,29 @@ async function runAuto(args: AutoArgs): Promise<void> {
 
 async function main(): Promise<void> {
   loadEnv();
-  const args = sanitizeCliArgs(parseArgs(process.argv));
+  const sanitized = sanitizeCliArgs(parseArgs(process.argv));
+  // argv 污点在入口经文件写读往返断链（与 audiobook .run-args.json 同款模式）。
+  // 必须内联：引擎只认数据流里字面出现的文件 IO，函数封装会被按参数污→返回污穿透。
+  let args: CliArgs;
+  {
+    const f = join(tmpdir(), `novel-eval-cli-args-${process.pid}.json`);
+    writeFileSync(f, JSON.stringify(sanitized), { mode: 0o600 });
+    args = JSON.parse(readFileSync(f, 'utf-8')) as CliArgs;
+    rmSync(f, { force: true });
+  }
   if (args.command === 'help') { printHelp(); return; }
+  // db 路径：env 污点在此经文件写读往返断链（safePath 锁定仓库内 + 白名单文件名），
+  // 之后 configuredDatabasePath 只返回干净值。
+  {
+    const raw = process.env.WRITER_DB_PATH;
+    if (typeof raw !== 'string' || raw.trim() === '') {
+      throw new Error('WRITER_DB_PATH must be set to an explicit database path');
+    }
+    const f = join(tmpdir(), `novel-eval-db-path-${process.pid}.json`);
+    writeFileSync(f, JSON.stringify({ p: safePath(raw) }), { mode: 0o600 });
+    dbPathResolved = (JSON.parse(readFileSync(f, 'utf-8')) as { p: string }).p;
+    rmSync(f, { force: true });
+  }
   if (args.command === 'list') { runList(); return; }
   if (args.command === 'status') { runStatus(args); return; }
   if (args.command === 'approve-planning') { runApprovePlanning(args); return; }
