@@ -167,6 +167,14 @@ export class RevisionTaskRepository {
     return row === undefined ? null : readRevisionTask(row);
   }
 
+  /** 归属内联查询：id 与 projectId 同时进 WHERE，不存在"裸 id 查库"的 idor sink 形状。 */
+  findByIdAndProject(id: string, projectId: string): RevisionTask | null {
+    const row: unknown = this.db
+      .prepare(`SELECT * FROM revision_task WHERE id = ? AND project_id = ?`)
+      .get(id, projectId);
+    return row === undefined ? null : readRevisionTask(row);
+  }
+
   listByProject(
     projectId: string,
     options?: { status?: RevisionTaskStatus },
@@ -234,5 +242,23 @@ export class RevisionTaskRepository {
       .run(status, now, id);
     if (result.changes === 0) return null;
     return this.findById(id);
+  }
+
+  /** 归属内联更新：WHERE 同时约束 id 与 project_id，越权更新在 SQL 层不可达。 */
+  updateStatusForProject(
+    projectId: string,
+    id: string,
+    status: RevisionTaskStatus,
+    now = new Date().toISOString(),
+  ): RevisionTask | null {
+    const result = this.db
+      .prepare(
+        `UPDATE revision_task
+         SET status = ?, updated_at = ?
+         WHERE id = ? AND project_id = ?`,
+      )
+      .run(status, now, id, projectId);
+    if (result.changes === 0) return null;
+    return this.findByIdAndProject(id, projectId);
   }
 }

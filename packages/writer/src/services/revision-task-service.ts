@@ -187,10 +187,10 @@ export class RevisionTaskService {
     return this.tasks.listByProject(projectId, options);
   }
 
-  get(projectId: string, taskId: string): RevisionTask | null {
-    const task = this.tasks.findById(taskId);
-    if (!task || task.projectId !== projectId) return null;
-    return task;
+  /** 按归属取任务：查询本身内联归属（id+projectId 复合 WHERE），跨项目 taskId
+   *  直接查无此行，IDOR 在 SQL 层不可达。 */
+  getOwned(projectId: string, taskId: string): RevisionTask | null {
+    return this.tasks.findByIdAndProject(taskId, projectId);
   }
 
   setStatus(input: SetRevisionTaskStatusInput): RevisionTask {
@@ -199,11 +199,12 @@ export class RevisionTaskService {
         `invalid status: ${String(input.status)}; expected one of ${REVISION_TASK_STATUSES.join(', ')}`,
       );
     }
-    const existing = this.get(input.projectId, input.taskId);
+    const existing = this.getOwned(input.projectId, input.taskId);
     if (!existing) {
       throw new ValidationError(`revision task not found: ${input.taskId}`);
     }
-    const updated = this.tasks.updateStatus(
+    const updated = this.tasks.updateStatusForProject(
+      input.projectId,
       input.taskId,
       input.status,
       input.now ?? new Date().toISOString(),
@@ -218,7 +219,7 @@ export class RevisionTaskService {
    * Resolve a chapter-scoped revision task to an outline chapter number and
    * mark the task in_progress. Does not start LLM correction.
    */
-  openCorrection(input: {
+  beginOwnedCorrection(input: {
     projectId: string;
     taskId: string;
     now?: string;
@@ -227,7 +228,7 @@ export class RevisionTaskService {
     chapterNumber: number;
     path: string;
   } {
-    const task = this.get(input.projectId, input.taskId);
+    const task = this.getOwned(input.projectId, input.taskId);
     if (!task) {
       throw new ValidationError(`revision task not found: ${input.taskId}`);
     }

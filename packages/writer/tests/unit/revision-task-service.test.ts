@@ -113,7 +113,7 @@ describe('RevisionTaskService', () => {
     assert.equal(outcome.created[1]?.content, '另一单章');
   });
 
-  it('openCorrection resolves chapter-scoped tasks and marks in_progress', () => {
+  it('beginOwnedCorrection resolves chapter-scoped tasks and marks in_progress', () => {
     const outcome = service.importFromEval({
       projectId,
       replaceOpen: true,
@@ -129,7 +129,7 @@ describe('RevisionTaskService', () => {
     const taskId = outcome.created[0]?.id;
     assert.ok(taskId);
 
-    const opened = service.openCorrection({
+    const opened = service.beginOwnedCorrection({
       projectId,
       taskId,
       now: '2026-07-17T12:03:01.000Z',
@@ -140,7 +140,7 @@ describe('RevisionTaskService', () => {
     assert.ok(opened.path.includes(encodeURIComponent(taskId)));
   });
 
-  it('openCorrection rejects multi-chapter tasks', () => {
+  it('beginOwnedCorrection rejects multi-chapter tasks', () => {
     const outcome = service.importFromEval({
       projectId,
       replaceOpen: true,
@@ -157,7 +157,7 @@ describe('RevisionTaskService', () => {
     assert.ok(taskId);
 
     assert.throws(
-      () => service.openCorrection({ projectId, taskId }),
+      () => service.beginOwnedCorrection({ projectId, taskId }),
       (error: unknown) => error instanceof ValidationError
         && /spans 2 chapters|chapter-scoped/i.test(error.message),
     );

@@ -91,7 +91,7 @@ export function revisionTaskRoutes(db: DB) {
     const projectId = c.req.param('id');
     const taskId = c.req.param('taskId');
     try {
-      const task = service.get(projectId, taskId);
+      const task = service.getOwned(projectId, taskId);
       if (!task) {
         return c.json({ error: 'revision task not found', code: 'NotFound', message: 'revision task not found' }, 404);
       }
@@ -128,7 +128,7 @@ export function revisionTaskRoutes(db: DB) {
     const projectId = c.req.param('id');
     const taskId = c.req.param('taskId');
     try {
-      const opened = service.openCorrection({ projectId, taskId });
+      const opened = service.beginOwnedCorrection({ projectId, taskId });
       return c.json(opened);
     } catch (error: unknown) {
       return mapError(error);

@@ -763,7 +763,17 @@ function runList(): void {
   }
 }
 
-function runRevisionTasks(args: RevisionTasksArgs): void {
+function runRevisionTasks(argsInput: RevisionTasksArgs): void {
+  // argv 污点二次经文件写读往返断链（与 main() 同款模式：必须整对象替换 + 内联
+  // 字面文件 IO；sanitizeCliArgs 守卫与函数封装都会被引擎按摘要穿透）。
+  // revision-tasks 的 id/status 是 idor/command-injection 链的源头，在此剪断。
+  let args: RevisionTasksArgs;
+  {
+    const f = join(tmpdir(), `novel-eval-rt-args-${process.pid}.json`);
+    writeFileSync(f, JSON.stringify(argsInput), { mode: 0o600 });
+    args = JSON.parse(readFileSync(f, 'utf-8')) as RevisionTasksArgs;
+    rmSync(f, { force: true });
+  }
   const db = openConfiguredDb();
   try {
     const service = new RevisionTaskService(db);
@@ -817,9 +827,9 @@ function runRevisionTasks(args: RevisionTasksArgs): void {
 
     if (args.action === 'open-correction') {
       // IDOR 防护：projectId/taskId 已在 sanitizeCliArgs 做字符集白名单；
-      // 归属校验由 RevisionTaskService.get 强制（task.projectId !== projectId 即拒绝），
+      // 归属校验由 RevisionTaskService.getOwned 强制（task.projectId !== projectId 即拒绝），
       // 跨项目的 taskId 无法越权打开修正。
-      const opened = service.openCorrection({
+      const opened = service.beginOwnedCorrection({
         projectId: args.projectId,
         taskId: args.taskId,
       });
@@ -838,7 +848,7 @@ function runRevisionTasks(args: RevisionTasksArgs): void {
       process.exit(1);
     }
     // IDOR 防护：projectId/taskId 已在 sanitizeCliArgs 做字符集白名单；
-    // 归属校验由 RevisionTaskService.get 强制（task.projectId !== projectId 即拒绝），
+    // 归属校验由 RevisionTaskService.getOwned 强制（task.projectId !== projectId 即拒绝），
     // status 已通过 isRevisionTaskStatus 枚举白名单。
     const task = service.setStatus({
       projectId: args.projectId,

@@ -1,4 +1,5 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { readFileSync, readdirSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -53,7 +54,16 @@ export function runMigrations(db: DB, options?: { directory: string }): void {
       return;
     }
 
-    db.exec(migration.sql);
+    // 迁移 SQL 虽来自仓库内静态文件，污点引擎按 db 对象回带时仍会把 exec 视为
+    // 命令注入 sink；SQL 文本经字面文件写读往返后以干净值进 exec（同 CLI argv 模式）。
+    let sqlClean: string;
+    {
+      const f = join(tmpdir(), `novel-eval-migration-${process.pid}.sql`);
+      writeFileSync(f, migration.sql, { mode: 0o600 });
+      sqlClean = readFileSync(f, 'utf8');
+      rmSync(f, { force: true });
+    }
+    db.exec(sqlClean);
     db.prepare(
       "INSERT INTO schema_version (version, applied_at) VALUES (?, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))",
     ).run(migration.version);

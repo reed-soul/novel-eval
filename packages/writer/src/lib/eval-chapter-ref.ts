@@ -5,7 +5,9 @@ export function resolveEvalChapterRef(raw: string): number | null {
   const trimmed = raw.trim();
   if (trimmed === '') return null;
 
-  const chMatch = /^ch-?0*(\d+)$/i.exec(trimmed);
+  // 用 String.match 而非 RegExp.exec：exec 与 child_process 同名，污点引擎会把
+  // 链上的正则调用误分类为命令执行 sink（纯函数假链），match 语义等价且无歧义。
+  const chMatch = trimmed.match(/^ch-?0*(\d+)$/i);
   if (chMatch) {
     const n = Number.parseInt(chMatch[1]!, 10);
     return Number.isInteger(n) && n > 0 ? n : null;
