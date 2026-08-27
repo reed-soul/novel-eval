@@ -39,6 +39,9 @@ export function Layout() {
             <Link to="/eval" className={`nav-link ${location.pathname.startsWith('/eval') ? 'active' : ''}`}>
               📊 质量评估
             </Link>
+            <Link to="/audit" className={`nav-link ${location.pathname.startsWith('/audit') ? 'active' : ''}`}>
+              🔍 逻辑审计
+            </Link>
             <button 
               className="theme-toggle-btn" 
               onClick={toggleTheme} 

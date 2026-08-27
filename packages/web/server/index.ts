@@ -27,6 +27,7 @@ import { correctionRoutes } from './routes/correction.ts';
 import { configRoutes } from './routes/config.ts';
 import { evalRoutes } from './routes/eval.ts';
 import { evalTasksRouter } from './routes/eval-tasks.ts';
+import { auditTasksRouter } from './routes/audit-tasks.ts';
 import { storyStateRoutes } from './routes/story-state.ts';
 import { rebuildRoutes } from './routes/rebuilds.ts';
 import { revisionRoutes } from './routes/revisions.ts';
@@ -78,6 +79,7 @@ app.route('/api/projects', revisionTaskRoutes(db));
 app.route('/api/projects', finalizeRoutes(db, undefined, { registry }));
 app.route('/api/chapters', revisionRoutes(db));
 app.route('/api/eval', evalTasksRouter);
+app.route('/api/audit', auditTasksRouter);
 app.route('/api/config', configRoutes(registry));
 
 app.get('/api/config', (c) => c.json({

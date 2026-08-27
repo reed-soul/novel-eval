@@ -16,6 +16,7 @@
 import type { AIAgentAdapter } from '@novel-eval/shared';
 import { callWithValidation, type SchemaSpec, type FieldSpec } from '@novel-eval/shared';
 import { loadPrompt, addUsage, zeroUsage } from '@novel-eval/shared';
+import { loadPlatform } from './config.ts';
 import type {
   Chapter, Character, DimensionKey, DimensionScore, EmotionalPoint,
   MarketBenchmark, NovelMetadata, Suggestion, TokenUsage,
@@ -151,6 +152,17 @@ export async function runReducePhase(
 
   // ─── R2 八维评分（致命，依赖 R1 的 charactersBlock）────────────────────────────────
   const weightsBlock = Object.entries(weights).map(([k, v]) => `${k}: ${v}`).join('  ');
+  // 平台专属细则注入（森铁教训：平台只是自由文本时不改变评委口径）
+  let platformRubricBlock = '';
+  const platformName = metadata.platform?.trim() || 'general';
+  try {
+    const platform = loadPlatform(platformName);
+    if (platform.rubric) {
+      platformRubricBlock = `#### 平台细则（${platform.displayName}）\n${platform.rubric}`;
+    }
+  } catch {
+    platformRubricBlock = '';
+  }
   const r2Prompt = loadPrompt('reduce-r2', PROMPTS_DIR)
     .replace('{CHAPTERS}', chaptersBlock)
     .replace('{EXCERPTS}', excerptsBlock)
@@ -159,7 +171,8 @@ export async function runReducePhase(
     .replace('{WEIGHTS}', weightsBlock)
     .replace('{GENRE}', metadata.genre)
     .replace('{AUDIENCE}', metadata.targetAudience)
-    .replace('{PLATFORM}', metadata.platform ?? '未指定');
+    .replace('{PLATFORM}', metadata.platform ?? '未指定')
+    .replace('{PLATFORM_RUBRIC}', platformRubricBlock);
   const r2Schema: SchemaSpec = {
     dimensions: {
       type: 'object', required: true, fields: Object.fromEntries(

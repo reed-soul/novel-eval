@@ -88,3 +88,4 @@
 类型：{GENRE}
 目标受众：{AUDIENCE}
 发行平台：{PLATFORM}
+{PLATFORM_RUBRIC}

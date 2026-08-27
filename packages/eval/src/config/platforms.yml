@@ -1,0 +1,53 @@
+# 平台专属评分细则 + 投稿红线（v1，2026-08-28）
+#
+# 背景：森铁三次评测全用 revision profile（marketPotential 权重 0.04），15 章里
+# marketPotential 全为最低维（68-78）却被总分 88/A 淹没，投盐选被拒。本文件让
+# 「平台」从自由文本变成一等公民：rubric 注入 R2 评委提示词，红线在结果聚合时
+# 计算 submissionGate，Web/CLI 展示。
+#
+# 红线 dimension 引用八维 key；min 为「低于此分不建议投稿」。
+
+platforms:
+  general:
+    displayName: 通用
+    rubric: ''
+    redLines: []
+
+  yanxuan:
+    displayName: 知乎盐选
+    rubric: |
+      盐选（知乎付费故事）平台细则——评 marketPotential 与 emotionalResonance 时按以下标准，不按通用文学尺：
+      - 第一人称「亲身经历」感是硬通货；第三人称疏离视角要在 analysis 中明确扣分并说明
+      - 开篇前三段必须抛出核心异常或冲突；黄金三章决定编辑第一印象
+      - 段落口语化、单段不超过三行（知乎体）；节奏要「短、快、不平」（多反转）
+      - 付费读者以女频为主；男频题材需在 analysis 里说明差异化路径
+      - 结局正义必须有实质伸张（罪罚匹配）；「保护伞软着陆/不彻底正义」是付费读者雷点，须标注
+    redLines:
+      - dimension: marketPotential
+        min: 80
+      - dimension: emotionalResonance
+        min: 80
+
+  fanqie:
+    displayName: 番茄小说
+    rubric: |
+      番茄小说（免费阅读+短故事激励）平台细则——评 marketPotential 与 pacingRetention 时按以下标准：
+      - 中短篇（2.5–10 万字完结）通道明确欢迎第三人称悬疑；人称本身不扣分
+      - 免费读者耐心极低：首章主角必须尽早出场、前 500 字内要有事件；主角迟到要在 analysis 标注
+      - 章末钩子是留存生命线；信息密度分布要均匀，中段拖沓直接扣分
+      - 快节奏强刺激偏好；压抑慢热基调须明确指出风险
+      - 结局爽感：罪罚匹配、正义实质伸张；「复查启动」式开放收尾可接受但不加分
+    redLines:
+      - dimension: marketPotential
+        min: 80
+      - dimension: pacingRetention
+        min: 80
+
+  douban:
+    displayName: 豆瓣阅读
+    rubric: |
+      豆瓣阅读（中篇/文学向）平台细则——评 writingQuality 与 thematicDepth 时可上调，marketPotential 按文学市场口径：
+      - 读者成熟，接受文学性、慢热、双线、不彻底正义；文笔质感与主题深度是核心资产
+      - 悬疑要「生活流」质感（对标《漫长的季节》一类）；纯爽文套路反而扣分
+      - 影视改编通道看重结构完成度与人物弧光，analysis 里可评估改编潜力
+    redLines: []

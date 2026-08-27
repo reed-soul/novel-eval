@@ -32,6 +32,8 @@ export type {
   CoverageThresholds,
   EvaluationMarketBenchmarkDto,
   EvaluationMarketComparableDto,
+  EvaluationPlatformGateDto,
+  EvaluationPlatformGateCheckDto,
 } from './evaluation.ts';
 export {
   EVALUATION_DIMENSION_KEYS,

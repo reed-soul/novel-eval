@@ -15,6 +15,7 @@ export function Evaluation() {
   const [genre, setGenre] = useState<string>('都市');
   const [audience, setAudience] = useState<string>('大众');
   const [profile, setProfile] = useState<string>('default');
+  const [platform, setPlatform] = useState<string>('general');
 
   const [taskId, setTaskId] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
@@ -71,6 +72,7 @@ export function Evaluation() {
       formData.append('genre', genre);
       formData.append('audience', audience);
       formData.append('profile', profile);
+      formData.append('platform', platform);
       if (selectedProjectId) {
         formData.append('projectId', selectedProjectId);
         const selected = projects.find((p) => p.id === selectedProjectId);
@@ -173,15 +175,39 @@ export function Evaluation() {
 
             <div className="eval-form-group">
               <label>评估模式 (Profile)</label>
-              <select 
-                className="input" 
-                value={profile} 
+              <select
+                className="input"
+                value={profile}
                 onChange={(e) => setProfile(e.target.value)}
               >
                 <option value="default">标准综合评估 (default)</option>
                 <option value="revision">深度改稿指引模式 (revision)</option>
                 <option value="submission">出版社投稿审查模式 (submission)</option>
               </select>
+            </div>
+
+            <div className="eval-form-group">
+              <label>
+                投稿平台 (Platform)
+                <span style={{ marginLeft: 6, fontSize: 12, color: 'var(--text-muted)' }}>
+                  ——投稿前必选：平台细则注入评委，红线决定投稿门
+                </span>
+              </label>
+              <select
+                className="input"
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value)}
+              >
+                <option value="general">通用（不注入平台细则）</option>
+                <option value="yanxuan">知乎盐选（第一人称/黄金三章/女频盘）</option>
+                <option value="fanqie">番茄小说（第三人称友好/强节奏/完结爽感）</option>
+                <option value="douban">豆瓣阅读（文学向/慢热友好/影视通道）</option>
+              </select>
+              {platform !== 'general' && (
+                <p style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)' }}>
+                  报告页将显示投稿门：平台红线维度（如番茄的市场潜力≥80、节奏留存≥80）未达标会亮红牌。
+                </p>
+              )}
             </div>
 
             <div className="eval-divider">选择小说来源</div>

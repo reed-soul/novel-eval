@@ -6,13 +6,37 @@
  */
 // 评估主流程
 export { evaluate, type EvaluateOptions, type EvaluateResult } from './evaluator.ts';
+// 剧情逻辑审计（推敲器）
+export {
+  auditPlot,
+  type AuditOptions,
+  type AuditOutcome,
+} from './audit/run.ts';
+export { formatAuditSummary } from './audit/terminal.ts';
+export { analyzeGraph, graphStats, resolveClimaxIndex } from './audit/graph-analysis.ts';
+export type {
+  AuditEvent, AuditEdgeSpec, ChapterExtraction, CausalEdgeType,
+  CrossEdge, LinkSuspicion, LinkResult, GraphNode, GraphEdge,
+  GraphAnalysisResult, GraphAnalysisOptions, TimelineConflict, HubReport,
+  ClueLedgerItem, FairPlayResult, ReaderQuestionProbe, PlausibilityResult,
+  ProbeHole, LogicHole, LogicHoleType, HoleSeverity, HoleFixCost, PlotAuditReport,
+} from './audit/types.ts';
+export {
+  CAUSAL_EDGE_LABELS, CAUSAL_EDGE_TYPES,
+  LOGIC_HOLE_LABELS, LOGIC_HOLE_TYPES,
+} from './audit/types.ts';
 // 内存版评估（writer 质量门槛用）
 export { assessChapters, type AssessOptions, type AssessResult } from './assess.ts';
 // 可独立调用的阶段函数
 export { runMapPhase, type MapPhaseResult, type MapProgressCallback } from './map-phase.ts';
 export { runReducePhase, type ReducePhaseResult, type ReduceProgressCallback, type ReduceMode } from './reduce-phase.ts';
 // 配置 + 聚合
-export { loadConfig, computeOverall, lookupGrade, type AppConfig } from './config.ts';
+export { loadConfig, computeOverall, lookupGrade, loadPlatform, computePlatformGate, type AppConfig } from './config.ts';
+export type {
+  PlatformConfig, PlatformRedLine, PlatformGate, PlatformGateCheck,
+  PlatformName,
+} from './config.ts';
+export { PLATFORM_NAMES } from './config.ts';
 // 类型
 export type {
   ChapterInput, MapChapterInput, MapChapterOutput, Chapter,

@@ -9,7 +9,7 @@ import { runReducePhase } from './reduce-phase.ts';
 import { splitChaptersWithMeta, countChars } from '@novel-eval/shared';
 import { analyzeChapterRule } from '@novel-eval/shared';
 import { parseTxt } from '@novel-eval/shared';
-import { loadConfig, computeOverall, lookupGrade } from './config.ts';
+import { loadConfig, computeOverall, lookupGrade, loadPlatform, computePlatformGate } from './config.ts';
 import type { EvaluationResult, EvaluationTask, NovelMetadata } from './types.ts';
 
 export interface EvaluateOptions {
@@ -34,6 +34,8 @@ export async function evaluate(opts: EvaluateOptions): Promise<EvaluateResult> {
   const engine = opts.engine ?? createEngine(config.engine);
   const taskId = randomUUID();
   const createdAt = new Date();
+  const platformName = opts.metadata.platform?.trim() || 'general';
+  const platform = loadPlatform(platformName); // 未知平台立即失败，不静默当 general
 
   const task: EvaluationTask = {
     id: taskId,
@@ -47,6 +49,7 @@ export async function evaluate(opts: EvaluateOptions): Promise<EvaluateResult> {
     configSnapshot: {
       profile: config.profileName,
       model: config.engine.model,
+      platform: platform.name,
       metadata: opts.metadata,
     },
     cost: { inputTokens: 0, outputTokens: 0, totalRmb: 0 },
@@ -72,6 +75,19 @@ export async function evaluate(opts: EvaluateOptions): Promise<EvaluateResult> {
       heuristic.strategy === 'separator' ? '分隔符模式'
       : heuristic.strategy === 'regex' ? '行首正则模式'
       : '无标志回退';
+
+    // 碎片段防护（对齐 audit 管线）：双层标题导出 md 会切出只有元信息头的碎片段，
+    // 跳过后污染覆盖率（森铁 31 单元 16 跳过 → skip rate 0.52 触发覆盖门误报）。
+    const MIN_CHAPTER_CHARS = 300;
+    const fragmentTitles = chapterInputs
+      .filter((c) => countChars(c.content) < MIN_CHAPTER_CHARS)
+      .map((c) => c.title);
+    if (fragmentTitles.length > 0 && chapterInputs.length - fragmentTitles.length > 0) {
+      chapterInputs = chapterInputs
+        .filter((c) => countChars(c.content) >= MIN_CHAPTER_CHARS)
+        .map((c, i) => ({ ...c, id: `ch${String(i + 1).padStart(3, '0')}` }));
+      opts.onProgress?.(`剔除 ${fragmentTitles.length} 个碎片段（书名页/双层标题元信息），章号已重排`);
+    }
 
     // 是否需要 L2 AI 确认：L1 低置信度，或章节数可疑（仅 1 章但字数很大）
     const suspicious = heuristic.confidence === 'low'
@@ -133,6 +149,14 @@ export async function evaluate(opts: EvaluateOptions): Promise<EvaluateResult> {
     );
 
     const skippedChapterIds = [...mapResult.skippedChapters];
+    const platformGate = computePlatformGate(platform, reduceResult.dimensions);
+    if (platformGate.verdict === 'block') {
+      opts.onProgress?.(
+        `⛔ 投稿门（${platform.displayName}）：${platformGate.reasons.join('；')}——不建议以当前状态投稿`,
+      );
+    } else if (platform.name !== 'general') {
+      opts.onProgress?.(`✅ 投稿门（${platform.displayName}）：红线全部通过`);
+    }
     const coverage = evaluationCoverageFor({
       dimensions: reduceResult.dimensions,
       excerpts: allExcerpts,
@@ -163,6 +187,7 @@ export async function evaluate(opts: EvaluateOptions): Promise<EvaluateResult> {
       excerpts: allExcerpts,
       suggestions: reduceResult.suggestions,
       marketBenchmark: reduceResult.marketBenchmark,
+      platformGate,
       baselineTaskId: opts.baselineTaskId,
       coverage,
       skippedChapterIds,

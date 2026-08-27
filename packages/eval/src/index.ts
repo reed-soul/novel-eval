@@ -7,6 +7,9 @@
  *   novel-eval golden check|slice|run [options]
  */
 import { evaluate } from './evaluator.ts';
+import { auditPlot } from './audit/run.ts';
+import { formatAuditSummary } from './audit/terminal.ts';
+import { PLATFORM_NAMES } from './config.ts';
 import { generateReport } from './report/html-generator.ts';
 import { generateCompareReport } from './report/compare-html.ts';
 import { runPreflight, formatPreflightSummary } from './preflight.ts';
@@ -48,6 +51,15 @@ interface CompareArgs {
   outDir?: string;
 }
 
+interface AuditArgs {
+  command: 'audit';
+  filePath: string;
+  title?: string;
+  genre?: string;
+  climaxChapter?: number;
+  yes?: boolean;
+}
+
 interface GoldenArgs {
   command: 'golden';
   subcommand: 'check' | 'slice' | 'run' | 'help';
@@ -58,7 +70,7 @@ interface GoldenArgs {
   vcrMode?: 'record' | 'replay';
 }
 
-type CliArgs = EvaluateArgs | CompareArgs | GoldenArgs | { command: 'help' };
+type CliArgs = EvaluateArgs | CompareArgs | AuditArgs | GoldenArgs | { command: 'help' };
 
 function parseArgs(argv: string[]): CliArgs {
   const [, , command, ...rest] = argv;
@@ -106,6 +118,19 @@ function parseArgs(argv: string[]): CliArgs {
     return args;
   }
 
+  if (command === 'audit') {
+    const args: AuditArgs = { command: 'audit', filePath: '' };
+    for (let i = 0; i < rest.length; i++) {
+      const a = rest[i];
+      if (a === '--title') args.title = rest[++i];
+      else if (a === '--genre') args.genre = rest[++i];
+      else if (a === '--climax-chapter') args.climaxChapter = Number(rest[++i]);
+      else if (a === '-y' || a === '--yes') args.yes = true;
+      else if (!a.startsWith('--') && !args.filePath) args.filePath = a;
+    }
+    return args;
+  }
+
   const args: EvaluateArgs = { command: 'evaluate', filePath: '' };
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
@@ -127,17 +152,26 @@ function printHelp(): void {
 
 用法：
   novel-eval evaluate <文件.txt> [选项]
+  novel-eval audit <文件.md|txt> [选项]
   novel-eval compare <基线.json> <当前.json> [--html] [--out 目录]
   novel-eval golden check|slice|run [选项]
 
 evaluate 选项：
   --genre <类型>       小说类型（建议必填，如「都市言情」）
   --audience <受众>    目标受众（建议必填）
-  --platform <平台>    发行平台（可选）
-  --profile <name>     评估模式：default | revision | submission
+  --platform <平台>    发行平台：general | yanxuan | fanqie | douban（投稿前必选对应平台，
+                       平台细则注入评委、红线计算投稿门；缺省 general）
+  --profile <name>     评估模式：default | revision | submission（投稿审查建议 submission）
   --title / --author   书名与作者
   --baseline <taskId>  关联基线任务 ID（改稿对比用）
   -y, --yes            跳过确认屏
+
+audit 选项（剧情逻辑审计/推敲器）：
+  --genre <类型>           小说类型（注入公平/世情探针上下文）
+  --title <书名>           报告书名
+  --climax-chapter <N>     高潮章号（1-based，缺省=最后一章）
+  -y, --yes                跳过确认屏
+  环境变量 AUDIT_REDTEAM_MODEL 可指定红队用不同模型（缺省同主引擎换角色）
 
 compare 选项：
   --html               生成 compare.html
@@ -153,6 +187,7 @@ golden 选项：
 
 示例：
   novel-eval evaluate ./book.txt --genre 玄幻 --audience 青年男性
+  novel-eval audit ./book.md --genre 犯罪悬疑 --climax-chapter 14
   novel-eval compare ./reports/a/result.json ./reports/b/result.json --html
   novel-eval golden check
   novel-eval golden run --dry-run
@@ -196,6 +231,11 @@ function resolveMetadata(args: EvaluateArgs): NovelMetadata {
 async function runEvaluate(args: EvaluateArgs): Promise<void> {
   if (!args.filePath) {
     console.error('错误：缺少文件路径');
+    process.exit(1);
+  }
+
+  if (args.platform && !PLATFORM_NAMES.includes(args.platform as (typeof PLATFORM_NAMES)[number])) {
+    console.error(`错误：未知平台 "${args.platform}"（可用：${PLATFORM_NAMES.join(' / ')}）`);
     process.exit(1);
   }
 
@@ -254,6 +294,48 @@ async function runEvaluate(args: EvaluateArgs): Promise<void> {
   console.log(`  打开：open "${htmlPath}"`);
 }
 
+async function runAudit(args: AuditArgs): Promise<void> {
+  if (!args.filePath) {
+    console.error('错误：缺少文件路径');
+    process.exit(1);
+  }
+
+  const preflight = runPreflight(args.filePath);
+  console.log(formatPreflightSummary(preflight, { genre: args.genre ?? '未指定', targetAudience: '未指定' }));
+  console.log('');
+
+  if (!args.yes) {
+    const ok = await confirmProceed('剧情逻辑审计约需 15-20 次 LLM 调用');
+    if (!ok) {
+      console.log('已取消');
+      return;
+    }
+  }
+
+  console.log('Novel Eval — 剧情逻辑审计（推敲器）\n');
+
+  const { report } = await auditPlot({
+    filePath: args.filePath,
+    title: args.title,
+    genre: args.genre,
+    climaxChapter: args.climaxChapter,
+    onProgress: (msg) => console.log(`  ${msg}`),
+  });
+
+  const reportsDir = resolve(resolveEvalDataRoot(), 'reports');
+  const outDir = resolve(reportsDir, report.task.id);
+  mkdirSync(outDir, { recursive: true });
+  const resultPath = resolve(outDir, 'audit.json');
+  writeFileSync(resultPath, JSON.stringify(report, null, 2), 'utf-8');
+
+  console.log('');
+  console.log(formatAuditSummary(report));
+  console.log('');
+  console.log('✓ 完成');
+  console.log(`  费用：¥${report.task.cost.totalRmb.toFixed(4)}`);
+  console.log(`  结果：${resultPath}`);
+}
+
 function runCompare(args: CompareArgs): void {
   const baseline = loadResultJson(args.baselinePath);
   const current = loadResultJson(args.currentPath);
@@ -307,6 +389,10 @@ async function main(): Promise<void> {
   }
   if (args.command === 'compare') {
     runCompare(args);
+    return;
+  }
+  if (args.command === 'audit') {
+    await runAudit(args);
     return;
   }
   if (args.command === 'golden') {

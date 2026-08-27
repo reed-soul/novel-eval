@@ -2,6 +2,7 @@ import { Hono, type Context } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import { evaluationCoverageFor, toEvaluationReportResponse } from '@novel-eval/shared';
 import { EvaluationIncompleteError } from '@novel-eval/writer';
+import { PLATFORM_NAMES } from '@novel-eval/eval';
 import { getEvalJob, listActiveEvalJobs, runEvalTaskInBackground } from '../eval-jobs.ts';
 import { httpErrorJson, toHttpError } from '../middleware/error-mapper.ts';
 import fs from 'node:fs/promises';
@@ -89,6 +90,9 @@ evalTasksRouter.post('/upload', async (c) => {
   const profile = typeof body['profile'] === 'string' ? body['profile'] : 'default';
   const genre = typeof body['genre'] === 'string' ? body['genre'] : '未知';
   const audience = typeof body['audience'] === 'string' ? body['audience'] : '全年龄';
+  // 平台白名单：投稿前选 yanxuan/fanqie/douban，平台细则注入评委 + 红线算投稿门
+  const rawPlatform = typeof body['platform'] === 'string' ? body['platform'] : 'general';
+  const platform = (PLATFORM_NAMES as readonly string[]).includes(rawPlatform) ? rawPlatform : 'general';
   const projectId = typeof body['projectId'] === 'string' && body['projectId'].trim() !== ''
     ? body['projectId'].trim()
     : null;
@@ -102,7 +106,7 @@ evalTasksRouter.post('/upload', async (c) => {
     metadata: {
       genre,
       targetAudience: audience,
-      platform: 'web',
+      platform,
     },
   }, { projectId, title }).then(async (result) => {
     const resultPath = evalArtifactPath(taskId, 'json');

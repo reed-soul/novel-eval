@@ -23,6 +23,7 @@ import type {
   ChapterInput,
 } from '@novel-eval/shared';
 import type { EvaluationCoverageDto } from '@novel-eval/shared';
+import type { PlatformGate } from './config.ts';
 
 // ─── 任务与状态 ────────────────────────────────────────────────────
 
@@ -215,6 +216,8 @@ export interface EvaluationResult {
   excerpts: Excerpt[];
   suggestions: Suggestion[];
   marketBenchmark?: MarketBenchmark | null;
+  /** 平台投稿门（platform ≠ general 时按 platforms.yml 红线计算） */
+  platformGate?: PlatformGate;
   baselineTaskId?: string;
   /** Stage C2 coverage snapshot (dimensions + evidence + skips). */
   coverage?: EvaluationCoverageDto;

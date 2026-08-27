@@ -257,6 +257,39 @@ export function EvaluationReport() {
         </div>
       )}
 
+      {report.platformGate && report.platformGate.platform !== 'general' && (
+        <div
+          role="status"
+          style={{
+            marginTop: 16,
+            padding: '14px 18px',
+            borderRadius: 10,
+            background: report.platformGate.verdict === 'block' ? 'rgba(220,38,38,0.10)' : 'rgba(22,163,74,0.10)',
+            border: `1px solid ${report.platformGate.verdict === 'block' ? '#dc2626' : '#16a34a'}`,
+          }}
+        >
+          <strong style={{ color: report.platformGate.verdict === 'block' ? '#dc2626' : '#16a34a', fontSize: 15 }}>
+            {report.platformGate.verdict === 'block'
+              ? `⛔ 投稿门（${report.platformGate.displayName}）：不建议以当前状态投稿`
+              : `✅ 投稿门（${report.platformGate.displayName}）：红线全部通过`}
+          </strong>
+          {report.platformGate.reasons.length > 0 && (
+            <div style={{ marginTop: 6, fontSize: 13 }}>
+              {report.platformGate.reasons.map((reason, i) => (
+                <div key={i}>· {reason}</div>
+              ))}
+            </div>
+          )}
+          {report.platformGate.lowestDimension && (
+            <div style={{ marginTop: 6, fontSize: 13, color: 'var(--text-muted)' }}>
+              全书最低维：{dimensionLabel(report.platformGate.lowestDimension.dimension)}
+              {' '}{report.platformGate.lowestDimension.score} 分
+              （森铁教训：最低维最容易被总分平均掉，投稿前优先处理）
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="report-grid">
         <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <h2 style={{ alignSelf: 'flex-start', marginBottom: 16 }}>维度解析</h2>

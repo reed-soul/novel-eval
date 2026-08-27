@@ -11,6 +11,7 @@ import { Dashboard } from './pages/Dashboard.tsx';
 import { Settings } from './pages/Settings.tsx';
 import { Evaluation } from './pages/Evaluation.tsx';
 import { EvaluationReport } from './pages/EvaluationReport.tsx';
+import { Audit } from './pages/Audit.tsx';
 import { Layout } from './components/Layout.tsx';
 import './styles.css';
 
@@ -29,6 +30,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/settings" element={<Settings />} />
           <Route path="/eval" element={<Evaluation />} />
           <Route path="/eval/:taskId" element={<EvaluationReport />} />
+          <Route path="/audit" element={<Audit />} />
         </Route>
       </Routes>
     </BrowserRouter>

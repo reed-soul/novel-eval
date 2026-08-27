@@ -132,6 +132,23 @@ export interface EvaluationCoverageInput {
   thresholds?: Partial<CoverageThresholds>;
 }
 
+export interface EvaluationPlatformGateCheckDto {
+  dimension: string;
+  min: number;
+  actual: number;
+  passed: boolean;
+}
+
+/** 平台投稿门（platform ≠ general 时按平台红线计算；见 eval 包 platforms.yml） */
+export interface EvaluationPlatformGateDto {
+  platform: string;
+  displayName: string;
+  verdict: 'pass' | 'block';
+  checks: EvaluationPlatformGateCheckDto[];
+  reasons: string[];
+  lowestDimension: { dimension: string; score: number } | null;
+}
+
 /**
  * Stable evaluation report DTO for GET /api/eval/:taskId/result.
  * Flat shape — never the evaluate() `{ task, result }` envelope.
@@ -145,6 +162,7 @@ export interface EvaluationReportResponse {
   emotionalCurve: EvaluationEmotionalPointDto[];
   suggestions: EvaluationSuggestionDto[];
   marketBenchmark?: EvaluationMarketBenchmarkDto | null;
+  platformGate?: EvaluationPlatformGateDto | null;
   excerpts: EvaluationExcerptDto[];
   chapters?: unknown[];
   coverage: EvaluationCoverageDto;
@@ -244,6 +262,40 @@ function parseExcerpt(raw: unknown): EvaluationExcerptDto | null {
   if (typeof raw.matchedBy === 'string') excerpt.matchedBy = raw.matchedBy;
   if (typeof raw.length === 'number') excerpt.length = raw.length;
   return excerpt;
+}
+
+function parsePlatformGate(raw: unknown): EvaluationPlatformGateDto | null {
+  if (!isRecord(raw)) return null;
+  if (typeof raw.platform !== 'string' || typeof raw.displayName !== 'string') return null;
+  if (raw.verdict !== 'pass' && raw.verdict !== 'block') return null;
+
+  const checks: EvaluationPlatformGateCheckDto[] = [];
+  if (Array.isArray(raw.checks)) {
+    for (const item of raw.checks) {
+      if (
+        isRecord(item) && typeof item.dimension === 'string'
+        && typeof item.min === 'number' && typeof item.actual === 'number'
+        && typeof item.passed === 'boolean'
+      ) {
+        checks.push({ dimension: item.dimension, min: item.min, actual: item.actual, passed: item.passed });
+      }
+    }
+  }
+
+  const reasons = Array.isArray(raw.reasons)
+    ? raw.reasons.filter((r): r is string => typeof r === 'string')
+    : [];
+
+  let lowestDimension: EvaluationPlatformGateDto['lowestDimension'] = null;
+  if (
+    isRecord(raw.lowestDimension)
+    && typeof raw.lowestDimension.dimension === 'string'
+    && typeof raw.lowestDimension.score === 'number'
+  ) {
+    lowestDimension = { dimension: raw.lowestDimension.dimension, score: raw.lowestDimension.score };
+  }
+
+  return { platform: raw.platform, displayName: raw.displayName, verdict: raw.verdict, checks, reasons, lowestDimension };
 }
 
 function parseRelationship(raw: unknown): CharacterRelationship | null {
@@ -461,6 +513,11 @@ export function parseEvaluationReportResponse(raw: unknown): ParseResult<Evaluat
     report.marketBenchmark = null;
   } else if (flat.marketBenchmark !== undefined) {
     report.marketBenchmark = parseMarketBenchmark(flat.marketBenchmark);
+  }
+  if (flat.platformGate === null) {
+    report.platformGate = null;
+  } else if (flat.platformGate !== undefined) {
+    report.platformGate = parsePlatformGate(flat.platformGate);
   }
   if (Array.isArray(flat.chapters)) report.chapters = flat.chapters;
   const taskCoverage: { sourceWordCount?: number; chapterCount?: number } = {};
