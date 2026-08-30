@@ -168,7 +168,7 @@ export function Audiobook() {
         </div>
       )}
 
-      {showBuild && <BuildForm onCancel={() => setShowBuild(false)} onSubmit={(o) => void startJob({ action: 'build', out: runId, ...o })} />}
+      {showBuild && <BuildForm sceneRuns={runs} onCancel={() => setShowBuild(false)} onSubmit={(o) => void startJob({ action: 'build', out: runId, ...o })} />}
 
       <div className="ab-listen-bar">
         <span className="ab-listen-label">审听选项：</span>
@@ -227,7 +227,7 @@ export function Audiobook() {
   );
 }
 
-function BuildForm({ onSubmit, onCancel }: { onSubmit: (o: Record<string, unknown>) => void; onCancel: () => void }) {
+function BuildForm({ onSubmit, onCancel, sceneRuns }: { onSubmit: (o: Record<string, unknown>) => void; onCancel: () => void; sceneRuns: AbRun[] }) {
   const [project, setProject] = useState('最后一班森铁');
   const [chapters, setChapters] = useState('1');
   const [group, setGroup] = useState('3');
@@ -235,6 +235,7 @@ function BuildForm({ onSubmit, onCancel }: { onSubmit: (o: Record<string, unknow
   const [chars, setChars] = useState('');
   const [epStart, setEpStart] = useState('1');
   const [noVideo, setNoVideo] = useState(false);
+  const [coverRun, setCoverRun] = useState('');
 
   return (
     <div className="ab-build-form">
@@ -254,6 +255,14 @@ function BuildForm({ onSubmit, onCancel }: { onSubmit: (o: Record<string, unknow
         </label>
         <label>试产字数<input className="ab-input ab-input-mini" value={chars} onChange={(e) => setChars(e.target.value.replace(/[^\d]/g, ''))} placeholder="空=全章" /></label>
         <label>起始集号<input className="ab-input ab-input-mini" value={epStart} onChange={(e) => setEpStart(e.target.value.replace(/[^\d]/g, ''))} /></label>
+        <label>场景图
+          <select className="ab-input" value={coverRun} onChange={(e) => setCoverRun(e.target.value)}>
+            <option value="">无（纯音频视频将跳过）</option>
+            {sceneRuns.filter((r) => r.sceneImageCount > 0).map((r) => (
+              <option key={r.id} value={r.id}>{r.label} 的 scenes（{r.sceneImageCount} 张）</option>
+            ))}
+          </select>
+        </label>
         <label className="ab-check"><input type="checkbox" checked={noVideo} onChange={(e) => setNoVideo(e.target.checked)} />跳过视频渲染</label>
       </div>
       <div className="ab-build-actions">
@@ -261,7 +270,7 @@ function BuildForm({ onSubmit, onCancel }: { onSubmit: (o: Record<string, unknow
         <button className="ab-btn" onClick={onCancel}>取消</button>
         <button
           className="ab-btn ab-btn-primary"
-          onClick={() => onSubmit({ project, chapters, group, engine, ...(chars ? { chars } : {}), ...(epStart ? { epStart } : {}), noVideo })}
+          onClick={() => onSubmit({ project, chapters, group, engine, ...(chars ? { chars } : {}), ...(epStart ? { epStart } : {}), noVideo, ...(coverRun ? { coverRun } : {}) })}
         >
           启动构建
         </button>

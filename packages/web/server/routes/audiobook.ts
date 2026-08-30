@@ -271,6 +271,8 @@ function checked(v: unknown, pattern: RegExp, name: string): string | undefined 
 interface BuildOptions {
   project: string; chapters: string; group: string; chars?: string;
   engine: string; epStart?: string; out?: string; noVideo?: boolean;
+  /** 场景图目录来源 run（须已有 scenes/），映射为 --cover-dir dist/<id>/scenes */
+  coverRun?: string;
 }
 interface ListenOptions {
   ep?: string; model?: string; cer?: string; out?: string; fix?: boolean; srt?: boolean;
@@ -322,6 +324,7 @@ function startBuildJob(o: BuildOptions): AbJob {
   if (o.chars) childArgs.push('--chars', o.chars);
   if (o.epStart) childArgs.push('--ep-start', o.epStart);
   if (o.out) childArgs.push('--out', `dist/${o.out}`);
+  if (o.coverRun) childArgs.push('--cover-dir', `dist/${o.coverRun}/scenes`);
   if (o.noVideo) childArgs.push('--skip-video');
   return startJob(childArgs, [...childArgs]);
 }
@@ -457,9 +460,14 @@ audiobookRouter.post('/jobs', async (c) => {
       const chars = checked(body.chars, /^\d{2,6}$/, '--chars');
       const epStart = checked(body.epStart, /^[1-9]$/, '--ep-start');
       const out = checked(body.out, /^[\w-]{1,40}$/, '--out');
+      const coverRun = checked(body.coverRun, /^[\w-]{1,40}$/, '--cover-dir');
       if (!project || !chapters || !group || !engine) throw new Error('project/chapters/group/engine 必填');
       if (out) assertOutAllowed(out);
-      job = startBuildJob({ project, chapters, group, engine, chars, epStart, out, noVideo: body.noVideo === true });
+      // coverRun 必须真实存在 scenes/ 目录（防指到无图 run 导致视频被跳过）
+      if (coverRun && !existsSync(join(REPO_ROOT, 'dist', coverRun, 'scenes'))) {
+        throw new Error('--cover-dir 非法（该版本没有 scenes 目录）');
+      }
+      job = startBuildJob({ project, chapters, group, engine, chars, epStart, out, coverRun, noVideo: body.noVideo === true });
     } else if (body.action === 'listen') {
       const ep = checked(body.ep, /^\d{1,2}$/, '--ep');
       const model = checked(body.model, /^(tiny|base|small|medium|large|large-v2|large-v3|turbo)$/, '--model');

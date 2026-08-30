@@ -72,7 +72,9 @@ export function listCurrentStoryStateDtos(db: DB, rawProjectId: string): StorySt
 function parsePositiveInteger(value: string | undefined, fallback: number): number | null {
   if (value === undefined) return fallback;
   const parsed = Number.parseInt(value, 10);
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
+  if (!Number.isInteger(parsed) || parsed <= 0) return null;
+  // 钳位重造字面量：越界值拒绝，同时打断「HTTP 参数 → 深层计算」的污点直通
+  return Math.min(parsed, 1_000_000);
 }
 
 export function storyStateRoutes(db: DB, application?: WriterApplication) {
