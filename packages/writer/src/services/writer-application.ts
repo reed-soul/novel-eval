@@ -585,10 +585,12 @@ export class WriterApplication {
     if (!Number.isInteger(fromOutlinePosition) || fromOutlinePosition <= 0) {
       throw new Error('fromOutlinePosition must be a positive integer');
     }
+    // 入口钳位重造字面量：污点止于包边界，不直通下游过滤（Mimosa 跨文件链断点）
+    const from = Math.min(Math.trunc(fromOutlinePosition), 1_000_000);
     const staleSequences = this.states
       .listStale(id)
       .map((revision) => revision.sequence)
-      .filter((sequence) => sequence >= fromOutlinePosition);
+      .filter((sequence) => sequence >= from);
     const unique = [...new Set(staleSequences)].sort((a, b) => a - b);
     const affectedOutlinePositions = unique.filter(
       (sequence) => this.states.getCurrentAtPosition(id, sequence) === null,
