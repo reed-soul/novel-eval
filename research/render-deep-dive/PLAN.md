@@ -167,7 +167,7 @@ ffmpeg -hide_banner -loglevel error -y \
 
 1. **P0 ✅（2026-08-30 已落地）**：`video.ts` 重构为段渲染器 + concat 组装 + 缓存目录（实现拆为 `video.ts`/`render-assets.ts`/`assemble.ts` 三文件，过 Mimosa 写入门）；参数 24fps/2x supersample(5120×2880)/1440p/**x264 CRF18 段母带**/luma 直混 0.35（env 可调 AUDIOBOOK_SNOW_OPACITY）/锁相 20s 桶。**e2e 实测（62s 双图+雪花+字幕）：冷渲 23.1s、全缓存命中重渲 0.5s、换一张图 15.1s（仅重渲 1/3 段）**；产物 2560×1440@24 + mov_text 中文轨校验通过；
 2. **P0.5 ✅**：youtube.ts 章节时间戳（首条 0:00、≥3 条生效）进描述；captions 字段（zh-Hans）+ UPLOAD.md 上传指引（YouTube 忽略 MP4 内封字幕轨）；实际 captions.insert API 待 publish 步骤接入 OAuth 后补；
-3. **P1（验收）**：一集全流程 + libvmaf 段级回归（`n_threads=8`）+ 上传实测 VP9 通道确认；
+3. **P1 ✅（2026-08-30 实测，森铁 EP01，edge 引擎验证）**：56 分钟真实一集全流程 899s（TTS 大头，视频渲染仅 222s）；**169 槽 / 153 缓存命中**（15 图轮换 × 20s 标准桶 → 仅 16 个唯一段真渲，缓存设计按预期发挥）。QA 门全过：规格（1440p24/h264+aac/mov_text chi/时长贴合）、无黑帧、响度 -16.72 LUFS/-1.46 TP、VMAF 96.8（CRF18 vs CRF12 参考，>95 门）；成片 3.1GB @7.9Mbps。上传物料含章节导航（0:00 冷开场…）与 captions(zh-Hans)。**VP9 通道验证待用户传 unlisted 测试片**（dist/audiobook-v4/vp9-test-60s.mp4，60s/76MB，传后 yt-dlp -F 验证）。**磁盘警示**：全片仅剩 6.8Gi，5 集 × 3.1GB 不可行——需 上传后即删 / 转 Win11（tailnet rsync）/ AUDIOBOOK_NO_FASTSTART 策略之一；
 4. **P2**：2.5D 模块 → hero 槽 i2v provider（火山/fal 抽象）→ 按留存逐档推进；
 5. **P3**：Web 端一键出片（jobs 挂载 + SSE 进度 + 产物面板）。
 
