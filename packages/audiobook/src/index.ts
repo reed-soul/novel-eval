@@ -6,3 +6,7 @@ export type { TtsEngine, SynthResult } from './tts/index.ts';
 export { assembleChapter } from './audio.ts';
 export { renderChapterVideo } from './video.ts';
 export { buildUploadPlan, writeUploadBundle, DEFAULT_BRAND } from './youtube.ts';
+export {
+  loadRegistry, saveRegistry, setupBookLine, recordEpisode, nextEpisodeHint, episodeReady,
+} from './registry.ts';
+export type { BookRegistry, EpisodeRecord, Registry } from './registry.ts';

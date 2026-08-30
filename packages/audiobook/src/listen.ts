@@ -394,11 +394,25 @@ export async function runListen(opts: ListenOptions): Promise<void> {
     }
   }
 
+  // 报告按集 merge：单集重审只更新本次审的章，其余章沿用旧报告
+  // （M0 阻断2：整文件覆盖会把他集 QA 结果写丢）
   const reportFile = join(opts.outRoot, 'listen-report.json');
-  await writeFile(reportFile, JSON.stringify(report, null, 1), 'utf-8');
-  const totalBad = report.chapters.reduce((a, c) => a + c.counts.bad + c.counts.missing + c.counts.silent, 0);
-  const totalSuspect = report.chapters.reduce((a, c) => a + c.counts.suspect, 0);
-  console.log(`▶ 报告：${reportFile}｜P0（bad+missing+silent）${totalBad}｜suspect ${totalSuspect}`);
+  interface OldReport { generatedAt?: string; model?: string; cerThreshold?: number; chapters?: ChapterAudit[]; fixDeleted?: string[] }
+  const old = (() => {
+    try {
+      return JSON.parse(readFileSync(reportFile, 'utf-8')) as OldReport;
+    } catch {
+      return {} as OldReport;
+    }
+  })();
+  const audited = new Set(report.chapters.map((c) => c.dir));
+  const merged = [...(old.chapters ?? []).filter((c) => !audited.has(c.dir)), ...report.chapters]
+    .sort((a, b) => a.dir.localeCompare(b.dir));
+  const finalReport = { ...report, chapters: merged };
+  await writeFile(reportFile, JSON.stringify(finalReport, null, 1), 'utf-8');
+  const totalBad = finalReport.chapters.reduce((a, c) => a + c.counts.bad + c.counts.missing + c.counts.silent, 0);
+  const totalSuspect = finalReport.chapters.reduce((a, c) => a + c.counts.suspect, 0);
+  console.log(`▶ 报告：${reportFile}｜按集合并后共 ${finalReport.chapters.length} 章｜P0 ${totalBad}｜suspect ${totalSuspect}`);
   if (report.fixDeleted.length) {
     console.log(`▶ 已删除 ${report.fixDeleted.length} 个坏段缓存。重跑同一条 build 命令即可只重合成这些段（段级缓存）。`);
   }

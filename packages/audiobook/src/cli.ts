@@ -13,7 +13,7 @@
  * （防路径穿越），文本参数做字符集/长度白名单，引擎名走字面量分支。
  */
 import { resolve, sep } from 'node:path';
-import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile, rm } from 'node:fs/promises';
 import { readFileSync } from 'node:fs';
 import { existsSync, readdirSync } from 'node:fs';
 import { openWriterDb, resolveProjectId, loadChapters, listProjects } from './db.ts';
@@ -63,6 +63,8 @@ interface CleanArgs {
   coverDir?: string;
   snow: boolean;
   skipVideo: boolean;
+  /** 构建前清空所选章节的 tts/ 段级缓存——正文/发音修订后的强制重制（M0 验收10） */
+  clean: boolean;
   tagline: string;
   /** per-project 配置显式路径（默认按项目名/ID 自动发现 data/audiobook/projects/） */
   config?: string;
@@ -91,6 +93,7 @@ function parseArgs(argv: string[]): { command: string; raw: Record<string, strin
       case '--cover': raw.cover = next(); break;
       case '--cover-dir': raw.coverDir = next(); break;
       case '--no-snow': raw.noSnow = '1'; break;
+      case '--clean': raw.clean = '1'; break;
       case '--no-cold-open': raw.noColdOpen = '1'; break;
       case '--skip-video': skipVideo = true; break;
       case '--ep-start': raw.epStart = next(); break;
@@ -117,7 +120,7 @@ function cleanArgs(raw: Record<string, string>, skipVideo: boolean): CleanArgs {
   const group = c.group ? Number(c.group) : 1;
   if (!Number.isInteger(group) || group < 1 || group > 5) throw new Error('group 需在 1-5（每集章数）');
   const epStart = c.epStart ? Number(c.epStart) : 1;
-  if (!Number.isInteger(epStart) || epStart < 1 || epStart > 9) throw new Error('ep-start 需在 1-9');
+  if (!Number.isInteger(epStart) || epStart < 1 || epStart > 99) throw new Error('ep-start 需在 1-99');
   if (c.engine && c.engine !== 'edge' && c.engine !== 'minimax' && c.engine !== 'volcengine') {
     throw new Error('引擎仅允许 edge | minimax | volcengine');
   }
@@ -133,6 +136,7 @@ function cleanArgs(raw: Record<string, string>, skipVideo: boolean): CleanArgs {
     cover: c.cover ? safePath(c.cover) : undefined,
     coverDir: c.coverDir ? safePath(c.coverDir) : undefined,
     snow: c.noSnow !== '1',
+    clean: c.clean === '1',
     skipVideo,
     tagline: c.tagline ? cleanText(c.tagline, 100) : '',
     config: c.config ? safePath(c.config) : undefined,
@@ -340,6 +344,14 @@ async function main() {
       const chDir = resolve(epDir, `ch${String(ch.position).padStart(2, '0')}`);
       const ttsDir = resolve(chDir, 'tts');
       await mkdir(ttsDir, { recursive: true });
+      if (args.clean) {
+        // 强制重制：清空本章段级缓存（含 mp3/srt/tts-failures），
+        // 正文或发音修订后普通重跑会被旧缓存原样复读（M0 阻断5）
+        for (const f of readdirSync(ttsDir)) {
+          if (/\.(mp3|srt)$/.test(f) || f === 'tts-failures.json') await rm(resolve(ttsDir, f), { force: true });
+        }
+        console.log(`    --clean：已清 ${ch.position} 章段级缓存`);
+      }
       if (args.llmAttribute) {
         const tAttr = Date.now();
         const res = await attributeMissingSpeakers(segs, {
