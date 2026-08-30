@@ -1,0 +1,3835 @@
+{
+  "wireMagic": "pb3",
+  "pens": [ {
+  
+  } ],
+  "wsWinStyles": [ {
+  
+  } ],
+  "wpWinPositions": [ {
+  
+  } ],
+  "events": [ {
+    "tStartMs": 0,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "我叫小胖"
+    } ]
+  }, {
+    "tStartMs": 1000,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "生活在一个偏远的小山村"
+    } ]
+  }, {
+    "tStartMs": 3466,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "因为村口有一棵老槐树"
+    } ]
+  }, {
+    "tStartMs": 5700,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "故此得名古槐村"
+    } ]
+  }, {
+    "tStartMs": 7233,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "村里有个叫二狗的年轻人"
+    } ]
+  }, {
+    "tStartMs": 9700,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "开荒了十几亩田地"
+    } ]
+  }, {
+    "tStartMs": 11400,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "在村子里是出了名的勤奋能干"
+    } ]
+  }, {
+    "tStartMs": 14000,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "在二狗22岁那年"
+    } ]
+  }, {
+    "tStartMs": 16033,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "他爹给他张罗了一个媳妇"
+    } ]
+  }, {
+    "tStartMs": 18100,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "那模样很是标致"
+    } ]
+  }, {
+    "tStartMs": 19733,
+    "dDurationMs": 2833,
+    "segs": [ {
+      "utf8": "每当村里人提起二狗和他媳妇"
+    } ]
+  }, {
+    "tStartMs": 22600,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "我都羡慕不已"
+    } ]
+  }, {
+    "tStartMs": 23833,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "转眼过去一年多"
+    } ]
+  }, {
+    "tStartMs": 25400,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "二狗媳妇即将临盆的那天"
+    } ]
+  }, {
+    "tStartMs": 27733,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "天上下着倾盆大雨"
+    } ]
+  }, {
+    "tStartMs": 29766,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "说来也巧"
+    } ]
+  }, {
+    "tStartMs": 30900,
+    "dDurationMs": 2366,
+    "segs": [ {
+      "utf8": "这天刚好是农历的七月半"
+    } ]
+  }, {
+    "tStartMs": 33266,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "传说这一天"
+    } ]
+  }, {
+    "tStartMs": 34433,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "是一年当中阴气最重的一天"
+    } ]
+  }, {
+    "tStartMs": 37033,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "邪祟都会在这一天出来"
+    } ]
+  }, {
+    "tStartMs": 39000,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "但是邪祟害怕打雷"
+    } ]
+  }, {
+    "tStartMs": 40866,
+    "dDurationMs": 1234,
+    "segs": [ {
+      "utf8": "为了躲避打雷"
+    } ]
+  }, {
+    "tStartMs": 42133,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "它们会躲到生人的屋子里"
+    } ]
+  }, {
+    "tStartMs": 44100,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "二狗听说"
+    } ]
+  }, {
+    "tStartMs": 45166,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "只要在门口挂一把菜刀就可以辟邪"
+    } ]
+  }, {
+    "tStartMs": 48133,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "为了媳妇能安全生产"
+    } ]
+  }, {
+    "tStartMs": 50266,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "他当即就从厨房拿来一把菜刀"
+    } ]
+  }, {
+    "tStartMs": 52933,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "挂在了门上"
+    } ]
+  }, {
+    "tStartMs": 54100,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "屋子里面"
+    } ]
+  }, {
+    "tStartMs": 55033,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "不断传来妻子的喊叫声"
+    } ]
+  }, {
+    "tStartMs": 57300,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "二狗不安的在门口来回踱步"
+    } ]
+  }, {
+    "tStartMs": 59800,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "突然"
+    } ]
+  }, {
+    "tStartMs": 60400,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "外面传来一声巨响"
+    } ]
+  }, {
+    "tStartMs": 62100,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "好像是什么东西撞在了门上"
+    } ]
+  }, {
+    "tStartMs": 64400,
+    "dDurationMs": 733,
+    "segs": [ {
+      "utf8": "这一撞"
+    } ]
+  }, {
+    "tStartMs": 65166,
+    "dDurationMs": 2334,
+    "segs": [ {
+      "utf8": "刚好把门上的菜刀震了下来"
+    } ]
+  }, {
+    "tStartMs": 67533,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "掉落在了二狗的肩膀上"
+    } ]
+  }, {
+    "tStartMs": 69566,
+    "dDurationMs": 3700,
+    "segs": [ {
+      "utf8": "二狗的肩膀被菜刀划出一道深深的血口"
+    } ]
+  }, {
+    "tStartMs": 73300,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "然而这时"
+    } ]
+  }, {
+    "tStartMs": 74333,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "屋里突然传来一阵婴儿的啼哭声"
+    } ]
+  }, {
+    "tStartMs": 77033,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "二狗心里一喜"
+    } ]
+  }, {
+    "tStartMs": 78366,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "也顾不得伤口"
+    } ]
+  }, {
+    "tStartMs": 79766,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "一下就闯进了屋子里"
+    } ]
+  }, {
+    "tStartMs": 81466,
+    "dDurationMs": 1934,
+    "segs": [ {
+      "utf8": "看着白白胖胖的儿子"
+    } ]
+  }, {
+    "tStartMs": 83433,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "二狗心里一阵欢喜"
+    } ]
+  }, {
+    "tStartMs": 85433,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "可二狗肩膀上的伤口"
+    } ]
+  }, {
+    "tStartMs": 87433,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "过了整整一个月"
+    } ]
+  }, {
+    "tStartMs": 88833,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "还没有愈合"
+    } ]
+  }, {
+    "tStartMs": 89933,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "在给儿子办满月酒的时候"
+    } ]
+  }, {
+    "tStartMs": 92266,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "二狗因为操劳过度"
+    } ]
+  }, {
+    "tStartMs": 94166,
+    "dDurationMs": 1134,
+    "segs": [ {
+      "utf8": "眼前一黑"
+    } ]
+  }, {
+    "tStartMs": 95333,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "尽然昏了过去"
+    } ]
+  }, {
+    "tStartMs": 96633,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "还发起了高烧"
+    } ]
+  }, {
+    "tStartMs": 98033,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "二狗父亲看到后"
+    } ]
+  }, {
+    "tStartMs": 99766,
+    "dDurationMs": 2934,
+    "segs": [ {
+      "utf8": "让二狗媳妇把二狗扶到床上去"
+    } ]
+  }, {
+    "tStartMs": 102733,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "自己则跑来请我爷爷"
+    } ]
+  }, {
+    "tStartMs": 104766,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "我爷爷是村里的风水先生"
+    } ]
+  }, {
+    "tStartMs": 107100,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "年轻的时候"
+    } ]
+  }, {
+    "tStartMs": 108266,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "曾经跟着一个道长学习过一段时间"
+    } ]
+  }, {
+    "tStartMs": 111166,
+    "dDurationMs": 1534,
+    "segs": [ {
+      "utf8": "不仅通晓阴阳"
+    } ]
+  }, {
+    "tStartMs": 112700,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "还懂些医术"
+    } ]
+  }, {
+    "tStartMs": 113933,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "爷爷来到二狗家看了看"
+    } ]
+  }, {
+    "tStartMs": 116100,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "叹了口气"
+    } ]
+  }, {
+    "tStartMs": 117166,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "并没有多说什么"
+    } ]
+  }, {
+    "tStartMs": 118633,
+    "dDurationMs": 2467,
+    "segs": [ {
+      "utf8": "便从口袋里拿出一小瓶药"
+    } ]
+  }, {
+    "tStartMs": 121133,
+    "dDurationMs": 667,
+    "segs": [ {
+      "utf8": "说道"
+    } ]
+  }, {
+    "tStartMs": 121800,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "这是治伤的灵药"
+    } ]
+  }, {
+    "tStartMs": 123200,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "每天子时和午时把它敷在伤口上"
+    } ]
+  }, {
+    "tStartMs": 126100,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "二狗能不能好"
+    } ]
+  }, {
+    "tStartMs": 127500,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "就看他的造化了"
+    } ]
+  }, {
+    "tStartMs": 128900,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "说完这话"
+    } ]
+  }, {
+    "tStartMs": 129933,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "爷爷便转身离开了"
+    } ]
+  }, {
+    "tStartMs": 131666,
+    "dDurationMs": 2034,
+    "segs": [ {
+      "utf8": "二狗虽然用了爷爷给的药"
+    } ]
+  }, {
+    "tStartMs": 133700,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "但依然没有好转"
+    } ]
+  }, {
+    "tStartMs": 135300,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "精神头也是一天不如一天"
+    } ]
+  }, {
+    "tStartMs": 137500,
+    "dDurationMs": 1766,
+    "segs": [ {
+      "utf8": "就这样又过了一个月"
+    } ]
+  }, {
+    "tStartMs": 139300,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "二狗还是没能撑过去"
+    } ]
+  }, {
+    "tStartMs": 141233,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "二狗出殡那天"
+    } ]
+  }, {
+    "tStartMs": 142566,
+    "dDurationMs": 1734,
+    "segs": [ {
+      "utf8": "爷爷带着送葬的队伍"
+    } ]
+  }, {
+    "tStartMs": 144333,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "来到后山墓地"
+    } ]
+  }, {
+    "tStartMs": 145733,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "正准备下葬时"
+    } ]
+  }, {
+    "tStartMs": 147233,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "突然"
+    } ]
+  }, {
+    "tStartMs": 147866,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "棺材里传来一阵响声"
+    } ]
+  }, {
+    "tStartMs": 149900,
+    "dDurationMs": 2933,
+    "segs": [ {
+      "utf8": "像是有人在里面敲打棺材的声音"
+    } ]
+  }, {
+    "tStartMs": 152833,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "在场的人吓的连连后退"
+    } ]
+  }, {
+    "tStartMs": 155133,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "有人大喊道"
+    } ]
+  }, {
+    "tStartMs": 156366,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "王老爷子"
+    } ]
+  }, {
+    "tStartMs": 157333,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "二狗诈尸了"
+    } ]
+  }, {
+    "tStartMs": 158466,
+    "dDurationMs": 1234,
+    "segs": [ {
+      "utf8": "看到这情况"
+    } ]
+  }, {
+    "tStartMs": 159733,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "爷爷眉头紧锁"
+    } ]
+  }, {
+    "tStartMs": 161200,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "连忙从口袋里"
+    } ]
+  }, {
+    "tStartMs": 162600,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "拿出一张黄色的符纸"
+    } ]
+  }, {
+    "tStartMs": 164600,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "贴在了棺材上面"
+    } ]
+  }, {
+    "tStartMs": 166000,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "可是"
+    } ]
+  }, {
+    "tStartMs": 166600,
+    "dDurationMs": 966,
+    "segs": [ {
+      "utf8": "棺材里面"
+    } ]
+  }, {
+    "tStartMs": 167600,
+    "dDurationMs": 2233,
+    "segs": [ {
+      "utf8": "依旧是不断的传来敲击声"
+    } ]
+  }, {
+    "tStartMs": 169833,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "又过了一会"
+    } ]
+  }, {
+    "tStartMs": 170866,
+    "dDurationMs": 1434,
+    "segs": [ {
+      "utf8": "爷爷松了一口气"
+    } ]
+  }, {
+    "tStartMs": 172333,
+    "dDurationMs": 667,
+    "segs": [ {
+      "utf8": "说道"
+    } ]
+  }, {
+    "tStartMs": 173000,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "没事的"
+    } ]
+  }, {
+    "tStartMs": 173800,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "这不是诈尸"
+    } ]
+  }, {
+    "tStartMs": 174966,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "如果是诈尸"
+    } ]
+  }, {
+    "tStartMs": 176133,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "那张符咒应该会起到作用的"
+    } ]
+  }, {
+    "tStartMs": 178666,
+    "dDurationMs": 834,
+    "segs": [ {
+      "utf8": "紧接着"
+    } ]
+  }, {
+    "tStartMs": 179500,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "爷爷又对抬棺的几人说道"
+    } ]
+  }, {
+    "tStartMs": 181600,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "你们几个把棺材打开"
+    } ]
+  }, {
+    "tStartMs": 183633,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "看看到底是怎么回事"
+    } ]
+  }, {
+    "tStartMs": 185400,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "几个抬棺的人面面相觑"
+    } ]
+  }, {
+    "tStartMs": 187600,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "都不敢下手"
+    } ]
+  }, {
+    "tStartMs": 188833,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "可爷爷在村子里威望很高"
+    } ]
+  }, {
+    "tStartMs": 191233,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "没人敢反驳他的话"
+    } ]
+  }, {
+    "tStartMs": 192966,
+    "dDurationMs": 634,
+    "segs": [ {
+      "utf8": "于是"
+    } ]
+  }, {
+    "tStartMs": 193633,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "提心吊胆的靠近棺材"
+    } ]
+  }, {
+    "tStartMs": 195833,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "吃力的将棺材打开"
+    } ]
+  }, {
+    "tStartMs": 197766,
+    "dDurationMs": 667,
+    "segs": [ {
+      "utf8": "然后"
+    } ]
+  }, {
+    "tStartMs": 198466,
+    "dDurationMs": 1867,
+    "segs": [ {
+      "utf8": "迅速的窜出去很远"
+    } ]
+  }, {
+    "tStartMs": 200333,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "大家紧紧的盯着那口棺材"
+    } ]
+  }, {
+    "tStartMs": 202733,
+    "dDurationMs": 1067,
+    "segs": [ {
+      "utf8": "等了许久"
+    } ]
+  }, {
+    "tStartMs": 203833,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "也没见有什么动静"
+    } ]
+  }, {
+    "tStartMs": 205333,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "众人刚准备走过去一探究竟"
+    } ]
+  }, {
+    "tStartMs": 207933,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "突然"
+    } ]
+  }, {
+    "tStartMs": 208533,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "二狗从棺材里猛的坐了起来"
+    } ]
+  }, {
+    "tStartMs": 210900,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "他紧闭双眼"
+    } ]
+  }, {
+    "tStartMs": 212200,
+    "dDurationMs": 1166,
+    "segs": [ {
+      "utf8": "脸色惨白"
+    } ]
+  }, {
+    "tStartMs": 213366,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "身体在微微的抖动"
+    } ]
+  }, {
+    "tStartMs": 215100,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "二狗媳妇见状"
+    } ]
+  }, {
+    "tStartMs": 216433,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "哭喊着就要跑过去"
+    } ]
+  }, {
+    "tStartMs": 218333,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "爷爷一把拉住她"
+    } ]
+  }, {
+    "tStartMs": 219766,
+    "dDurationMs": 667,
+    "segs": [ {
+      "utf8": "说道"
+    } ]
+  }, {
+    "tStartMs": 220466,
+    "dDurationMs": 1934,
+    "segs": [ {
+      "utf8": "二狗媳妇先别过去"
+    } ]
+  }, {
+    "tStartMs": 222400,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "这事有点邪性"
+    } ]
+  }, {
+    "tStartMs": 223700,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "可二狗媳妇像发疯了似的"
+    } ]
+  }, {
+    "tStartMs": 226066,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "甩开爷爷的手"
+    } ]
+  }, {
+    "tStartMs": 227433,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "跑到棺材前哭喊道"
+    } ]
+  }, {
+    "tStartMs": 229466,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "二狗"
+    } ]
+  }, {
+    "tStartMs": 230166,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "你快醒醒"
+    } ]
+  }, {
+    "tStartMs": 231266,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "我们回家去"
+    } ]
+  }, {
+    "tStartMs": 232266,
+    "dDurationMs": 1434,
+    "segs": [ {
+      "utf8": "可是话刚说完"
+    } ]
+  }, {
+    "tStartMs": 233700,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "二狗媳妇就昏了过去"
+    } ]
+  }, {
+    "tStartMs": 235633,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "转眼到了第二天"
+    } ]
+  }, {
+    "tStartMs": 237200,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "二狗他娘看到二狗醒来"
+    } ]
+  }, {
+    "tStartMs": 239400,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "激动的说道"
+    } ]
+  }, {
+    "tStartMs": 240500,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "醒来就好"
+    } ]
+  }, {
+    "tStartMs": 241566,
+    "dDurationMs": 1067,
+    "segs": [ {
+      "utf8": "醒来就好"
+    } ]
+  }, {
+    "tStartMs": 242633,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "这时"
+    } ]
+  }, {
+    "tStartMs": 243300,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "二狗媳妇也把狗蛋抱了过来"
+    } ]
+  }, {
+    "tStartMs": 245733,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "想让二狗看看自己的儿子"
+    } ]
+  }, {
+    "tStartMs": 248033,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "可是"
+    } ]
+  }, {
+    "tStartMs": 248633,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "狗蛋一靠近二狗"
+    } ]
+  }, {
+    "tStartMs": 250266,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "就大哭不止"
+    } ]
+  }, {
+    "tStartMs": 251500,
+    "dDurationMs": 2066,
+    "segs": [ {
+      "utf8": "二狗媳妇看到这情形"
+    } ]
+  }, {
+    "tStartMs": 253566,
+    "dDurationMs": 1834,
+    "segs": [ {
+      "utf8": "只好把孩子抱到一边"
+    } ]
+  }, {
+    "tStartMs": 255433,
+    "dDurationMs": 2733,
+    "segs": [ {
+      "utf8": "但二狗对此显得很是不高兴"
+    } ]
+  }, {
+    "tStartMs": 258200,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "甚至眼睛里"
+    } ]
+  }, {
+    "tStartMs": 259333,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "还流露出一丝不易察觉的杀气"
+    } ]
+  }, {
+    "tStartMs": 261900,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "转眼到了晚上"
+    } ]
+  }, {
+    "tStartMs": 263233,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "二狗媳妇做了一个奇怪的梦"
+    } ]
+  }, {
+    "tStartMs": 265600,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "在梦里面"
+    } ]
+  }, {
+    "tStartMs": 266600,
+    "dDurationMs": 2733,
+    "segs": [ {
+      "utf8": "二狗一个人躺在黑洞洞的棺材里"
+    } ]
+  }, {
+    "tStartMs": 269366,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "突然"
+    } ]
+  }, {
+    "tStartMs": 269966,
+    "dDurationMs": 1234,
+    "segs": [ {
+      "utf8": "棺材里的二狗"
+    } ]
+  }, {
+    "tStartMs": 271233,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "猛地睁开双眼"
+    } ]
+  }, {
+    "tStartMs": 272666,
+    "dDurationMs": 2334,
+    "segs": [ {
+      "utf8": "脸上露出一幅诡异的微笑"
+    } ]
+  }, {
+    "tStartMs": 275033,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "幽幽的说道"
+    } ]
+  }, {
+    "tStartMs": 276166,
+    "dDurationMs": 867,
+    "segs": [ {
+      "utf8": "我回来了"
+    } ]
+  }, {
+    "tStartMs": 277033,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "我要回家"
+    } ]
+  }, {
+    "tStartMs": 277966,
+    "dDurationMs": 1934,
+    "segs": [ {
+      "utf8": "二狗媳妇被吓醒后"
+    } ]
+  }, {
+    "tStartMs": 279900,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "满身的冷汗"
+    } ]
+  }, {
+    "tStartMs": 281066,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "她觉得事情有些蹊跷"
+    } ]
+  }, {
+    "tStartMs": 283066,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "因为刚才脱衣服睡觉时"
+    } ]
+  }, {
+    "tStartMs": 285300,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "二狗媳妇发现"
+    } ]
+  }, {
+    "tStartMs": 286600,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "二狗肩膀上的刀伤不见了"
+    } ]
+  }, {
+    "tStartMs": 288800,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "甚至连一点疤痕都没有留下"
+    } ]
+  }, {
+    "tStartMs": 291266,
+    "dDurationMs": 2234,
+    "segs": [ {
+      "utf8": "二狗媳妇打算转过头去"
+    } ]
+  }, {
+    "tStartMs": 293500,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "看看睡在身边的二狗"
+    } ]
+  }, {
+    "tStartMs": 295533,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "可她刚一转头"
+    } ]
+  }, {
+    "tStartMs": 296966,
+    "dDurationMs": 1834,
+    "segs": [ {
+      "utf8": "吓的差点大叫出来"
+    } ]
+  }, {
+    "tStartMs": 298833,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "只见"
+    } ]
+  }, {
+    "tStartMs": 299500,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "在月光映照下的二狗"
+    } ]
+  }, {
+    "tStartMs": 301500,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "正瞪着恶狠狠的双眼"
+    } ]
+  }, {
+    "tStartMs": 303666,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "直勾勾地盯着他"
+    } ]
+  }, {
+    "tStartMs": 304966,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "就像刚从地狱里爬出来的恶鬼"
+    } ]
+  }, {
+    "tStartMs": 307666,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "躺在身边"
+    } ]
+  }, {
+    "tStartMs": 308766,
+    "dDurationMs": 1434,
+    "segs": [ {
+      "utf8": "那种狰狞的眼神"
+    } ]
+  }, {
+    "tStartMs": 310200,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "让二狗媳妇不寒而栗"
+    } ]
+  }, {
+    "tStartMs": 312300,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "二狗媳妇声音颤抖地问道"
+    } ]
+  }, {
+    "tStartMs": 314666,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "二狗"
+    } ]
+  }, {
+    "tStartMs": 315366,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "你咋还没睡呢"
+    } ]
+  }, {
+    "tStartMs": 316666,
+    "dDurationMs": 1767,
+    "segs": [ {
+      "utf8": "但回答二狗媳妇的"
+    } ]
+  }, {
+    "tStartMs": 318433,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "只有死一般的寂静"
+    } ]
+  }, {
+    "tStartMs": 320166,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "她甚至听不到二狗的呼吸声"
+    } ]
+  }, {
+    "tStartMs": 322666,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "第二天早晨"
+    } ]
+  }, {
+    "tStartMs": 323966,
+    "dDurationMs": 1034,
+    "segs": [ {
+      "utf8": "吃过早饭"
+    } ]
+  }, {
+    "tStartMs": 325000,
+    "dDurationMs": 2233,
+    "segs": [ {
+      "utf8": "二狗的爹娘来爷爷家道谢"
+    } ]
+  }, {
+    "tStartMs": 327233,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "二狗媳妇则去了河边洗衣服"
+    } ]
+  }, {
+    "tStartMs": 329700,
+    "dDurationMs": 1666,
+    "segs": [ {
+      "utf8": "一个人在家的二狗"
+    } ]
+  }, {
+    "tStartMs": 331366,
+    "dDurationMs": 2467,
+    "segs": [ {
+      "utf8": "莫名其妙的翻出一堆纸人来"
+    } ]
+  }, {
+    "tStartMs": 333866,
+    "dDurationMs": 2067,
+    "segs": [ {
+      "utf8": "然后在门口挖了个坑"
+    } ]
+  }, {
+    "tStartMs": 335933,
+    "dDurationMs": 2233,
+    "segs": [ {
+      "utf8": "把纸人全都埋到了坑里"
+    } ]
+  }, {
+    "tStartMs": 338166,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "二狗一边做着这些"
+    } ]
+  }, {
+    "tStartMs": 339966,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "还一边阴森森的笑着"
+    } ]
+  }, {
+    "tStartMs": 342066,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "二狗媳妇洗衣服回来时"
+    } ]
+  }, {
+    "tStartMs": 344266,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "正好撞见二狗往坑里填土"
+    } ]
+  }, {
+    "tStartMs": 346900,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "她一脸惊骇的看了一会"
+    } ]
+  }, {
+    "tStartMs": 348900,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "便悄悄的回到了屋里"
+    } ]
+  }, {
+    "tStartMs": 351033,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "吃过晚饭"
+    } ]
+  }, {
+    "tStartMs": 352000,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "二狗早早的去睡觉了"
+    } ]
+  }, {
+    "tStartMs": 354033,
+    "dDurationMs": 2067,
+    "segs": [ {
+      "utf8": "二狗媳妇看了看公婆"
+    } ]
+  }, {
+    "tStartMs": 356133,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "犹豫了一会"
+    } ]
+  }, {
+    "tStartMs": 357200,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "决定把这两天的事情告诉公婆"
+    } ]
+  }, {
+    "tStartMs": 359900,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "当她把昨天晚上和今天早晨"
+    } ]
+  }, {
+    "tStartMs": 362533,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "二狗怪异的举动讲完后"
+    } ]
+  }, {
+    "tStartMs": 364633,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "二狗娘长长的叹了口气"
+    } ]
+  }, {
+    "tStartMs": 366933,
+    "dDurationMs": 667,
+    "segs": [ {
+      "utf8": "说道"
+    } ]
+  }, {
+    "tStartMs": 367633,
+    "dDurationMs": 733,
+    "segs": [ {
+      "utf8": "翠花"
+    } ]
+  }, {
+    "tStartMs": 368400,
+    "dDurationMs": 833,
+    "segs": [ {
+      "utf8": "你不知道"
+    } ]
+  }, {
+    "tStartMs": 369233,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "下葬那天"
+    } ]
+  }, {
+    "tStartMs": 370333,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "我和你爹就在家里坐着"
+    } ]
+  }, {
+    "tStartMs": 372333,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "可是"
+    } ]
+  }, {
+    "tStartMs": 372933,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "突然就觉得有人在拉我们的裤脚"
+    } ]
+  }, {
+    "tStartMs": 375533,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "力气出奇的大"
+    } ]
+  }, {
+    "tStartMs": 376833,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "当时我和你爹都吓坏了"
+    } ]
+  }, {
+    "tStartMs": 379033,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "过了没一会"
+    } ]
+  }, {
+    "tStartMs": 380066,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "小胖他爷爷就带着人"
+    } ]
+  }, {
+    "tStartMs": 382100,
+    "dDurationMs": 1966,
+    "segs": [ {
+      "utf8": "把你和二狗背回来了"
+    } ]
+  }, {
+    "tStartMs": 384066,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "就在你们到家的时候"
+    } ]
+  }, {
+    "tStartMs": 385666,
+    "dDurationMs": 3134,
+    "segs": [ {
+      "utf8": "咱家的大黄狗就冲着二狗拼命的叫"
+    } ]
+  }, {
+    "tStartMs": 388800,
+    "dDurationMs": 766,
+    "segs": [ {
+      "utf8": "以前"
+    } ]
+  }, {
+    "tStartMs": 389600,
+    "dDurationMs": 2266,
+    "segs": [ {
+      "utf8": "大黄狗看见自己家里人"
+    } ]
+  }, {
+    "tStartMs": 391866,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "从来都不叫唤"
+    } ]
+  }, {
+    "tStartMs": 393266,
+    "dDurationMs": 667,
+    "segs": [ {
+      "utf8": "不过"
+    } ]
+  }, {
+    "tStartMs": 393933,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "它叫着叫着"
+    } ]
+  }, {
+    "tStartMs": 395133,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "就呜呜了两声"
+    } ]
+  }, {
+    "tStartMs": 396366,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "夹着尾巴跑了"
+    } ]
+  }, {
+    "tStartMs": 397700,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "今天早晨"
+    } ]
+  }, {
+    "tStartMs": 398800,
+    "dDurationMs": 2233,
+    "segs": [ {
+      "utf8": "我跟你爹去小胖爷爷家时"
+    } ]
+  }, {
+    "tStartMs": 401066,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "小胖爷爷说"
+    } ]
+  }, {
+    "tStartMs": 402300,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "二狗不应该回来"
+    } ]
+  }, {
+    "tStartMs": 403700,
+    "dDurationMs": 2066,
+    "segs": [ {
+      "utf8": "如果二狗在家里找事"
+    } ]
+  }, {
+    "tStartMs": 405766,
+    "dDurationMs": 1434,
+    "segs": [ {
+      "utf8": "那便可能会出事"
+    } ]
+  }, {
+    "tStartMs": 407200,
+    "dDurationMs": 2233,
+    "segs": [ {
+      "utf8": "搞不好还要连累整个村子"
+    } ]
+  }, {
+    "tStartMs": 409466,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "可是咱们又能怎么办啊"
+    } ]
+  }, {
+    "tStartMs": 411366,
+    "dDurationMs": 1067,
+    "segs": [ {
+      "utf8": "说到最后"
+    } ]
+  }, {
+    "tStartMs": 412433,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "二狗娘变得哽咽起来"
+    } ]
+  }, {
+    "tStartMs": 414466,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "二狗爹在一旁也落起泪来"
+    } ]
+  }, {
+    "tStartMs": 416766,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "二狗媳妇的衣服"
+    } ]
+  }, {
+    "tStartMs": 418166,
+    "dDurationMs": 1834,
+    "segs": [ {
+      "utf8": "几乎被汗水浸透了"
+    } ]
+  }, {
+    "tStartMs": 420033,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "她一想到要跟二狗睡在一张床上"
+    } ]
+  }, {
+    "tStartMs": 423133,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "就毛骨悚然"
+    } ]
+  }, {
+    "tStartMs": 424266,
+    "dDurationMs": 2067,
+    "segs": [ {
+      "utf8": "二狗娘看出了她的心思"
+    } ]
+  }, {
+    "tStartMs": 426366,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "便开口说道"
+    } ]
+  }, {
+    "tStartMs": 427666,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "这几天你就别在里屋睡了"
+    } ]
+  }, {
+    "tStartMs": 429866,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "跟我睡一块吧"
+    } ]
+  }, {
+    "tStartMs": 431166,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "第二天一早"
+    } ]
+  }, {
+    "tStartMs": 432500,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "二狗媳妇发现家里的大黄死了"
+    } ]
+  }, {
+    "tStartMs": 435233,
+    "dDurationMs": 1767,
+    "segs": [ {
+      "utf8": "整个肚子都被撕开"
+    } ]
+  }, {
+    "tStartMs": 437000,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "内脏全部被掏空"
+    } ]
+  }, {
+    "tStartMs": 438733,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "看到这情况"
+    } ]
+  }, {
+    "tStartMs": 439966,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "吓的她大叫一声"
+    } ]
+  }, {
+    "tStartMs": 441566,
+    "dDurationMs": 2034,
+    "segs": [ {
+      "utf8": "二狗的爹娘听见动静"
+    } ]
+  }, {
+    "tStartMs": 443633,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "也赶紧走了过来"
+    } ]
+  }, {
+    "tStartMs": 445266,
+    "dDurationMs": 2234,
+    "segs": [ {
+      "utf8": "三个人看着大黄的尸体"
+    } ]
+  }, {
+    "tStartMs": 447533,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "都沉默着没有说话"
+    } ]
+  }, {
+    "tStartMs": 449366,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "转眼又过了一个月"
+    } ]
+  }, {
+    "tStartMs": 450866,
+    "dDurationMs": 1034,
+    "segs": [ {
+      "utf8": "这一个月内"
+    } ]
+  }, {
+    "tStartMs": 451933,
+    "dDurationMs": 3367,
+    "segs": [ {
+      "utf8": "整个村子里家家户户的狗都难逃厄运"
+    } ]
+  }, {
+    "tStartMs": 455333,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "几乎无一例外的被掏空内脏而死"
+    } ]
+  }, {
+    "tStartMs": 458300,
+    "dDurationMs": 1966,
+    "segs": [ {
+      "utf8": "二狗的爹娘又惊又怒"
+    } ]
+  }, {
+    "tStartMs": 460300,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "跟二狗媳妇商量了一下"
+    } ]
+  }, {
+    "tStartMs": 462433,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "决定请爷爷来家里驱邪"
+    } ]
+  }, {
+    "tStartMs": 464800,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "当爷爷来到二狗家后"
+    } ]
+  }, {
+    "tStartMs": 466900,
+    "dDurationMs": 2933,
+    "segs": [ {
+      "utf8": "便让二狗爹把二狗绑在椅子上"
+    } ]
+  }, {
+    "tStartMs": 469833,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "二狗挣扎着不让"
+    } ]
+  }, {
+    "tStartMs": 471500,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "于是"
+    } ]
+  }, {
+    "tStartMs": 472133,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "二狗他爹一狠心"
+    } ]
+  }, {
+    "tStartMs": 473633,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "便把二狗打晕了过去"
+    } ]
+  }, {
+    "tStartMs": 475700,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "等二狗醒来"
+    } ]
+  }, {
+    "tStartMs": 477033,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "已经被结结实实的绑在了椅子上"
+    } ]
+  }, {
+    "tStartMs": 479533,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "随后"
+    } ]
+  }, {
+    "tStartMs": 480266,
+    "dDurationMs": 1767,
+    "segs": [ {
+      "utf8": "爷爷抓来一只大公鸡"
+    } ]
+  }, {
+    "tStartMs": 482033,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "一剑砍下了鸡头"
+    } ]
+  }, {
+    "tStartMs": 483600,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "把鸡血洒在二狗的身上"
+    } ]
+  }, {
+    "tStartMs": 485733,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "紧接着"
+    } ]
+  }, {
+    "tStartMs": 486566,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "二狗身后"
+    } ]
+  }, {
+    "tStartMs": 487600,
+    "dDurationMs": 2766,
+    "segs": [ {
+      "utf8": "赫然出现一个身穿红衣的小孩"
+    } ]
+  }, {
+    "tStartMs": 490366,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "他死死的盯着爷爷"
+    } ]
+  }, {
+    "tStartMs": 492200,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "嘴里还露出一幅诡异的微笑"
+    } ]
+  }, {
+    "tStartMs": 494700,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "看到这情形"
+    } ]
+  }, {
+    "tStartMs": 496000,
+    "dDurationMs": 2233,
+    "segs": [ {
+      "utf8": "爷爷连忙拿出一把桃木剑"
+    } ]
+  }, {
+    "tStartMs": 498266,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "嘴里还念着听不懂的咒语"
+    } ]
+  }, {
+    "tStartMs": 500566,
+    "dDurationMs": 734,
+    "segs": [ {
+      "utf8": "随后"
+    } ]
+  }, {
+    "tStartMs": 501300,
+    "dDurationMs": 2233,
+    "segs": [ {
+      "utf8": "一剑刺向那个红衣小孩"
+    } ]
+  }, {
+    "tStartMs": 503566,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "突然"
+    } ]
+  }, {
+    "tStartMs": 504166,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "二狗惨叫一声"
+    } ]
+  }, {
+    "tStartMs": 505566,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "昏了过去"
+    } ]
+  }, {
+    "tStartMs": 506566,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "安置好二狗后"
+    } ]
+  }, {
+    "tStartMs": 507966,
+    "dDurationMs": 1767,
+    "segs": [ {
+      "utf8": "爷爷对着二狗娘说道"
+    } ]
+  }, {
+    "tStartMs": 509766,
+    "dDurationMs": 2334,
+    "segs": [ {
+      "utf8": "刚才鸡血沾到二狗身上"
+    } ]
+  }, {
+    "tStartMs": 512100,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "我看到他身上趴着一个婴儿"
+    } ]
+  }, {
+    "tStartMs": 514300,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "这是借尸还魂"
+    } ]
+  }, {
+    "tStartMs": 515700,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "这到底是怎么回事"
+    } ]
+  }, {
+    "tStartMs": 517233,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "听到爷爷的话"
+    } ]
+  }, {
+    "tStartMs": 518466,
+    "dDurationMs": 1734,
+    "segs": [ {
+      "utf8": "二狗他娘先是一愣"
+    } ]
+  }, {
+    "tStartMs": 520200,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "随后"
+    } ]
+  }, {
+    "tStartMs": 520900,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "便痛哭起来"
+    } ]
+  }, {
+    "tStartMs": 522300,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "二狗他爹也正正地站在那里"
+    } ]
+  }, {
+    "tStartMs": 524700,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "半晌后"
+    } ]
+  }, {
+    "tStartMs": 525633,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "二狗的娘才抽噎着说道"
+    } ]
+  }, {
+    "tStartMs": 527766,
+    "dDurationMs": 767,
+    "segs": [ {
+      "utf8": "都怪我"
+    } ]
+  }, {
+    "tStartMs": 528566,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "都怪我啊"
+    } ]
+  }, {
+    "tStartMs": 529533,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "当年二狗有个双胞胎弟弟"
+    } ]
+  }, {
+    "tStartMs": 531933,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "兄弟俩出生那年"
+    } ]
+  }, {
+    "tStartMs": 533600,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "正好赶上村子大旱"
+    } ]
+  }, {
+    "tStartMs": 535566,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "两个男孩我们根本养不活"
+    } ]
+  }, {
+    "tStartMs": 537766,
+    "dDurationMs": 867,
+    "segs": [ {
+      "utf8": "没办法"
+    } ]
+  }, {
+    "tStartMs": 538666,
+    "dDurationMs": 2134,
+    "segs": [ {
+      "utf8": "我跟二狗他爹商量了一下"
+    } ]
+  }, {
+    "tStartMs": 540833,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "便决定留下二狗"
+    } ]
+  }, {
+    "tStartMs": 542566,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "但我实在不能眼睁睁的看着"
+    } ]
+  }, {
+    "tStartMs": 545166,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "另一个被活生生饿死"
+    } ]
+  }, {
+    "tStartMs": 547300,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "就让他爹把他抱走扔在了山上"
+    } ]
+  }, {
+    "tStartMs": 549866,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "后来"
+    } ]
+  }, {
+    "tStartMs": 550566,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "我们实在无法割舍的下"
+    } ]
+  }, {
+    "tStartMs": 552366,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "便拼命的跑回山上去"
+    } ]
+  }, {
+    "tStartMs": 554666,
+    "dDurationMs": 1634,
+    "segs": [ {
+      "utf8": "等我们找到他的时候"
+    } ]
+  }, {
+    "tStartMs": 556300,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "他已经被山上的野兽"
+    } ]
+  }, {
+    "tStartMs": 558266,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "把内脏都给掏光了"
+    } ]
+  }, {
+    "tStartMs": 559966,
+    "dDurationMs": 2234,
+    "segs": [ {
+      "utf8": "二狗他娘越说哭的越厉害"
+    } ]
+  }, {
+    "tStartMs": 562233,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "二狗他爹也是泪流满面"
+    } ]
+  }, {
+    "tStartMs": 564366,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "儿啊"
+    } ]
+  }, {
+    "tStartMs": 565066,
+    "dDurationMs": 1767,
+    "segs": [ {
+      "utf8": "当年是爹把你给害了"
+    } ]
+  }, {
+    "tStartMs": 566833,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "要报仇你冲着爹来吧"
+    } ]
+  }, {
+    "tStartMs": 568833,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "别再缠着你哥了"
+    } ]
+  }, {
+    "tStartMs": 570300,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "听了他们的讲述"
+    } ]
+  }, {
+    "tStartMs": 571566,
+    "dDurationMs": 1334,
+    "segs": [ {
+      "utf8": "爷爷叹了口气"
+    } ]
+  }, {
+    "tStartMs": 572933,
+    "dDurationMs": 667,
+    "segs": [ {
+      "utf8": "说道"
+    } ]
+  }, {
+    "tStartMs": 573600,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "事已至此"
+    } ]
+  }, {
+    "tStartMs": 574633,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "也没有别的办法了"
+    } ]
+  }, {
+    "tStartMs": 576133,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "二狗的灵魂已经入了地府"
+    } ]
+  }, {
+    "tStartMs": 578333,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "现在借用他尸体的是他弟弟的灵魂"
+    } ]
+  }, {
+    "tStartMs": 581333,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "也算是你们的儿子"
+    } ]
+  }, {
+    "tStartMs": 582900,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "他如果能在你们二老膝下尽孝"
+    } ]
+  }, {
+    "tStartMs": 585433,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "不祸害乡邻"
+    } ]
+  }, {
+    "tStartMs": 586666,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "倒也未必一定要打得他魂飞魄散"
+    } ]
+  }, {
+    "tStartMs": 589633,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "就看他醒了以后怎么样吧"
+    } ]
+  }, {
+    "tStartMs": 591833,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "说完"
+    } ]
+  }, {
+    "tStartMs": 592566,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "爷爷拿出一个纸风铃"
+    } ]
+  }, {
+    "tStartMs": 594466,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "挂在了二狗的房门前"
+    } ]
+  }, {
+    "tStartMs": 596400,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "然后"
+    } ]
+  }, {
+    "tStartMs": 597100,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "接着说道"
+    } ]
+  }, {
+    "tStartMs": 598000,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "这是镇魂风铃"
+    } ]
+  }, {
+    "tStartMs": 599400,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "可以安抚恶鬼的怨气"
+    } ]
+  }, {
+    "tStartMs": 601400,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "如果以后这风铃不响"
+    } ]
+  }, {
+    "tStartMs": 603433,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "那就没事"
+    } ]
+  }, {
+    "tStartMs": 604333,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "要是响了"
+    } ]
+  }, {
+    "tStartMs": 605300,
+    "dDurationMs": 2766,
+    "segs": [ {
+      "utf8": "就说明二狗身上的厉鬼要行凶"
+    } ]
+  }, {
+    "tStartMs": 608100,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "你们要马上来告诉我"
+    } ]
+  }, {
+    "tStartMs": 609733,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "在之后的几天"
+    } ]
+  }, {
+    "tStartMs": 611066,
+    "dDurationMs": 2434,
+    "segs": [ {
+      "utf8": "村子里再也没有发生过什么事"
+    } ]
+  }, {
+    "tStartMs": 613500,
+    "dDurationMs": 2933,
+    "segs": [ {
+      "utf8": "就在大家都以为风波平息的时候"
+    } ]
+  }, {
+    "tStartMs": 616466,
+    "dDurationMs": 1067,
+    "segs": [ {
+      "utf8": "却出了人命"
+    } ]
+  }, {
+    "tStartMs": 617566,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "这天晚上"
+    } ]
+  }, {
+    "tStartMs": 618566,
+    "dDurationMs": 2234,
+    "segs": [ {
+      "utf8": "邻居铁柱跑到二狗家"
+    } ]
+  }, {
+    "tStartMs": 620833,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "愤怒的大吼道"
+    } ]
+  }, {
+    "tStartMs": 622200,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "二狗"
+    } ]
+  }, {
+    "tStartMs": 622900,
+    "dDurationMs": 1566,
+    "segs": [ {
+      "utf8": "你把我儿子怎么样了"
+    } ]
+  }, {
+    "tStartMs": 624500,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "有什么事你冲着我来"
+    } ]
+  }, {
+    "tStartMs": 626300,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "我不怕你"
+    } ]
+  }, {
+    "tStartMs": 627200,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "你不许害我儿子"
+    } ]
+  }, {
+    "tStartMs": 628666,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "二狗媳妇赶紧解释道"
+    } ]
+  }, {
+    "tStartMs": 630700,
+    "dDurationMs": 1066,
+    "segs": [ {
+      "utf8": "铁柱大哥"
+    } ]
+  }, {
+    "tStartMs": 631766,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "二狗现在天天在家伺候爹娘"
+    } ]
+  }, {
+    "tStartMs": 634466,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "从没有出过门"
+    } ]
+  }, {
+    "tStartMs": 635800,
+    "dDurationMs": 2233,
+    "segs": [ {
+      "utf8": "你是不是到别的地方找找啊"
+    } ]
+  }, {
+    "tStartMs": 638033,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "铁柱一瞪眼"
+    } ]
+  }, {
+    "tStartMs": 639366,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "朝着二狗媳妇吼道"
+    } ]
+  }, {
+    "tStartMs": 641266,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "上哪找"
+    } ]
+  }, {
+    "tStartMs": 642200,
+    "dDurationMs": 1466,
+    "segs": [ {
+      "utf8": "我要见你家二狗"
+    } ]
+  }, {
+    "tStartMs": 643666,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "你让他出来"
+    } ]
+  }, {
+    "tStartMs": 644766,
+    "dDurationMs": 767,
+    "segs": [ {
+      "utf8": "这时候"
+    } ]
+  }, {
+    "tStartMs": 645566,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "二狗他爹走了过来"
+    } ]
+  }, {
+    "tStartMs": 647033,
+    "dDurationMs": 667,
+    "segs": [ {
+      "utf8": "说道"
+    } ]
+  }, {
+    "tStartMs": 647700,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "二狗今天早上说要出去走走"
+    } ]
+  }, {
+    "tStartMs": 650266,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "应该是这些天在家里没有出屋"
+    } ]
+  }, {
+    "tStartMs": 652866,
+    "dDurationMs": 867,
+    "segs": [ {
+      "utf8": "憋坏了"
+    } ]
+  }, {
+    "tStartMs": 653733,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "所以我也没拦着"
+    } ]
+  }, {
+    "tStartMs": 655266,
+    "dDurationMs": 634,
+    "segs": [ {
+      "utf8": "不过"
+    } ]
+  }, {
+    "tStartMs": 655933,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "他现在还没回来呢"
+    } ]
+  }, {
+    "tStartMs": 657633,
+    "dDurationMs": 833,
+    "segs": [ {
+      "utf8": "正说着"
+    } ]
+  }, {
+    "tStartMs": 658466,
+    "dDurationMs": 1934,
+    "segs": [ {
+      "utf8": "二狗从外面走了进来"
+    } ]
+  }, {
+    "tStartMs": 660433,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "说道娘"
+    } ]
+  }, {
+    "tStartMs": 661633,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "饭好了没有"
+    } ]
+  }, {
+    "tStartMs": 662766,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "我都饿了"
+    } ]
+  }, {
+    "tStartMs": 663700,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "话说到一半"
+    } ]
+  }, {
+    "tStartMs": 664933,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "突然"
+    } ]
+  }, {
+    "tStartMs": 665533,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "挂在二狗屋门口的纸风铃响了起来"
+    } ]
+  }, {
+    "tStartMs": 668666,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "此时"
+    } ]
+  }, {
+    "tStartMs": 669366,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "屋内一点风都没有"
+    } ]
+  }, {
+    "tStartMs": 671066,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "而且"
+    } ]
+  }, {
+    "tStartMs": 671800,
+    "dDurationMs": 2466,
+    "segs": [ {
+      "utf8": "那是一个完全用纸糊的风铃"
+    } ]
+  }, {
+    "tStartMs": 674266,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "竟然发出了金属碰撞的铃声"
+    } ]
+  }, {
+    "tStartMs": 676866,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "听到这声音"
+    } ]
+  }, {
+    "tStartMs": 678066,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "所有人都愣住了"
+    } ]
+  }, {
+    "tStartMs": 679566,
+    "dDurationMs": 1334,
+    "segs": [ {
+      "utf8": "铁柱回过神来"
+    } ]
+  }, {
+    "tStartMs": 680933,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "忙不迭地跑去找爷爷"
+    } ]
+  }, {
+    "tStartMs": 682966,
+    "dDurationMs": 1867,
+    "segs": [ {
+      "utf8": "二狗也立刻追了出去"
+    } ]
+  }, {
+    "tStartMs": 684866,
+    "dDurationMs": 867,
+    "segs": [ {
+      "utf8": "过了一会"
+    } ]
+  }, {
+    "tStartMs": 685733,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "铁柱跟爷爷赶了过来"
+    } ]
+  }, {
+    "tStartMs": 687700,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "二狗却没有回来"
+    } ]
+  }, {
+    "tStartMs": 689233,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "爷爷一进屋便开口说道"
+    } ]
+  }, {
+    "tStartMs": 691400,
+    "dDurationMs": 833,
+    "segs": [ {
+      "utf8": "都怨我"
+    } ]
+  }, {
+    "tStartMs": 692233,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "当时就不应该心慈手软"
+    } ]
+  }, {
+    "tStartMs": 694500,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "铁柱"
+    } ]
+  }, {
+    "tStartMs": 695200,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "你赶紧去村里多叫些人"
+    } ]
+  }, {
+    "tStartMs": 697433,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "让他们五个人一队"
+    } ]
+  }, {
+    "tStartMs": 698900,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "出去找二狗和你儿子"
+    } ]
+  }, {
+    "tStartMs": 700800,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "铁柱答应了一声就跑了出去"
+    } ]
+  }, {
+    "tStartMs": 703200,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "屋里只剩下二狗的家人"
+    } ]
+  }, {
+    "tStartMs": 705233,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "爷爷对着他们说道"
+    } ]
+  }, {
+    "tStartMs": 706633,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "二狗他爹"
+    } ]
+  }, {
+    "tStartMs": 707600,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "你们夫妻俩恐怕要走一个了"
+    } ]
+  }, {
+    "tStartMs": 709933,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "现在二狗身上附的厉鬼"
+    } ]
+  }, {
+    "tStartMs": 712233,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "已经开始害人了"
+    } ]
+  }, {
+    "tStartMs": 713666,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "即使毁了二狗的肉身"
+    } ]
+  }, {
+    "tStartMs": 715500,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "对那个冤魂的作用也不大"
+    } ]
+  }, {
+    "tStartMs": 717600,
+    "dDurationMs": 1666,
+    "segs": [ {
+      "utf8": "应该还会继续害人"
+    } ]
+  }, {
+    "tStartMs": 719300,
+    "dDurationMs": 2933,
+    "segs": [ {
+      "utf8": "除非他的爹娘其中一个死在他手里"
+    } ]
+  }, {
+    "tStartMs": 722266,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "杀害自己的爹娘会遭到天谴的"
+    } ]
+  }, {
+    "tStartMs": 725066,
+    "dDurationMs": 1067,
+    "segs": [ {
+      "utf8": "天谴一降"
+    } ]
+  }, {
+    "tStartMs": 726166,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "永世不得超生"
+    } ]
+  }, {
+    "tStartMs": 727566,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "再也没机会害人了"
+    } ]
+  }, {
+    "tStartMs": 729266,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "爷爷刚说完"
+    } ]
+  }, {
+    "tStartMs": 730466,
+    "dDurationMs": 1534,
+    "segs": [ {
+      "utf8": "铁柱便跑了进来"
+    } ]
+  }, {
+    "tStartMs": 732000,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "说道"
+    } ]
+  }, {
+    "tStartMs": 732666,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "王老爷子"
+    } ]
+  }, {
+    "tStartMs": 733666,
+    "dDurationMs": 1234,
+    "segs": [ {
+      "utf8": "我儿子找到了"
+    } ]
+  }, {
+    "tStartMs": 734900,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "他的内脏都被掏空了"
+    } ]
+  }, {
+    "tStartMs": 736833,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "爷爷看着二狗的爹娘"
+    } ]
+  }, {
+    "tStartMs": 738733,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "说道"
+    } ]
+  }, {
+    "tStartMs": 739400,
+    "dDurationMs": 1166,
+    "segs": [ {
+      "utf8": "你们都看到了"
+    } ]
+  }, {
+    "tStartMs": 740566,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "必须要牺牲你们其中一个"
+    } ]
+  }, {
+    "tStartMs": 742866,
+    "dDurationMs": 634,
+    "segs": [ {
+      "utf8": "不然"
+    } ]
+  }, {
+    "tStartMs": 743500,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "他会再去害别人的"
+    } ]
+  }, {
+    "tStartMs": 745100,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "你们忍心吗"
+    } ]
+  }, {
+    "tStartMs": 746166,
+    "dDurationMs": 1867,
+    "segs": [ {
+      "utf8": "二狗爹看了看铁柱"
+    } ]
+  }, {
+    "tStartMs": 748066,
+    "dDurationMs": 834,
+    "segs": [ {
+      "utf8": "一咬牙"
+    } ]
+  }, {
+    "tStartMs": 748900,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "说道"
+    } ]
+  }, {
+    "tStartMs": 749566,
+    "dDurationMs": 834,
+    "segs": [ {
+      "utf8": "让我去"
+    } ]
+  }, {
+    "tStartMs": 750400,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "当年是我把他放在山上的"
+    } ]
+  }, {
+    "tStartMs": 752766,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "就让他把我杀了报仇吧"
+    } ]
+  }, {
+    "tStartMs": 754666,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "爷爷点了点头"
+    } ]
+  }, {
+    "tStartMs": 755966,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "先是吩咐几个人在家陪着二狗他娘"
+    } ]
+  }, {
+    "tStartMs": 759066,
+    "dDurationMs": 667,
+    "segs": [ {
+      "utf8": "然后"
+    } ]
+  }, {
+    "tStartMs": 759766,
+    "dDurationMs": 2634,
+    "segs": [ {
+      "utf8": "便带着二狗他爹去找二狗了"
+    } ]
+  }, {
+    "tStartMs": 762400,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "可是全村都搜遍了"
+    } ]
+  }, {
+    "tStartMs": 764133,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "也不见二狗的踪影"
+    } ]
+  }, {
+    "tStartMs": 765800,
+    "dDurationMs": 666,
+    "segs": [ {
+      "utf8": "后来"
+    } ]
+  }, {
+    "tStartMs": 766466,
+    "dDurationMs": 1634,
+    "segs": [ {
+      "utf8": "二狗爹带着大家"
+    } ]
+  }, {
+    "tStartMs": 768133,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "来到当年他丢弃自己儿子的地方"
+    } ]
+  }, {
+    "tStartMs": 770933,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "二狗果然在这里"
+    } ]
+  }, {
+    "tStartMs": 772533,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "二狗爹一下冲了过去"
+    } ]
+  }, {
+    "tStartMs": 774566,
+    "dDurationMs": 1134,
+    "segs": [ {
+      "utf8": "一把抓住他"
+    } ]
+  }, {
+    "tStartMs": 775733,
+    "dDurationMs": 833,
+    "segs": [ {
+      "utf8": "大吼道"
+    } ]
+  }, {
+    "tStartMs": 776600,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "当年是我扔的你"
+    } ]
+  }, {
+    "tStartMs": 778033,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "你来杀了我吧"
+    } ]
+  }, {
+    "tStartMs": 779233,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "杀了我你就报仇了"
+    } ]
+  }, {
+    "tStartMs": 781066,
+    "dDurationMs": 1134,
+    "segs": [ {
+      "utf8": "二狗看着他"
+    } ]
+  }, {
+    "tStartMs": 782200,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "恶狠狠的说道"
+    } ]
+  }, {
+    "tStartMs": 783466,
+    "dDurationMs": 1134,
+    "segs": [ {
+      "utf8": "我不会杀你的"
+    } ]
+  }, {
+    "tStartMs": 784633,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "我会让整个村子里的小孩都给我陪葬"
+    } ]
+  }, {
+    "tStartMs": 787633,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "说完"
+    } ]
+  }, {
+    "tStartMs": 788366,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "转身就要跑"
+    } ]
+  }, {
+    "tStartMs": 789633,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "可被爷爷和村民们给拦住了"
+    } ]
+  }, {
+    "tStartMs": 792000,
+    "dDurationMs": 2233,
+    "segs": [ {
+      "utf8": "一群人费了九牛二虎之力"
+    } ]
+  }, {
+    "tStartMs": 794266,
+    "dDurationMs": 2434,
+    "segs": [ {
+      "utf8": "总算把二狗给摁在了地上"
+    } ]
+  }, {
+    "tStartMs": 796700,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "爷爷看着二狗"
+    } ]
+  }, {
+    "tStartMs": 798100,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "对大家说道"
+    } ]
+  }, {
+    "tStartMs": 799333,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "他既然知道我们的目的"
+    } ]
+  }, {
+    "tStartMs": 801166,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "不肯就范"
+    } ]
+  }, {
+    "tStartMs": 802200,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "那我们只能先把他的肉身火化了"
+    } ]
+  }, {
+    "tStartMs": 804900,
+    "dDurationMs": 966,
+    "segs": [ {
+      "utf8": "听到这话"
+    } ]
+  }, {
+    "tStartMs": 805900,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "二狗的眼里掠过一丝惊恐"
+    } ]
+  }, {
+    "tStartMs": 808200,
+    "dDurationMs": 2766,
+    "segs": [ {
+      "utf8": "但马上又露出一幅诡异的微笑"
+    } ]
+  }, {
+    "tStartMs": 811000,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "说道"
+    } ]
+  }, {
+    "tStartMs": 811633,
+    "dDurationMs": 767,
+    "segs": [ {
+      "utf8": "没用的"
+    } ]
+  }, {
+    "tStartMs": 812433,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "你们烧了我也没用的"
+    } ]
+  }, {
+    "tStartMs": 814200,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "在二狗的阴笑声中"
+    } ]
+  }, {
+    "tStartMs": 816000,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "村民们把手中的火把丢向了他"
+    } ]
+  }, {
+    "tStartMs": 818633,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "被大火烧着的二狗"
+    } ]
+  }, {
+    "tStartMs": 820600,
+    "dDurationMs": 1666,
+    "segs": [ {
+      "utf8": "瞬间摆脱了控制"
+    } ]
+  }, {
+    "tStartMs": 822300,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "满身是火的狂笑着跑了出去"
+    } ]
+  }, {
+    "tStartMs": 824800,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "在之后的几个月里"
+    } ]
+  }, {
+    "tStartMs": 826433,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "村子里经常有小孩失踪"
+    } ]
+  }, {
+    "tStartMs": 828733,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "找到尸体时"
+    } ]
+  }, {
+    "tStartMs": 829900,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "内脏都被掏了出来"
+    } ]
+  }, {
+    "tStartMs": 831566,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "村子里还有孩子的人家都忧心忡忡"
+    } ]
+  }, {
+    "tStartMs": 834566,
+    "dDurationMs": 3667,
+    "segs": [ {
+      "utf8": "家里的大人都轮班24小时守护着孩子"
+    } ]
+  }, {
+    "tStartMs": 838233,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "转眼又到了七月半"
+    } ]
+  }, {
+    "tStartMs": 839966,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "狗蛋过生日后"
+    } ]
+  }, {
+    "tStartMs": 841266,
+    "dDurationMs": 2034,
+    "segs": [ {
+      "utf8": "便由二狗他爹带到屋里"
+    } ]
+  }, {
+    "tStartMs": 843300,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "搂着睡觉去了"
+    } ]
+  }, {
+    "tStartMs": 844600,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "可到了半夜"
+    } ]
+  }, {
+    "tStartMs": 845733,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "二狗他爹听见有人敲门"
+    } ]
+  }, {
+    "tStartMs": 847933,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "本来是不想搭理的"
+    } ]
+  }, {
+    "tStartMs": 849566,
+    "dDurationMs": 2467,
+    "segs": [ {
+      "utf8": "可是外面的敲门声越来越急"
+    } ]
+  }, {
+    "tStartMs": 852033,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "只好起身去看看"
+    } ]
+  }, {
+    "tStartMs": 853700,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "可当二狗爹打开门后"
+    } ]
+  }, {
+    "tStartMs": 855766,
+    "dDurationMs": 2034,
+    "segs": [ {
+      "utf8": "发现门外一个人都没有"
+    } ]
+  }, {
+    "tStartMs": 857800,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "这时"
+    } ]
+  }, {
+    "tStartMs": 858466,
+    "dDurationMs": 1634,
+    "segs": [ {
+      "utf8": "二狗他爹猛然想到"
+    } ]
+  }, {
+    "tStartMs": 860100,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "自己的孙子还在床上"
+    } ]
+  }, {
+    "tStartMs": 862100,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "他赶紧转身回去"
+    } ]
+  }, {
+    "tStartMs": 863766,
+    "dDurationMs": 634,
+    "segs": [ {
+      "utf8": "果然"
+    } ]
+  }, {
+    "tStartMs": 864400,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "狗蛋已经失踪了"
+    } ]
+  }, {
+    "tStartMs": 865866,
+    "dDurationMs": 634,
+    "segs": [ {
+      "utf8": "于是"
+    } ]
+  }, {
+    "tStartMs": 866500,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "便冲里屋大喊道"
+    } ]
+  }, {
+    "tStartMs": 868266,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "二狗他娘"
+    } ]
+  }, {
+    "tStartMs": 869266,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "狗蛋丢了"
+    } ]
+  }, {
+    "tStartMs": 870266,
+    "dDurationMs": 1734,
+    "segs": [ {
+      "utf8": "你快去找王老爷子"
+    } ]
+  }, {
+    "tStartMs": 872033,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "我先去二狗被烧死的地方找找"
+    } ]
+  }, {
+    "tStartMs": 874933,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "说完"
+    } ]
+  }, {
+    "tStartMs": 875666,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "便转身追了出去"
+    } ]
+  }, {
+    "tStartMs": 877266,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "来到后山"
+    } ]
+  }, {
+    "tStartMs": 878300,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "果然看到浑身焦黑的二狗"
+    } ]
+  }, {
+    "tStartMs": 880833,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "怀里还抱着狗蛋"
+    } ]
+  }, {
+    "tStartMs": 882366,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "二狗那双血红的双眼"
+    } ]
+  }, {
+    "tStartMs": 884566,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "死死的盯着他爹"
+    } ]
+  }, {
+    "tStartMs": 886033,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "而右手却慢慢的伸向了狗蛋的心脏"
+    } ]
+  }, {
+    "tStartMs": 889333,
+    "dDurationMs": 3733,
+    "segs": [ {
+      "utf8": "二狗他爹眼睁睁的看着自己的孙子被杀害"
+    } ]
+  }, {
+    "tStartMs": 893100,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "恐惧"
+    } ]
+  }, {
+    "tStartMs": 893700,
+    "dDurationMs": 533,
+    "segs": [ {
+      "utf8": "愤怒"
+    } ]
+  }, {
+    "tStartMs": 894233,
+    "dDurationMs": 767,
+    "segs": [ {
+      "utf8": "伤心"
+    } ]
+  }, {
+    "tStartMs": 895033,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "瞬间涌上他的心头"
+    } ]
+  }, {
+    "tStartMs": 896866,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "眼前一黑"
+    } ]
+  }, {
+    "tStartMs": 898066,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "直接昏了过去"
+    } ]
+  }, {
+    "tStartMs": 899333,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "就在这个时候"
+    } ]
+  }, {
+    "tStartMs": 900533,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "爷爷带着二狗他娘赶到了"
+    } ]
+  }, {
+    "tStartMs": 902833,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "二狗娘看到这个场面"
+    } ]
+  }, {
+    "tStartMs": 904800,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "也直接昏死了过去"
+    } ]
+  }, {
+    "tStartMs": 906466,
+    "dDurationMs": 1734,
+    "segs": [ {
+      "utf8": "等她再醒过来的时候"
+    } ]
+  }, {
+    "tStartMs": 908200,
+    "dDurationMs": 2066,
+    "segs": [ {
+      "utf8": "已经躺在了自己的床上"
+    } ]
+  }, {
+    "tStartMs": 910266,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "她看到爷爷"
+    } ]
+  }, {
+    "tStartMs": 911366,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "迫不及待的问道"
+    } ]
+  }, {
+    "tStartMs": 912866,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "二狗他爹呢"
+    } ]
+  }, {
+    "tStartMs": 914000,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "他怎么样了"
+    } ]
+  }, {
+    "tStartMs": 914966,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "他在哪"
+    } ]
+  }, {
+    "tStartMs": 915800,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "爷爷摇了摇头"
+    } ]
+  }, {
+    "tStartMs": 917100,
+    "dDurationMs": 666,
+    "segs": [ {
+      "utf8": "说道"
+    } ]
+  }, {
+    "tStartMs": 917800,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "那孩子害死了自己的亲爹"
+    } ]
+  }, {
+    "tStartMs": 920133,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "是要下十八层地狱"
+    } ]
+  }, {
+    "tStartMs": 921833,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "永不超生的"
+    } ]
+  }, {
+    "tStartMs": 923133,
+    "dDurationMs": 3033,
+    "segs": [ {
+      "utf8": "就在大家以为事情终于结束的时候"
+    } ]
+  }, {
+    "tStartMs": 926166,
+    "dDurationMs": 2034,
+    "segs": [ {
+      "utf8": "神情憔悴的二狗娘"
+    } ]
+  }, {
+    "tStartMs": 928200,
+    "dDurationMs": 2466,
+    "segs": [ {
+      "utf8": "却在几天后的一个雨夜子时"
+    } ]
+  }, {
+    "tStartMs": 930700,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "猛地坐了起来"
+    } ]
+  }, {
+    "tStartMs": 931900,
+    "dDurationMs": 1666,
+    "segs": [ {
+      "utf8": "口中凄厉的念叨着"
+    } ]
+  }, {
+    "tStartMs": 933600,
+    "dDurationMs": 833,
+    "segs": [ {
+      "utf8": "我恨你们"
+    } ]
+  }, {
+    "tStartMs": 934433,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "你们都是恶鬼"
+    } ]
+  }, {
+    "tStartMs": 935700,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "我要让所有人都不得好死"
+    } ]
+  }, {
+    "tStartMs": 938033,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "说完"
+    } ]
+  }, {
+    "tStartMs": 938766,
+    "dDurationMs": 1734,
+    "segs": [ {
+      "utf8": "就一头撞到了墙上"
+    } ]
+  }, {
+    "tStartMs": 940500,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "二狗媳妇看到这情况"
+    } ]
+  }, {
+    "tStartMs": 942566,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "心理承受能力也到了极限"
+    } ]
+  }, {
+    "tStartMs": 944866,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "当时就变的疯疯颠颠的"
+    } ]
+  }, {
+    "tStartMs": 947133,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "爷爷和村里人"
+    } ]
+  }, {
+    "tStartMs": 948400,
+    "dDurationMs": 2566,
+    "segs": [ {
+      "utf8": "把二狗的爹娘合葬在了一起"
+    } ]
+  }, {
+    "tStartMs": 950966,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "爷爷在二狗他娘下葬时"
+    } ]
+  }, {
+    "tStartMs": 953100,
+    "dDurationMs": 1166,
+    "segs": [ {
+      "utf8": "跟村里人说"
+    } ]
+  }, {
+    "tStartMs": 954266,
+    "dDurationMs": 1634,
+    "segs": [ {
+      "utf8": "二狗他娘是自杀"
+    } ]
+  }, {
+    "tStartMs": 955900,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "自杀的人"
+    } ]
+  }, {
+    "tStartMs": 956933,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "在阴间是见不到亲人的"
+    } ]
+  }, {
+    "tStartMs": 959166,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "她本身死时怨气就重"
+    } ]
+  }, {
+    "tStartMs": 961266,
+    "dDurationMs": 2434,
+    "segs": [ {
+      "utf8": "又不能在阴间跟亲人团聚"
+    } ]
+  }, {
+    "tStartMs": 963700,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "恐怕要出事啊"
+    } ]
+  }, {
+    "tStartMs": 965000,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "果然"
+    } ]
+  }, {
+    "tStartMs": 965666,
+    "dDurationMs": 2334,
+    "segs": [ {
+      "utf8": "在二狗娘头七那天晚上"
+    } ]
+  }, {
+    "tStartMs": 968000,
+    "dDurationMs": 2966,
+    "segs": [ {
+      "utf8": "村子里每家每户都听到了敲门声"
+    } ]
+  }, {
+    "tStartMs": 970966,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "门外是二狗他娘的哭声"
+    } ]
+  }, {
+    "tStartMs": 972966,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "我儿子没了"
+    } ]
+  }, {
+    "tStartMs": 974000,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "我老头子也没了"
+    } ]
+  }, {
+    "tStartMs": 975366,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "你们谁知道他们在哪"
+    } ]
+  }, {
+    "tStartMs": 977066,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "为了保护村子"
+    } ]
+  }, {
+    "tStartMs": 978366,
+    "dDurationMs": 634,
+    "segs": [ {
+      "utf8": "那晚"
+    } ]
+  }, {
+    "tStartMs": 979000,
+    "dDurationMs": 2066,
+    "segs": [ {
+      "utf8": "爷爷带着他所有的法器"
+    } ]
+  }, {
+    "tStartMs": 981100,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "走了出去"
+    } ]
+  }, {
+    "tStartMs": 982033,
+    "dDurationMs": 833,
+    "segs": [ {
+      "utf8": "第二天"
+    } ]
+  }, {
+    "tStartMs": 982900,
+    "dDurationMs": 2266,
+    "segs": [ {
+      "utf8": "有人在村子里发现了爷爷"
+    } ]
+  }, {
+    "tStartMs": 985166,
+    "dDurationMs": 1767,
+    "segs": [ {
+      "utf8": "爷爷七窍流血而死"
+    } ]
+  }, {
+    "tStartMs": 986966,
+    "dDurationMs": 1034,
+    "segs": [ {
+      "utf8": "从那以后"
+    } ]
+  }, {
+    "tStartMs": 988000,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "每晚都会传来二狗娘哭嚎的声音"
+    } ]
+  }, {
+    "tStartMs": 991133,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "终于有一天"
+    } ]
+  }, {
+    "tStartMs": 992233,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "有一个云游的道士路过村子"
+    } ]
+  }, {
+    "tStartMs": 994533,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "村里人都苦苦哀求那个道士"
+    } ]
+  }, {
+    "tStartMs": 997066,
+    "dDurationMs": 1234,
+    "segs": [ {
+      "utf8": "救救这个村子"
+    } ]
+  }, {
+    "tStartMs": 998333,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "道士听完村民的讲述"
+    } ]
+  }, {
+    "tStartMs": 1000233,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "叹了口气"
+    } ]
+  }, {
+    "tStartMs": 1001266,
+    "dDurationMs": 667,
+    "segs": [ {
+      "utf8": "说道"
+    } ]
+  }, {
+    "tStartMs": 1001966,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "既然我赶上了这件事"
+    } ]
+  }, {
+    "tStartMs": 1003666,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "也算是因缘际会"
+    } ]
+  }, {
+    "tStartMs": 1005366,
+    "dDurationMs": 1334,
+    "segs": [ {
+      "utf8": "恐怕是天意啊"
+    } ]
+  }, {
+    "tStartMs": 1006733,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "我尽力而为吧"
+    } ]
+  }, {
+    "tStartMs": 1007966,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "在之后的几天里"
+    } ]
+  }, {
+    "tStartMs": 1009366,
+    "dDurationMs": 1634,
+    "segs": [ {
+      "utf8": "道士让村里的工匠"
+    } ]
+  }, {
+    "tStartMs": 1011033,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "凿刻了一副石棺"
+    } ]
+  }, {
+    "tStartMs": 1012433,
+    "dDurationMs": 667,
+    "segs": [ {
+      "utf8": "然后"
+    } ]
+  }, {
+    "tStartMs": 1013133,
+    "dDurationMs": 3167,
+    "segs": [ {
+      "utf8": "用朱砂和鸡血在石棺上画满了符咒"
+    } ]
+  }, {
+    "tStartMs": 1016300,
+    "dDurationMs": 1566,
+    "segs": [ {
+      "utf8": "最后对村民说道"
+    } ]
+  }, {
+    "tStartMs": 1017866,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": "各位"
+    } ]
+  }, {
+    "tStartMs": 1018500,
+    "dDurationMs": 2833,
+    "segs": [ {
+      "utf8": "今晚我会尽力化解他们一家的怨气"
+    } ]
+  }, {
+    "tStartMs": 1021366,
+    "dDurationMs": 1067,
+    "segs": [ {
+      "utf8": "如果不行"
+    } ]
+  }, {
+    "tStartMs": 1022433,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "我会把他们封印在这石棺内"
+    } ]
+  }, {
+    "tStartMs": 1024533,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "但如果我失败了"
+    } ]
+  }, {
+    "tStartMs": 1026066,
+    "dDurationMs": 3034,
+    "segs": [ {
+      "utf8": "我也会用自己的肉身把他们封印在体内"
+    } ]
+  }, {
+    "tStartMs": 1029133,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "到时候"
+    } ]
+  }, {
+    "tStartMs": 1029933,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "请各位把我的尸身放入这石棺内"
+    } ]
+  }, {
+    "tStartMs": 1032533,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "埋在村口的大槐树下"
+    } ]
+  }, {
+    "tStartMs": 1034566,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "石棺上的符咒可以镇住冤魂"
+    } ]
+  }, {
+    "tStartMs": 1036966,
+    "dDurationMs": 2334,
+    "segs": [ {
+      "utf8": "至少可以保村子百年无事"
+    } ]
+  }, {
+    "tStartMs": 1039333,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "今晚各位把门窗关好"
+    } ]
+  }, {
+    "tStartMs": 1041433,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "无论发生什么事情都不要出来"
+    } ]
+  }, {
+    "tStartMs": 1043800,
+    "dDurationMs": 666,
+    "segs": [ {
+      "utf8": "当晚"
+    } ]
+  }, {
+    "tStartMs": 1044500,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "家家户户都门窗紧闭"
+    } ]
+  }, {
+    "tStartMs": 1046600,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "半夜只听见外边鬼哭神嚎"
+    } ]
+  }, {
+    "tStartMs": 1049133,
+    "dDurationMs": 2467,
+    "segs": [ {
+      "utf8": "风大的几乎要把房门刮飞"
+    } ]
+  }, {
+    "tStartMs": 1051633,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "整个晚上"
+    } ]
+  }, {
+    "tStartMs": 1052600,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "几乎没有一个人敢合眼"
+    } ]
+  }, {
+    "tStartMs": 1054833,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "大家都是在恐惧中度过的"
+    } ]
+  }, {
+    "tStartMs": 1057033,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "第二天早晨"
+    } ]
+  }, {
+    "tStartMs": 1058333,
+    "dDurationMs": 2733,
+    "segs": [ {
+      "utf8": "有些胆子大的人出去查看情况"
+    } ]
+  }, {
+    "tStartMs": 1061100,
+    "dDurationMs": 666,
+    "segs": [ {
+      "utf8": "发现"
+    } ]
+  }, {
+    "tStartMs": 1061766,
+    "dDurationMs": 1634,
+    "segs": [ {
+      "utf8": "道长脸色苍白"
+    } ]
+  }, {
+    "tStartMs": 1063400,
+    "dDurationMs": 2066,
+    "segs": [ {
+      "utf8": "满嘴鲜血的坐在地上"
+    } ]
+  }, {
+    "tStartMs": 1065466,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "背靠着棺材"
+    } ]
+  }, {
+    "tStartMs": 1066900,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "轻声说道"
+    } ]
+  }, {
+    "tStartMs": 1067900,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "大家把这棺材埋了吧"
+    } ]
+  }, {
+    "tStartMs": 1070966,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "从那以后"
+    } ]
+  }, {
+    "tStartMs": 1072000,
+    "dDurationMs": 1966,
+    "segs": [ {
+      "utf8": "村子里一直相安无事"
+    } ]
+  }, {
+    "tStartMs": 1073966,
+    "dDurationMs": 2434,
+    "segs": [ {
+      "utf8": "在也没有发生过诡异的事情了"
+    } ]
+  } ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "yt-competitors",
+  "private": true,
+  "type": "module",
+  "description": "Read-only YouTube competitive research for 悬疑借阅室 via youtubei.js",
+  "dependencies": {
+    "youtubei.js": "^13.0.0"
+  }
+}

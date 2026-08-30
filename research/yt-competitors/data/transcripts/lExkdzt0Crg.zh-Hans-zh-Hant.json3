@@ -1,0 +1,5671 @@
+{
+  "wireMagic": "pb3",
+  "pens": [ {
+  
+  } ],
+  "wsWinStyles": [ {
+  
+  } ],
+  "wpWinPositions": [ {
+  
+  } ],
+  "events": [ {
+    "tStartMs": 15200,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "欢迎收听"
+    } ]
+  }, {
+    "tStartMs": 15833,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "由鲶鱼志为您带来的鲶鱼夜话节目"
+    } ]
+  }, {
+    "tStartMs": 18400,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "如果您有一些适合在夜里说的奇事、"
+    } ]
+  }, {
+    "tStartMs": 20800,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "怪事、邪事"
+    } ]
+  }, {
+    "tStartMs": 22100,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "欢迎投给小编"
+    } ]
+  }, {
+    "tStartMs": 23333,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "我是鲶鱼夜话的老于"
+    } ]
+  }, {
+    "tStartMs": 24900,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "我是妙妙"
+    } ]
+  }, {
+    "tStartMs": 25933,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "下面开始今天的夜话"
+    } ]
+  }, {
+    "tStartMs": 28333,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "亲爱的友友们大家好"
+    } ]
+  }, {
+    "tStartMs": 29833,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "录这一期节目的时候呢"
+    } ]
+  }, {
+    "tStartMs": 31333,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "是老于鼻炎最严重的一个阶段"
+    } ]
+  }, {
+    "tStartMs": 34033,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "是两个鼻子都是没有办法呼吸的"
+    } ]
+  }, {
+    "tStartMs": 36733,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "所以鼻音非常非常严重"
+    } ]
+  }, {
+    "tStartMs": 38800,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "也请大家见谅吧"
+    } ]
+  }, {
+    "tStartMs": 40900,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "给大家带来的不好的视听感受"
+    } ]
+  }, {
+    "tStartMs": 43233,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "真的道个歉"
+    } ]
+  }, {
+    "tStartMs": 45500,
+    "dDurationMs": 3033,
+    "segs": [ {
+      "utf8": "妙老师那个时候也是阳性刚恢复"
+    } ]
+  }, {
+    "tStartMs": 48700,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "所以我们俩的状态也都比较"
+    } ]
+  }, {
+    "tStartMs": 51200,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "比较差一些啊"
+    } ]
+  }, {
+    "tStartMs": 52666,
+    "dDurationMs": 2134,
+    "segs": [ {
+      "utf8": "请大家多多包涵啊"
+    } ]
+  }, {
+    "tStartMs": 54800,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "确实是为了不断更"
+    } ]
+  }, {
+    "tStartMs": 56133,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "我们坚持在录音这个事情"
+    } ]
+  }, {
+    "tStartMs": 60800,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "大家好欢迎收听本期夜话"
+    } ]
+  }, {
+    "tStartMs": 62933,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "我是被生活虐待千百遍"
+    } ]
+  }, {
+    "tStartMs": 65266,
+    "dDurationMs": 1934,
+    "segs": [ {
+      "utf8": "依旧保持深爱的老于"
+    } ]
+  }, {
+    "tStartMs": 67666,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "我是又菜又爱玩的妙妙"
+    } ]
+  }, {
+    "tStartMs": 69866,
+    "dDurationMs": 1134,
+    "segs": [ {
+      "utf8": "那你是蛮菜的"
+    } ]
+  }, {
+    "tStartMs": 71000,
+    "dDurationMs": 1466,
+    "segs": [ {
+      "utf8": "对啊哦"
+    } ]
+  }, {
+    "tStartMs": 72733,
+    "dDurationMs": 867,
+    "segs": [ {
+      "utf8": "好我们来"
+    } ]
+  }, {
+    "tStartMs": 73600,
+    "dDurationMs": 866,
+    "segs": [ {
+      "utf8": "今天夜话之前呢"
+    } ]
+  }, {
+    "tStartMs": 74466,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "又进入我们传统的废话环节啊"
+    } ]
+  }, {
+    "tStartMs": 77133,
+    "dDurationMs": 267,
+    "segs": [ {
+      "utf8": "哎"
+    } ]
+  }, {
+    "tStartMs": 77400,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "妙是你不知道有没有听过一个故事啊"
+    } ]
+  }, {
+    "tStartMs": 79233,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "一个说法叫做鬼故事不能过百"
+    } ]
+  }, {
+    "tStartMs": 82333,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "过百之后就会成真"
+    } ]
+  }, {
+    "tStartMs": 84666,
+    "dDurationMs": 1034,
+    "segs": [ {
+      "utf8": "鬼故事不能过"
+    } ]
+  }, {
+    "tStartMs": 85700,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "什么过百"
+    } ]
+  }, {
+    "tStartMs": 86700,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "一百一两百的百"
+    } ]
+  }, {
+    "tStartMs": 88200,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "就说鬼故事或者拍鬼故事"
+    } ]
+  }, {
+    "tStartMs": 90300,
+    "dDurationMs": 2766,
+    "segs": [ {
+      "utf8": "嗯或者写鬼故事不能超过100个"
+    } ]
+  }, {
+    "tStartMs": 93233,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "超过了就会成真"
+    } ]
+  }, {
+    "tStartMs": 94266,
+    "dDurationMs": 667,
+    "segs": [ {
+      "utf8": "我们多少个"
+    } ]
+  }, {
+    "tStartMs": 94933,
+    "dDurationMs": 1067,
+    "segs": [ {
+      "utf8": "我们不止100个了"
+    } ]
+  }, {
+    "tStartMs": 96000,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "你想我们现在快50期了"
+    } ]
+  }, {
+    "tStartMs": 97533,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "我们一期至少3个，每次3-4个嘛"
+    } ]
+  }, {
+    "tStartMs": 99700,
+    "dDurationMs": 966,
+    "segs": [ {
+      "utf8": "早就过百了"
+    } ]
+  }, {
+    "tStartMs": 100666,
+    "dDurationMs": 2034,
+    "segs": [ {
+      "utf8": "所以你才会用到遇到那些"
+    } ]
+  }, {
+    "tStartMs": 102700,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "我不会啊我很好啊"
+    } ]
+  }, {
+    "tStartMs": 104733,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "这是我是最近看那个怪谈新耳袋"
+    } ]
+  }, {
+    "tStartMs": 107533,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "然后他上面讲的"
+    } ]
+  }, {
+    "tStartMs": 109200,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "完了我刚才是不是又笑了"
+    } ]
+  }, {
+    "tStartMs": 111000,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "是的我不笑我不笑"
+    } ]
+  }, {
+    "tStartMs": 112400,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "这个是笑我们彼此啊"
+    } ]
+  }, {
+    "tStartMs": 114100,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "好好好然后最后我说一下呢"
+    } ]
+  }, {
+    "tStartMs": 116900,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "呃最近会有一些"
+    } ]
+  }, {
+    "tStartMs": 118333,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "同质性的故事开始投稿"
+    } ]
+  }, {
+    "tStartMs": 120733,
+    "dDurationMs": 100,
+    "segs": [ {
+      "utf8": "就"
+    } ]
+  }, {
+    "tStartMs": 120833,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "可能我们现在鲶鱼粉丝越来越多了嘛"
+    } ]
+  }, {
+    "tStartMs": 123633,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "投稿的这个故事啊"
+    } ]
+  }, {
+    "tStartMs": 125133,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "会有听众的底下留言啊"
+    } ]
+  }, {
+    "tStartMs": 126433,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": " "
+    } ]
+  }, {
+    "tStartMs": 127033,
+    "dDurationMs": 2867,
+    "segs": [ {
+      "utf8": "像我在某某大主播某某大up主"
+    } ]
+  }, {
+    "tStartMs": 129900,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "里面听到的故事"
+    } ]
+  }, {
+    "tStartMs": 132666,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "就觉得我们是"
+    } ]
+  }, {
+    "tStartMs": 134133,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "就觉得我们可能是抄袭啊之类的"
+    } ]
+  }, {
+    "tStartMs": 137200,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "这个我只能说啊"
+    } ]
+  }, {
+    "tStartMs": 138466,
+    "dDurationMs": 2867,
+    "segs": [ {
+      "utf8": "确实很多故事它是存在相似性的"
+    } ]
+  }, {
+    "tStartMs": 141633,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "我们没有办法就是"
+    } ]
+  }, {
+    "tStartMs": 144200,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "去规定粉丝投什么样的稿子对吧"
+    } ]
+  }, {
+    "tStartMs": 146500,
+    "dDurationMs": 2933,
+    "segs": [ {
+      "utf8": "嗯。而且我们更没有办法去规定"
+    } ]
+  }, {
+    "tStartMs": 149700,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "你这个稿子只能给鲶鱼投"
+    } ]
+  }, {
+    "tStartMs": 152866,
+    "dDurationMs": 934,
+    "segs": [ {
+      "utf8": "很多人"
+    } ]
+  }, {
+    "tStartMs": 153800,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "他可能已经给一些大的网站"
+    } ]
+  }, {
+    "tStartMs": 156333,
+    "dDurationMs": 767,
+    "segs": [ {
+      "utf8": "或者是平台"
+    } ]
+  }, {
+    "tStartMs": 157100,
+    "dDurationMs": 3233,
+    "segs": [ {
+      "utf8": "或者是up主或者是主播投过了"
+    } ]
+  }, {
+    "tStartMs": 160733,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "那他们用没用我不知道"
+    } ]
+  }, {
+    "tStartMs": 161900,
+    "dDurationMs": 1966,
+    "segs": [ {
+      "utf8": "因为他们的节目都一两百期啊"
+    } ]
+  }, {
+    "tStartMs": 164066,
+    "dDurationMs": 3067,
+    "segs": [ {
+      "utf8": "浏览量太大了"
+    } ]
+  }, {
+    "tStartMs": 167200,
+    "dDurationMs": 1666,
+    "segs": [ {
+      "utf8": "没有这个能力去就是……"
+    } ]
+  }, {
+    "tStartMs": 168866,
+    "dDurationMs": 2867,
+    "segs": [ {
+      "utf8": "对对对，所以呢，我希望的是啊"
+    } ]
+  }, {
+    "tStartMs": 171733,
+    "dDurationMs": 3167,
+    "segs": [ {
+      "utf8": "我也恳请以后投稿的各位鱼友啊"
+    } ]
+  }, {
+    "tStartMs": 175033,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "如果您的这个故事"
+    } ]
+  }, {
+    "tStartMs": 176400,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "已经投稿给其他节目了"
+    } ]
+  }, {
+    "tStartMs": 178933,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "请您告知鲶鱼一下"
+    } ]
+  }, {
+    "tStartMs": 181433,
+    "dDurationMs": 2233,
+    "segs": [ {
+      "utf8": "因为我们如果使要使用您的稿子的话"
+    } ]
+  }, {
+    "tStartMs": 183666,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "肯定会提前在节目里说"
+    } ]
+  }, {
+    "tStartMs": 185833,
+    "dDurationMs": 3433,
+    "segs": [ {
+      "utf8": "就像小六的那期节目会说这是in核"
+    } ]
+  }, {
+    "tStartMs": 189633,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "在in核投过稿子的"
+    } ]
+  }, {
+    "tStartMs": 191466,
+    "dDurationMs": 2734,
+    "segs": [ {
+      "utf8": "也只有她目前是跟我说过。"
+    } ]
+  }, {
+    "tStartMs": 194700,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "我才会得到提前的反馈"
+    } ]
+  }, {
+    "tStartMs": 196866,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "嗯！但确实最近有有一些节目下面"
+    } ]
+  }, {
+    "tStartMs": 199733,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "会有粉丝留言说"
+    } ]
+  }, {
+    "tStartMs": 201133,
+    "dDurationMs": 3667,
+    "segs": [ {
+      "utf8": "你这个故事跟某某主播啊的故事很像"
+    } ]
+  }, {
+    "tStartMs": 204800,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "嗯。我还真去听了"
+    } ]
+  }, {
+    "tStartMs": 206466,
+    "dDurationMs": 2334,
+    "segs": [ {
+      "utf8": "确实有相似性很高"
+    } ]
+  }, {
+    "tStartMs": 208866,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "对这种故事我觉得很难避免啊"
+    } ]
+  }, {
+    "tStartMs": 211833,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "是的是的"
+    } ]
+  }, {
+    "tStartMs": 212833,
+    "dDurationMs": 1767,
+    "segs": [ {
+      "utf8": "所以呢，最后啊"
+    } ]
+  }, {
+    "tStartMs": 214600,
+    "dDurationMs": 2866,
+    "segs": [ {
+      "utf8": "我还是要感谢大家的支持和厚爱"
+    } ]
+  }, {
+    "tStartMs": 217466,
+    "dDurationMs": 2834,
+    "segs": [ {
+      "utf8": "嗯请大家继续保持投稿OK"
+    } ]
+  }, {
+    "tStartMs": 220533,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "话不多说今天的废话就到这边了"
+    } ]
+  }, {
+    "tStartMs": 223066,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "哈哈哈讲太长了OK"
+    } ]
+  }, {
+    "tStartMs": 225900,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "话不多说，我们开始今天第一个故事"
+    } ]
+  }, {
+    "tStartMs": 227733,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "好"
+    } ]
+  }, {
+    "tStartMs": 229933,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "今天的第一个故事呢"
+    } ]
+  }, {
+    "tStartMs": 231033,
+    "dDurationMs": 3200,
+    "segs": [ {
+      "utf8": "来自于我们的小宇宙的鱼友影尘"
+    } ]
+  }, {
+    "tStartMs": 234533,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "下面我们称他为小影"
+    } ]
+  }, {
+    "tStartMs": 236200,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "小影是从小宇宙追到"
+    } ]
+  }, {
+    "tStartMs": 238633,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "因为他这个平台不能私信啊"
+    } ]
+  }, {
+    "tStartMs": 240266,
+    "dDurationMs": 2134,
+    "segs": [ {
+      "utf8": "追到网易追到小红书"
+    } ]
+  }, {
+    "tStartMs": 242400,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "最后在小红书给我投的稿"
+    } ]
+  }, {
+    "tStartMs": 244633,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "因为小红书私信比较方便一些"
+    } ]
+  }, {
+    "tStartMs": 246333,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "哦。对"
+    } ]
+  }, {
+    "tStartMs": 247666,
+    "dDurationMs": 2034,
+    "segs": [ {
+      "utf8": "早些投稿他是排队一直排到现在"
+    } ]
+  }, {
+    "tStartMs": 249700,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "小影说他自己呢"
+    } ]
+  }, {
+    "tStartMs": 252266,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "最早是在小宇宙听到鲶鱼的"
+    } ]
+  }, {
+    "tStartMs": 254666,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "然后就非常喜欢我们节目"
+    } ]
+  }, {
+    "tStartMs": 256666,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "但一直找不到投稿的地方"
+    } ]
+  }, {
+    "tStartMs": 258533,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "就去注册小红书的账号给我投稿"
+    } ]
+  }, {
+    "tStartMs": 261933,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "这里再重复一句啊"
+    } ]
+  }, {
+    "tStartMs": 263200,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "如果说想投稿的"
+    } ]
+  }, {
+    "tStartMs": 264500,
+    "dDurationMs": 2966,
+    "segs": [ {
+      "utf8": "可以添加我们鲶鱼的微信号catfishtalk"
+    } ]
+  }, {
+    "tStartMs": 268000,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "C A T F I S H T A L K"
+    } ]
+  }, {
+    "tStartMs": 272033,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "我每天都会登录，但是不定时啊"
+    } ]
+  }, {
+    "tStartMs": 274733,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "因为确实我比较忙工作啊"
+    } ]
+  }, {
+    "tStartMs": 277300,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "打工狗嘛"
+    } ]
+  }, {
+    "tStartMs": 278500,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "大家来发这个投稿"
+    } ]
+  }, {
+    "tStartMs": 281600,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "书归正传我们开始小影的故事"
+    } ]
+  }, {
+    "tStartMs": 283633,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "小影投稿里​​面说呢"
+    } ]
+  }, {
+    "tStartMs": 284900,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "故事发生在去年的秋天"
+    } ]
+  }, {
+    "tStartMs": 287266,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "那天呢她跟平常一样"
+    } ]
+  }, {
+    "tStartMs": 289633,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "放学回到这个租房的地方"
+    } ]
+  }, {
+    "tStartMs": 292300,
+    "dDurationMs": 2733,
+    "segs": [ {
+      "utf8": "因为她当时租这个房子比较急"
+    } ]
+  }, {
+    "tStartMs": 295433,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "就没有去看太多的房子"
+    } ]
+  }, {
+    "tStartMs": 297666,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "选了一个离他们学校最近的老小区"
+    } ]
+  }, {
+    "tStartMs": 301100,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "而自己租的这个房子呢"
+    } ]
+  }, {
+    "tStartMs": 302900,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "也是这个小区里面"
+    } ]
+  }, {
+    "tStartMs": 304733,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "就是很里面的一个小户型啊"
+    } ]
+  }, {
+    "tStartMs": 307866,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "就是老小区的故事"
+    } ]
+  }, {
+    "tStartMs": 309466,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 310666,
+    "dDurationMs": 2034,
+    "segs": [ {
+      "utf8": "那天晚上在回家路上呢"
+    } ]
+  }, {
+    "tStartMs": 313233,
+    "dDurationMs": 3467,
+    "segs": [ {
+      "utf8": "小影发现整个小区人少就人很少"
+    } ]
+  }, {
+    "tStartMs": 317500,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "既没有遛弯的大爷"
+    } ]
+  }, {
+    "tStartMs": 319033,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "也没有跳出广场舞的大妈"
+    } ]
+  }, {
+    "tStartMs": 321133,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "小影就说呢"
+    } ]
+  }, {
+    "tStartMs": 322400,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "说这个路上面啊"
+    } ]
+  }, {
+    "tStartMs": 323666,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "虽然谈不上是空空荡荡"
+    } ]
+  }, {
+    "tStartMs": 325700,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "但是因为人比较少也显得很冷清"
+    } ]
+  }, {
+    "tStartMs": 328433,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "让她心里就有一点发毛了"
+    } ]
+  }, {
+    "tStartMs": 330700,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 331500,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "一路上，小影"
+    } ]
+  }, {
+    "tStartMs": 332400,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "就瞻前顾后"
+    } ]
+  }, {
+    "tStartMs": 334266,
+    "dDurationMs": 834,
+    "segs": [ {
+      "utf8": "她这个时候"
+    } ]
+  }, {
+    "tStartMs": 335200,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "恨不得啊"
+    } ]
+  }, {
+    "tStartMs": 335833,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "碰到几个去接孩子放学的家长"
+    } ]
+  }, {
+    "tStartMs": 338500,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "因为平时他会觉得这些家长啊"
+    } ]
+  }, {
+    "tStartMs": 341066,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "接孩子，孩子很闹"
+    } ]
+  }, {
+    "tStartMs": 342600,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "然后在路上乱跑挺烦的"
+    } ]
+  }, {
+    "tStartMs": 344500,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "现在她巴不得去碰到这些人"
+    } ]
+  }, {
+    "tStartMs": 347800,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "但现在呢，还是四下无人"
+    } ]
+  }, {
+    "tStartMs": 350333,
+    "dDurationMs": 2467,
+    "segs": [ {
+      "utf8": "直到他走到一段路上"
+    } ]
+  }, {
+    "tStartMs": 352866,
+    "dDurationMs": 2534,
+    "segs": [ {
+      "utf8": "才看到一个看上去很壮的男生"
+    } ]
+  }, {
+    "tStartMs": 355866,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "穿着也正好是小影他们学校的校服"
+    } ]
+  }, {
+    "tStartMs": 358866,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "就是校友了"
+    } ]
+  }, {
+    "tStartMs": 360033,
+    "dDurationMs": 2833,
+    "segs": [ {
+      "utf8": "这个男生呢在小影前面走"
+    } ]
+  }, {
+    "tStartMs": 362933,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "速度不急不慢的"
+    } ]
+  }, {
+    "tStartMs": 364333,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "给人一种怪怪的感觉"
+    } ]
+  }, {
+    "tStartMs": 367266,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "小影这个时候她没多想啊"
+    } ]
+  }, {
+    "tStartMs": 368733,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "还是跟着男生继续往家里面走"
+    } ]
+  }, {
+    "tStartMs": 371433,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "她给老于说啊"
+    } ]
+  }, {
+    "tStartMs": 372500,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "说这条路啊，就剩他们两个人了"
+    } ]
+  }, {
+    "tStartMs": 375700,
+    "dDurationMs": 3566,
+    "segs": [ {
+      "utf8": "她如果放任感官去感觉的话"
+    } ]
+  }, {
+    "tStartMs": 379300,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "他甚至觉得啊"
+    } ]
+  }, {
+    "tStartMs": 380200,
+    "dDurationMs": 2066,
+    "segs": [ {
+      "utf8": "整个小区就只剩下两个人"
+    } ]
+  }, {
+    "tStartMs": 382266,
+    "dDurationMs": 2234,
+    "segs": [ {
+      "utf8": "老于这个时候其实想打断他的"
+    } ]
+  }, {
+    "tStartMs": 384800,
+    "dDurationMs": 233,
+    "segs": [ {
+      "utf8": "就是"
+    } ]
+  }, {
+    "tStartMs": 385033,
+    "dDurationMs": 3767,
+    "segs": [ {
+      "utf8": "会不会是整个小区只剩你们两个活人"
+    } ]
+  }, {
+    "tStartMs": 388833,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "哼哈哈哈哎呦我又笑了"
+    } ]
+  }, {
+    "tStartMs": 390933,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "我靠"
+    } ]
+  }, {
+    "tStartMs": 391633,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "这个这个是我我的发散思维。我的"
+    } ]
+  }, {
+    "tStartMs": 394033,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "就没事啊"
+    } ]
+  }, {
+    "tStartMs": 395700,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "小影说呢"
+    } ]
+  }, {
+    "tStartMs": 396733,
+    "dDurationMs": 1867,
+    "segs": [ {
+      "utf8": "她回家的路不是很长"
+    } ]
+  }, {
+    "tStartMs": 399033,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "然后走到头呢是一个T字形"
+    } ]
+  }, {
+    "tStartMs": 401133,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "就是那种丁字路口"
+    } ]
+  }, {
+    "tStartMs": 402733,
+    "dDurationMs": 3200,
+    "segs": [ {
+      "utf8": "周围一边是老旧的单元房"
+    } ]
+  }, {
+    "tStartMs": 406200,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "另外一边呢是"
+    } ]
+  }, {
+    "tStartMs": 407866,
+    "dDurationMs": 2767,
+    "segs": [ {
+      "utf8": "另外房子的围墙墙院"
+    } ]
+  }, {
+    "tStartMs": 411233,
+    "dDurationMs": 1767,
+    "segs": [ {
+      "utf8": "她只要走到路的尽头"
+    } ]
+  }, {
+    "tStartMs": 413000,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "就是那个丁字路口"
+    } ]
+  }, {
+    "tStartMs": 414666,
+    "dDurationMs": 2334,
+    "segs": [ {
+      "utf8": "再向左边走一小会"
+    } ]
+  }, {
+    "tStartMs": 417200,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "就可以进到她租的房子的那个小院子"
+    } ]
+  }, {
+    "tStartMs": 420333,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "嗯。然后他跟那个男生啊"
+    } ]
+  }, {
+    "tStartMs": 422666,
+    "dDurationMs": 1734,
+    "segs": [ {
+      "utf8": "就这么走啊走啊走"
+    } ]
+  }, {
+    "tStartMs": 424666,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "越往里面觉得越来越阴冷"
+    } ]
+  }, {
+    "tStartMs": 428233,
+    "dDurationMs": 2067,
+    "segs": [ {
+      "utf8": "旁边单元楼虽然亮着灯"
+    } ]
+  }, {
+    "tStartMs": 430433,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "可是她自己觉得有点阴森"
+    } ]
+  }, {
+    "tStartMs": 433066,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "小影越来越害怕"
+    } ]
+  }, {
+    "tStartMs": 434633,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "她就想赶紧"
+    } ]
+  }, {
+    "tStartMs": 435933,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "加快脚步追上前面那个男生"
+    } ]
+  }, {
+    "tStartMs": 437633,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "跟他并排起走"
+    } ]
+  }, {
+    "tStartMs": 440300,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "男生该害怕了"
+    } ]
+  }, {
+    "tStartMs": 442000,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "就一开始我听到这边的时候"
+    } ]
+  }, {
+    "tStartMs": 443500,
+    "dDurationMs": 4533,
+    "segs": [ {
+      "utf8": "我觉得男生是不是错觉，就是没这个"
+    } ]
+  }, {
+    "tStartMs": 448033,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "就但是后面不是的"
+    } ]
+  }, {
+    "tStartMs": 450033,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "追上去之后呢"
+    } ]
+  }, {
+    "tStartMs": 452000,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "哎这个男生也看到小影了"
+    } ]
+  }, {
+    "tStartMs": 454600,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "但没有说什么"
+    } ]
+  }, {
+    "tStartMs": 456433,
+    "dDurationMs": 2767,
+    "segs": [ {
+      "utf8": "就在他们到了丁字路口的时候"
+    } ]
+  }, {
+    "tStartMs": 459700,
+    "dDurationMs": 2966,
+    "segs": [ {
+      "utf8": "小影说自己的腿刚往前迈一步"
+    } ]
+  }, {
+    "tStartMs": 462866,
+    "dDurationMs": 3867,
+    "segs": [ {
+      "utf8": "就听到后面一阵很大的哀嚎声"
+    } ]
+  }, {
+    "tStartMs": 466833,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "而且周围还出现了若隐若现"
+    } ]
+  }, {
+    "tStartMs": 469633,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "似有似无的哭泣声"
+    } ]
+  }, {
+    "tStartMs": 471666,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 472900,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "说时迟那时快"
+    } ]
+  }, {
+    "tStartMs": 473933,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "小颖就硬生生的把腿快速收回来了"
+    } ]
+  }, {
+    "tStartMs": 476666,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "然后那个男的就那个男生也愣住了"
+    } ]
+  }, {
+    "tStartMs": 479400,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "站在原地不敢动"
+    } ]
+  }, {
+    "tStartMs": 481833,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "很显然他肯定也是听到这个声音了"
+    } ]
+  }, {
+    "tStartMs": 484133,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "嗯，就证明小影不是幻听"
+    } ]
+  }, {
+    "tStartMs": 486700,
+    "dDurationMs": 1166,
+    "segs": [ {
+      "utf8": "与此同时呢"
+    } ]
+  }, {
+    "tStartMs": 487933,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "旁边单元楼的二、三楼的这个"
+    } ]
+  }, {
+    "tStartMs": 490733,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "几扇窗户啊"
+    } ]
+  }, {
+    "tStartMs": 491900,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "透出来的这个灯"
+    } ]
+  }, {
+    "tStartMs": 494400,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "它突然闪了几下"
+    } ]
+  }, {
+    "tStartMs": 496533,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "这个男生二话没说"
+    } ]
+  }, {
+    "tStartMs": 498133,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "非常快的向右跑掉了"
+    } ]
+  }, {
+    "tStartMs": 500800,
+    "dDurationMs": 2066,
+    "segs": [ {
+      "utf8": "就是小影家相反的方向啊"
+    } ]
+  }, {
+    "tStartMs": 503200,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "小影这个时候神傻了"
+    } ]
+  }, {
+    "tStartMs": 505400,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "就没想到男生会这么做"
+    } ]
+  }, {
+    "tStartMs": 507800,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "自我防范意识很强啊"
+    } ]
+  }, {
+    "tStartMs": 509700,
+    "dDurationMs": 2833,
+    "segs": [ {
+      "utf8": "她就愣了几秒钟，就赶紧往左走"
+    } ]
+  }, {
+    "tStartMs": 512900,
+    "dDurationMs": 533,
+    "segs": [ {
+      "utf8": " "
+    } ]
+  }, {
+    "tStartMs": 513433,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "要想赶紧回到自己的租的房子里面"
+    } ]
+  }, {
+    "tStartMs": 516400,
+    "dDurationMs": 3666,
+    "segs": [ {
+      "utf8": "就当她踏上左边的那个路口的时候"
+    } ]
+  }, {
+    "tStartMs": 520266,
+    "dDurationMs": 4567,
+    "segs": [ {
+      "utf8": "看见路边黄黄的纸钱洒满了一路"
+    } ]
+  }, {
+    "tStartMs": 525233,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "她给我的投稿里面其实用的是"
+    } ]
+  }, {
+    "tStartMs": 527466,
+    "dDurationMs": 4167,
+    "segs": [ {
+      "utf8": "甚至可以说是铺满一路就洒满了纸钱"
+    } ]
+  }, {
+    "tStartMs": 532666,
+    "dDurationMs": 400,
+    "segs": [ {
+      "utf8": "小影"
+    } ]
+  }, {
+    "tStartMs": 533066,
+    "dDurationMs": 2034,
+    "segs": [ {
+      "utf8": "她吓得头也不回的就往院子里面跑"
+    } ]
+  }, {
+    "tStartMs": 535433,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "飞快的开门然后进屋"
+    } ]
+  }, {
+    "tStartMs": 538066,
+    "dDurationMs": 3067,
+    "segs": [ {
+      "utf8": "然后开灯关门锁门一气呵成"
+    } ]
+  }, {
+    "tStartMs": 541433,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "然后开始靠在门上喘气"
+    } ]
+  }, {
+    "tStartMs": 544033,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 545533,
+    "dDurationMs": 767,
+    "segs": [ {
+      "utf8": "小影给老于说"
+    } ]
+  }, {
+    "tStartMs": 546300,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "她说当时后背已经被冷汗浸湿了"
+    } ]
+  }, {
+    "tStartMs": 549833,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "心里面不停安慰自己说"
+    } ]
+  }, {
+    "tStartMs": 551466,
+    "dDurationMs": 3367,
+    "segs": [ {
+      "utf8": "哎呀可能今天是什么特殊的日子"
+    } ]
+  }, {
+    "tStartMs": 554833,
+    "dDurationMs": 3633,
+    "segs": [ {
+      "utf8": "或者是别人家出殡之类的啊"
+    } ]
+  }, {
+    "tStartMs": 558466,
+    "dDurationMs": 3134,
+    "segs": [ {
+      "utf8": "然后环卫工人没扫干净才会有纸钱的"
+    } ]
+  }, {
+    "tStartMs": 561600,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "嗯，就安慰自己，不是灵异事件"
+    } ]
+  }, {
+    "tStartMs": 563800,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 564500,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "然后第一天到基本就结束哦"
+    } ]
+  }, {
+    "tStartMs": 567800,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "还不止一天呢"
+    } ]
+  }, {
+    "tStartMs": 568733,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "对她第一天就碰到这个纸钱"
+    } ]
+  }, {
+    "tStartMs": 570666,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "满是纸钱的这种情景"
+    } ]
+  }, {
+    "tStartMs": 572433,
+    "dDurationMs": 1067,
+    "segs": [ {
+      "utf8": "其实我想啊"
+    } ]
+  }, {
+    "tStartMs": 573600,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "因为她回家明显已经是晚上了嘛"
+    } ]
+  }, {
+    "tStartMs": 575700,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "对！你正常出殡早上去做"
+    } ]
+  }, {
+    "tStartMs": 578733,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "你再怎么着"
+    } ]
+  }, {
+    "tStartMs": 579833,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "你中午这些东西应该扫掉了是"
+    } ]
+  }, {
+    "tStartMs": 582200,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "或者下午"
+    } ]
+  }, {
+    "tStartMs": 583833,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "是再不济再不济"
+    } ]
+  }, {
+    "tStartMs": 585333,
+    "dDurationMs": 2867,
+    "segs": [ {
+      "utf8": "你环卫工下班前应该扫掉了吧"
+    } ]
+  }, {
+    "tStartMs": 588666,
+    "dDurationMs": 2034,
+    "segs": [ {
+      "utf8": "我是没见过就是"
+    } ]
+  }, {
+    "tStartMs": 590733,
+    "dDurationMs": 3667,
+    "segs": [ {
+      "utf8": "嗯。是散的比较多的纸钱在地上"
+    } ]
+  }, {
+    "tStartMs": 594400,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "就可能有一些地方风俗会撒的很多"
+    } ]
+  }, {
+    "tStartMs": 597100,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 598100,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "OK我们说回第二天的事情啊"
+    } ]
+  }, {
+    "tStartMs": 601600,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "好。第二天呢"
+    } ]
+  }, {
+    "tStartMs": 602900,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "太阳刚露头，小影就起床了"
+    } ]
+  }, {
+    "tStartMs": 606000,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "小影说她一大早借着这个"
+    } ]
+  }, {
+    "tStartMs": 608000,
+    "dDurationMs": 1666,
+    "segs": [ {
+      "utf8": "旭日东升的暖意"
+    } ]
+  }, {
+    "tStartMs": 609733,
+    "dDurationMs": 3267,
+    "segs": [ {
+      "utf8": "特意跑去昨天的那个路口看了"
+    } ]
+  }, {
+    "tStartMs": 613400,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "果然"
+    } ]
+  }, {
+    "tStartMs": 614600,
+    "dDurationMs": 2833,
+    "segs": [ {
+      "utf8": "只有几片没有被扫干净的银杏叶"
+    } ]
+  }, {
+    "tStartMs": 617733,
+    "dDurationMs": 1767,
+    "segs": [ {
+      "utf8": "没有什么纸钱"
+    } ]
+  }, {
+    "tStartMs": 619866,
+    "dDurationMs": 634,
+    "segs": [ {
+      "utf8": "小影心想"
+    } ]
+  }, {
+    "tStartMs": 620500,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "估计是昨天晚上自己看花眼了"
+    } ]
+  }, {
+    "tStartMs": 623300,
+    "dDurationMs": 3166,
+    "segs": [ {
+      "utf8": "毕竟她说现在这个祭祀什么的"
+    } ]
+  }, {
+    "tStartMs": 626900,
+    "dDurationMs": 1766,
+    "segs": [ {
+      "utf8": "都是把纸钱给烧掉"
+    } ]
+  }, {
+    "tStartMs": 628833,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "怎么会有那么多完整的纸钱呢"
+    } ]
+  }, {
+    "tStartMs": 631133,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "对啊。当天晚上放学"
+    } ]
+  }, {
+    "tStartMs": 634800,
+    "dDurationMs": 3200,
+    "segs": [ {
+      "utf8": "小影也向邻居打听了说最近是不是"
+    } ]
+  }, {
+    "tStartMs": 638466,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "这个小区有什么人去世啊什么的"
+    } ]
+  }, {
+    "tStartMs": 641066,
+    "dDurationMs": 1867,
+    "segs": [ {
+      "utf8": "得到的都是否定的答案"
+    } ]
+  }, {
+    "tStartMs": 643333,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "那奇怪的是呢"
+    } ]
+  }, {
+    "tStartMs": 644800,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "后面几天回家"
+    } ]
+  }, {
+    "tStartMs": 646433,
+    "dDurationMs": 3067,
+    "segs": [ {
+      "utf8": "那条路啊都是正常的人来人往"
+    } ]
+  }, {
+    "tStartMs": 649600,
+    "dDurationMs": 2466,
+    "segs": [ {
+      "utf8": "小影呢也就没多想了"
+    } ]
+  }, {
+    "tStartMs": 652466,
+    "dDurationMs": 400,
+    "segs": [ {
+      "utf8": "但是"
+    } ]
+  }, {
+    "tStartMs": 652866,
+    "dDurationMs": 3034,
+    "segs": [ {
+      "utf8": "真正让小影感到毛骨悚然的事情啊"
+    } ]
+  }, {
+    "tStartMs": 656000,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "发生在一周之后的某天"
+    } ]
+  }, {
+    "tStartMs": 659600,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "那天小影做了个噩梦"
+    } ]
+  }, {
+    "tStartMs": 662200,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "小影补充说啊，他们当地下葬的风俗"
+    } ]
+  }, {
+    "tStartMs": 665033,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "是中午请人抬棺撒纸钱"
+    } ]
+  }, {
+    "tStartMs": 668400,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "那一边走呢一边还去"
+    } ]
+  }, {
+    "tStartMs": 670333,
+    "dDurationMs": 2467,
+    "segs": [ {
+      "utf8": "还会有故去的人的子女"
+    } ]
+  }, {
+    "tStartMs": 672800,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "就是逝者的这个子女，或者亲戚"
+    } ]
+  }, {
+    "tStartMs": 676100,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "就哭丧。嗯"
+    } ]
+  }, {
+    "tStartMs": 677600,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "他甚至会有人请专门的人来哭丧"
+    } ]
+  }, {
+    "tStartMs": 679900,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "就哭的特别惨特别惨"
+    } ]
+  }, {
+    "tStartMs": 682400,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "一边哭还一边要喊着去故去人的名字"
+    } ]
+  }, {
+    "tStartMs": 685433,
+    "dDurationMs": 2233,
+    "segs": [ {
+      "utf8": "把他生平的事情说出来"
+    } ]
+  }, {
+    "tStartMs": 687733,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "就比如说"
+    } ]
+  }, {
+    "tStartMs": 688866,
+    "dDurationMs": 2734,
+    "segs": [ {
+      "utf8": "哎呀妙老师你怎么死的这么早啊"
+    } ]
+  }, {
+    "tStartMs": 691600,
+    "dDurationMs": 2066,
+    "segs": [ {
+      "utf8": "上一次还说好要一起打牌的"
+    } ]
+  }, {
+    "tStartMs": 693700,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "这种感觉你知道吧"
+    } ]
+  }, {
+    "tStartMs": 695066,
+    "dDurationMs": 2467,
+    "segs": [ {
+      "utf8": "好那代称一下代称一下。嗯"
+    } ]
+  }, {
+    "tStartMs": 698533,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "那最后呢"
+    } ]
+  }, {
+    "tStartMs": 699600,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "这个逝者的这个家属"
+    } ]
+  }, {
+    "tStartMs": 702533,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "会在撒纸钱的地方"
+    } ]
+  }, {
+    "tStartMs": 705333,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "扔一些水果和零食"
+    } ]
+  }, {
+    "tStartMs": 707866,
+    "dDurationMs": 1434,
+    "segs": [ {
+      "utf8": "然后砸火盆"
+    } ]
+  }, {
+    "tStartMs": 709466,
+    "dDurationMs": 3200,
+    "segs": [ {
+      "utf8": "最后有几个全身是黑"
+    } ]
+  }, {
+    "tStartMs": 712666,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "就黑衣黑裤黑鞋的人把这个棺材下葬"
+    } ]
+  }, {
+    "tStartMs": 716800,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "小影还给老于强调说说"
+    } ]
+  }, {
+    "tStartMs": 718800,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "这个是他们老家的风俗"
+    } ]
+  }, {
+    "tStartMs": 720666,
+    "dDurationMs": 1867,
+    "segs": [ {
+      "utf8": "但她上学的这个城市啊"
+    } ]
+  }, {
+    "tStartMs": 722633,
+    "dDurationMs": 1767,
+    "segs": [ {
+      "utf8": "从来都没有类似的风俗"
+    } ]
+  }, {
+    "tStartMs": 724400,
+    "dDurationMs": 2066,
+    "segs": [ {
+      "utf8": "起码她自己没看到过"
+    } ]
+  }, {
+    "tStartMs": 726466,
+    "dDurationMs": 2867,
+    "segs": [ {
+      "utf8": "嗯。你别说我这两天接投稿"
+    } ]
+  }, {
+    "tStartMs": 729333,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "不是投稿就是我们的图文故事的评论"
+    } ]
+  }, {
+    "tStartMs": 732300,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "还有人说在苏州啊"
+    } ]
+  }, {
+    "tStartMs": 734300,
+    "dDurationMs": 4333,
+    "segs": [ {
+      "utf8": "风俗是就是出殡的时候往路边撒糖"
+    } ]
+  }, {
+    "tStartMs": 739466,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "撒什么糖果"
+    } ]
+  }, {
+    "tStartMs": 741400,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "撒糖果，对。只要是糖就可以吗"
+    } ]
+  }, {
+    "tStartMs": 744200,
+    "dDurationMs": 3533,
+    "segs": [ {
+      "utf8": "对。就这个这个怎么讲"
+    } ]
+  }, {
+    "tStartMs": 747733,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "评论的人我们鱼友啊"
+    } ]
+  }, {
+    "tStartMs": 749300,
+    "dDurationMs": 3766,
+    "segs": [ {
+      "utf8": "他拿起来吃了，然后回家就生病了。啊……"
+    } ]
+  }, {
+    "tStartMs": 753600,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "不好啊这样不好啊"
+    } ]
+  }, {
+    "tStartMs": 755000,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "对因为一开始"
+    } ]
+  }, {
+    "tStartMs": 756933,
+    "dDurationMs": 4767,
+    "segs": [ {
+      "utf8": "我真的没想到，还会有人在出殡撒糖"
+    } ]
+  }, {
+    "tStartMs": 761700,
+    "dDurationMs": 4633,
+    "segs": [ {
+      "utf8": "嗯。就糖不应该都是喜事红事"
+    } ]
+  }, {
+    "tStartMs": 766333,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "嗯。对吧。他白事撒其实挺怪的"
+    } ]
+  }, {
+    "tStartMs": 769066,
+    "dDurationMs": 3534,
+    "segs": [ {
+      "utf8": "对。这个东西别乱吃吧"
+    } ]
+  }, {
+    "tStartMs": 772800,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "对啊。而且有很多"
+    } ]
+  }, {
+    "tStartMs": 774800,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "就是可能住在外面流浪汉之类"
+    } ]
+  }, {
+    "tStartMs": 777800,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "他会吃那些贡品那些"
+    } ]
+  }, {
+    "tStartMs": 780300,
+    "dDurationMs": 1566,
+    "segs": [ {
+      "utf8": "那个还好，对"
+    } ]
+  }, {
+    "tStartMs": 782066,
+    "dDurationMs": 3467,
+    "segs": [ {
+      "utf8": "而且我还听说有规矩是说在某一个"
+    } ]
+  }, {
+    "tStartMs": 786133,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "地方吧"
+    } ]
+  }, {
+    "tStartMs": 787266,
+    "dDurationMs": 934,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 788200,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "比方说北方，或者是西北方之类的"
+    } ]
+  }, {
+    "tStartMs": 790066,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "就是挺大的一个地方"
+    } ]
+  }, {
+    "tStartMs": 791833,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "大的方向他们是上完贡"
+    } ]
+  }, {
+    "tStartMs": 794866,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "这个贡品是好的"
+    } ]
+  }, {
+    "tStartMs": 796533,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "就是一定要给孩子分吃的"
+    } ]
+  }, {
+    "tStartMs": 799133,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "这是好事啊"
+    } ]
+  }, {
+    "tStartMs": 800400,
+    "dDurationMs": 2066,
+    "segs": [ {
+      "utf8": "这个我好像我也吃过"
+    } ]
+  }, {
+    "tStartMs": 802466,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "但我不记得吃的是什么"
+    } ]
+  }, {
+    "tStartMs": 804633,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "哦！好像是我们家这边"
+    } ]
+  }, {
+    "tStartMs": 807400,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "反正我们家习俗是最后苹果都拿走"
+    } ]
+  }, {
+    "tStartMs": 810400,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "都给几个孩子拿走"
+    } ]
+  }, {
+    "tStartMs": 812066,
+    "dDurationMs": 2934,
+    "segs": [ {
+      "utf8": "哦。然后吃不吃就随你了，但是你得拿走"
+    } ]
+  }, {
+    "tStartMs": 815500,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "我周六才上的坟"
+    } ]
+  }, {
+    "tStartMs": 816733,
+    "dDurationMs": 1067,
+    "segs": [ {
+      "utf8": "嗯，就前两天"
+    } ]
+  }, {
+    "tStartMs": 817800,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 818866,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "OK我们回到小影的故事啊"
+    } ]
+  }, {
+    "tStartMs": 820600,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "就小影说她这个住的城市啊"
+    } ]
+  }, {
+    "tStartMs": 823233,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "是没有这个风俗的"
+    } ]
+  }, {
+    "tStartMs": 824233,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "但他家乡是有这种风俗的"
+    } ]
+  }, {
+    "tStartMs": 826933,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "那天梦到什么呢"
+    } ]
+  }, {
+    "tStartMs": 828600,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "小影她梦到啊"
+    } ]
+  }, {
+    "tStartMs": 830000,
+    "dDurationMs": 2466,
+    "segs": [ {
+      "utf8": "她自己不知道为什么又出现在了那个"
+    } ]
+  }, {
+    "tStartMs": 832533,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "丁字路口"
+    } ]
+  }, {
+    "tStartMs": 833733,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "而且跟之前一样满地纸钱"
+    } ]
+  }, {
+    "tStartMs": 836666,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "四周的哭泣声格外真切"
+    } ]
+  }, {
+    "tStartMs": 839300,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "紧接着她就看见"
+    } ]
+  }, {
+    "tStartMs": 841233,
+    "dDurationMs": 4067,
+    "segs": [ {
+      "utf8": "从右手边的巷子里，走出了一队抬棺人"
+    } ]
+  }, {
+    "tStartMs": 845533,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "啊"
+    } ]
+  }, {
+    "tStartMs": 846900,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "最前面的是一个"
+    } ]
+  }, {
+    "tStartMs": 848700,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "脸画的很白很白的女人"
+    } ]
+  }, {
+    "tStartMs": 851333,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "但嘴巴呢又用口红涂的"
+    } ]
+  }, {
+    "tStartMs": 854633,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "又大又红。啊"
+    } ]
+  }, {
+    "tStartMs": 856233,
+    "dDurationMs": 767,
+    "segs": [ {
+      "utf8": "我第一反应"
+    } ]
+  }, {
+    "tStartMs": 857000,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "我第一想到的印象是那个大嘴妹"
+    } ]
+  }, {
+    "tStartMs": 859633,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "就是那个最近直播很流行的那个"
+    } ]
+  }, {
+    "tStartMs": 862600,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "就咖啡里冲不冲"
+    } ]
+  }, {
+    "tStartMs": 864200,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "我不看这些东西！好吧好吧好吧"
+    } ]
+  }, {
+    "tStartMs": 866833,
+    "dDurationMs": 2833,
+    "segs": [ {
+      "utf8": "你接不了这个梗啊！我不看这东西"
+    } ]
+  }, {
+    "tStartMs": 870233,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "然后这个站在前面的这个女人啊"
+    } ]
+  }, {
+    "tStartMs": 873233,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "就是脸白嘴红的这个女人"
+    } ]
+  }, {
+    "tStartMs": 875533,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "就开始不停的哭丧"
+    } ]
+  }, {
+    "tStartMs": 877600,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "然后不停的说说话"
+    } ]
+  }, {
+    "tStartMs": 879633,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "嗯。那具体说什么呢"
+    } ]
+  }, {
+    "tStartMs": 881066,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "听不清楚"
+    } ]
+  }, {
+    "tStartMs": 881866,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "但是脸上的这个妆已经哭花了"
+    } ]
+  }, {
+    "tStartMs": 884733,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "看起来格外瘮人"
+    } ]
+  }, {
+    "tStartMs": 886733,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "那哭丧这个女人后面跟着四个"
+    } ]
+  }, {
+    "tStartMs": 889133,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "黑衣黑裤黑鞋的人"
+    } ]
+  }, {
+    "tStartMs": 891233,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "看不清面容，但是抬着一口棺材"
+    } ]
+  }, {
+    "tStartMs": 894333,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "在一步一步一步的往小影这边走来"
+    } ]
+  }, {
+    "tStartMs": 898133,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "小影说自己当时不知道为什么"
+    } ]
+  }, {
+    "tStartMs": 900400,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "完全动弹不了"
+    } ]
+  }, {
+    "tStartMs": 901833,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "也发不出声音"
+    } ]
+  }, {
+    "tStartMs": 903033,
+    "dDurationMs": 500,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 903533,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "当这个抬棺队伍走到自己面前的时候"
+    } ]
+  }, {
+    "tStartMs": 907066,
+    "dDurationMs": 1134,
+    "segs": [ {
+      "utf8": "停住了"
+    } ]
+  }, {
+    "tStartMs": 908900,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "她甚至能看到"
+    } ]
+  }, {
+    "tStartMs": 910300,
+    "dDurationMs": 3166,
+    "segs": [ {
+      "utf8": "刚才哭丧的这个白脸女人脸上"
+    } ]
+  }, {
+    "tStartMs": 913533,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "被泪水弄糊的这个妆"
+    } ]
+  }, {
+    "tStartMs": 916800,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "然后这四个黑衣人突然把这个棺材"
+    } ]
+  }, {
+    "tStartMs": 920066,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "直挺挺的竖在小影面前啊"
+    } ]
+  }, {
+    "tStartMs": 925233,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "小影这个时候才发现这个棺材"
+    } ]
+  }, {
+    "tStartMs": 927466,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "没有盖子！啊"
+    } ]
+  }, {
+    "tStartMs": 929600,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "棺材里面躺着的是谁，猜"
+    } ]
+  }, {
+    "tStartMs": 933300,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "我猜肯定是那个男生"
+    } ]
+  }, {
+    "tStartMs": 934833,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "对就是因为只出现了这么几个角色"
+    } ]
+  }, {
+    "tStartMs": 937833,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "是的！对吧"
+    } ]
+  }, {
+    "tStartMs": 938866,
+    "dDurationMs": 2634,
+    "segs": [ {
+      "utf8": "就是那个男的肯定是跑错方向了"
+    } ]
+  }, {
+    "tStartMs": 941500,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "哈哈哈，跑快点"
+    } ]
+  }, {
+    "tStartMs": 943066,
+    "dDurationMs": 2434,
+    "segs": [ {
+      "utf8": "你笑了你笑了就完了这是小影做的梦"
+    } ]
+  }, {
+    "tStartMs": 945500,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "你完了哈哈哈"
+    } ]
+  }, {
+    "tStartMs": 946866,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "你要挨冲"
+    } ]
+  }, {
+    "tStartMs": 948233,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "OK我们回来啊"
+    } ]
+  }, {
+    "tStartMs": 949833,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "呃别扯啊别扯那么远啊"
+    } ]
+  }, {
+    "tStartMs": 952133,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "那个棺材里面就是那个"
+    } ]
+  }, {
+    "tStartMs": 954600,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "那天那个和自己穿一样校服的男生"
+    } ]
+  }, {
+    "tStartMs": 957666,
+    "dDurationMs": 834,
+    "segs": [ {
+      "utf8": "而且啊"
+    } ]
+  }, {
+    "tStartMs": 958600,
+    "dDurationMs": 2733,
+    "segs": [ {
+      "utf8": "这个男生原本是平躺在棺材里的"
+    } ]
+  }, {
+    "tStartMs": 961333,
+    "dDurationMs": 3367,
+    "segs": [ {
+      "utf8": "但棺材这么一竖他就直挺挺的往前倒"
+    } ]
+  }, {
+    "tStartMs": 964733,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "就要压在小影身上"
+    } ]
+  }, {
+    "tStartMs": 966800,
+    "dDurationMs": 1066,
+    "segs": [ {
+      "utf8": "小影醒了"
+    } ]
+  }, {
+    "tStartMs": 968500,
+    "dDurationMs": 3800,
+    "segs": [ {
+      "utf8": "我去！然后她就被吓得冷汗狂流"
+    } ]
+  }, {
+    "tStartMs": 972300,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "还止不住的发抖"
+    } ]
+  }, {
+    "tStartMs": 973733,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "嗯。然后就在这个时候啊"
+    } ]
+  }, {
+    "tStartMs": 976200,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "她特意给我补充"
+    } ]
+  }, {
+    "tStartMs": 977333,
+    "dDurationMs": 3800,
+    "segs": [ {
+      "utf8": "她说就在她还沉浸在梦中不知所措"
+    } ]
+  }, {
+    "tStartMs": 981400,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "感觉到很恐怖的时候"
+    } ]
+  }, {
+    "tStartMs": 983133,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "窗外的灯不知道是路灯还是邻居的灯"
+    } ]
+  }, {
+    "tStartMs": 986666,
+    "dDurationMs": 2334,
+    "segs": [ {
+      "utf8": "跟她之前碰到的情况一样"
+    } ]
+  }, {
+    "tStartMs": 989000,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "闪了几下是吧"
+    } ]
+  }, {
+    "tStartMs": 990333,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "对闪了几下"
+    } ]
+  }, {
+    "tStartMs": 992666,
+    "dDurationMs": 1634,
+    "segs": [ {
+      "utf8": "然后故事到这边就结束了"
+    } ]
+  }, {
+    "tStartMs": 994400,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "然后我又跟小影聊了聊后面呢"
+    } ]
+  }, {
+    "tStartMs": 996800,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "还好就没有发生什么怪事"
+    } ]
+  }, {
+    "tStartMs": 999100,
+    "dDurationMs": 3633,
+    "segs": [ {
+      "utf8": "但这几次呢都吓得真的是吓得不轻"
+    } ]
+  }, {
+    "tStartMs": 1002733,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "我好奇"
+    } ]
+  }, {
+    "tStartMs": 1003533,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "她之后在小学还遇见过那男的吗"
+    } ]
+  }, {
+    "tStartMs": 1006733,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "她说没有"
+    } ]
+  }, {
+    "tStartMs": 1008333,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "我也问了差不多的问题"
+    } ]
+  }, {
+    "tStartMs": 1009866,
+    "dDurationMs": 1867,
+    "segs": [ {
+      "utf8": "说我觉得那男的就是"
+    } ]
+  }, {
+    "tStartMs": 1011733,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "肯定是一着急就跑错方向了"
+    } ]
+  }, {
+    "tStartMs": 1014300,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "就跑到不好的地方"
+    } ]
+  }, {
+    "tStartMs": 1016433,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "我觉得是"
+    } ]
+  }, {
+    "tStartMs": 1017500,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "那个灯闪烁的时候"
+    } ]
+  }, {
+    "tStartMs": 1018900,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "是代表着进入里世界了啊"
+    } ]
+  }, {
+    "tStartMs": 1021200,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "像那种怪奇物语的感觉被收了"
+    } ]
+  }, {
+    "tStartMs": 1023333,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "那男的肯定是"
+    } ]
+  }, {
+    "tStartMs": 1025266,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "就真的是挺恐怖的这个挺恐怖的，我靠"
+    } ]
+  }, {
+    "tStartMs": 1028300,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "OK第一个故事到这边"
+    } ]
+  }, {
+    "tStartMs": 1032000,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "好，第二个故事我这边的啊"
+    } ]
+  }, {
+    "tStartMs": 1033800,
+    "dDurationMs": 4333,
+    "segs": [ {
+      "utf8": "嗯，依然是b站的鱼友叫百万嬉皮"
+    } ]
+  }, {
+    "tStartMs": 1038800,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "嗯叫他小溪啊"
+    } ]
+  }, {
+    "tStartMs": 1040100,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "你这个昵称起的就是越来越别"
+    } ]
+  }, {
+    "tStartMs": 1042033,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "别具一致了啊"
+    } ]
+  }, {
+    "tStartMs": 1043066,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "是人家的昵称"
+    } ]
+  }, {
+    "tStartMs": 1044700,
+    "dDurationMs": 2566,
+    "segs": [ {
+      "utf8": "我知道我意思是你叫他小溪啊"
+    } ]
+  }, {
+    "tStartMs": 1047266,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "这个昵称我讲一下"
+    } ]
+  }, {
+    "tStartMs": 1048633,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "我都是挑自己就是念的顺嘴啊"
+    } ]
+  }, {
+    "tStartMs": 1051200,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "如果有冒犯就不好意思"
+    } ]
+  }, {
+    "tStartMs": 1052900,
+    "dDurationMs": 2833,
+    "segs": [ {
+      "utf8": "叫皮皮，叫小希吧"
+    } ]
+  }, {
+    "tStartMs": 1055733,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "我稿子里面都是小希"
+    } ]
+  }, {
+    "tStartMs": 1057033,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "好的乱了一会。好的"
+    } ]
+  }, {
+    "tStartMs": 1059633,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "小希说"
+    } ]
+  }, {
+    "tStartMs": 1060266,
+    "dDurationMs": 3834,
+    "segs": [ {
+      "utf8": "自己故事发生在大概10年前那个晚上"
+    } ]
+  }, {
+    "tStartMs": 1064500,
+    "dDurationMs": 3233,
+    "segs": [ {
+      "utf8": "那时候自己还在上上学而且是住校"
+    } ]
+  }, {
+    "tStartMs": 1067866,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 1069066,
+    "dDurationMs": 3267,
+    "segs": [ {
+      "utf8": "这段时间因为小希的外公他年龄大了"
+    } ]
+  }, {
+    "tStartMs": 1072333,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "仙世了"
+    } ]
+  }, {
+    "tStartMs": 1074033,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "啊。所以小希就从学校赶回家了"
+    } ]
+  }, {
+    "tStartMs": 1076700,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "家里也连夜赶回了很多亲戚"
+    } ]
+  }, {
+    "tStartMs": 1080100,
+    "dDurationMs": 3233,
+    "segs": [ {
+      "utf8": "大家都是很悲伤嘛，哭的稀里哗啦的"
+    } ]
+  }, {
+    "tStartMs": 1083333,
+    "dDurationMs": 3967,
+    "segs": [ {
+      "utf8": "小西说这几天天天晚上他得，"
+    } ]
+  }, {
+    "tStartMs": 1087600,
+    "dDurationMs": 1666,
+    "segs": [ {
+      "utf8": "应该他们习俗啊"
+    } ]
+  }, {
+    "tStartMs": 1089500,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "得跪在棺材面前"
+    } ]
+  }, {
+    "tStartMs": 1090900,
+    "dDurationMs": 3566,
+    "segs": [ {
+      "utf8": "听道士在那噼里啪啦一顿敲锣打鼓"
+    } ]
+  }, {
+    "tStartMs": 1094600,
+    "dDurationMs": 2266,
+    "segs": [ {
+      "utf8": "然后过了几天"
+    } ]
+  }, {
+    "tStartMs": 1096866,
+    "dDurationMs": 2734,
+    "segs": [ {
+      "utf8": "等到就是该下葬的那一天啊"
+    } ]
+  }, {
+    "tStartMs": 1100600,
+    "dDurationMs": 2866,
+    "segs": [ {
+      "utf8": "大家就把这个他外公的棺材"
+    } ]
+  }, {
+    "tStartMs": 1103500,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "一起抬上了山"
+    } ]
+  }, {
+    "tStartMs": 1105400,
+    "dDurationMs": 3800,
+    "segs": [ {
+      "utf8": "然后他们埋的话是埋在族坟那边的"
+    } ]
+  }, {
+    "tStartMs": 1109733,
+    "dDurationMs": 3533,
+    "segs": [ {
+      "utf8": "就应该是一个家族就是统一的坟地"
+    } ]
+  }, {
+    "tStartMs": 1113500,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "大家族呀"
+    } ]
+  }, {
+    "tStartMs": 1114900,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "对大家族才有这种"
+    } ]
+  }, {
+    "tStartMs": 1115933,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "对我感觉也是"
+    } ]
+  }, {
+    "tStartMs": 1117033,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "我反正看影视作品啊"
+    } ]
+  }, {
+    "tStartMs": 1119466,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "之类都是大家族"
+    } ]
+  }, {
+    "tStartMs": 1121933,
+    "dDurationMs": 3967,
+    "segs": [ {
+      "utf8": "在大房子旁边有个小山坡上面的族坟"
+    } ]
+  }, {
+    "tStartMs": 1125900,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "对对对，他应该也是这样"
+    } ]
+  }, {
+    "tStartMs": 1127800,
+    "dDurationMs": 3233,
+    "segs": [ {
+      "utf8": "他说因为要抬到族坟那边"
+    } ]
+  }, {
+    "tStartMs": 1131100,
+    "dDurationMs": 3366,
+    "segs": [ {
+      "utf8": "但是上这条山的小路呢，只能过人"
+    } ]
+  }, {
+    "tStartMs": 1134466,
+    "dDurationMs": 1234,
+    "segs": [ {
+      "utf8": "走不了车子"
+    } ]
+  }, {
+    "tStartMs": 1136000,
+    "dDurationMs": 3666,
+    "segs": [ {
+      "utf8": "所以一群人一直忙活忙到晚上才封土"
+    } ]
+  }, {
+    "tStartMs": 1140200,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "小溪说啊"
+    } ]
+  }, {
+    "tStartMs": 1141300,
+    "dDurationMs": 3900,
+    "segs": [ {
+      "utf8": "记得就是封土之后又烧了一堆纸"
+    } ]
+  }, {
+    "tStartMs": 1145400,
+    "dDurationMs": 3533,
+    "segs": [ {
+      "utf8": "纸钱嘛，自己当时年纪小也不懂"
+    } ]
+  }, {
+    "tStartMs": 1148933,
+    "dDurationMs": 2867,
+    "segs": [ {
+      "utf8": "就在旁边烧的不亦乐乎"
+    } ]
+  }, {
+    "tStartMs": 1151900,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "等到结束要走的时候呢"
+    } ]
+  }, {
+    "tStartMs": 1154900,
+    "dDurationMs": 3566,
+    "segs": [ {
+      "utf8": "大人们就把就是之前的火给扑灭了"
+    } ]
+  }, {
+    "tStartMs": 1158600,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "小希也去帮忙"
+    } ]
+  }, {
+    "tStartMs": 1160033,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "小希说"
+    } ]
+  }, {
+    "tStartMs": 1162833,
+    "dDurationMs": 3267,
+    "segs": [ {
+      "utf8": "小溪说一些烧完的纸钱啊"
+    } ]
+  }, {
+    "tStartMs": 1166100,
+    "dDurationMs": 2566,
+    "segs": [ {
+      "utf8": "它那个灰飞到天上去了"
+    } ]
+  }, {
+    "tStartMs": 1168666,
+    "dDurationMs": 2934,
+    "segs": [ {
+      "utf8": "突然又飞进自己眼睛里面了"
+    } ]
+  }, {
+    "tStartMs": 1172200,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "当时自己眼睛就睁不开了"
+    } ]
+  }, {
+    "tStartMs": 1174133,
+    "dDurationMs": 4100,
+    "segs": [ {
+      "utf8": "揉了很久很久才勉强能睁开来"
+    } ]
+  }, {
+    "tStartMs": 1178300,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "但是眼睛就开始有种那种近视的感觉"
+    } ]
+  }, {
+    "tStartMs": 1181800,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "模模糊糊的"
+    } ]
+  }, {
+    "tStartMs": 1183533,
+    "dDurationMs": 4100,
+    "segs": [ {
+      "utf8": "小溪想着等一会回家里面好好洗一下"
+    } ]
+  }, {
+    "tStartMs": 1188100,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "于是就下山拉着他"
+    } ]
+  }, {
+    "tStartMs": 1190200,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "甚至下山时候"
+    } ]
+  }, {
+    "tStartMs": 1191300,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "都是拉着爸爸的衣服下去"
+    } ]
+  }, {
+    "tStartMs": 1194500,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "小溪说下山之后啊这些就是白事"
+    } ]
+  }, {
+    "tStartMs": 1197500,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "基本就是结束了"
+    } ]
+  }, {
+    "tStartMs": 1199533,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "剩下就是外婆这边的人善后就好了"
+    } ]
+  }, {
+    "tStartMs": 1202500,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "爸爸呢"
+    } ]
+  }, {
+    "tStartMs": 1203900,
+    "dDurationMs": 3333,
+    "segs": [ {
+      "utf8": "准备就是一会就直接送小希回学校了"
+    } ]
+  }, {
+    "tStartMs": 1207233,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "也不会耽误第二天上课"
+    } ]
+  }, {
+    "tStartMs": 1208933,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "小希心里就嘀咕"
+    } ]
+  }, {
+    "tStartMs": 1211433,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "自己还想偷懒睡到明天中午才回去"
+    } ]
+  }, {
+    "tStartMs": 1213900,
+    "dDurationMs": 1766,
+    "segs": [ {
+      "utf8": "一点摸鱼的机会也不给"
+    } ]
+  }, {
+    "tStartMs": 1216666,
+    "dDurationMs": 1234,
+    "segs": [ {
+      "utf8": "结果就在路上"
+    } ]
+  }, {
+    "tStartMs": 1218200,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "小希还是一直在揉眼睛嘛眼睛不舒服"
+    } ]
+  }, {
+    "tStartMs": 1221100,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 1222233,
+    "dDurationMs": 400,
+    "segs": [ {
+      "utf8": "路过"
+    } ]
+  }, {
+    "tStartMs": 1222633,
+    "dDurationMs": 4567,
+    "segs": [ {
+      "utf8": "刚才就是往祖坟那个小山坡上去的路"
+    } ]
+  }, {
+    "tStartMs": 1227333,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "小希的妈妈说他还想再看一眼"
+    } ]
+  }, {
+    "tStartMs": 1230933,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "就是看一眼就是埋外公地方吗"
+    } ]
+  }, {
+    "tStartMs": 1233466,
+    "dDurationMs": 2634,
+    "segs": [ {
+      "utf8": "这其实不信看啊"
+    } ]
+  }, {
+    "tStartMs": 1236733,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "是对"
+    } ]
+  }, {
+    "tStartMs": 1238700,
+    "dDurationMs": 3433,
+    "segs": [ {
+      "utf8": "然后妈妈就喊喊他们俩停在那边"
+    } ]
+  }, {
+    "tStartMs": 1242133,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "小希就一直揉着眼睛一直往"
+    } ]
+  }, {
+    "tStartMs": 1245633,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "往族坟那那块看"
+    } ]
+  }, {
+    "tStartMs": 1247466,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "结果慢慢的居然看到里隐约有一个人"
+    } ]
+  }, {
+    "tStartMs": 1251266,
+    "dDurationMs": 2634,
+    "segs": [ {
+      "utf8": "小溪说当时因为眼睛糊嘛"
+    } ]
+  }, {
+    "tStartMs": 1253933,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "周围的景象都很模糊"
+    } ]
+  }, {
+    "tStartMs": 1255600,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "嗯但是那个人很清晰"
+    } ]
+  }, {
+    "tStartMs": 1258000,
+    "dDurationMs": 1666,
+    "segs": [ {
+      "utf8": "甚至能看得清脸"
+    } ]
+  }, {
+    "tStartMs": 1260066,
+    "dDurationMs": 1234,
+    "segs": [ {
+      "utf8": "但是投稿的时候呢"
+    } ]
+  }, {
+    "tStartMs": 1261300,
+    "dDurationMs": 566,
+    "segs": [ {
+      "utf8": "小希说"
+    } ]
+  }, {
+    "tStartMs": 1261866,
+    "dDurationMs": 2534,
+    "segs": [ {
+      "utf8": "自己已经记不清那个人脸长什么样了"
+    } ]
+  }, {
+    "tStartMs": 1264400,
+    "dDurationMs": 4100,
+    "segs": [ {
+      "utf8": "但在当时事发的那个年龄啊"
+    } ]
+  }, {
+    "tStartMs": 1268500,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "他自己还没有觉得哪里不对"
+    } ]
+  }, {
+    "tStartMs": 1270300,
+    "dDurationMs": 3566,
+    "segs": [ {
+      "utf8": "小希就很好奇的从上往下打量了一番"
+    } ]
+  }, {
+    "tStartMs": 1273866,
+    "dDurationMs": 234,
+    "segs": [ {
+      "utf8": " "
+    } ]
+  }, {
+    "tStartMs": 1274100,
+    "dDurationMs": 2966,
+    "segs": [ {
+      "utf8": "这个人。发现这个人人头正对着自己"
+    } ]
+  }, {
+    "tStartMs": 1277066,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "但是"
+    } ]
+  }, {
+    "tStartMs": 1279933,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "他的脚也是对着自己的"
+    } ]
+  }, {
+    "tStartMs": 1283666,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "我懂我懂了"
+    } ]
+  }, {
+    "tStartMs": 1284933,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "我瞬间能get到了"
+    } ]
+  }, {
+    "tStartMs": 1286433,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "你知道为什么吗"
+    } ]
+  }, {
+    "tStartMs": 1287833,
+    "dDurationMs": 867,
+    "segs": [ {
+      "utf8": "你get到什么"
+    } ]
+  }, {
+    "tStartMs": 1288700,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "我没讲完呢"
+    } ]
+  }, {
+    "tStartMs": 1289633,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "我get到他肯定啊"
+    } ]
+  }, {
+    "tStartMs": 1291333,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "你刚刚不是说脸和脚都对着自己吗"
+    } ]
+  }, {
+    "tStartMs": 1293333,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "那肯定不是正常的嘛"
+    } ]
+  }, {
+    "tStartMs": 1295133,
+    "dDurationMs": 3767,
+    "segs": [ {
+      "utf8": "是他的脸跟脚跟对着自己对吧"
+    } ]
+  }, {
+    "tStartMs": 1300733,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "对。就是不是一个方向"
+    } ]
+  }, {
+    "tStartMs": 1302700,
+    "dDurationMs": 1566,
+    "segs": [ {
+      "utf8": "你知道为什么我能get到这一点吗"
+    } ]
+  }, {
+    "tStartMs": 1304266,
+    "dDurationMs": 3567,
+    "segs": [ {
+      "utf8": "嗯我还有一篇投稿跟这个好像"
+    } ]
+  }, {
+    "tStartMs": 1307833,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "对！但比这个情况"
+    } ]
+  }, {
+    "tStartMs": 1310066,
+    "dDurationMs": 2234,
+    "segs": [ {
+      "utf8": "他这个因为上坟然后碰到他"
+    } ]
+  }, {
+    "tStartMs": 1312300,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "整个逻辑是顺的吗"
+    } ]
+  }, {
+    "tStartMs": 1313666,
+    "dDurationMs": 1934,
+    "segs": [ {
+      "utf8": "我那个逻辑就很乱"
+    } ]
+  }, {
+    "tStartMs": 1315600,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "后面讲到的那一期我要跟你讲好"
+    } ]
+  }, {
+    "tStartMs": 1318933,
+    "dDurationMs": 3367,
+    "segs": [ {
+      "utf8": "反正意思就是他脸"
+    } ]
+  }, {
+    "tStartMs": 1322300,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "这个人"
+    } ]
+  }, {
+    "tStartMs": 1322933,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "脸朝的方向和脚尖朝方向是360度"
+    } ]
+  }, {
+    "tStartMs": 1326400,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "对是对吧"
+    } ]
+  }, {
+    "tStartMs": 1327500,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "对"
+    } ]
+  }, {
+    "tStartMs": 1329066,
+    "dDurationMs": 2534,
+    "segs": [ {
+      "utf8": "这时候呢小希立刻就想叫出来了"
+    } ]
+  }, {
+    "tStartMs": 1331733,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "想和妈妈说"
+    } ]
+  }, {
+    "tStartMs": 1333600,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "但是啊"
+    } ]
+  }, {
+    "tStartMs": 1334533,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "他自己觉得眼睛根本转不过去了"
+    } ]
+  }, {
+    "tStartMs": 1337033,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "只能死死的盯着这个人看"
+    } ]
+  }, {
+    "tStartMs": 1339333,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "动都动不了"
+    } ]
+  }, {
+    "tStartMs": 1340300,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "这时候小希"
+    } ]
+  }, {
+    "tStartMs": 1342800,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "突然自己脚就开始动了"
+    } ]
+  }, {
+    "tStartMs": 1344633,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "嗯双脚就开始往那个小山上走"
+    } ]
+  }, {
+    "tStartMs": 1347866,
+    "dDurationMs": 2434,
+    "segs": [ {
+      "utf8": "他说自己依然死死盯着那双脚"
+    } ]
+  }, {
+    "tStartMs": 1350300,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "没法离开视线"
+    } ]
+  }, {
+    "tStartMs": 1351633,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 1352933,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "小溪还觉得"
+    } ]
+  }, {
+    "tStartMs": 1354600,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "那个人好像在盯着自己看"
+    } ]
+  }, {
+    "tStartMs": 1356633,
+    "dDurationMs": 400,
+    "segs": [ {
+      "utf8": "然后"
+    } ]
+  }, {
+    "tStartMs": 1357033,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "自己又有一种梦里面跳悬崖的感觉"
+    } ]
+  }, {
+    "tStartMs": 1359933,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "嗯感觉自己灵魂都要被他拽走了"
+    } ]
+  }, {
+    "tStartMs": 1363133,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "这个人影呢"
+    } ]
+  }, {
+    "tStartMs": 1364400,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "他说开始慢慢变淡了"
+    } ]
+  }, {
+    "tStartMs": 1366333,
+    "dDurationMs": 3267,
+    "segs": [ {
+      "utf8": "小希的脑子也变得越来越沉想睡觉"
+    } ]
+  }, {
+    "tStartMs": 1369600,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "这时候啊"
+    } ]
+  }, {
+    "tStartMs": 1371266,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "亲妈出现了"
+    } ]
+  }, {
+    "tStartMs": 1373833,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "他"
+    } ]
+  }, {
+    "tStartMs": 1375533,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "妈妈突然触景生情开始哭起来了"
+    } ]
+  }, {
+    "tStartMs": 1378133,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "喊着外公的名字"
+    } ]
+  }, {
+    "tStartMs": 1379800,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "这一哭一叫"
+    } ]
+  }, {
+    "tStartMs": 1381300,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "打雷一样的就把小希给吓醒了"
+    } ]
+  }, {
+    "tStartMs": 1383033,
+    "dDurationMs": 467,
+    "segs": [ {
+      "utf8": "拽回来了"
+    } ]
+  }, {
+    "tStartMs": 1383500,
+    "dDurationMs": 1566,
+    "segs": [ {
+      "utf8": "对。小希说"
+    } ]
+  }, {
+    "tStartMs": 1385066,
+    "dDurationMs": 2734,
+    "segs": [ {
+      "utf8": "当时自己眼睛就再也没有那种模糊"
+    } ]
+  }, {
+    "tStartMs": 1387800,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "近视的感觉了"
+    } ]
+  }, {
+    "tStartMs": 1389266,
+    "dDurationMs": 3234,
+    "segs": [ {
+      "utf8": "自己也就是能缓过神来控制自己了吧"
+    } ]
+  }, {
+    "tStartMs": 1392800,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "不管三七二十一抱着妈妈就是哭"
+    } ]
+  }, {
+    "tStartMs": 1395466,
+    "dDurationMs": 3134,
+    "segs": [ {
+      "utf8": "爸爸在旁边看他一开始一动不动"
+    } ]
+  }, {
+    "tStartMs": 1398600,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "突然这样哭"
+    } ]
+  }, {
+    "tStartMs": 1399500,
+    "dDurationMs": 533,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 1400033,
+    "dDurationMs": 3233,
+    "segs": [ {
+      "utf8": "就把车子熄灭了跑过来安慰安慰小希"
+    } ]
+  }, {
+    "tStartMs": 1403333,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "小希就哭哭啼啼的跟妈妈爸爸"
+    } ]
+  }, {
+    "tStartMs": 1406200,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "说自己刚才经历的事情"
+    } ]
+  }, {
+    "tStartMs": 1409700,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "小希说"
+    } ]
+  }, {
+    "tStartMs": 1410400,
+    "dDurationMs": 2666,
+    "segs": [ {
+      "utf8": "平时爸妈可能会觉得自己又在说胡话"
+    } ]
+  }, {
+    "tStartMs": 1413066,
+    "dDurationMs": 3034,
+    "segs": [ {
+      "utf8": "但那时候吧就是刚经历完白事吧"
+    } ]
+  }, {
+    "tStartMs": 1416100,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "人都会有点迷信"
+    } ]
+  }, {
+    "tStartMs": 1418100,
+    "dDurationMs": 3900,
+    "segs": [ {
+      "utf8": "吓得爸妈赶紧就是带着小希"
+    } ]
+  }, {
+    "tStartMs": 1422066,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "回旁边的家里"
+    } ]
+  }, {
+    "tStartMs": 1423633,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "后来听爸爸说一大群人就是"
+    } ]
+  }, {
+    "tStartMs": 1427533,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "就在商量这事嘛"
+    } ]
+  }, {
+    "tStartMs": 1428700,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "觉得可能是外公太疼小希了"
+    } ]
+  }, {
+    "tStartMs": 1430900,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "想带他一起走舍不得他"
+    } ]
+  }, {
+    "tStartMs": 1432733,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "对等他们商量完"
+    } ]
+  }, {
+    "tStartMs": 1434666,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "小希已经哭哭啼啼的也累了"
+    } ]
+  }, {
+    "tStartMs": 1437666,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "被外婆哄睡着了"
+    } ]
+  }, {
+    "tStartMs": 1439466,
+    "dDurationMs": 2934,
+    "segs": [ {
+      "utf8": "外婆把门一关陪着小希睡了一晚上"
+    } ]
+  }, {
+    "tStartMs": 1443000,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "第二天呢他自己精神状态好一点了"
+    } ]
+  }, {
+    "tStartMs": 1446066,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "爸爸绕了个远路把他送回学校了"
+    } ]
+  }, {
+    "tStartMs": 1448633,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "这事他就说也算过去了就结束了"
+    } ]
+  }, {
+    "tStartMs": 1452033,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "对后面也没有碰过什么怪事"
+    } ]
+  }, {
+    "tStartMs": 1454200,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "那还好没出什么事"
+    } ]
+  }, {
+    "tStartMs": 1455800,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "他那个"
+    } ]
+  }, {
+    "tStartMs": 1457433,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "形象有点可怕"
+    } ]
+  }, {
+    "tStartMs": 1458633,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "对而且他们看到这个情况的时候"
+    } ]
+  }, {
+    "tStartMs": 1461000,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "他之前是"
+    } ]
+  }, {
+    "tStartMs": 1462266,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "那个灰迷了眼"
+    } ]
+  }, {
+    "tStartMs": 1463866,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "对，这是我"
+    } ]
+  }, {
+    "tStartMs": 1465133,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "绝对这段时间我太能找共情了"
+    } ]
+  }, {
+    "tStartMs": 1466800,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "你没发现我今天"
+    } ]
+  }, {
+    "tStartMs": 1467600,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "一天晚上都在揉眼睛吗"
+    } ]
+  }, {
+    "tStartMs": 1468700,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "你也会迷了眼"
+    } ]
+  }, {
+    "tStartMs": 1469900,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "我可不是"
+    } ]
+  }, {
+    "tStartMs": 1471033,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "哈哈哈我是鼻炎引发的结膜炎"
+    } ]
+  }, {
+    "tStartMs": 1473400,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "然后我眼睛狂痒啊"
+    } ]
+  }, {
+    "tStartMs": 1476433,
+    "dDurationMs": 4167,
+    "segs": [ {
+      "utf8": "哎这个上次好像也说我这边故事是"
+    } ]
+  }, {
+    "tStartMs": 1481333,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "我不记得是谁了"
+    } ]
+  }, {
+    "tStartMs": 1482700,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "嗯他是过年就是踢的别人烧的纸钱"
+    } ]
+  }, {
+    "tStartMs": 1485833,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "对对对对纸钱"
+    } ]
+  }, {
+    "tStartMs": 1487500,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "大家最好就是离远一点好吧"
+    } ]
+  }, {
+    "tStartMs": 1489600,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "是的该保持敬意肯定还是保持敬意"
+    } ]
+  }, {
+    "tStartMs": 1492300,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "嗯好这个故事到这边OK"
+    } ]
+  }, {
+    "tStartMs": 1496666,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "好下一个投稿呢"
+    } ]
+  }, {
+    "tStartMs": 1498933,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "我印象比较深"
+    } ]
+  }, {
+    "tStartMs": 1500066,
+    "dDurationMs": 4067,
+    "segs": [ {
+      "utf8": "他这个投稿啊有点恐怖又有点邪"
+    } ]
+  }, {
+    "tStartMs": 1504266,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "主要是他这个人的文笔啊"
+    } ]
+  }, {
+    "tStartMs": 1506533,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "这个鱼友的文笔啊贼好"
+    } ]
+  }, {
+    "tStartMs": 1508433,
+    "dDurationMs": 2867,
+    "segs": [ {
+      "utf8": "给我塑造出了一种年代感"
+    } ]
+  }, {
+    "tStartMs": 1511533,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "非常年代感"
+    } ]
+  }, {
+    "tStartMs": 1513600,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "这个投稿的鱼友叫星星啊，就是"
+    } ]
+  }, {
+    "tStartMs": 1517266,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "那个满天繁星的星"
+    } ]
+  }, {
+    "tStartMs": 1518900,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "因为这个文笔太好了"
+    } ]
+  }, {
+    "tStartMs": 1521700,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "下面我少有的用第一人称来叙述了"
+    } ]
+  }, {
+    "tStartMs": 1524800,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "你骗人，你上期也是这么说的哈哈哈"
+    } ]
+  }, {
+    "tStartMs": 1527133,
+    "dDurationMs": 3067,
+    "segs": [ {
+      "utf8": "真的这个真的很好，好有形象的啊"
+    } ]
+  }, {
+    "tStartMs": 1530533,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "来听一下OK"
+    } ]
+  }, {
+    "tStartMs": 1532733,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "这个开始啊"
+    } ]
+  }, {
+    "tStartMs": 1534000,
+    "dDurationMs": 3466,
+    "segs": [ {
+      "utf8": "从小我身上发生了太多的灵异事件"
+    } ]
+  }, {
+    "tStartMs": 1537466,
+    "dDurationMs": 1334,
+    "segs": [ {
+      "utf8": "真的是太多了"
+    } ]
+  }, {
+    "tStartMs": 1539300,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "因为我是早产儿"
+    } ]
+  }, {
+    "tStartMs": 1541300,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "身体很弱"
+    } ]
+  }, {
+    "tStartMs": 1542733,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "所以经常吃药"
+    } ]
+  }, {
+    "tStartMs": 1544400,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "小时候有一天呢"
+    } ]
+  }, {
+    "tStartMs": 1545733,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "我跟着外婆和小姨去一个商场买衣服"
+    } ]
+  }, {
+    "tStartMs": 1549133,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "那个商场很旧了很有年代感"
+    } ]
+  }, {
+    "tStartMs": 1552233,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "记得当时是夏天特别热"
+    } ]
+  }, {
+    "tStartMs": 1554866,
+    "dDurationMs": 2067,
+    "segs": [ {
+      "utf8": "我们去一个店里面看衣服"
+    } ]
+  }, {
+    "tStartMs": 1557200,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "我就不知道为什么"
+    } ]
+  }, {
+    "tStartMs": 1558533,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "莫名跟着一个女的走了"
+    } ]
+  }, {
+    "tStartMs": 1561200,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "印象中那个女的呢"
+    } ]
+  }, {
+    "tStartMs": 1562466,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "穿的特别像电影"
+    } ]
+  }, {
+    "tStartMs": 1564433,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "电视里面的那种明星一样"
+    } ]
+  }, {
+    "tStartMs": 1567400,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "化着浓妆大红唇"
+    } ]
+  }, {
+    "tStartMs": 1569833,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "还跟我说"
+    } ]
+  }, {
+    "tStartMs": 1571266,
+    "dDurationMs": 1734,
+    "segs": [ {
+      "utf8": "跟我走跟我走"
+    } ]
+  }, {
+    "tStartMs": 1573200,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 1573833,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "她说我是你小姨"
+    } ]
+  }, {
+    "tStartMs": 1576533,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "我当时就犯迷糊了"
+    } ]
+  }, {
+    "tStartMs": 1578100,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "不知道为什么"
+    } ]
+  }, {
+    "tStartMs": 1579133,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "就觉得这个漂亮的姐姐真的是我小姨"
+    } ]
+  }, {
+    "tStartMs": 1582533,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "因为我爸妈一直在外面做生意嘛"
+    } ]
+  }, {
+    "tStartMs": 1584500,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "嗯所以家里面只有小姨愿意跟我玩"
+    } ]
+  }, {
+    "tStartMs": 1586900,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "我很喜欢小姨"
+    } ]
+  }, {
+    "tStartMs": 1588633,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "当时我听到外婆在后面叫我过去"
+    } ]
+  }, {
+    "tStartMs": 1591533,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "当我当然我没有理会她"
+    } ]
+  }, {
+    "tStartMs": 1594800,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "继续跟着这个女漂亮的姐姐往前走"
+    } ]
+  }, {
+    "tStartMs": 1597833,
+    "dDurationMs": 3367,
+    "segs": [ {
+      "utf8": "后来啊小姨衣服都没换就跑过来"
+    } ]
+  }, {
+    "tStartMs": 1601533,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "就把我一把抱住问我怎么了"
+    } ]
+  }, {
+    "tStartMs": 1604233,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "怎么这么不听话一直往里面走"
+    } ]
+  }, {
+    "tStartMs": 1608133,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "然后我记得我就跟小姨说我说"
+    } ]
+  }, {
+    "tStartMs": 1610900,
+    "dDurationMs": 3166,
+    "segs": [ {
+      "utf8": "这边怪冷的，是空调开的很低吗"
+    } ]
+  }, {
+    "tStartMs": 1614100,
+    "dDurationMs": 2366,
+    "segs": [ {
+      "utf8": "就是答非所问。然后我"
+    } ]
+  }, {
+    "tStartMs": 1616466,
+    "dDurationMs": 3334,
+    "segs": [ {
+      "utf8": "说：「小姨你看，那边还有一个漂亮的小姨！」"
+    } ]
+  }, {
+    "tStartMs": 1620200,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "小姨以为我在胡说八道"
+    } ]
+  }, {
+    "tStartMs": 1621666,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "我却说里面有个姐姐，里面有个姐姐"
+    } ]
+  }, {
+    "tStartMs": 1624200,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "然后外婆跟小姨都没有说话"
+    } ]
+  }, {
+    "tStartMs": 1627533,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "小姨听完我说的就把我抱回家了"
+    } ]
+  }, {
+    "tStartMs": 1629833,
+    "dDurationMs": 1067,
+    "segs": [ {
+      "utf8": "衣服也没有买"
+    } ]
+  }, {
+    "tStartMs": 1631066,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "一路上小姨跟我都很沉默"
+    } ]
+  }, {
+    "tStartMs": 1633900,
+    "dDurationMs": 3166,
+    "segs": [ {
+      "utf8": "外婆一回家就给一个老爷爷打电话"
+    } ]
+  }, {
+    "tStartMs": 1637466,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "说的是什么我已经忘记了"
+    } ]
+  }, {
+    "tStartMs": 1639300,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "但一回家我就开始哭"
+    } ]
+  }, {
+    "tStartMs": 1641333,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "外婆好不容易把我哄睡着了"
+    } ]
+  }, {
+    "tStartMs": 1644233,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "当天晚上我就发烧了"
+    } ]
+  }, {
+    "tStartMs": 1646333,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "那天凌晨呢"
+    } ]
+  }, {
+    "tStartMs": 1648733,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "我听我的外婆"
+    } ]
+  }, {
+    "tStartMs": 1650433,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "还是在跟白天打电话的老爷爷说什么"
+    } ]
+  }, {
+    "tStartMs": 1653833,
+    "dDurationMs": 2833,
+    "segs": [ {
+      "utf8": "但是烧的迷迷糊糊的根本听不清"
+    } ]
+  }, {
+    "tStartMs": 1657266,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "小姨就坐在我旁边拍着我的心口说"
+    } ]
+  }, {
+    "tStartMs": 1660400,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "啊没事的没事的"
+    } ]
+  }, {
+    "tStartMs": 1661600,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "星星会好的，星星会好的"
+    } ]
+  }, {
+    "tStartMs": 1664066,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "后来呢，奶奶把小姨叫出去了"
+    } ]
+  }, {
+    "tStartMs": 1666733,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "我一个人躺在床上"
+    } ]
+  }, {
+    "tStartMs": 1668433,
+    "dDurationMs": 3800,
+    "segs": [ {
+      "utf8": "就看见白天的那个女人坐在我的床边"
+    } ]
+  }, {
+    "tStartMs": 1672333,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "转过头边笑边说：走呀"
+    } ]
+  }, {
+    "tStartMs": 1675700,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "我带你去找妈妈呀"
+    } ]
+  }, {
+    "tStartMs": 1677700,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "她笑的很诡异"
+    } ]
+  }, {
+    "tStartMs": 1679466,
+    "dDurationMs": 1534,
+    "segs": [ {
+      "utf8": "我吓得叫出来了"
+    } ]
+  }, {
+    "tStartMs": 1681033,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "然后外婆跟小姨他们都进来了"
+    } ]
+  }, {
+    "tStartMs": 1683500,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "那个爷爷也来了"
+    } ]
+  }, {
+    "tStartMs": 1684433,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "进来之后呢就盯着我看"
+    } ]
+  }, {
+    "tStartMs": 1686600,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "那一瞬间我就很害怕就哇哇大哭"
+    } ]
+  }, {
+    "tStartMs": 1689433,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "他见状出去了一会"
+    } ]
+  }, {
+    "tStartMs": 1691733,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "再进来的时候给了我一张符"
+    } ]
+  }, {
+    "tStartMs": 1694300,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "跟我说"
+    } ]
+  }, {
+    "tStartMs": 1696133,
+    "dDurationMs": 2067,
+    "segs": [ {
+      "utf8": "应该这里应该是用那个方言"
+    } ]
+  }, {
+    "tStartMs": 1698200,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "我不太会啊就是说「妮啊」"
+    } ]
+  }, {
+    "tStartMs": 1700333,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "就是河南吧河南还是河北的（方言）"
+    } ]
+  }, {
+    "tStartMs": 1702633,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "就你把这个符"
+    } ]
+  }, {
+    "tStartMs": 1704500,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "带在身上不能弄丢知道没有"
+    } ]
+  }, {
+    "tStartMs": 1706900,
+    "dDurationMs": 2766,
+    "segs": [ {
+      "utf8": "第二天早上烧退了一点"
+    } ]
+  }, {
+    "tStartMs": 1709933,
+    "dDurationMs": 2767,
+    "segs": [ {
+      "utf8": "外婆就带着我在这个院坝晒太阳"
+    } ]
+  }, {
+    "tStartMs": 1713133,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "晒着晒着我又看到了那天那个女人"
+    } ]
+  }, {
+    "tStartMs": 1716833,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "她还是在对我笑"
+    } ]
+  }, {
+    "tStartMs": 1718300,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "站在田野里面"
+    } ]
+  }, {
+    "tStartMs": 1720233,
+    "dDurationMs": 4033,
+    "segs": [ {
+      "utf8": "我就说，「外婆那个阿姨又来了。」"
+    } ]
+  }, {
+    "tStartMs": 1725300,
+    "dDurationMs": 3366,
+    "segs": [ {
+      "utf8": "然后外婆呢就起身把我往屋子里面抱"
+    } ]
+  }, {
+    "tStartMs": 1729100,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "她问我你符咒放哪了"
+    } ]
+  }, {
+    "tStartMs": 1730600,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "我说在枕头下面"
+    } ]
+  }, {
+    "tStartMs": 1732466,
+    "dDurationMs": 2467,
+    "segs": [ {
+      "utf8": "他就把符咒着让我握在手里面"
+    } ]
+  }, {
+    "tStartMs": 1735266,
+    "dDurationMs": 2534,
+    "segs": [ {
+      "utf8": "小姨呢就从楼上跑下来抱着我"
+    } ]
+  }, {
+    "tStartMs": 1738200,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "给我唱歌安慰我"
+    } ]
+  }, {
+    "tStartMs": 1739800,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "大概半小时"
+    } ]
+  }, {
+    "tStartMs": 1741233,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "然后那个爷爷又来了"
+    } ]
+  }, {
+    "tStartMs": 1742833,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "跟我说「你啊，晚上你早点睡觉。」"
+    } ]
+  }, {
+    "tStartMs": 1745266,
+    "dDurationMs": 1334,
+    "segs": [ {
+      "utf8": "「听到什么都不要发出声音！」"
+    } ]
+  }, {
+    "tStartMs": 1746600,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "「知不知道？今天晚上没有人陪你。」"
+    } ]
+  }, {
+    "tStartMs": 1749833,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "我从小就胆子特别小"
+    } ]
+  }, {
+    "tStartMs": 1751800,
+    "dDurationMs": 2833,
+    "segs": [ {
+      "utf8": "我就问外婆啊妈妈会回来吗"
+    } ]
+  }, {
+    "tStartMs": 1754933,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "外婆说妈妈他们回来回来的路上了"
+    } ]
+  }, {
+    "tStartMs": 1757500,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "你不要害怕"
+    } ]
+  }, {
+    "tStartMs": 1759400,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "然后那天下午"
+    } ]
+  }, {
+    "tStartMs": 1761133,
+    "dDurationMs": 1767,
+    "segs": [ {
+      "utf8": "整个下午只有小姨抱着我"
+    } ]
+  }, {
+    "tStartMs": 1762900,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "唱了一遍又一遍的歌"
+    } ]
+  }, {
+    "tStartMs": 1765000,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "一直到8点钟的时候"
+    } ]
+  }, {
+    "tStartMs": 1766400,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "外婆煮了汤圆给我吃"
+    } ]
+  }, {
+    "tStartMs": 1768633,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "让我吃完就睡觉"
+    } ]
+  }, {
+    "tStartMs": 1770400,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "但是我全身都没有力气"
+    } ]
+  }, {
+    "tStartMs": 1772266,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "感觉特别特别冷浑身轻飘飘的"
+    } ]
+  }, {
+    "tStartMs": 1775033,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "吃了一半的时候"
+    } ]
+  }, {
+    "tStartMs": 1776400,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "以前一起和我玩的那些小朋友啊"
+    } ]
+  }, {
+    "tStartMs": 1778733,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "就跑过来找我玩"
+    } ]
+  }, {
+    "tStartMs": 1780333,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "外婆把他们吼走了"
+    } ]
+  }, {
+    "tStartMs": 1781833,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "要知道"
+    } ]
+  }, {
+    "tStartMs": 1782533,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "外婆平时对这些小朋友都很温柔的"
+    } ]
+  }, {
+    "tStartMs": 1785733,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "说话呢也轻声细语的"
+    } ]
+  }, {
+    "tStartMs": 1788033,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "今天晚上她特别反常"
+    } ]
+  }, {
+    "tStartMs": 1790733,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "晚上我一个人躺在床上睡觉的时候"
+    } ]
+  }, {
+    "tStartMs": 1793133,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "眼睛紧闭着不敢睁开"
+    } ]
+  }, {
+    "tStartMs": 1795333,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "但是那个女人的这个形象啊"
+    } ]
+  }, {
+    "tStartMs": 1797466,
+    "dDurationMs": 2467,
+    "segs": [ {
+      "utf8": "在我脑海里面浮现出来了"
+    } ]
+  }, {
+    "tStartMs": 1800100,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "还是对我笑嘻嘻的样子"
+    } ]
+  }, {
+    "tStartMs": 1803000,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "后来我睡的迷迷糊糊的时候"
+    } ]
+  }, {
+    "tStartMs": 1804900,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "就感觉有人在敲门"
+    } ]
+  }, {
+    "tStartMs": 1806400,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "我本来呢想去开"
+    } ]
+  }, {
+    "tStartMs": 1807500,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "又想起了那个爷爷说的话"
+    } ]
+  }, {
+    "tStartMs": 1809600,
+    "dDurationMs": 1066,
+    "segs": [ {
+      "utf8": "我就没有开"
+    } ]
+  }, {
+    "tStartMs": 1810933,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "就紧闭着眼睛继续睡觉"
+    } ]
+  }, {
+    "tStartMs": 1813066,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "希望自己能够赶紧睡着"
+    } ]
+  }, {
+    "tStartMs": 1815600,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "然后我就听到有个人喊我"
+    } ]
+  }, {
+    "tStartMs": 1817400,
+    "dDurationMs": 866,
+    "segs": [ {
+      "utf8": "让我给她开门"
+    } ]
+  }, {
+    "tStartMs": 1818266,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "她说我是妈妈"
+    } ]
+  }, {
+    "tStartMs": 1820500,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "我还是很害怕"
+    } ]
+  }, {
+    "tStartMs": 1821500,
+    "dDurationMs": 966,
+    "segs": [ {
+      "utf8": "因为我知道"
+    } ]
+  }, {
+    "tStartMs": 1822633,
+    "dDurationMs": 3167,
+    "segs": [ {
+      "utf8": "妈妈如果有这个回来的情况啊"
+    } ]
+  }, {
+    "tStartMs": 1825800,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "她会先告诉外婆的"
+    } ]
+  }, {
+    "tStartMs": 1827866,
+    "dDurationMs": 1634,
+    "segs": [ {
+      "utf8": "我就感到门外的女人"
+    } ]
+  }, {
+    "tStartMs": 1829500,
+    "dDurationMs": 2166,
+    "segs": [ {
+      "utf8": "因为我不开门开始生气了"
+    } ]
+  }, {
+    "tStartMs": 1831733,
+    "dDurationMs": 3667,
+    "segs": [ {
+      "utf8": "出现那种气急败坏的声音大吼："
+    } ]
+  }, {
+    "tStartMs": 1835400,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "你再不开门我生气了"
+    } ]
+  }, {
+    "tStartMs": 1837200,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "我还是没去理她"
+    } ]
+  }, {
+    "tStartMs": 1839033,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "虽然当时是夏天"
+    } ]
+  }, {
+    "tStartMs": 1840700,
+    "dDurationMs": 2733,
+    "segs": [ {
+      "utf8": "但是我感觉屋子里面越来越冷"
+    } ]
+  }, {
+    "tStartMs": 1843800,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "后来我听见有人在房子里走来走去"
+    } ]
+  }, {
+    "tStartMs": 1847033,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "没几分钟脚不停了"
+    } ]
+  }, {
+    "tStartMs": 1849400,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "我有一种被人盯着的感觉"
+    } ]
+  }, {
+    "tStartMs": 1852033,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "听到一个声音说，「还是跟我走吧」"
+    } ]
+  }, {
+    "tStartMs": 1854733,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "我带你去找奶奶"
+    } ]
+  }, {
+    "tStartMs": 1858000,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "这个声音啊"
+    } ]
+  }, {
+    "tStartMs": 1859100,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "就是最早我在商场里面"
+    } ]
+  }, {
+    "tStartMs": 1861500,
+    "dDurationMs": 1766,
+    "segs": [ {
+      "utf8": "看到的那个女人的声音"
+    } ]
+  }, {
+    "tStartMs": 1863466,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "她一直在我耳边重复这句话"
+    } ]
+  }, {
+    "tStartMs": 1865700,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "当时我已经意识到这个女人"
+    } ]
+  }, {
+    "tStartMs": 1868466,
+    "dDurationMs": 1234,
+    "segs": [ {
+      "utf8": "估计是女鬼了"
+    } ]
+  }, {
+    "tStartMs": 1869900,
+    "dDurationMs": 1966,
+    "segs": [ {
+      "utf8": "但是我不知道她到底要不要害我"
+    } ]
+  }, {
+    "tStartMs": 1871866,
+    "dDurationMs": 934,
+    "segs": [ {
+      "utf8": "还是怎么的"
+    } ]
+  }, {
+    "tStartMs": 1873266,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "后来我逐渐意识模糊"
+    } ]
+  }, {
+    "tStartMs": 1875633,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "可能是睡过去的"
+    } ]
+  }, {
+    "tStartMs": 1877100,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "也可能是那种魂魄离体"
+    } ]
+  }, {
+    "tStartMs": 1879866,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "我感觉整个人都轻飘飘的"
+    } ]
+  }, {
+    "tStartMs": 1882300,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "但我脑海里面始终有一个画面"
+    } ]
+  }, {
+    "tStartMs": 1885000,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "就是我在寺庙里面拜菩萨"
+    } ]
+  }, {
+    "tStartMs": 1888400,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "一直到天蒙蒙亮"
+    } ]
+  }, {
+    "tStartMs": 1890233,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "妈妈打开我的房间门进来"
+    } ]
+  }, {
+    "tStartMs": 1892266,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "抱着我一直哭"
+    } ]
+  }, {
+    "tStartMs": 1893800,
+    "dDurationMs": 2866,
+    "segs": [ {
+      "utf8": "然后还不停的说是我的错是我的错"
+    } ]
+  }, {
+    "tStartMs": 1896800,
+    "dDurationMs": 2266,
+    "segs": [ {
+      "utf8": "我当时也不知道妈妈是怎么了"
+    } ]
+  }, {
+    "tStartMs": 1899133,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "我也跟着她哭了"
+    } ]
+  }, {
+    "tStartMs": 1901033,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "然后那个爷爷在外面呢就跟外婆说"
+    } ]
+  }, {
+    "tStartMs": 1903900,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "你家女儿厉害呢"
+    } ]
+  }, {
+    "tStartMs": 1906000,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "昨天晚上啊是菩萨在保佑他"
+    } ]
+  }, {
+    "tStartMs": 1908600,
+    "dDurationMs": 1666,
+    "segs": [ {
+      "utf8": "你赶紧让他父母去烧香"
+    } ]
+  }, {
+    "tStartMs": 1910533,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "让那个女鬼啊别再缠着孩子了"
+    } ]
+  }, {
+    "tStartMs": 1913133,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "也让这个孩子啊好好去谢谢菩萨"
+    } ]
+  }, {
+    "tStartMs": 1916633,
+    "dDurationMs": 1867,
+    "segs": [ {
+      "utf8": "然后我父母就带着我去烧香了"
+    } ]
+  }, {
+    "tStartMs": 1918666,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "也就是那天之后"
+    } ]
+  }, {
+    "tStartMs": 1920400,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "那个声音和那个女鬼再也没有出现"
+    } ]
+  }, {
+    "tStartMs": 1924066,
+    "dDurationMs": 1534,
+    "segs": [ {
+      "utf8": "我睡觉都很安稳"
+    } ]
+  }, {
+    "tStartMs": 1926000,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "然后我过了几年才知道啊"
+    } ]
+  }, {
+    "tStartMs": 1928266,
+    "dDurationMs": 1534,
+    "segs": [ {
+      "utf8": "这个事情是什么原因呢"
+    } ]
+  }, {
+    "tStartMs": 1929866,
+    "dDurationMs": 2934,
+    "segs": [ {
+      "utf8": "隔壁村的一个女人一直和我家有仇"
+    } ]
+  }, {
+    "tStartMs": 1933400,
+    "dDurationMs": 2733,
+    "segs": [ {
+      "utf8": "我妈怀上孩子之后啊她当时没怀上"
+    } ]
+  }, {
+    "tStartMs": 1936333,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "后来好不容易怀上了"
+    } ]
+  }, {
+    "tStartMs": 1937833,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "出生几天又夭折了"
+    } ]
+  }, {
+    "tStartMs": 1939700,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "她就一直被这个事情打击"
+    } ]
+  }, {
+    "tStartMs": 1941666,
+    "dDurationMs": 1934,
+    "segs": [ {
+      "utf8": "一直到变得疯疯癫癫的"
+    } ]
+  }, {
+    "tStartMs": 1944666,
+    "dDurationMs": 1134,
+    "segs": [ {
+      "utf8": "持续了一段时间之后"
+    } ]
+  }, {
+    "tStartMs": 1945800,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "不知道什么原因死掉了"
+    } ]
+  }, {
+    "tStartMs": 1947833,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "估计死后是有怨气一直缠着我"
+    } ]
+  }, {
+    "tStartMs": 1950933,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "故事到这边就结束了"
+    } ]
+  }, {
+    "tStartMs": 1952133,
+    "dDurationMs": 1867,
+    "segs": [ {
+      "utf8": "哦。好顶！"
+    } ]
+  }, {
+    "tStartMs": 1954033,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "很有年代感的一个故事"
+    } ]
+  }, {
+    "tStartMs": 1956133,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "就是他给我塑造的一种画面"
+    } ]
+  }, {
+    "tStartMs": 1958400,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "就是那种"
+    } ]
+  }, {
+    "tStartMs": 1959600,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "可能是80年代或者70年代的那种商场"
+    } ]
+  }, {
+    "tStartMs": 1962900,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "要用粮票的那种商场"
+    } ]
+  }, {
+    "tStartMs": 1965233,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "他主要，他的文笔给我很有画面感"
+    } ]
+  }, {
+    "tStartMs": 1968733,
+    "dDurationMs": 3933,
+    "segs": [ {
+      "utf8": "对对！几个女人在田野里面啊。对对对"
+    } ]
+  }, {
+    "tStartMs": 1972666,
+    "dDurationMs": 3834,
+    "segs": [ {
+      "utf8": "或者在房门外面就是让他出来之类的"
+    } ]
+  }, {
+    "tStartMs": 1976500,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "是的，画面感很强"
+    } ]
+  }, {
+    "tStartMs": 1978233,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "是的是。压迫感也很强"
+    } ]
+  }, {
+    "tStartMs": 1979933,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "我靠这个对"
+    } ]
+  }, {
+    "tStartMs": 1980900,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "而且他投过来了"
+    } ]
+  }, {
+    "tStartMs": 1983133,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "基本上都是书面语言"
+    } ]
+  }, {
+    "tStartMs": 1984266,
+    "dDurationMs": 534,
+    "segs": [ {
+      "utf8": "他不像我"
+    } ]
+  }, {
+    "tStartMs": 1984800,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "很多时候"
+    } ]
+  }, {
+    "tStartMs": 1985600,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "大家投稿是那种口语化的东西"
+    } ]
+  }, {
+    "tStartMs": 1987800,
+    "dDurationMs": 2266,
+    "segs": [ {
+      "utf8": "我要去整理然后把逻辑理顺"
+    } ]
+  }, {
+    "tStartMs": 1990066,
+    "dDurationMs": 3267,
+    "segs": [ {
+      "utf8": "理的过程中如果遇到如果遇到一些"
+    } ]
+  }, {
+    "tStartMs": 1993633,
+    "dDurationMs": 767,
+    "segs": [ {
+      "utf8": "逻辑不通的地方"
+    } ]
+  }, {
+    "tStartMs": 1994400,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "我要去跟投稿的鱼友来问说"
+    } ]
+  }, {
+    "tStartMs": 1997033,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "你这边大概是什么情况"
+    } ]
+  }, {
+    "tStartMs": 1998200,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "大概什么情况"
+    } ]
+  }, {
+    "tStartMs": 1999466,
+    "dDurationMs": 1034,
+    "segs": [ {
+      "utf8": "你停止攻击"
+    } ]
+  }, {
+    "tStartMs": 2000600,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "攻击其他粉丝好不好"
+    } ]
+  }, {
+    "tStartMs": 2002500,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "没有没有就是我都我觉得都挺好的"
+    } ]
+  }, {
+    "tStartMs": 2005500,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "对但是他这个投稿呢"
+    } ]
+  }, {
+    "tStartMs": 2006933,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "就是给我营造的这种年代的画面感"
+    } ]
+  }, {
+    "tStartMs": 2009900,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "太深刻了"
+    } ]
+  }, {
+    "tStartMs": 2010933,
+    "dDurationMs": 267,
+    "segs": [ {
+      "utf8": "是的"
+    } ]
+  }, {
+    "tStartMs": 2011200,
+    "dDurationMs": 3533,
+    "segs": [ {
+      "utf8": "我就想到了那个那种不能说的年代"
+    } ]
+  }, {
+    "tStartMs": 2014833,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "然后出的这种事情"
+    } ]
+  }, {
+    "tStartMs": 2016333,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "哎小孩子碰小孩子碰到这种"
+    } ]
+  }, {
+    "tStartMs": 2019733,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "给人一种就是像拐卖的感觉"
+    } ]
+  }, {
+    "tStartMs": 2022066,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "就更恐怖了"
+    } ]
+  }, {
+    "tStartMs": 2023533,
+    "dDurationMs": 867,
+    "segs": [ {
+      "utf8": "我觉得对"
+    } ]
+  }, {
+    "tStartMs": 2024700,
+    "dDurationMs": 1766,
+    "segs": [ {
+      "utf8": "而且那个时候我记得小时候啊"
+    } ]
+  }, {
+    "tStartMs": 2026466,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "就是我那个小时候"
+    } ]
+  }, {
+    "tStartMs": 2028433,
+    "dDurationMs": 2233,
+    "segs": [ {
+      "utf8": "大概 2,000年之前吧"
+    } ]
+  }, {
+    "tStartMs": 2030666,
+    "dDurationMs": 3067,
+    "segs": [ {
+      "utf8": "不经常说外面有人拐卖人"
+    } ]
+  }, {
+    "tStartMs": 2033733,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "然后他往里头顶一拍，拍个什么粉"
+    } ]
+  }, {
+    "tStartMs": 2036266,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "你就什么都不知道了"
+    } ]
+  }, {
+    "tStartMs": 2037466,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "对他中间不有一段正好就是"
+    } ]
+  }, {
+    "tStartMs": 2040433,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "呃他小姨抱着他"
+    } ]
+  }, {
+    "tStartMs": 2041900,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "嗯然后他就说那边有还有一个小姨"
+    } ]
+  }, {
+    "tStartMs": 2044933,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "就一一方面是可能是孩子他年幼"
+    } ]
+  }, {
+    "tStartMs": 2047033,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "他对人的五官的分分辨程度对"
+    } ]
+  }, {
+    "tStartMs": 2050333,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "这个还行确实"
+    } ]
+  }, {
+    "tStartMs": 2052666,
+    "dDurationMs": 2534,
+    "segs": [ {
+      "utf8": "主要好像我们经历过这个年代"
+    } ]
+  }, {
+    "tStartMs": 2055200,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "对"
+    } ]
+  }, {
+    "tStartMs": 2055833,
+    "dDurationMs": 4867,
+    "segs": [ {
+      "utf8": "好像现在可能我们住的城市比较稍微"
+    } ]
+  }, {
+    "tStartMs": 2061433,
+    "dDurationMs": 667,
+    "segs": [ {
+      "utf8": "安全一点"
+    } ]
+  }, {
+    "tStartMs": 2062100,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "对稍微安全一点"
+    } ]
+  }, {
+    "tStartMs": 2063533,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "可能"
+    } ]
+  }, {
+    "tStartMs": 2064533,
+    "dDurationMs": 2867,
+    "segs": [ {
+      "utf8": "近几年没有碰到过这种事情很少了"
+    } ]
+  }, {
+    "tStartMs": 2067400,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "其实我们小时候这种事情还挺多的"
+    } ]
+  }, {
+    "tStartMs": 2069500,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "对对，就是拐卖"
+    } ]
+  }, {
+    "tStartMs": 2070700,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "我什至记得我小时候我奶奶"
+    } ]
+  }, {
+    "tStartMs": 2073333,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "他想让我安静下来啊"
+    } ]
+  }, {
+    "tStartMs": 2074666,
+    "dDurationMs": 834,
+    "segs": [ {
+      "utf8": "他想吓唬我"
+    } ]
+  }, {
+    "tStartMs": 2075500,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "都是用说什么有人要来把你拐走了"
+    } ]
+  }, {
+    "tStartMs": 2078233,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "这种东西"
+    } ]
+  }, {
+    "tStartMs": 2078866,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "对对"
+    } ]
+  }, {
+    "tStartMs": 2080500,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "是这个故事可以啊很是的是的"
+    } ]
+  }, {
+    "tStartMs": 2083933,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "OK那今天第三个故事到这边"
+    } ]
+  }, {
+    "tStartMs": 2088833,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "好的那本期鲶鱼夜话全部的故事"
+    } ]
+  }, {
+    "tStartMs": 2091800,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "到这边就结束了啊"
+    } ]
+  }, {
+    "tStartMs": 2093800,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "我们在最后呢"
+    } ]
+  }, {
+    "tStartMs": 2095066,
+    "dDurationMs": 3267,
+    "segs": [ {
+      "utf8": "老于想说一句叫做啊我一直觉得啊"
+    } ]
+  }, {
+    "tStartMs": 2098500,
+    "dDurationMs": 4033,
+    "segs": [ {
+      "utf8": "被误解，是讲述者的一个宿命啊"
+    } ]
+  }, {
+    "tStartMs": 2102533,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "我其实也能理解"
+    } ]
+  }, {
+    "tStartMs": 2104000,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "因为毕竟是每个人心中都有他自己的"
+    } ]
+  }, {
+    "tStartMs": 2107466,
+    "dDurationMs": 834,
+    "segs": [ {
+      "utf8": "鲶鱼夜话"
+    } ]
+  }, {
+    "tStartMs": 2108333,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "我希望鲶鱼呢"
+    } ]
+  }, {
+    "tStartMs": 2109333,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "最终能做到的是"
+    } ]
+  }, {
+    "tStartMs": 2111000,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "陪伴大家度过一段岁月"
+    } ]
+  }, {
+    "tStartMs": 2113533,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "一段时光"
+    } ]
+  }, {
+    "tStartMs": 2114466,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "可能在"
+    } ]
+  }, {
+    "tStartMs": 2115666,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "这个五年、十年甚至更长的时间啊"
+    } ]
+  }, {
+    "tStartMs": 2119066,
+    "dDurationMs": 1934,
+    "segs": [ {
+      "utf8": "你跟你的孩子啊说啊"
+    } ]
+  }, {
+    "tStartMs": 2121000,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "之前我听鲶鱼夜话啊"
+    } ]
+  }, {
+    "tStartMs": 2123133,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "跟这个"
+    } ]
+  }, {
+    "tStartMs": 2125733,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "老于叔叔"
+    } ]
+  }, {
+    "tStartMs": 2128100,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "小妙哥哥"
+    } ]
+  }, {
+    "tStartMs": 2129900,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "然后，辈分好像立马就上来了"
+    } ]
+  }, {
+    "tStartMs": 2132200,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "度过了一段解压的岁月"
+    } ]
+  }, {
+    "tStartMs": 2135066,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "升华了。 OK OK不闹了啊"
+    } ]
+  }, {
+    "tStartMs": 2137266,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": " "
+    } ]
+  }, {
+    "tStartMs": 2138066,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "欢迎大家继续对我们的关注和支持"
+    } ]
+  }, {
+    "tStartMs": 2141100,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "也欢迎您随时把您身边发生的"
+    } ]
+  }, {
+    "tStartMs": 2144033,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "适合在夜里说的奇事、怪事和邪事"
+    } ]
+  }, {
+    "tStartMs": 2146666,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "给我们投稿"
+    } ]
+  }, {
+    "tStartMs": 2147666,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "任何一个可以联系到鲶鱼的平台"
+    } ]
+  }, {
+    "tStartMs": 2150000,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "都可以向我们私信投稿"
+    } ]
+  }, {
+    "tStartMs": 2152633,
+    "dDurationMs": 2467,
+    "segs": [ {
+      "utf8": "那今天的夜话到这边，拜拜！拜拜！"
+    } ]
+  } ]
+}

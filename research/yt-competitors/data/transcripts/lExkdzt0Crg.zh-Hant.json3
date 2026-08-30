@@ -1,0 +1,5671 @@
+{
+  "wireMagic": "pb3",
+  "pens": [ {
+  
+  } ],
+  "wsWinStyles": [ {
+  
+  } ],
+  "wpWinPositions": [ {
+  
+  } ],
+  "events": [ {
+    "tStartMs": 15200,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "歡迎收聽"
+    } ]
+  }, {
+    "tStartMs": 15833,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "由鯰魚志為您帶來的鯰魚夜話節目"
+    } ]
+  }, {
+    "tStartMs": 18400,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "如果您有一些適合在夜裡說的奇事、"
+    } ]
+  }, {
+    "tStartMs": 20800,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "怪事、邪事"
+    } ]
+  }, {
+    "tStartMs": 22100,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "歡迎投給小編"
+    } ]
+  }, {
+    "tStartMs": 23333,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "我是鯰魚夜話的老於"
+    } ]
+  }, {
+    "tStartMs": 24900,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "我是妙妙"
+    } ]
+  }, {
+    "tStartMs": 25933,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "下面開始今天的夜話"
+    } ]
+  }, {
+    "tStartMs": 28333,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "親愛的友友們大家好"
+    } ]
+  }, {
+    "tStartMs": 29833,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "錄這一期節目的時候呢"
+    } ]
+  }, {
+    "tStartMs": 31333,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "是老於鼻炎最嚴重的一個階段"
+    } ]
+  }, {
+    "tStartMs": 34033,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "是兩個鼻子都是沒有辦法呼吸的"
+    } ]
+  }, {
+    "tStartMs": 36733,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "所以鼻音非常非常嚴重"
+    } ]
+  }, {
+    "tStartMs": 38800,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "也請大家見諒吧"
+    } ]
+  }, {
+    "tStartMs": 40900,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "給大家帶來的不好的視聽感受"
+    } ]
+  }, {
+    "tStartMs": 43233,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "真的道個歉"
+    } ]
+  }, {
+    "tStartMs": 45500,
+    "dDurationMs": 3033,
+    "segs": [ {
+      "utf8": "妙老師那個時候也是陽性剛恢復"
+    } ]
+  }, {
+    "tStartMs": 48700,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "所以我們倆的狀態也都比較"
+    } ]
+  }, {
+    "tStartMs": 51200,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "比較差一些啊"
+    } ]
+  }, {
+    "tStartMs": 52666,
+    "dDurationMs": 2134,
+    "segs": [ {
+      "utf8": "請大家多多包涵啊"
+    } ]
+  }, {
+    "tStartMs": 54800,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "確實是為了不斷更"
+    } ]
+  }, {
+    "tStartMs": 56133,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "我們堅持在錄音這個事情"
+    } ]
+  }, {
+    "tStartMs": 60800,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "大家好歡迎收聽本期夜話"
+    } ]
+  }, {
+    "tStartMs": 62933,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "我是被生活虐待千百遍"
+    } ]
+  }, {
+    "tStartMs": 65266,
+    "dDurationMs": 1934,
+    "segs": [ {
+      "utf8": "依舊保持深愛的老於"
+    } ]
+  }, {
+    "tStartMs": 67666,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "我是又菜又愛玩的妙妙"
+    } ]
+  }, {
+    "tStartMs": 69866,
+    "dDurationMs": 1134,
+    "segs": [ {
+      "utf8": "那你是蠻菜的"
+    } ]
+  }, {
+    "tStartMs": 71000,
+    "dDurationMs": 1466,
+    "segs": [ {
+      "utf8": "對啊哦"
+    } ]
+  }, {
+    "tStartMs": 72733,
+    "dDurationMs": 867,
+    "segs": [ {
+      "utf8": "好我們來"
+    } ]
+  }, {
+    "tStartMs": 73600,
+    "dDurationMs": 866,
+    "segs": [ {
+      "utf8": "今天夜話之前呢"
+    } ]
+  }, {
+    "tStartMs": 74466,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "又進入我們傳統的廢話環節啊"
+    } ]
+  }, {
+    "tStartMs": 77133,
+    "dDurationMs": 267,
+    "segs": [ {
+      "utf8": "哎"
+    } ]
+  }, {
+    "tStartMs": 77400,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "妙是你不知道有沒有聽過一個故事啊"
+    } ]
+  }, {
+    "tStartMs": 79233,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "一個說法叫做鬼故事不能過百"
+    } ]
+  }, {
+    "tStartMs": 82333,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "過百之後就會成真"
+    } ]
+  }, {
+    "tStartMs": 84666,
+    "dDurationMs": 1034,
+    "segs": [ {
+      "utf8": "鬼故事不能過"
+    } ]
+  }, {
+    "tStartMs": 85700,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "什麼過百"
+    } ]
+  }, {
+    "tStartMs": 86700,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "一百一兩百的百"
+    } ]
+  }, {
+    "tStartMs": 88200,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "就說鬼故事或者拍鬼故事"
+    } ]
+  }, {
+    "tStartMs": 90300,
+    "dDurationMs": 2766,
+    "segs": [ {
+      "utf8": "嗯或者寫鬼故事不能超過100個"
+    } ]
+  }, {
+    "tStartMs": 93233,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "超過了就會成真"
+    } ]
+  }, {
+    "tStartMs": 94266,
+    "dDurationMs": 667,
+    "segs": [ {
+      "utf8": "我們多少個"
+    } ]
+  }, {
+    "tStartMs": 94933,
+    "dDurationMs": 1067,
+    "segs": [ {
+      "utf8": "我們不止100個了"
+    } ]
+  }, {
+    "tStartMs": 96000,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "你想我們現在快50期了"
+    } ]
+  }, {
+    "tStartMs": 97533,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "我們一期至少3個，每次3-4個嘛"
+    } ]
+  }, {
+    "tStartMs": 99700,
+    "dDurationMs": 966,
+    "segs": [ {
+      "utf8": "早就過百了"
+    } ]
+  }, {
+    "tStartMs": 100666,
+    "dDurationMs": 2034,
+    "segs": [ {
+      "utf8": "所以你才會用到遇到那些"
+    } ]
+  }, {
+    "tStartMs": 102700,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "我不會啊我很好啊"
+    } ]
+  }, {
+    "tStartMs": 104733,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "這是我是最近看那個怪談新耳袋"
+    } ]
+  }, {
+    "tStartMs": 107533,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "然後他上面講的"
+    } ]
+  }, {
+    "tStartMs": 109200,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "完了我剛才是不是又笑了"
+    } ]
+  }, {
+    "tStartMs": 111000,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "是的我不笑我不笑"
+    } ]
+  }, {
+    "tStartMs": 112400,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "這個是笑我們彼此啊"
+    } ]
+  }, {
+    "tStartMs": 114100,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "好好好然後最後我說一下呢"
+    } ]
+  }, {
+    "tStartMs": 116900,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "呃最近會有一些"
+    } ]
+  }, {
+    "tStartMs": 118333,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "同質性的故事開始投稿"
+    } ]
+  }, {
+    "tStartMs": 120733,
+    "dDurationMs": 100,
+    "segs": [ {
+      "utf8": "就"
+    } ]
+  }, {
+    "tStartMs": 120833,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "可能我們現在鯰魚粉絲越來越多了嘛"
+    } ]
+  }, {
+    "tStartMs": 123633,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "投稿的這個故事啊"
+    } ]
+  }, {
+    "tStartMs": 125133,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "會有聽眾的底下留言啊"
+    } ]
+  }, {
+    "tStartMs": 126433,
+    "dDurationMs": 600,
+    "segs": [ {
+      "utf8": " "
+    } ]
+  }, {
+    "tStartMs": 127033,
+    "dDurationMs": 2867,
+    "segs": [ {
+      "utf8": "像我在某某大主播某某大up主"
+    } ]
+  }, {
+    "tStartMs": 129900,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "裡面聽到的故事"
+    } ]
+  }, {
+    "tStartMs": 132666,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "就覺得我們是"
+    } ]
+  }, {
+    "tStartMs": 134133,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "就覺得我們可能是抄襲啊之類的"
+    } ]
+  }, {
+    "tStartMs": 137200,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "這個我只能說啊"
+    } ]
+  }, {
+    "tStartMs": 138466,
+    "dDurationMs": 2867,
+    "segs": [ {
+      "utf8": "確實很多故事它是存在相似性的"
+    } ]
+  }, {
+    "tStartMs": 141633,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "我們沒有辦法就是"
+    } ]
+  }, {
+    "tStartMs": 144200,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "去規定粉絲投什麼樣的稿子對吧"
+    } ]
+  }, {
+    "tStartMs": 146500,
+    "dDurationMs": 2933,
+    "segs": [ {
+      "utf8": "嗯。而且我們更沒有辦法去規定"
+    } ]
+  }, {
+    "tStartMs": 149700,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "你這個稿子只能給鯰魚投"
+    } ]
+  }, {
+    "tStartMs": 152866,
+    "dDurationMs": 934,
+    "segs": [ {
+      "utf8": "很多人"
+    } ]
+  }, {
+    "tStartMs": 153800,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "他可能已經給一些大的網站"
+    } ]
+  }, {
+    "tStartMs": 156333,
+    "dDurationMs": 767,
+    "segs": [ {
+      "utf8": "或者是平台"
+    } ]
+  }, {
+    "tStartMs": 157100,
+    "dDurationMs": 3233,
+    "segs": [ {
+      "utf8": "或者是up主或者是主播投過了"
+    } ]
+  }, {
+    "tStartMs": 160733,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "那他們用沒用我不知道"
+    } ]
+  }, {
+    "tStartMs": 161900,
+    "dDurationMs": 1966,
+    "segs": [ {
+      "utf8": "因為他們的節目都一兩百期啊"
+    } ]
+  }, {
+    "tStartMs": 164066,
+    "dDurationMs": 3067,
+    "segs": [ {
+      "utf8": "瀏覽量太大了"
+    } ]
+  }, {
+    "tStartMs": 167200,
+    "dDurationMs": 1666,
+    "segs": [ {
+      "utf8": "沒有這個能力去就是……"
+    } ]
+  }, {
+    "tStartMs": 168866,
+    "dDurationMs": 2867,
+    "segs": [ {
+      "utf8": "對對對，所以呢，我希望的是啊"
+    } ]
+  }, {
+    "tStartMs": 171733,
+    "dDurationMs": 3167,
+    "segs": [ {
+      "utf8": "我也懇請以後投稿的各位魚友啊"
+    } ]
+  }, {
+    "tStartMs": 175033,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "如果您的這個故事"
+    } ]
+  }, {
+    "tStartMs": 176400,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "已經投稿給其他節目了"
+    } ]
+  }, {
+    "tStartMs": 178933,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "請您告知鯰魚一下"
+    } ]
+  }, {
+    "tStartMs": 181433,
+    "dDurationMs": 2233,
+    "segs": [ {
+      "utf8": "因為我們如果使要使用您的稿子的話"
+    } ]
+  }, {
+    "tStartMs": 183666,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "肯定會提前在節目裡說"
+    } ]
+  }, {
+    "tStartMs": 185833,
+    "dDurationMs": 3433,
+    "segs": [ {
+      "utf8": "就像小六的那期節目會說這是in核"
+    } ]
+  }, {
+    "tStartMs": 189633,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "在in核投過稿子的"
+    } ]
+  }, {
+    "tStartMs": 191466,
+    "dDurationMs": 2734,
+    "segs": [ {
+      "utf8": "也只有她目前是跟我說過。"
+    } ]
+  }, {
+    "tStartMs": 194700,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "我才會得到提前的反饋"
+    } ]
+  }, {
+    "tStartMs": 196866,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "嗯！但確實最近有有一些節目下面"
+    } ]
+  }, {
+    "tStartMs": 199733,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "會有粉絲留言說"
+    } ]
+  }, {
+    "tStartMs": 201133,
+    "dDurationMs": 3667,
+    "segs": [ {
+      "utf8": "你這個故事跟某某主播啊的故事很像"
+    } ]
+  }, {
+    "tStartMs": 204800,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "嗯。我還真去聽了"
+    } ]
+  }, {
+    "tStartMs": 206466,
+    "dDurationMs": 2334,
+    "segs": [ {
+      "utf8": "確實有相似性很高"
+    } ]
+  }, {
+    "tStartMs": 208866,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "對這種故事我覺得很難避免啊"
+    } ]
+  }, {
+    "tStartMs": 211833,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "是的是的"
+    } ]
+  }, {
+    "tStartMs": 212833,
+    "dDurationMs": 1767,
+    "segs": [ {
+      "utf8": "所以呢，最後啊"
+    } ]
+  }, {
+    "tStartMs": 214600,
+    "dDurationMs": 2866,
+    "segs": [ {
+      "utf8": "我還是要感謝大家的支持和厚愛"
+    } ]
+  }, {
+    "tStartMs": 217466,
+    "dDurationMs": 2834,
+    "segs": [ {
+      "utf8": "嗯請大家繼續保持投稿OK"
+    } ]
+  }, {
+    "tStartMs": 220533,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "話不多說今天的廢話就到這邊了"
+    } ]
+  }, {
+    "tStartMs": 223066,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "哈哈哈講太長了OK"
+    } ]
+  }, {
+    "tStartMs": 225900,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "話不多說，我們開始今天第一個故事"
+    } ]
+  }, {
+    "tStartMs": 227733,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "好"
+    } ]
+  }, {
+    "tStartMs": 229933,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "今天的第一個故事呢"
+    } ]
+  }, {
+    "tStartMs": 231033,
+    "dDurationMs": 3200,
+    "segs": [ {
+      "utf8": "來自於我們的小宇宙的魚友影塵"
+    } ]
+  }, {
+    "tStartMs": 234533,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "下面我們稱他為小影"
+    } ]
+  }, {
+    "tStartMs": 236200,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "小影是從小宇宙追到"
+    } ]
+  }, {
+    "tStartMs": 238633,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "因為他這個平台不能私信啊"
+    } ]
+  }, {
+    "tStartMs": 240266,
+    "dDurationMs": 2134,
+    "segs": [ {
+      "utf8": "追到網易追到小紅書"
+    } ]
+  }, {
+    "tStartMs": 242400,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "最後在小紅書給我投的稿"
+    } ]
+  }, {
+    "tStartMs": 244633,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "因為小紅書私信比較方便一些"
+    } ]
+  }, {
+    "tStartMs": 246333,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "哦。對"
+    } ]
+  }, {
+    "tStartMs": 247666,
+    "dDurationMs": 2034,
+    "segs": [ {
+      "utf8": "早些投稿他是排隊一直排到現在"
+    } ]
+  }, {
+    "tStartMs": 249700,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "小影說他自己呢"
+    } ]
+  }, {
+    "tStartMs": 252266,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "最早是在小宇宙聽到鯰魚的"
+    } ]
+  }, {
+    "tStartMs": 254666,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "然後就非常喜歡我們節目"
+    } ]
+  }, {
+    "tStartMs": 256666,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "但一直找不到投稿的地方"
+    } ]
+  }, {
+    "tStartMs": 258533,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "就去註冊小紅書的賬號給我投稿"
+    } ]
+  }, {
+    "tStartMs": 261933,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "這裡再重複一句啊"
+    } ]
+  }, {
+    "tStartMs": 263200,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "如果說想投稿的"
+    } ]
+  }, {
+    "tStartMs": 264500,
+    "dDurationMs": 2966,
+    "segs": [ {
+      "utf8": "可以添加我們鯰魚的微信號catfishtalk"
+    } ]
+  }, {
+    "tStartMs": 268000,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "C A T F I S H T A L K"
+    } ]
+  }, {
+    "tStartMs": 272033,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "我每天都會登錄，但是不定時啊"
+    } ]
+  }, {
+    "tStartMs": 274733,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "因為確實我比較忙工作啊"
+    } ]
+  }, {
+    "tStartMs": 277300,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "打工狗嘛"
+    } ]
+  }, {
+    "tStartMs": 278500,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "大家來發這個投稿"
+    } ]
+  }, {
+    "tStartMs": 281600,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "書歸正傳我們開始小影的故事"
+    } ]
+  }, {
+    "tStartMs": 283633,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "小影投稿裡面說呢"
+    } ]
+  }, {
+    "tStartMs": 284900,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "故事發生在去年的秋天"
+    } ]
+  }, {
+    "tStartMs": 287266,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "那天呢她跟平常一樣"
+    } ]
+  }, {
+    "tStartMs": 289633,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "放學回到這個租房的地方"
+    } ]
+  }, {
+    "tStartMs": 292300,
+    "dDurationMs": 2733,
+    "segs": [ {
+      "utf8": "因為她當時租這個房子比較急"
+    } ]
+  }, {
+    "tStartMs": 295433,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "就沒有去看太多的房子"
+    } ]
+  }, {
+    "tStartMs": 297666,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "選了一個離他們學校最近的老小區"
+    } ]
+  }, {
+    "tStartMs": 301100,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "而自己租的這個房子呢"
+    } ]
+  }, {
+    "tStartMs": 302900,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "也是這個小區裡面"
+    } ]
+  }, {
+    "tStartMs": 304733,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "就是很裡面的一個小戶型啊"
+    } ]
+  }, {
+    "tStartMs": 307866,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "就是老小區的故事"
+    } ]
+  }, {
+    "tStartMs": 309466,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 310666,
+    "dDurationMs": 2034,
+    "segs": [ {
+      "utf8": "那天晚上在回家路上呢"
+    } ]
+  }, {
+    "tStartMs": 313233,
+    "dDurationMs": 3467,
+    "segs": [ {
+      "utf8": "小影發現整個小區人少就人很少"
+    } ]
+  }, {
+    "tStartMs": 317500,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "既沒有遛彎的大爺"
+    } ]
+  }, {
+    "tStartMs": 319033,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "也沒有跳出廣場舞的大媽"
+    } ]
+  }, {
+    "tStartMs": 321133,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "小影就說呢"
+    } ]
+  }, {
+    "tStartMs": 322400,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "說這個路上面啊"
+    } ]
+  }, {
+    "tStartMs": 323666,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "雖然談不上是空空蕩蕩"
+    } ]
+  }, {
+    "tStartMs": 325700,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "但是因為人比較少也顯得很冷清"
+    } ]
+  }, {
+    "tStartMs": 328433,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "讓她心裡就有一點發毛了"
+    } ]
+  }, {
+    "tStartMs": 330700,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 331500,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "一路上，小影"
+    } ]
+  }, {
+    "tStartMs": 332400,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "就瞻前顧後"
+    } ]
+  }, {
+    "tStartMs": 334266,
+    "dDurationMs": 834,
+    "segs": [ {
+      "utf8": "她這個時候"
+    } ]
+  }, {
+    "tStartMs": 335200,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "恨不得啊"
+    } ]
+  }, {
+    "tStartMs": 335833,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "碰到幾個去接孩子放學的家長"
+    } ]
+  }, {
+    "tStartMs": 338500,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "因為平時他會覺得這些家長啊"
+    } ]
+  }, {
+    "tStartMs": 341066,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "接孩子，孩子很鬧"
+    } ]
+  }, {
+    "tStartMs": 342600,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "然後在路上亂跑挺煩的"
+    } ]
+  }, {
+    "tStartMs": 344500,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "現在她巴不得去碰到這些人"
+    } ]
+  }, {
+    "tStartMs": 347800,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "但現在呢，還是四下無人"
+    } ]
+  }, {
+    "tStartMs": 350333,
+    "dDurationMs": 2467,
+    "segs": [ {
+      "utf8": "直到他走到一段路上"
+    } ]
+  }, {
+    "tStartMs": 352866,
+    "dDurationMs": 2534,
+    "segs": [ {
+      "utf8": "才看到一個看上去很壯的男生"
+    } ]
+  }, {
+    "tStartMs": 355866,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "穿着也正好是小影他們學校的校服"
+    } ]
+  }, {
+    "tStartMs": 358866,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "就是校友了"
+    } ]
+  }, {
+    "tStartMs": 360033,
+    "dDurationMs": 2833,
+    "segs": [ {
+      "utf8": "這個男生呢在小影前面走"
+    } ]
+  }, {
+    "tStartMs": 362933,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "速度不急不慢的"
+    } ]
+  }, {
+    "tStartMs": 364333,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "給人一種怪怪的感覺"
+    } ]
+  }, {
+    "tStartMs": 367266,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "小影這個時候她沒多想啊"
+    } ]
+  }, {
+    "tStartMs": 368733,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "還是跟着男生繼續往家裡面走"
+    } ]
+  }, {
+    "tStartMs": 371433,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "她給老於說啊"
+    } ]
+  }, {
+    "tStartMs": 372500,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "說這條路啊，就剩他們兩個人了"
+    } ]
+  }, {
+    "tStartMs": 375700,
+    "dDurationMs": 3566,
+    "segs": [ {
+      "utf8": "她如果放任感官去感覺的話"
+    } ]
+  }, {
+    "tStartMs": 379300,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "他甚至覺得啊"
+    } ]
+  }, {
+    "tStartMs": 380200,
+    "dDurationMs": 2066,
+    "segs": [ {
+      "utf8": "整個小區就只剩下兩個人"
+    } ]
+  }, {
+    "tStartMs": 382266,
+    "dDurationMs": 2234,
+    "segs": [ {
+      "utf8": "老於這個時候其實想打斷他的"
+    } ]
+  }, {
+    "tStartMs": 384800,
+    "dDurationMs": 233,
+    "segs": [ {
+      "utf8": "就是"
+    } ]
+  }, {
+    "tStartMs": 385033,
+    "dDurationMs": 3767,
+    "segs": [ {
+      "utf8": "會不會是整個小區只剩你們兩個活人"
+    } ]
+  }, {
+    "tStartMs": 388833,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "哼哈哈哈哎呦我又笑了"
+    } ]
+  }, {
+    "tStartMs": 390933,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "我靠"
+    } ]
+  }, {
+    "tStartMs": 391633,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "這個這個是我我的發散思維。我的"
+    } ]
+  }, {
+    "tStartMs": 394033,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "就沒事啊"
+    } ]
+  }, {
+    "tStartMs": 395700,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "小影說呢"
+    } ]
+  }, {
+    "tStartMs": 396733,
+    "dDurationMs": 1867,
+    "segs": [ {
+      "utf8": "她回家的路不是很長"
+    } ]
+  }, {
+    "tStartMs": 399033,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "然後走到頭呢是一個T字形"
+    } ]
+  }, {
+    "tStartMs": 401133,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "就是那種丁字路口"
+    } ]
+  }, {
+    "tStartMs": 402733,
+    "dDurationMs": 3200,
+    "segs": [ {
+      "utf8": "周圍一邊是老舊的單元房"
+    } ]
+  }, {
+    "tStartMs": 406200,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "另外一邊呢是"
+    } ]
+  }, {
+    "tStartMs": 407866,
+    "dDurationMs": 2767,
+    "segs": [ {
+      "utf8": "另外房子的圍牆牆院"
+    } ]
+  }, {
+    "tStartMs": 411233,
+    "dDurationMs": 1767,
+    "segs": [ {
+      "utf8": "她只要走到路的盡頭"
+    } ]
+  }, {
+    "tStartMs": 413000,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "就是那個丁字路口"
+    } ]
+  }, {
+    "tStartMs": 414666,
+    "dDurationMs": 2334,
+    "segs": [ {
+      "utf8": "再向左邊走一小會"
+    } ]
+  }, {
+    "tStartMs": 417200,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "就可以進到她租的房子的那個小院子"
+    } ]
+  }, {
+    "tStartMs": 420333,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "嗯。然後他跟那個男生啊"
+    } ]
+  }, {
+    "tStartMs": 422666,
+    "dDurationMs": 1734,
+    "segs": [ {
+      "utf8": "就這麼走啊走啊走"
+    } ]
+  }, {
+    "tStartMs": 424666,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "越往裡面覺得越來越陰冷"
+    } ]
+  }, {
+    "tStartMs": 428233,
+    "dDurationMs": 2067,
+    "segs": [ {
+      "utf8": "旁邊單元樓雖然亮着燈"
+    } ]
+  }, {
+    "tStartMs": 430433,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "可是她自己覺得有點陰森"
+    } ]
+  }, {
+    "tStartMs": 433066,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "小影越來越害怕"
+    } ]
+  }, {
+    "tStartMs": 434633,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "她就想趕緊"
+    } ]
+  }, {
+    "tStartMs": 435933,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "加快腳步追上前面那個男生"
+    } ]
+  }, {
+    "tStartMs": 437633,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "跟他並排起走"
+    } ]
+  }, {
+    "tStartMs": 440300,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "男生該害怕了"
+    } ]
+  }, {
+    "tStartMs": 442000,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "就一開始我聽到這邊的時候"
+    } ]
+  }, {
+    "tStartMs": 443500,
+    "dDurationMs": 4533,
+    "segs": [ {
+      "utf8": "我覺得男生是不是錯覺，就是沒這個"
+    } ]
+  }, {
+    "tStartMs": 448033,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "就但是後面不是的"
+    } ]
+  }, {
+    "tStartMs": 450033,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "追上去之後呢"
+    } ]
+  }, {
+    "tStartMs": 452000,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "哎這個男生也看到小影了"
+    } ]
+  }, {
+    "tStartMs": 454600,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "但沒有說什麼"
+    } ]
+  }, {
+    "tStartMs": 456433,
+    "dDurationMs": 2767,
+    "segs": [ {
+      "utf8": "就在他們到了丁字路口的時候"
+    } ]
+  }, {
+    "tStartMs": 459700,
+    "dDurationMs": 2966,
+    "segs": [ {
+      "utf8": "小影說自己的腿剛往前邁一步"
+    } ]
+  }, {
+    "tStartMs": 462866,
+    "dDurationMs": 3867,
+    "segs": [ {
+      "utf8": "就聽到後面一陣很大的哀嚎聲"
+    } ]
+  }, {
+    "tStartMs": 466833,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "而且周圍還出現了若隱若現"
+    } ]
+  }, {
+    "tStartMs": 469633,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "似有似無的哭泣聲"
+    } ]
+  }, {
+    "tStartMs": 471666,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 472900,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "說時遲那時快"
+    } ]
+  }, {
+    "tStartMs": 473933,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "小穎就硬生生的把腿快速收回來了"
+    } ]
+  }, {
+    "tStartMs": 476666,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "然後那個男的就那個男生也愣住了"
+    } ]
+  }, {
+    "tStartMs": 479400,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "站在原地不敢動"
+    } ]
+  }, {
+    "tStartMs": 481833,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "很顯然他肯定也是聽到這個聲音了"
+    } ]
+  }, {
+    "tStartMs": 484133,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "嗯，就證明小影不是幻聽"
+    } ]
+  }, {
+    "tStartMs": 486700,
+    "dDurationMs": 1166,
+    "segs": [ {
+      "utf8": "與此同時呢"
+    } ]
+  }, {
+    "tStartMs": 487933,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "旁邊單元樓的二、三樓的這個"
+    } ]
+  }, {
+    "tStartMs": 490733,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "幾扇窗戶啊"
+    } ]
+  }, {
+    "tStartMs": 491900,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "透出來的這個燈"
+    } ]
+  }, {
+    "tStartMs": 494400,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "它突然閃了幾下"
+    } ]
+  }, {
+    "tStartMs": 496533,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "這個男生二話沒說"
+    } ]
+  }, {
+    "tStartMs": 498133,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "非常快的向右跑掉了"
+    } ]
+  }, {
+    "tStartMs": 500800,
+    "dDurationMs": 2066,
+    "segs": [ {
+      "utf8": "就是小影家相反的方向啊"
+    } ]
+  }, {
+    "tStartMs": 503200,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "小影這個時候神傻了"
+    } ]
+  }, {
+    "tStartMs": 505400,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "就沒想到男生會這麼做"
+    } ]
+  }, {
+    "tStartMs": 507800,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "自我防範意識很強啊"
+    } ]
+  }, {
+    "tStartMs": 509700,
+    "dDurationMs": 2833,
+    "segs": [ {
+      "utf8": "她就愣了幾秒鐘，就趕緊往左走"
+    } ]
+  }, {
+    "tStartMs": 512900,
+    "dDurationMs": 533,
+    "segs": [ {
+      "utf8": " "
+    } ]
+  }, {
+    "tStartMs": 513433,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "要想趕緊回到自己的租的房子裡面"
+    } ]
+  }, {
+    "tStartMs": 516400,
+    "dDurationMs": 3666,
+    "segs": [ {
+      "utf8": "就當她踏上左邊的那個路口的時候"
+    } ]
+  }, {
+    "tStartMs": 520266,
+    "dDurationMs": 4567,
+    "segs": [ {
+      "utf8": "看見路邊黃黃的紙錢灑滿了一路"
+    } ]
+  }, {
+    "tStartMs": 525233,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "她給我的投稿裡面其實用的是"
+    } ]
+  }, {
+    "tStartMs": 527466,
+    "dDurationMs": 4167,
+    "segs": [ {
+      "utf8": "甚至可以說是鋪滿一路就灑滿了紙錢"
+    } ]
+  }, {
+    "tStartMs": 532666,
+    "dDurationMs": 400,
+    "segs": [ {
+      "utf8": "小影"
+    } ]
+  }, {
+    "tStartMs": 533066,
+    "dDurationMs": 2034,
+    "segs": [ {
+      "utf8": "她嚇得頭也不回的就往院子裡面跑"
+    } ]
+  }, {
+    "tStartMs": 535433,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "飛快的開門然後進屋"
+    } ]
+  }, {
+    "tStartMs": 538066,
+    "dDurationMs": 3067,
+    "segs": [ {
+      "utf8": "然後開燈關門鎖門一氣呵成"
+    } ]
+  }, {
+    "tStartMs": 541433,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "然後開始靠在門上喘氣"
+    } ]
+  }, {
+    "tStartMs": 544033,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 545533,
+    "dDurationMs": 767,
+    "segs": [ {
+      "utf8": "小影給老於說"
+    } ]
+  }, {
+    "tStartMs": 546300,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "她說當時後背已經被冷汗浸濕了"
+    } ]
+  }, {
+    "tStartMs": 549833,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "心裏面不停安慰自己說"
+    } ]
+  }, {
+    "tStartMs": 551466,
+    "dDurationMs": 3367,
+    "segs": [ {
+      "utf8": "哎呀可能今天是什麼特殊的日子"
+    } ]
+  }, {
+    "tStartMs": 554833,
+    "dDurationMs": 3633,
+    "segs": [ {
+      "utf8": "或者是別人家出殯之類的啊"
+    } ]
+  }, {
+    "tStartMs": 558466,
+    "dDurationMs": 3134,
+    "segs": [ {
+      "utf8": "然後環衛工人沒掃乾淨才會有紙錢的"
+    } ]
+  }, {
+    "tStartMs": 561600,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "嗯，就安慰自己，不是靈異事件"
+    } ]
+  }, {
+    "tStartMs": 563800,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 564500,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "然後第一天到基本就結束哦"
+    } ]
+  }, {
+    "tStartMs": 567800,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "還不止一天呢"
+    } ]
+  }, {
+    "tStartMs": 568733,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "對她第一天就碰到這個紙錢"
+    } ]
+  }, {
+    "tStartMs": 570666,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "滿是紙錢的這種情景"
+    } ]
+  }, {
+    "tStartMs": 572433,
+    "dDurationMs": 1067,
+    "segs": [ {
+      "utf8": "其實我想啊"
+    } ]
+  }, {
+    "tStartMs": 573600,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "因為她回家明顯已經是晚上了嘛"
+    } ]
+  }, {
+    "tStartMs": 575700,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "對！你正常出殯早上去做"
+    } ]
+  }, {
+    "tStartMs": 578733,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "你再怎麼着"
+    } ]
+  }, {
+    "tStartMs": 579833,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "你中午這些東西應該掃掉了是"
+    } ]
+  }, {
+    "tStartMs": 582200,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "或者下午"
+    } ]
+  }, {
+    "tStartMs": 583833,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "是再不濟再不濟"
+    } ]
+  }, {
+    "tStartMs": 585333,
+    "dDurationMs": 2867,
+    "segs": [ {
+      "utf8": "你環衛工下班前應該掃掉了吧"
+    } ]
+  }, {
+    "tStartMs": 588666,
+    "dDurationMs": 2034,
+    "segs": [ {
+      "utf8": "我是沒見過就是"
+    } ]
+  }, {
+    "tStartMs": 590733,
+    "dDurationMs": 3667,
+    "segs": [ {
+      "utf8": "嗯。是散的比較多的紙錢在地上"
+    } ]
+  }, {
+    "tStartMs": 594400,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "就可能有一些地方風俗會撒的很多"
+    } ]
+  }, {
+    "tStartMs": 597100,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 598100,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "OK我們說回第二天的事情啊"
+    } ]
+  }, {
+    "tStartMs": 601600,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "好。第二天呢"
+    } ]
+  }, {
+    "tStartMs": 602900,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "太陽剛露頭，小影就起床了"
+    } ]
+  }, {
+    "tStartMs": 606000,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "小影說她一大早借着這個"
+    } ]
+  }, {
+    "tStartMs": 608000,
+    "dDurationMs": 1666,
+    "segs": [ {
+      "utf8": "旭日東升的暖意"
+    } ]
+  }, {
+    "tStartMs": 609733,
+    "dDurationMs": 3267,
+    "segs": [ {
+      "utf8": "特意跑去昨天的那個路口看了"
+    } ]
+  }, {
+    "tStartMs": 613400,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "果然"
+    } ]
+  }, {
+    "tStartMs": 614600,
+    "dDurationMs": 2833,
+    "segs": [ {
+      "utf8": "只有幾片沒有被掃乾淨的銀杏葉"
+    } ]
+  }, {
+    "tStartMs": 617733,
+    "dDurationMs": 1767,
+    "segs": [ {
+      "utf8": "沒有什麼紙錢"
+    } ]
+  }, {
+    "tStartMs": 619866,
+    "dDurationMs": 634,
+    "segs": [ {
+      "utf8": "小影心想"
+    } ]
+  }, {
+    "tStartMs": 620500,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "估計是昨天晚上自己看花眼了"
+    } ]
+  }, {
+    "tStartMs": 623300,
+    "dDurationMs": 3166,
+    "segs": [ {
+      "utf8": "畢竟她說現在這個祭祀什麼的"
+    } ]
+  }, {
+    "tStartMs": 626900,
+    "dDurationMs": 1766,
+    "segs": [ {
+      "utf8": "都是把紙錢給燒掉"
+    } ]
+  }, {
+    "tStartMs": 628833,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "怎麼會有那麼多完整的紙錢呢"
+    } ]
+  }, {
+    "tStartMs": 631133,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "對啊。當天晚上放學"
+    } ]
+  }, {
+    "tStartMs": 634800,
+    "dDurationMs": 3200,
+    "segs": [ {
+      "utf8": "小影也向鄰居打聽了說最近是不是"
+    } ]
+  }, {
+    "tStartMs": 638466,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "這個小區有什麼人去世啊什麼的"
+    } ]
+  }, {
+    "tStartMs": 641066,
+    "dDurationMs": 1867,
+    "segs": [ {
+      "utf8": "得到的都是否定的答案"
+    } ]
+  }, {
+    "tStartMs": 643333,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "那奇怪的是呢"
+    } ]
+  }, {
+    "tStartMs": 644800,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "後面幾天回家"
+    } ]
+  }, {
+    "tStartMs": 646433,
+    "dDurationMs": 3067,
+    "segs": [ {
+      "utf8": "那條路啊都是正常的人來人往"
+    } ]
+  }, {
+    "tStartMs": 649600,
+    "dDurationMs": 2466,
+    "segs": [ {
+      "utf8": "小影呢也就沒多想了"
+    } ]
+  }, {
+    "tStartMs": 652466,
+    "dDurationMs": 400,
+    "segs": [ {
+      "utf8": "但是"
+    } ]
+  }, {
+    "tStartMs": 652866,
+    "dDurationMs": 3034,
+    "segs": [ {
+      "utf8": "真正讓小影感到毛骨悚然的事情啊"
+    } ]
+  }, {
+    "tStartMs": 656000,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "發生在一周之後的某天"
+    } ]
+  }, {
+    "tStartMs": 659600,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "那天小影做了個噩夢"
+    } ]
+  }, {
+    "tStartMs": 662200,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "小影補充說啊，他們當地下葬的風俗"
+    } ]
+  }, {
+    "tStartMs": 665033,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "是中午請人抬棺撒紙錢"
+    } ]
+  }, {
+    "tStartMs": 668400,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "那一邊走呢一邊還去"
+    } ]
+  }, {
+    "tStartMs": 670333,
+    "dDurationMs": 2467,
+    "segs": [ {
+      "utf8": "還會有故去的人的子女"
+    } ]
+  }, {
+    "tStartMs": 672800,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "就是逝者的這個子女，或者親戚"
+    } ]
+  }, {
+    "tStartMs": 676100,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "就哭喪。嗯"
+    } ]
+  }, {
+    "tStartMs": 677600,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "他甚至會有人請專門的人來哭喪"
+    } ]
+  }, {
+    "tStartMs": 679900,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "就哭的特別慘特別慘"
+    } ]
+  }, {
+    "tStartMs": 682400,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "一邊哭還一邊要喊着去故去人的名字"
+    } ]
+  }, {
+    "tStartMs": 685433,
+    "dDurationMs": 2233,
+    "segs": [ {
+      "utf8": "把他生平的事情說出來"
+    } ]
+  }, {
+    "tStartMs": 687733,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "就比如說"
+    } ]
+  }, {
+    "tStartMs": 688866,
+    "dDurationMs": 2734,
+    "segs": [ {
+      "utf8": "哎呀妙老師你怎麼死的這麼早啊"
+    } ]
+  }, {
+    "tStartMs": 691600,
+    "dDurationMs": 2066,
+    "segs": [ {
+      "utf8": "上一次還說好要一起打牌的"
+    } ]
+  }, {
+    "tStartMs": 693700,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "這種感覺你知道吧"
+    } ]
+  }, {
+    "tStartMs": 695066,
+    "dDurationMs": 2467,
+    "segs": [ {
+      "utf8": "好那代稱一下代稱一下。嗯"
+    } ]
+  }, {
+    "tStartMs": 698533,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "那最後呢"
+    } ]
+  }, {
+    "tStartMs": 699600,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "這個逝者的這個家屬"
+    } ]
+  }, {
+    "tStartMs": 702533,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "會在撒紙錢的地方"
+    } ]
+  }, {
+    "tStartMs": 705333,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "扔一些水果和零食"
+    } ]
+  }, {
+    "tStartMs": 707866,
+    "dDurationMs": 1434,
+    "segs": [ {
+      "utf8": "然後砸火盆"
+    } ]
+  }, {
+    "tStartMs": 709466,
+    "dDurationMs": 3200,
+    "segs": [ {
+      "utf8": "最後有幾個全身是黑"
+    } ]
+  }, {
+    "tStartMs": 712666,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "就黑衣黑褲黑鞋的人把這個棺材下葬"
+    } ]
+  }, {
+    "tStartMs": 716800,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "小影還給老於強調說說"
+    } ]
+  }, {
+    "tStartMs": 718800,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "這個是他們老家的風俗"
+    } ]
+  }, {
+    "tStartMs": 720666,
+    "dDurationMs": 1867,
+    "segs": [ {
+      "utf8": "但她上學的這個城市啊"
+    } ]
+  }, {
+    "tStartMs": 722633,
+    "dDurationMs": 1767,
+    "segs": [ {
+      "utf8": "從來都沒有類似的風俗"
+    } ]
+  }, {
+    "tStartMs": 724400,
+    "dDurationMs": 2066,
+    "segs": [ {
+      "utf8": "起碼她自己沒看到過"
+    } ]
+  }, {
+    "tStartMs": 726466,
+    "dDurationMs": 2867,
+    "segs": [ {
+      "utf8": "嗯。你別說我這兩天接投稿"
+    } ]
+  }, {
+    "tStartMs": 729333,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "不是投稿就是我們的圖文故事的評論"
+    } ]
+  }, {
+    "tStartMs": 732300,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "還有人說在蘇州啊"
+    } ]
+  }, {
+    "tStartMs": 734300,
+    "dDurationMs": 4333,
+    "segs": [ {
+      "utf8": "風俗是就是出殯的時候往路邊撒糖"
+    } ]
+  }, {
+    "tStartMs": 739466,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "撒什麼糖果"
+    } ]
+  }, {
+    "tStartMs": 741400,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "撒糖果，對。只要是糖就可以嗎"
+    } ]
+  }, {
+    "tStartMs": 744200,
+    "dDurationMs": 3533,
+    "segs": [ {
+      "utf8": "對。就這個這個怎麼講"
+    } ]
+  }, {
+    "tStartMs": 747733,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "評論的人我們魚友啊"
+    } ]
+  }, {
+    "tStartMs": 749300,
+    "dDurationMs": 3766,
+    "segs": [ {
+      "utf8": "他拿起來吃了，然後回家就生病了。啊……"
+    } ]
+  }, {
+    "tStartMs": 753600,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "不好啊這樣不好啊"
+    } ]
+  }, {
+    "tStartMs": 755000,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "對因為一開始"
+    } ]
+  }, {
+    "tStartMs": 756933,
+    "dDurationMs": 4767,
+    "segs": [ {
+      "utf8": "我真的沒想到，還會有人在出殯撒糖"
+    } ]
+  }, {
+    "tStartMs": 761700,
+    "dDurationMs": 4633,
+    "segs": [ {
+      "utf8": "嗯。就糖不應該都是喜事紅事"
+    } ]
+  }, {
+    "tStartMs": 766333,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "嗯。對吧。他白事撒其實挺怪的"
+    } ]
+  }, {
+    "tStartMs": 769066,
+    "dDurationMs": 3534,
+    "segs": [ {
+      "utf8": "對。這個東西別亂吃吧"
+    } ]
+  }, {
+    "tStartMs": 772800,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "對啊。而且有很多"
+    } ]
+  }, {
+    "tStartMs": 774800,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "就是可能住在外面流浪漢之類"
+    } ]
+  }, {
+    "tStartMs": 777800,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "他會吃那些貢品那些"
+    } ]
+  }, {
+    "tStartMs": 780300,
+    "dDurationMs": 1566,
+    "segs": [ {
+      "utf8": "那個還好，對"
+    } ]
+  }, {
+    "tStartMs": 782066,
+    "dDurationMs": 3467,
+    "segs": [ {
+      "utf8": "而且我還聽說有規矩是說在某一個"
+    } ]
+  }, {
+    "tStartMs": 786133,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "地方吧"
+    } ]
+  }, {
+    "tStartMs": 787266,
+    "dDurationMs": 934,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 788200,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "比方說北方，或者是西北方之類的"
+    } ]
+  }, {
+    "tStartMs": 790066,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "就是挺大的一個地方"
+    } ]
+  }, {
+    "tStartMs": 791833,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "大的方向他們是上完貢"
+    } ]
+  }, {
+    "tStartMs": 794866,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "這個貢品是好的"
+    } ]
+  }, {
+    "tStartMs": 796533,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "就是一定要給孩子分吃的"
+    } ]
+  }, {
+    "tStartMs": 799133,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "這是好事啊"
+    } ]
+  }, {
+    "tStartMs": 800400,
+    "dDurationMs": 2066,
+    "segs": [ {
+      "utf8": "這個我好像我也吃過"
+    } ]
+  }, {
+    "tStartMs": 802466,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "但我不記得吃的是什麼"
+    } ]
+  }, {
+    "tStartMs": 804633,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "哦！好像是我們家這邊"
+    } ]
+  }, {
+    "tStartMs": 807400,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "反正我們家習俗是最後蘋果都拿走"
+    } ]
+  }, {
+    "tStartMs": 810400,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "都給幾個孩子拿走"
+    } ]
+  }, {
+    "tStartMs": 812066,
+    "dDurationMs": 2934,
+    "segs": [ {
+      "utf8": "哦。然後吃不吃就隨你了，但是你得拿走"
+    } ]
+  }, {
+    "tStartMs": 815500,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "我周六才上的墳"
+    } ]
+  }, {
+    "tStartMs": 816733,
+    "dDurationMs": 1067,
+    "segs": [ {
+      "utf8": "嗯，就前兩天"
+    } ]
+  }, {
+    "tStartMs": 817800,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 818866,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "OK我們回到小影的故事啊"
+    } ]
+  }, {
+    "tStartMs": 820600,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "就小影說她這個住的城市啊"
+    } ]
+  }, {
+    "tStartMs": 823233,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "是沒有這個風俗的"
+    } ]
+  }, {
+    "tStartMs": 824233,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "但他家鄉是有這種風俗的"
+    } ]
+  }, {
+    "tStartMs": 826933,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "那天夢到什麼呢"
+    } ]
+  }, {
+    "tStartMs": 828600,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "小影她夢到啊"
+    } ]
+  }, {
+    "tStartMs": 830000,
+    "dDurationMs": 2466,
+    "segs": [ {
+      "utf8": "她自己不知道為什麼又出現在了那個"
+    } ]
+  }, {
+    "tStartMs": 832533,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "丁字路口"
+    } ]
+  }, {
+    "tStartMs": 833733,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "而且跟之前一樣滿地紙錢"
+    } ]
+  }, {
+    "tStartMs": 836666,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "四周的哭泣聲格外真切"
+    } ]
+  }, {
+    "tStartMs": 839300,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "緊接着她就看見"
+    } ]
+  }, {
+    "tStartMs": 841233,
+    "dDurationMs": 4067,
+    "segs": [ {
+      "utf8": "從右手邊的巷子裡，走出了一隊抬棺人"
+    } ]
+  }, {
+    "tStartMs": 845533,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "啊"
+    } ]
+  }, {
+    "tStartMs": 846900,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "最前面的是一個"
+    } ]
+  }, {
+    "tStartMs": 848700,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "臉畫的很白很白的女人"
+    } ]
+  }, {
+    "tStartMs": 851333,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "但嘴巴呢又用口紅塗的"
+    } ]
+  }, {
+    "tStartMs": 854633,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "又大又紅。啊"
+    } ]
+  }, {
+    "tStartMs": 856233,
+    "dDurationMs": 767,
+    "segs": [ {
+      "utf8": "我第一反應"
+    } ]
+  }, {
+    "tStartMs": 857000,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "我第一想到的印象是那個大嘴妹"
+    } ]
+  }, {
+    "tStartMs": 859633,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "就是那個最近直播很流行的那個"
+    } ]
+  }, {
+    "tStartMs": 862600,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "就咖啡里沖不沖"
+    } ]
+  }, {
+    "tStartMs": 864200,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "我不看這些東西！好吧好吧好吧"
+    } ]
+  }, {
+    "tStartMs": 866833,
+    "dDurationMs": 2833,
+    "segs": [ {
+      "utf8": "你接不了這個梗啊！我不看這東西"
+    } ]
+  }, {
+    "tStartMs": 870233,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "然後這個站在前面的這個女人啊"
+    } ]
+  }, {
+    "tStartMs": 873233,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "就是臉白嘴紅的這個女人"
+    } ]
+  }, {
+    "tStartMs": 875533,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "就開始不停的哭喪"
+    } ]
+  }, {
+    "tStartMs": 877600,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "然後不停的說說話"
+    } ]
+  }, {
+    "tStartMs": 879633,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "嗯。那具體說什麼呢"
+    } ]
+  }, {
+    "tStartMs": 881066,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "聽不清楚"
+    } ]
+  }, {
+    "tStartMs": 881866,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "但是臉上的這個妝已經哭花了"
+    } ]
+  }, {
+    "tStartMs": 884733,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "看起來格外瘮人"
+    } ]
+  }, {
+    "tStartMs": 886733,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "那哭喪這個女人後面跟着四個"
+    } ]
+  }, {
+    "tStartMs": 889133,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "黑衣黑褲黑鞋的人"
+    } ]
+  }, {
+    "tStartMs": 891233,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "看不清面容，但是抬着一口棺材"
+    } ]
+  }, {
+    "tStartMs": 894333,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "在一步一步一步的往小影這邊走來"
+    } ]
+  }, {
+    "tStartMs": 898133,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "小影說自己當時不知道為什麼"
+    } ]
+  }, {
+    "tStartMs": 900400,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "完全動彈不了"
+    } ]
+  }, {
+    "tStartMs": 901833,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "也發不出聲音"
+    } ]
+  }, {
+    "tStartMs": 903033,
+    "dDurationMs": 500,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 903533,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "當這個抬棺隊伍走到自己面前的時候"
+    } ]
+  }, {
+    "tStartMs": 907066,
+    "dDurationMs": 1134,
+    "segs": [ {
+      "utf8": "停住了"
+    } ]
+  }, {
+    "tStartMs": 908900,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "她甚至能看到"
+    } ]
+  }, {
+    "tStartMs": 910300,
+    "dDurationMs": 3166,
+    "segs": [ {
+      "utf8": "剛才哭喪的這個白臉女人臉上"
+    } ]
+  }, {
+    "tStartMs": 913533,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "被淚水弄糊的這個妝"
+    } ]
+  }, {
+    "tStartMs": 916800,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "然後這四個黑衣人突然把這個棺材"
+    } ]
+  }, {
+    "tStartMs": 920066,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "直挺挺的豎在小影面前啊"
+    } ]
+  }, {
+    "tStartMs": 925233,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "小影這個時候才發現這個棺材"
+    } ]
+  }, {
+    "tStartMs": 927466,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "沒有蓋子！啊"
+    } ]
+  }, {
+    "tStartMs": 929600,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "棺材裡面躺着的是誰，猜"
+    } ]
+  }, {
+    "tStartMs": 933300,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "我猜肯定是那個男生"
+    } ]
+  }, {
+    "tStartMs": 934833,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "對就是因為只出現了這麼幾個角色"
+    } ]
+  }, {
+    "tStartMs": 937833,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "是的！對吧"
+    } ]
+  }, {
+    "tStartMs": 938866,
+    "dDurationMs": 2634,
+    "segs": [ {
+      "utf8": "就是那個男的肯定是跑錯方向了"
+    } ]
+  }, {
+    "tStartMs": 941500,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "哈哈哈，跑快點"
+    } ]
+  }, {
+    "tStartMs": 943066,
+    "dDurationMs": 2434,
+    "segs": [ {
+      "utf8": "你笑了你笑了就完了這是小影做的夢"
+    } ]
+  }, {
+    "tStartMs": 945500,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "你完了哈哈哈"
+    } ]
+  }, {
+    "tStartMs": 946866,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "你要挨沖"
+    } ]
+  }, {
+    "tStartMs": 948233,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "OK我們回來啊"
+    } ]
+  }, {
+    "tStartMs": 949833,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "呃別扯啊別扯那麼遠啊"
+    } ]
+  }, {
+    "tStartMs": 952133,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "那個棺材裡面就是那個"
+    } ]
+  }, {
+    "tStartMs": 954600,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "那天那個和自己穿一樣校服的男生"
+    } ]
+  }, {
+    "tStartMs": 957666,
+    "dDurationMs": 834,
+    "segs": [ {
+      "utf8": "而且啊"
+    } ]
+  }, {
+    "tStartMs": 958600,
+    "dDurationMs": 2733,
+    "segs": [ {
+      "utf8": "這個男生原本是平躺在棺材裡的"
+    } ]
+  }, {
+    "tStartMs": 961333,
+    "dDurationMs": 3367,
+    "segs": [ {
+      "utf8": "但棺材這麼一豎他就直挺挺的往前倒"
+    } ]
+  }, {
+    "tStartMs": 964733,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "就要壓在小影身上"
+    } ]
+  }, {
+    "tStartMs": 966800,
+    "dDurationMs": 1066,
+    "segs": [ {
+      "utf8": "小影醒了"
+    } ]
+  }, {
+    "tStartMs": 968500,
+    "dDurationMs": 3800,
+    "segs": [ {
+      "utf8": "我去！然後她就被嚇得冷汗狂流"
+    } ]
+  }, {
+    "tStartMs": 972300,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "還止不住的發抖"
+    } ]
+  }, {
+    "tStartMs": 973733,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "嗯。然後就在這個時候啊"
+    } ]
+  }, {
+    "tStartMs": 976200,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "她特意給我補充"
+    } ]
+  }, {
+    "tStartMs": 977333,
+    "dDurationMs": 3800,
+    "segs": [ {
+      "utf8": "她說就在她還沉浸在夢中不知所措"
+    } ]
+  }, {
+    "tStartMs": 981400,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "感覺到很恐怖的時候"
+    } ]
+  }, {
+    "tStartMs": 983133,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "窗外的燈不知道是路燈還是鄰居的燈"
+    } ]
+  }, {
+    "tStartMs": 986666,
+    "dDurationMs": 2334,
+    "segs": [ {
+      "utf8": "跟她之前碰到的情況一樣"
+    } ]
+  }, {
+    "tStartMs": 989000,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "閃了幾下是吧"
+    } ]
+  }, {
+    "tStartMs": 990333,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "對閃了幾下"
+    } ]
+  }, {
+    "tStartMs": 992666,
+    "dDurationMs": 1634,
+    "segs": [ {
+      "utf8": "然後故事到這邊就結束了"
+    } ]
+  }, {
+    "tStartMs": 994400,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "然後我又跟小影聊了聊後面呢"
+    } ]
+  }, {
+    "tStartMs": 996800,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "還好就沒有發生什麼怪事"
+    } ]
+  }, {
+    "tStartMs": 999100,
+    "dDurationMs": 3633,
+    "segs": [ {
+      "utf8": "但這幾次呢都嚇得真的是嚇得不輕"
+    } ]
+  }, {
+    "tStartMs": 1002733,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "我好奇"
+    } ]
+  }, {
+    "tStartMs": 1003533,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "她之後在小學還遇見過那男的嗎"
+    } ]
+  }, {
+    "tStartMs": 1006733,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "她說沒有"
+    } ]
+  }, {
+    "tStartMs": 1008333,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "我也問了差不多的問題"
+    } ]
+  }, {
+    "tStartMs": 1009866,
+    "dDurationMs": 1867,
+    "segs": [ {
+      "utf8": "說我覺得那男的就是"
+    } ]
+  }, {
+    "tStartMs": 1011733,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "肯定是一着急就跑錯方向了"
+    } ]
+  }, {
+    "tStartMs": 1014300,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "就跑到不好的地方"
+    } ]
+  }, {
+    "tStartMs": 1016433,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "我覺得是"
+    } ]
+  }, {
+    "tStartMs": 1017500,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "那個燈閃爍的時候"
+    } ]
+  }, {
+    "tStartMs": 1018900,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "是代表着進入里世界了啊"
+    } ]
+  }, {
+    "tStartMs": 1021200,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "像那種怪奇物語的感覺被收了"
+    } ]
+  }, {
+    "tStartMs": 1023333,
+    "dDurationMs": 1533,
+    "segs": [ {
+      "utf8": "那男的肯定是"
+    } ]
+  }, {
+    "tStartMs": 1025266,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "就真的是挺恐怖的這個挺恐怖的，我靠"
+    } ]
+  }, {
+    "tStartMs": 1028300,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "OK第一個故事到這邊"
+    } ]
+  }, {
+    "tStartMs": 1032000,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "好，第二個故事我這邊的啊"
+    } ]
+  }, {
+    "tStartMs": 1033800,
+    "dDurationMs": 4333,
+    "segs": [ {
+      "utf8": "嗯，依然是b站的魚友叫百萬嬉皮"
+    } ]
+  }, {
+    "tStartMs": 1038800,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "嗯叫他小溪啊"
+    } ]
+  }, {
+    "tStartMs": 1040100,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "你這個暱稱起的就是越來越別"
+    } ]
+  }, {
+    "tStartMs": 1042033,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "別具一致了啊"
+    } ]
+  }, {
+    "tStartMs": 1043066,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "是人家的暱稱"
+    } ]
+  }, {
+    "tStartMs": 1044700,
+    "dDurationMs": 2566,
+    "segs": [ {
+      "utf8": "我知道我意思是你叫他小溪啊"
+    } ]
+  }, {
+    "tStartMs": 1047266,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "這個暱稱我講一下"
+    } ]
+  }, {
+    "tStartMs": 1048633,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "我都是挑自己就是念的順嘴啊"
+    } ]
+  }, {
+    "tStartMs": 1051200,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "如果有冒犯就不好意思"
+    } ]
+  }, {
+    "tStartMs": 1052900,
+    "dDurationMs": 2833,
+    "segs": [ {
+      "utf8": "叫皮皮，叫小希吧"
+    } ]
+  }, {
+    "tStartMs": 1055733,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "我稿子裡面都是小希"
+    } ]
+  }, {
+    "tStartMs": 1057033,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "好的亂了一會。好的"
+    } ]
+  }, {
+    "tStartMs": 1059633,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "小希說"
+    } ]
+  }, {
+    "tStartMs": 1060266,
+    "dDurationMs": 3834,
+    "segs": [ {
+      "utf8": "自己故事發生在大概10年前那個晚上"
+    } ]
+  }, {
+    "tStartMs": 1064500,
+    "dDurationMs": 3233,
+    "segs": [ {
+      "utf8": "那時候自己還在上上學而且是住校"
+    } ]
+  }, {
+    "tStartMs": 1067866,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 1069066,
+    "dDurationMs": 3267,
+    "segs": [ {
+      "utf8": "這段時間因為小希的外公他年齡大了"
+    } ]
+  }, {
+    "tStartMs": 1072333,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "仙世了"
+    } ]
+  }, {
+    "tStartMs": 1074033,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "啊。所以小希就從學校趕回家了"
+    } ]
+  }, {
+    "tStartMs": 1076700,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "家裡也連夜趕回了很多親戚"
+    } ]
+  }, {
+    "tStartMs": 1080100,
+    "dDurationMs": 3233,
+    "segs": [ {
+      "utf8": "大家都是很悲傷嘛，哭的稀里嘩啦的"
+    } ]
+  }, {
+    "tStartMs": 1083333,
+    "dDurationMs": 3967,
+    "segs": [ {
+      "utf8": "小西說這幾天天天晚上他得，"
+    } ]
+  }, {
+    "tStartMs": 1087600,
+    "dDurationMs": 1666,
+    "segs": [ {
+      "utf8": "應該他們習俗啊"
+    } ]
+  }, {
+    "tStartMs": 1089500,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "得跪在棺材面前"
+    } ]
+  }, {
+    "tStartMs": 1090900,
+    "dDurationMs": 3566,
+    "segs": [ {
+      "utf8": "聽道士在那噼里啪啦一頓敲鑼打鼓"
+    } ]
+  }, {
+    "tStartMs": 1094600,
+    "dDurationMs": 2266,
+    "segs": [ {
+      "utf8": "然後過了幾天"
+    } ]
+  }, {
+    "tStartMs": 1096866,
+    "dDurationMs": 2734,
+    "segs": [ {
+      "utf8": "等到就是該下葬的那一天啊"
+    } ]
+  }, {
+    "tStartMs": 1100600,
+    "dDurationMs": 2866,
+    "segs": [ {
+      "utf8": "大家就把這個他外公的棺材"
+    } ]
+  }, {
+    "tStartMs": 1103500,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "一起抬上了山"
+    } ]
+  }, {
+    "tStartMs": 1105400,
+    "dDurationMs": 3800,
+    "segs": [ {
+      "utf8": "然後他們埋的話是埋在族墳那邊的"
+    } ]
+  }, {
+    "tStartMs": 1109733,
+    "dDurationMs": 3533,
+    "segs": [ {
+      "utf8": "就應該是一個家族就是統一的墳地"
+    } ]
+  }, {
+    "tStartMs": 1113500,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "大家族呀"
+    } ]
+  }, {
+    "tStartMs": 1114900,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "對大家族才有這種"
+    } ]
+  }, {
+    "tStartMs": 1115933,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "對我感覺也是"
+    } ]
+  }, {
+    "tStartMs": 1117033,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "我反正看影視作品啊"
+    } ]
+  }, {
+    "tStartMs": 1119466,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "之類都是大家族"
+    } ]
+  }, {
+    "tStartMs": 1121933,
+    "dDurationMs": 3967,
+    "segs": [ {
+      "utf8": "在大房子旁邊有個小山坡上面的族墳"
+    } ]
+  }, {
+    "tStartMs": 1125900,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "對對對，他應該也是這樣"
+    } ]
+  }, {
+    "tStartMs": 1127800,
+    "dDurationMs": 3233,
+    "segs": [ {
+      "utf8": "他說因為要抬到族墳那邊"
+    } ]
+  }, {
+    "tStartMs": 1131100,
+    "dDurationMs": 3366,
+    "segs": [ {
+      "utf8": "但是上這條山的小路呢，只能過人"
+    } ]
+  }, {
+    "tStartMs": 1134466,
+    "dDurationMs": 1234,
+    "segs": [ {
+      "utf8": "走不了車子"
+    } ]
+  }, {
+    "tStartMs": 1136000,
+    "dDurationMs": 3666,
+    "segs": [ {
+      "utf8": "所以一群人一直忙活忙到晚上才封土"
+    } ]
+  }, {
+    "tStartMs": 1140200,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "小溪說啊"
+    } ]
+  }, {
+    "tStartMs": 1141300,
+    "dDurationMs": 3900,
+    "segs": [ {
+      "utf8": "記得就是封土之後又燒了一堆紙"
+    } ]
+  }, {
+    "tStartMs": 1145400,
+    "dDurationMs": 3533,
+    "segs": [ {
+      "utf8": "紙錢嘛，自己當時年紀小也不懂"
+    } ]
+  }, {
+    "tStartMs": 1148933,
+    "dDurationMs": 2867,
+    "segs": [ {
+      "utf8": "就在旁邊燒的不亦樂乎"
+    } ]
+  }, {
+    "tStartMs": 1151900,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "等到結束要走的時候呢"
+    } ]
+  }, {
+    "tStartMs": 1154900,
+    "dDurationMs": 3566,
+    "segs": [ {
+      "utf8": "大人們就把就是之前的火給撲滅了"
+    } ]
+  }, {
+    "tStartMs": 1158600,
+    "dDurationMs": 1233,
+    "segs": [ {
+      "utf8": "小希也去幫忙"
+    } ]
+  }, {
+    "tStartMs": 1160033,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "小希說"
+    } ]
+  }, {
+    "tStartMs": 1162833,
+    "dDurationMs": 3267,
+    "segs": [ {
+      "utf8": "小溪說一些燒完的紙錢啊"
+    } ]
+  }, {
+    "tStartMs": 1166100,
+    "dDurationMs": 2566,
+    "segs": [ {
+      "utf8": "它那個灰飛到天上去了"
+    } ]
+  }, {
+    "tStartMs": 1168666,
+    "dDurationMs": 2934,
+    "segs": [ {
+      "utf8": "突然又飛進自己眼睛裡面了"
+    } ]
+  }, {
+    "tStartMs": 1172200,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "當時自己眼睛就睜不開了"
+    } ]
+  }, {
+    "tStartMs": 1174133,
+    "dDurationMs": 4100,
+    "segs": [ {
+      "utf8": "揉了很久很久才勉強能睜開來"
+    } ]
+  }, {
+    "tStartMs": 1178300,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "但是眼睛就開始有種那種近視的感覺"
+    } ]
+  }, {
+    "tStartMs": 1181800,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "模模糊糊的"
+    } ]
+  }, {
+    "tStartMs": 1183533,
+    "dDurationMs": 4100,
+    "segs": [ {
+      "utf8": "小溪想着等一會回家裡面好好洗一下"
+    } ]
+  }, {
+    "tStartMs": 1188100,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "於是就下山拉着他"
+    } ]
+  }, {
+    "tStartMs": 1190200,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "甚至下山時候"
+    } ]
+  }, {
+    "tStartMs": 1191300,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "都是拉着爸爸的衣服下去"
+    } ]
+  }, {
+    "tStartMs": 1194500,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "小溪說下山之後啊這些就是白事"
+    } ]
+  }, {
+    "tStartMs": 1197500,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "基本就是結束了"
+    } ]
+  }, {
+    "tStartMs": 1199533,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "剩下就是外婆這邊的人善後就好了"
+    } ]
+  }, {
+    "tStartMs": 1202500,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "爸爸呢"
+    } ]
+  }, {
+    "tStartMs": 1203900,
+    "dDurationMs": 3333,
+    "segs": [ {
+      "utf8": "準備就是一會就直接送小希回學校了"
+    } ]
+  }, {
+    "tStartMs": 1207233,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "也不會耽誤第二天上課"
+    } ]
+  }, {
+    "tStartMs": 1208933,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "小希心裡就嘀咕"
+    } ]
+  }, {
+    "tStartMs": 1211433,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "自己還想偷懶睡到明天中午才回去"
+    } ]
+  }, {
+    "tStartMs": 1213900,
+    "dDurationMs": 1766,
+    "segs": [ {
+      "utf8": "一點摸魚的機會也不給"
+    } ]
+  }, {
+    "tStartMs": 1216666,
+    "dDurationMs": 1234,
+    "segs": [ {
+      "utf8": "結果就在路上"
+    } ]
+  }, {
+    "tStartMs": 1218200,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "小希還是一直在揉眼睛嘛眼睛不舒服"
+    } ]
+  }, {
+    "tStartMs": 1221100,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 1222233,
+    "dDurationMs": 400,
+    "segs": [ {
+      "utf8": "路過"
+    } ]
+  }, {
+    "tStartMs": 1222633,
+    "dDurationMs": 4567,
+    "segs": [ {
+      "utf8": "剛才就是往祖墳那個小山坡上去的路"
+    } ]
+  }, {
+    "tStartMs": 1227333,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "小希的媽媽說他還想再看一眼"
+    } ]
+  }, {
+    "tStartMs": 1230933,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "就是看一眼就是埋外公地方嗎"
+    } ]
+  }, {
+    "tStartMs": 1233466,
+    "dDurationMs": 2634,
+    "segs": [ {
+      "utf8": "這其實不信看啊"
+    } ]
+  }, {
+    "tStartMs": 1236733,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "是對"
+    } ]
+  }, {
+    "tStartMs": 1238700,
+    "dDurationMs": 3433,
+    "segs": [ {
+      "utf8": "然後媽媽就喊喊他們倆停在那邊"
+    } ]
+  }, {
+    "tStartMs": 1242133,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "小希就一直揉着眼睛一直往"
+    } ]
+  }, {
+    "tStartMs": 1245633,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "往族墳那那塊看"
+    } ]
+  }, {
+    "tStartMs": 1247466,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "結果慢慢的居然看到里隱約有一個人"
+    } ]
+  }, {
+    "tStartMs": 1251266,
+    "dDurationMs": 2634,
+    "segs": [ {
+      "utf8": "小溪說當時因為眼睛糊嘛"
+    } ]
+  }, {
+    "tStartMs": 1253933,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "周圍的景象都很模糊"
+    } ]
+  }, {
+    "tStartMs": 1255600,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "嗯但是那個人很清晰"
+    } ]
+  }, {
+    "tStartMs": 1258000,
+    "dDurationMs": 1666,
+    "segs": [ {
+      "utf8": "甚至能看得清臉"
+    } ]
+  }, {
+    "tStartMs": 1260066,
+    "dDurationMs": 1234,
+    "segs": [ {
+      "utf8": "但是投稿的時候呢"
+    } ]
+  }, {
+    "tStartMs": 1261300,
+    "dDurationMs": 566,
+    "segs": [ {
+      "utf8": "小希說"
+    } ]
+  }, {
+    "tStartMs": 1261866,
+    "dDurationMs": 2534,
+    "segs": [ {
+      "utf8": "自己已經記不清那個人臉長什麼樣了"
+    } ]
+  }, {
+    "tStartMs": 1264400,
+    "dDurationMs": 4100,
+    "segs": [ {
+      "utf8": "但在當時事發的那個年齡啊"
+    } ]
+  }, {
+    "tStartMs": 1268500,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "他自己還沒有覺得哪裡不對"
+    } ]
+  }, {
+    "tStartMs": 1270300,
+    "dDurationMs": 3566,
+    "segs": [ {
+      "utf8": "小希就很好奇的從上往下打量了一番"
+    } ]
+  }, {
+    "tStartMs": 1273866,
+    "dDurationMs": 234,
+    "segs": [ {
+      "utf8": " "
+    } ]
+  }, {
+    "tStartMs": 1274100,
+    "dDurationMs": 2966,
+    "segs": [ {
+      "utf8": "這個人。發現這個人人頭正對着自己"
+    } ]
+  }, {
+    "tStartMs": 1277066,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "但是"
+    } ]
+  }, {
+    "tStartMs": 1279933,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "他的腳也是對着自己的"
+    } ]
+  }, {
+    "tStartMs": 1283666,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "我懂我懂了"
+    } ]
+  }, {
+    "tStartMs": 1284933,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "我瞬間能get到了"
+    } ]
+  }, {
+    "tStartMs": 1286433,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "你知道為什麼嗎"
+    } ]
+  }, {
+    "tStartMs": 1287833,
+    "dDurationMs": 867,
+    "segs": [ {
+      "utf8": "你get到什麼"
+    } ]
+  }, {
+    "tStartMs": 1288700,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "我沒講完呢"
+    } ]
+  }, {
+    "tStartMs": 1289633,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "我get到他肯定啊"
+    } ]
+  }, {
+    "tStartMs": 1291333,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "你剛剛不是說臉和腳都對着自己嗎"
+    } ]
+  }, {
+    "tStartMs": 1293333,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "那肯定不是正常的嘛"
+    } ]
+  }, {
+    "tStartMs": 1295133,
+    "dDurationMs": 3767,
+    "segs": [ {
+      "utf8": "是他的臉跟腳跟對着自己對吧"
+    } ]
+  }, {
+    "tStartMs": 1300733,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "對。就是不是一個方向"
+    } ]
+  }, {
+    "tStartMs": 1302700,
+    "dDurationMs": 1566,
+    "segs": [ {
+      "utf8": "你知道為什麼我能get到這一點嗎"
+    } ]
+  }, {
+    "tStartMs": 1304266,
+    "dDurationMs": 3567,
+    "segs": [ {
+      "utf8": "嗯我還有一篇投稿跟這個好像"
+    } ]
+  }, {
+    "tStartMs": 1307833,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "對！但比這個情況"
+    } ]
+  }, {
+    "tStartMs": 1310066,
+    "dDurationMs": 2234,
+    "segs": [ {
+      "utf8": "他這個因為上墳然後碰到他"
+    } ]
+  }, {
+    "tStartMs": 1312300,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "整個邏輯是順的嗎"
+    } ]
+  }, {
+    "tStartMs": 1313666,
+    "dDurationMs": 1934,
+    "segs": [ {
+      "utf8": "我那個邏輯就很亂"
+    } ]
+  }, {
+    "tStartMs": 1315600,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "後面講到的那一期我要跟你講好"
+    } ]
+  }, {
+    "tStartMs": 1318933,
+    "dDurationMs": 3367,
+    "segs": [ {
+      "utf8": "反正意思就是他臉"
+    } ]
+  }, {
+    "tStartMs": 1322300,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "這個人"
+    } ]
+  }, {
+    "tStartMs": 1322933,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "臉朝的方向和腳尖朝方向是360度"
+    } ]
+  }, {
+    "tStartMs": 1326400,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "對是對吧"
+    } ]
+  }, {
+    "tStartMs": 1327500,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "對"
+    } ]
+  }, {
+    "tStartMs": 1329066,
+    "dDurationMs": 2534,
+    "segs": [ {
+      "utf8": "這時候呢小希立刻就想叫出來了"
+    } ]
+  }, {
+    "tStartMs": 1331733,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "想和媽媽說"
+    } ]
+  }, {
+    "tStartMs": 1333600,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "但是啊"
+    } ]
+  }, {
+    "tStartMs": 1334533,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "他自己覺得眼睛根本轉不過去了"
+    } ]
+  }, {
+    "tStartMs": 1337033,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "只能死死的盯着這個人看"
+    } ]
+  }, {
+    "tStartMs": 1339333,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "動都動不了"
+    } ]
+  }, {
+    "tStartMs": 1340300,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "這時候小希"
+    } ]
+  }, {
+    "tStartMs": 1342800,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "突然自己腳就開始動了"
+    } ]
+  }, {
+    "tStartMs": 1344633,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "嗯雙腳就開始往那個小山上走"
+    } ]
+  }, {
+    "tStartMs": 1347866,
+    "dDurationMs": 2434,
+    "segs": [ {
+      "utf8": "他說自己依然死死盯着那雙腳"
+    } ]
+  }, {
+    "tStartMs": 1350300,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "沒法離開視線"
+    } ]
+  }, {
+    "tStartMs": 1351633,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 1352933,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "小溪還覺得"
+    } ]
+  }, {
+    "tStartMs": 1354600,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "那個人好像在盯着自己看"
+    } ]
+  }, {
+    "tStartMs": 1356633,
+    "dDurationMs": 400,
+    "segs": [ {
+      "utf8": "然後"
+    } ]
+  }, {
+    "tStartMs": 1357033,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "自己又有一種夢裡面跳懸崖的感覺"
+    } ]
+  }, {
+    "tStartMs": 1359933,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "嗯感覺自己靈魂都要被他拽走了"
+    } ]
+  }, {
+    "tStartMs": 1363133,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "這個人影呢"
+    } ]
+  }, {
+    "tStartMs": 1364400,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "他說開始慢慢變淡了"
+    } ]
+  }, {
+    "tStartMs": 1366333,
+    "dDurationMs": 3267,
+    "segs": [ {
+      "utf8": "小希的腦子也變得越來越沉想睡覺"
+    } ]
+  }, {
+    "tStartMs": 1369600,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "這時候啊"
+    } ]
+  }, {
+    "tStartMs": 1371266,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "親媽出現了"
+    } ]
+  }, {
+    "tStartMs": 1373833,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "他"
+    } ]
+  }, {
+    "tStartMs": 1375533,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "媽媽突然觸景生情開始哭起來了"
+    } ]
+  }, {
+    "tStartMs": 1378133,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "喊着外公的名字"
+    } ]
+  }, {
+    "tStartMs": 1379800,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "這一哭一叫"
+    } ]
+  }, {
+    "tStartMs": 1381300,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "打雷一樣的就把小希給嚇醒了"
+    } ]
+  }, {
+    "tStartMs": 1383033,
+    "dDurationMs": 467,
+    "segs": [ {
+      "utf8": "拽回來了"
+    } ]
+  }, {
+    "tStartMs": 1383500,
+    "dDurationMs": 1566,
+    "segs": [ {
+      "utf8": "對。小希說"
+    } ]
+  }, {
+    "tStartMs": 1385066,
+    "dDurationMs": 2734,
+    "segs": [ {
+      "utf8": "當時自己眼睛就再也沒有那種模糊"
+    } ]
+  }, {
+    "tStartMs": 1387800,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "近視的感覺了"
+    } ]
+  }, {
+    "tStartMs": 1389266,
+    "dDurationMs": 3234,
+    "segs": [ {
+      "utf8": "自己也就是能緩過神來控制自己了吧"
+    } ]
+  }, {
+    "tStartMs": 1392800,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "不管三七二十一抱着媽媽就是哭"
+    } ]
+  }, {
+    "tStartMs": 1395466,
+    "dDurationMs": 3134,
+    "segs": [ {
+      "utf8": "爸爸在旁邊看他一開始一動不動"
+    } ]
+  }, {
+    "tStartMs": 1398600,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "突然這樣哭"
+    } ]
+  }, {
+    "tStartMs": 1399500,
+    "dDurationMs": 533,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 1400033,
+    "dDurationMs": 3233,
+    "segs": [ {
+      "utf8": "就把車子熄滅了跑過來安慰安慰小希"
+    } ]
+  }, {
+    "tStartMs": 1403333,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "小希就哭哭啼啼的跟媽媽爸爸"
+    } ]
+  }, {
+    "tStartMs": 1406200,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "說自己剛才經歷的事情"
+    } ]
+  }, {
+    "tStartMs": 1409700,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "小希說"
+    } ]
+  }, {
+    "tStartMs": 1410400,
+    "dDurationMs": 2666,
+    "segs": [ {
+      "utf8": "平時爸媽可能會覺得自己又在說胡話"
+    } ]
+  }, {
+    "tStartMs": 1413066,
+    "dDurationMs": 3034,
+    "segs": [ {
+      "utf8": "但那時候吧就是剛經歷完白事吧"
+    } ]
+  }, {
+    "tStartMs": 1416100,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "人都會有點迷信"
+    } ]
+  }, {
+    "tStartMs": 1418100,
+    "dDurationMs": 3900,
+    "segs": [ {
+      "utf8": "嚇得爸媽趕緊就是帶着小希"
+    } ]
+  }, {
+    "tStartMs": 1422066,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "回旁邊的家裡"
+    } ]
+  }, {
+    "tStartMs": 1423633,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "後來聽爸爸說一大群人就是"
+    } ]
+  }, {
+    "tStartMs": 1427533,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "就在商量這事嘛"
+    } ]
+  }, {
+    "tStartMs": 1428700,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "覺得可能是外公太疼小希了"
+    } ]
+  }, {
+    "tStartMs": 1430900,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "想帶他一起走捨不得他"
+    } ]
+  }, {
+    "tStartMs": 1432733,
+    "dDurationMs": 1933,
+    "segs": [ {
+      "utf8": "對等他們商量完"
+    } ]
+  }, {
+    "tStartMs": 1434666,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "小希已經哭哭啼啼的也累了"
+    } ]
+  }, {
+    "tStartMs": 1437666,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "被外婆哄睡着了"
+    } ]
+  }, {
+    "tStartMs": 1439466,
+    "dDurationMs": 2934,
+    "segs": [ {
+      "utf8": "外婆把門一關陪着小希睡了一晚上"
+    } ]
+  }, {
+    "tStartMs": 1443000,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "第二天呢他自己精神狀態好一點了"
+    } ]
+  }, {
+    "tStartMs": 1446066,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "爸爸繞了個遠路把他送回學校了"
+    } ]
+  }, {
+    "tStartMs": 1448633,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "這事他就說也算過去了就結束了"
+    } ]
+  }, {
+    "tStartMs": 1452033,
+    "dDurationMs": 2167,
+    "segs": [ {
+      "utf8": "對後面也沒有碰過什麼怪事"
+    } ]
+  }, {
+    "tStartMs": 1454200,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "那還好沒出什麼事"
+    } ]
+  }, {
+    "tStartMs": 1455800,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "他那個"
+    } ]
+  }, {
+    "tStartMs": 1457433,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "形象有點可怕"
+    } ]
+  }, {
+    "tStartMs": 1458633,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "對而且他們看到這個情況的時候"
+    } ]
+  }, {
+    "tStartMs": 1461000,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "他之前是"
+    } ]
+  }, {
+    "tStartMs": 1462266,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "那個灰迷了眼"
+    } ]
+  }, {
+    "tStartMs": 1463866,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "對，這是我"
+    } ]
+  }, {
+    "tStartMs": 1465133,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "絕對這段時間我太能找共情了"
+    } ]
+  }, {
+    "tStartMs": 1466800,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "你沒發現我今天"
+    } ]
+  }, {
+    "tStartMs": 1467600,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "一天晚上都在揉眼睛嗎"
+    } ]
+  }, {
+    "tStartMs": 1468700,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "你也會迷了眼"
+    } ]
+  }, {
+    "tStartMs": 1469900,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "我可不是"
+    } ]
+  }, {
+    "tStartMs": 1471033,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "哈哈哈我是鼻炎引發的結膜炎"
+    } ]
+  }, {
+    "tStartMs": 1473400,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "然後我眼睛狂癢啊"
+    } ]
+  }, {
+    "tStartMs": 1476433,
+    "dDurationMs": 4167,
+    "segs": [ {
+      "utf8": "哎這個上次好像也說我這邊故事是"
+    } ]
+  }, {
+    "tStartMs": 1481333,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "我不記得是誰了"
+    } ]
+  }, {
+    "tStartMs": 1482700,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "嗯他是過年就是踢的別人燒的紙錢"
+    } ]
+  }, {
+    "tStartMs": 1485833,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "對對對對紙錢"
+    } ]
+  }, {
+    "tStartMs": 1487500,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "大家最好就是離遠一點好吧"
+    } ]
+  }, {
+    "tStartMs": 1489600,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "是的該保持敬意肯定還是保持敬意"
+    } ]
+  }, {
+    "tStartMs": 1492300,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "嗯好這個故事到這邊OK"
+    } ]
+  }, {
+    "tStartMs": 1496666,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "好下一個投稿呢"
+    } ]
+  }, {
+    "tStartMs": 1498933,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "我印象比較深"
+    } ]
+  }, {
+    "tStartMs": 1500066,
+    "dDurationMs": 4067,
+    "segs": [ {
+      "utf8": "他這個投稿啊有點恐怖又有點邪"
+    } ]
+  }, {
+    "tStartMs": 1504266,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "主要是他這個人的文筆啊"
+    } ]
+  }, {
+    "tStartMs": 1506533,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "這個魚友的文筆啊賊好"
+    } ]
+  }, {
+    "tStartMs": 1508433,
+    "dDurationMs": 2867,
+    "segs": [ {
+      "utf8": "給我塑造出了一種年代感"
+    } ]
+  }, {
+    "tStartMs": 1511533,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "非常年代感"
+    } ]
+  }, {
+    "tStartMs": 1513600,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "這個投稿的魚友叫星星啊，就是"
+    } ]
+  }, {
+    "tStartMs": 1517266,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "那個滿天繁星的星"
+    } ]
+  }, {
+    "tStartMs": 1518900,
+    "dDurationMs": 2800,
+    "segs": [ {
+      "utf8": "因為這個文筆太好了"
+    } ]
+  }, {
+    "tStartMs": 1521700,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "下面我少有的用第一人稱來敘述了"
+    } ]
+  }, {
+    "tStartMs": 1524800,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "你騙人，你上期也是這麼說的哈哈哈"
+    } ]
+  }, {
+    "tStartMs": 1527133,
+    "dDurationMs": 3067,
+    "segs": [ {
+      "utf8": "真的這個真的很好，好有形象的啊"
+    } ]
+  }, {
+    "tStartMs": 1530533,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "來聽一下OK"
+    } ]
+  }, {
+    "tStartMs": 1532733,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "這個開始啊"
+    } ]
+  }, {
+    "tStartMs": 1534000,
+    "dDurationMs": 3466,
+    "segs": [ {
+      "utf8": "從小我身上發生了太多的靈異事件"
+    } ]
+  }, {
+    "tStartMs": 1537466,
+    "dDurationMs": 1334,
+    "segs": [ {
+      "utf8": "真的是太多了"
+    } ]
+  }, {
+    "tStartMs": 1539300,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "因為我是早產兒"
+    } ]
+  }, {
+    "tStartMs": 1541300,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "身體很弱"
+    } ]
+  }, {
+    "tStartMs": 1542733,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "所以經常吃藥"
+    } ]
+  }, {
+    "tStartMs": 1544400,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "小時候有一天呢"
+    } ]
+  }, {
+    "tStartMs": 1545733,
+    "dDurationMs": 3100,
+    "segs": [ {
+      "utf8": "我跟着外婆和小姨去一個商場買衣服"
+    } ]
+  }, {
+    "tStartMs": 1549133,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "那個商場很舊了很有年代感"
+    } ]
+  }, {
+    "tStartMs": 1552233,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "記得當時是夏天特別熱"
+    } ]
+  }, {
+    "tStartMs": 1554866,
+    "dDurationMs": 2067,
+    "segs": [ {
+      "utf8": "我們去一個店裡面看衣服"
+    } ]
+  }, {
+    "tStartMs": 1557200,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "我就不知道為什麼"
+    } ]
+  }, {
+    "tStartMs": 1558533,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "莫名跟着一個女的走了"
+    } ]
+  }, {
+    "tStartMs": 1561200,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "印象中那個女的呢"
+    } ]
+  }, {
+    "tStartMs": 1562466,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "穿的特別像電影"
+    } ]
+  }, {
+    "tStartMs": 1564433,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "電視裡面的那種明星一樣"
+    } ]
+  }, {
+    "tStartMs": 1567400,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "化着濃妝大紅唇"
+    } ]
+  }, {
+    "tStartMs": 1569833,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "還跟我說"
+    } ]
+  }, {
+    "tStartMs": 1571266,
+    "dDurationMs": 1734,
+    "segs": [ {
+      "utf8": "跟我走跟我走"
+    } ]
+  }, {
+    "tStartMs": 1573200,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "嗯"
+    } ]
+  }, {
+    "tStartMs": 1573833,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "她說我是你小姨"
+    } ]
+  }, {
+    "tStartMs": 1576533,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "我當時就犯迷糊了"
+    } ]
+  }, {
+    "tStartMs": 1578100,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "不知道為什麼"
+    } ]
+  }, {
+    "tStartMs": 1579133,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "就覺得這個漂亮的姐姐真的是我小姨"
+    } ]
+  }, {
+    "tStartMs": 1582533,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "因為我爸媽一直在外面做生意嘛"
+    } ]
+  }, {
+    "tStartMs": 1584500,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "嗯所以家裡面只有小姨願意跟我玩"
+    } ]
+  }, {
+    "tStartMs": 1586900,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "我很喜歡小姨"
+    } ]
+  }, {
+    "tStartMs": 1588633,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "當時我聽到外婆在後面叫我過去"
+    } ]
+  }, {
+    "tStartMs": 1591533,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "當我當然我沒有理會她"
+    } ]
+  }, {
+    "tStartMs": 1594800,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "繼續跟着這個女漂亮的姐姐往前走"
+    } ]
+  }, {
+    "tStartMs": 1597833,
+    "dDurationMs": 3367,
+    "segs": [ {
+      "utf8": "後來啊小姨衣服都沒換就跑過來"
+    } ]
+  }, {
+    "tStartMs": 1601533,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "就把我一把抱住問我怎麼了"
+    } ]
+  }, {
+    "tStartMs": 1604233,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "怎麼這麼不聽話一直往裡面走"
+    } ]
+  }, {
+    "tStartMs": 1608133,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "然後我記得我就跟小姨說我說"
+    } ]
+  }, {
+    "tStartMs": 1610900,
+    "dDurationMs": 3166,
+    "segs": [ {
+      "utf8": "這邊怪冷的，是空調開的很低嗎"
+    } ]
+  }, {
+    "tStartMs": 1614100,
+    "dDurationMs": 2366,
+    "segs": [ {
+      "utf8": "就是答非所問。然後我"
+    } ]
+  }, {
+    "tStartMs": 1616466,
+    "dDurationMs": 3334,
+    "segs": [ {
+      "utf8": "說：「小姨你看，那邊還有一個漂亮的小姨！」"
+    } ]
+  }, {
+    "tStartMs": 1620200,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "小姨以為我在胡說八道"
+    } ]
+  }, {
+    "tStartMs": 1621666,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "我卻說裡面有個姐姐，裡面有個姐姐"
+    } ]
+  }, {
+    "tStartMs": 1624200,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "然後外婆跟小姨都沒有說話"
+    } ]
+  }, {
+    "tStartMs": 1627533,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "小姨聽完我說的就把我抱回家了"
+    } ]
+  }, {
+    "tStartMs": 1629833,
+    "dDurationMs": 1067,
+    "segs": [ {
+      "utf8": "衣服也沒有買"
+    } ]
+  }, {
+    "tStartMs": 1631066,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "一路上小姨跟我都很沉默"
+    } ]
+  }, {
+    "tStartMs": 1633900,
+    "dDurationMs": 3166,
+    "segs": [ {
+      "utf8": "外婆一回家就給一個老爺爺打電話"
+    } ]
+  }, {
+    "tStartMs": 1637466,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "說的是什麼我已經忘記了"
+    } ]
+  }, {
+    "tStartMs": 1639300,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "但一回家我就開始哭"
+    } ]
+  }, {
+    "tStartMs": 1641333,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "外婆好不容易把我哄睡着了"
+    } ]
+  }, {
+    "tStartMs": 1644233,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "當天晚上我就發燒了"
+    } ]
+  }, {
+    "tStartMs": 1646333,
+    "dDurationMs": 2367,
+    "segs": [ {
+      "utf8": "那天凌晨呢"
+    } ]
+  }, {
+    "tStartMs": 1648733,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "我聽我的外婆"
+    } ]
+  }, {
+    "tStartMs": 1650433,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "還是在跟白天打電話的老爺爺說什麼"
+    } ]
+  }, {
+    "tStartMs": 1653833,
+    "dDurationMs": 2833,
+    "segs": [ {
+      "utf8": "但是燒的迷迷糊糊的根本聽不清"
+    } ]
+  }, {
+    "tStartMs": 1657266,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "小姨就坐在我旁邊拍着我的心口說"
+    } ]
+  }, {
+    "tStartMs": 1660400,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "啊沒事的沒事的"
+    } ]
+  }, {
+    "tStartMs": 1661600,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "星星會好的，星星會好的"
+    } ]
+  }, {
+    "tStartMs": 1664066,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "後來呢，奶奶把小姨叫出去了"
+    } ]
+  }, {
+    "tStartMs": 1666733,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "我一個人躺在床上"
+    } ]
+  }, {
+    "tStartMs": 1668433,
+    "dDurationMs": 3800,
+    "segs": [ {
+      "utf8": "就看見白天的那個女人坐在我的床邊"
+    } ]
+  }, {
+    "tStartMs": 1672333,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "轉過頭邊笑邊說：走呀"
+    } ]
+  }, {
+    "tStartMs": 1675700,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "我帶你去找媽媽呀"
+    } ]
+  }, {
+    "tStartMs": 1677700,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "她笑的很詭異"
+    } ]
+  }, {
+    "tStartMs": 1679466,
+    "dDurationMs": 1534,
+    "segs": [ {
+      "utf8": "我嚇得叫出來了"
+    } ]
+  }, {
+    "tStartMs": 1681033,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "然後外婆跟小姨他們都進來了"
+    } ]
+  }, {
+    "tStartMs": 1683500,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "那個爺爺也來了"
+    } ]
+  }, {
+    "tStartMs": 1684433,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "進來之後呢就盯着我看"
+    } ]
+  }, {
+    "tStartMs": 1686600,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "那一瞬間我就很害怕就哇哇大哭"
+    } ]
+  }, {
+    "tStartMs": 1689433,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "他見狀出去了一會"
+    } ]
+  }, {
+    "tStartMs": 1691733,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "再進來的時候給了我一張符"
+    } ]
+  }, {
+    "tStartMs": 1694300,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "跟我說"
+    } ]
+  }, {
+    "tStartMs": 1696133,
+    "dDurationMs": 2067,
+    "segs": [ {
+      "utf8": "應該這裡應該是用那個方言"
+    } ]
+  }, {
+    "tStartMs": 1698200,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "我不太會啊就是說「妮啊」"
+    } ]
+  }, {
+    "tStartMs": 1700333,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "就是河南吧河南還是河北的（方言）"
+    } ]
+  }, {
+    "tStartMs": 1702633,
+    "dDurationMs": 1567,
+    "segs": [ {
+      "utf8": "就你把這個符"
+    } ]
+  }, {
+    "tStartMs": 1704500,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "帶在身上不能弄丟知道沒有"
+    } ]
+  }, {
+    "tStartMs": 1706900,
+    "dDurationMs": 2766,
+    "segs": [ {
+      "utf8": "第二天早上燒退了一點"
+    } ]
+  }, {
+    "tStartMs": 1709933,
+    "dDurationMs": 2767,
+    "segs": [ {
+      "utf8": "外婆就帶着我在這個院壩曬太陽"
+    } ]
+  }, {
+    "tStartMs": 1713133,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "曬着曬着我又看到了那天那個女人"
+    } ]
+  }, {
+    "tStartMs": 1716833,
+    "dDurationMs": 1367,
+    "segs": [ {
+      "utf8": "她還是在對我笑"
+    } ]
+  }, {
+    "tStartMs": 1718300,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "站在田野裡面"
+    } ]
+  }, {
+    "tStartMs": 1720233,
+    "dDurationMs": 4033,
+    "segs": [ {
+      "utf8": "我就說，「外婆那個阿姨又來了。」"
+    } ]
+  }, {
+    "tStartMs": 1725300,
+    "dDurationMs": 3366,
+    "segs": [ {
+      "utf8": "然後外婆呢就起身把我往屋子裡面抱"
+    } ]
+  }, {
+    "tStartMs": 1729100,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "她問我你符咒放哪了"
+    } ]
+  }, {
+    "tStartMs": 1730600,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "我說在枕頭下面"
+    } ]
+  }, {
+    "tStartMs": 1732466,
+    "dDurationMs": 2467,
+    "segs": [ {
+      "utf8": "他就把符咒着讓我握在手裡面"
+    } ]
+  }, {
+    "tStartMs": 1735266,
+    "dDurationMs": 2534,
+    "segs": [ {
+      "utf8": "小姨呢就從樓上跑下來抱着我"
+    } ]
+  }, {
+    "tStartMs": 1738200,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "給我唱歌安慰我"
+    } ]
+  }, {
+    "tStartMs": 1739800,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "大概半小時"
+    } ]
+  }, {
+    "tStartMs": 1741233,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "然後那個爺爺又來了"
+    } ]
+  }, {
+    "tStartMs": 1742833,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "跟我說「你啊，晚上你早點睡覺。」"
+    } ]
+  }, {
+    "tStartMs": 1745266,
+    "dDurationMs": 1334,
+    "segs": [ {
+      "utf8": "「聽到什麼都不要發出聲音！」"
+    } ]
+  }, {
+    "tStartMs": 1746600,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "「知不知道？今天晚上沒有人陪你。」"
+    } ]
+  }, {
+    "tStartMs": 1749833,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "我從小就膽子特別小"
+    } ]
+  }, {
+    "tStartMs": 1751800,
+    "dDurationMs": 2833,
+    "segs": [ {
+      "utf8": "我就問外婆啊媽媽會回來嗎"
+    } ]
+  }, {
+    "tStartMs": 1754933,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "外婆說媽媽他們回來回來的路上了"
+    } ]
+  }, {
+    "tStartMs": 1757500,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "你不要害怕"
+    } ]
+  }, {
+    "tStartMs": 1759400,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "然後那天下午"
+    } ]
+  }, {
+    "tStartMs": 1761133,
+    "dDurationMs": 1767,
+    "segs": [ {
+      "utf8": "整個下午只有小姨抱着我"
+    } ]
+  }, {
+    "tStartMs": 1762900,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "唱了一遍又一遍的歌"
+    } ]
+  }, {
+    "tStartMs": 1765000,
+    "dDurationMs": 1400,
+    "segs": [ {
+      "utf8": "一直到8點鐘的時候"
+    } ]
+  }, {
+    "tStartMs": 1766400,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "外婆煮了湯圓給我吃"
+    } ]
+  }, {
+    "tStartMs": 1768633,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "讓我吃完就睡覺"
+    } ]
+  }, {
+    "tStartMs": 1770400,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "但是我全身都沒有力氣"
+    } ]
+  }, {
+    "tStartMs": 1772266,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "感覺特別特別冷渾身輕飄飄的"
+    } ]
+  }, {
+    "tStartMs": 1775033,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "吃了一半的時候"
+    } ]
+  }, {
+    "tStartMs": 1776400,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "以前一起和我玩的那些小朋友啊"
+    } ]
+  }, {
+    "tStartMs": 1778733,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "就跑過來找我玩"
+    } ]
+  }, {
+    "tStartMs": 1780333,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "外婆把他們吼走了"
+    } ]
+  }, {
+    "tStartMs": 1781833,
+    "dDurationMs": 700,
+    "segs": [ {
+      "utf8": "要知道"
+    } ]
+  }, {
+    "tStartMs": 1782533,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "外婆平時對這些小朋友都很溫柔的"
+    } ]
+  }, {
+    "tStartMs": 1785733,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "說話呢也輕聲細語的"
+    } ]
+  }, {
+    "tStartMs": 1788033,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "今天晚上她特別反常"
+    } ]
+  }, {
+    "tStartMs": 1790733,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "晚上我一個人躺在床上睡覺的時候"
+    } ]
+  }, {
+    "tStartMs": 1793133,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "眼睛緊閉着不敢睜開"
+    } ]
+  }, {
+    "tStartMs": 1795333,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "但是那個女人的這個形象啊"
+    } ]
+  }, {
+    "tStartMs": 1797466,
+    "dDurationMs": 2467,
+    "segs": [ {
+      "utf8": "在我腦海裡面浮現出來了"
+    } ]
+  }, {
+    "tStartMs": 1800100,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "還是對我笑嘻嘻的樣子"
+    } ]
+  }, {
+    "tStartMs": 1803000,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "後來我睡的迷迷糊糊的時候"
+    } ]
+  }, {
+    "tStartMs": 1804900,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "就感覺有人在敲門"
+    } ]
+  }, {
+    "tStartMs": 1806400,
+    "dDurationMs": 1100,
+    "segs": [ {
+      "utf8": "我本來呢想去開"
+    } ]
+  }, {
+    "tStartMs": 1807500,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "又想起了那個爺爺說的話"
+    } ]
+  }, {
+    "tStartMs": 1809600,
+    "dDurationMs": 1066,
+    "segs": [ {
+      "utf8": "我就沒有開"
+    } ]
+  }, {
+    "tStartMs": 1810933,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "就緊閉着眼睛繼續睡覺"
+    } ]
+  }, {
+    "tStartMs": 1813066,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "希望自己能夠趕緊睡着"
+    } ]
+  }, {
+    "tStartMs": 1815600,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "然後我就聽到有個人喊我"
+    } ]
+  }, {
+    "tStartMs": 1817400,
+    "dDurationMs": 866,
+    "segs": [ {
+      "utf8": "讓我給她開門"
+    } ]
+  }, {
+    "tStartMs": 1818266,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "她說我是媽媽"
+    } ]
+  }, {
+    "tStartMs": 1820500,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "我還是很害怕"
+    } ]
+  }, {
+    "tStartMs": 1821500,
+    "dDurationMs": 966,
+    "segs": [ {
+      "utf8": "因為我知道"
+    } ]
+  }, {
+    "tStartMs": 1822633,
+    "dDurationMs": 3167,
+    "segs": [ {
+      "utf8": "媽媽如果有這個回來的情況啊"
+    } ]
+  }, {
+    "tStartMs": 1825800,
+    "dDurationMs": 1633,
+    "segs": [ {
+      "utf8": "她會先告訴外婆的"
+    } ]
+  }, {
+    "tStartMs": 1827866,
+    "dDurationMs": 1634,
+    "segs": [ {
+      "utf8": "我就感到門外的女人"
+    } ]
+  }, {
+    "tStartMs": 1829500,
+    "dDurationMs": 2166,
+    "segs": [ {
+      "utf8": "因為我不開門開始生氣了"
+    } ]
+  }, {
+    "tStartMs": 1831733,
+    "dDurationMs": 3667,
+    "segs": [ {
+      "utf8": "出現那種氣急敗壞的聲音大吼："
+    } ]
+  }, {
+    "tStartMs": 1835400,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "你再不開門我生氣了"
+    } ]
+  }, {
+    "tStartMs": 1837200,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "我還是沒去理她"
+    } ]
+  }, {
+    "tStartMs": 1839033,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "雖然當時是夏天"
+    } ]
+  }, {
+    "tStartMs": 1840700,
+    "dDurationMs": 2733,
+    "segs": [ {
+      "utf8": "但是我感覺屋子裡面越來越冷"
+    } ]
+  }, {
+    "tStartMs": 1843800,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "後來我聽見有人在房子裡走來走去"
+    } ]
+  }, {
+    "tStartMs": 1847033,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "沒幾分鐘腳不停了"
+    } ]
+  }, {
+    "tStartMs": 1849400,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "我有一種被人盯着的感覺"
+    } ]
+  }, {
+    "tStartMs": 1852033,
+    "dDurationMs": 2700,
+    "segs": [ {
+      "utf8": "聽到一個聲音說，「還是跟我走吧」"
+    } ]
+  }, {
+    "tStartMs": 1854733,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "我帶你去找奶奶"
+    } ]
+  }, {
+    "tStartMs": 1858000,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "這個聲音啊"
+    } ]
+  }, {
+    "tStartMs": 1859100,
+    "dDurationMs": 2400,
+    "segs": [ {
+      "utf8": "就是最早我在商場裡面"
+    } ]
+  }, {
+    "tStartMs": 1861500,
+    "dDurationMs": 1766,
+    "segs": [ {
+      "utf8": "看到的那個女人的聲音"
+    } ]
+  }, {
+    "tStartMs": 1863466,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "她一直在我耳邊重複這句話"
+    } ]
+  }, {
+    "tStartMs": 1865700,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "當時我已經意識到這個女人"
+    } ]
+  }, {
+    "tStartMs": 1868466,
+    "dDurationMs": 1234,
+    "segs": [ {
+      "utf8": "估計是女鬼了"
+    } ]
+  }, {
+    "tStartMs": 1869900,
+    "dDurationMs": 1966,
+    "segs": [ {
+      "utf8": "但是我不知道她到底要不要害我"
+    } ]
+  }, {
+    "tStartMs": 1871866,
+    "dDurationMs": 934,
+    "segs": [ {
+      "utf8": "還是怎麼的"
+    } ]
+  }, {
+    "tStartMs": 1873266,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "後來我逐漸意識模糊"
+    } ]
+  }, {
+    "tStartMs": 1875633,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "可能是睡過去的"
+    } ]
+  }, {
+    "tStartMs": 1877100,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "也可能是那種魂魄離體"
+    } ]
+  }, {
+    "tStartMs": 1879866,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "我感覺整個人都輕飄飄的"
+    } ]
+  }, {
+    "tStartMs": 1882300,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "但我腦海裡面始終有一個畫面"
+    } ]
+  }, {
+    "tStartMs": 1885000,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "就是我在寺廟裡面拜菩薩"
+    } ]
+  }, {
+    "tStartMs": 1888400,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "一直到天蒙蒙亮"
+    } ]
+  }, {
+    "tStartMs": 1890233,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "媽媽打開我的房間門進來"
+    } ]
+  }, {
+    "tStartMs": 1892266,
+    "dDurationMs": 1267,
+    "segs": [ {
+      "utf8": "抱着我一直哭"
+    } ]
+  }, {
+    "tStartMs": 1893800,
+    "dDurationMs": 2866,
+    "segs": [ {
+      "utf8": "然後還不停的說是我的錯是我的錯"
+    } ]
+  }, {
+    "tStartMs": 1896800,
+    "dDurationMs": 2266,
+    "segs": [ {
+      "utf8": "我當時也不知道媽媽是怎麼了"
+    } ]
+  }, {
+    "tStartMs": 1899133,
+    "dDurationMs": 1300,
+    "segs": [ {
+      "utf8": "我也跟着她哭了"
+    } ]
+  }, {
+    "tStartMs": 1901033,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "然後那個爺爺在外面呢就跟外婆說"
+    } ]
+  }, {
+    "tStartMs": 1903900,
+    "dDurationMs": 1366,
+    "segs": [ {
+      "utf8": "你家女兒厲害呢"
+    } ]
+  }, {
+    "tStartMs": 1906000,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "昨天晚上啊是菩薩在保佑他"
+    } ]
+  }, {
+    "tStartMs": 1908600,
+    "dDurationMs": 1666,
+    "segs": [ {
+      "utf8": "你趕緊讓他父母去燒香"
+    } ]
+  }, {
+    "tStartMs": 1910533,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "讓那個女鬼啊別再纏着孩子了"
+    } ]
+  }, {
+    "tStartMs": 1913133,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "也讓這個孩子啊好好去謝謝菩薩"
+    } ]
+  }, {
+    "tStartMs": 1916633,
+    "dDurationMs": 1867,
+    "segs": [ {
+      "utf8": "然後我父母就帶着我去燒香了"
+    } ]
+  }, {
+    "tStartMs": 1918666,
+    "dDurationMs": 1600,
+    "segs": [ {
+      "utf8": "也就是那天之後"
+    } ]
+  }, {
+    "tStartMs": 1920400,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "那個聲音和那個女鬼再也沒有出現"
+    } ]
+  }, {
+    "tStartMs": 1924066,
+    "dDurationMs": 1534,
+    "segs": [ {
+      "utf8": "我睡覺都很安穩"
+    } ]
+  }, {
+    "tStartMs": 1926000,
+    "dDurationMs": 1866,
+    "segs": [ {
+      "utf8": "然後我過了幾年才知道啊"
+    } ]
+  }, {
+    "tStartMs": 1928266,
+    "dDurationMs": 1534,
+    "segs": [ {
+      "utf8": "這個事情是什麼原因呢"
+    } ]
+  }, {
+    "tStartMs": 1929866,
+    "dDurationMs": 2934,
+    "segs": [ {
+      "utf8": "隔壁村的一個女人一直和我家有仇"
+    } ]
+  }, {
+    "tStartMs": 1933400,
+    "dDurationMs": 2733,
+    "segs": [ {
+      "utf8": "我媽懷上孩子之後啊她當時沒懷上"
+    } ]
+  }, {
+    "tStartMs": 1936333,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "後來好不容易懷上了"
+    } ]
+  }, {
+    "tStartMs": 1937833,
+    "dDurationMs": 1800,
+    "segs": [ {
+      "utf8": "出生幾天又夭折了"
+    } ]
+  }, {
+    "tStartMs": 1939700,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "她就一直被這個事情打擊"
+    } ]
+  }, {
+    "tStartMs": 1941666,
+    "dDurationMs": 1934,
+    "segs": [ {
+      "utf8": "一直到變得瘋瘋癲癲的"
+    } ]
+  }, {
+    "tStartMs": 1944666,
+    "dDurationMs": 1134,
+    "segs": [ {
+      "utf8": "持續了一段時間之後"
+    } ]
+  }, {
+    "tStartMs": 1945800,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "不知道什麼原因死掉了"
+    } ]
+  }, {
+    "tStartMs": 1947833,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "估計死後是有怨氣一直纏着我"
+    } ]
+  }, {
+    "tStartMs": 1950933,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "故事到這邊就結束了"
+    } ]
+  }, {
+    "tStartMs": 1952133,
+    "dDurationMs": 1867,
+    "segs": [ {
+      "utf8": "哦。好頂！"
+    } ]
+  }, {
+    "tStartMs": 1954033,
+    "dDurationMs": 2033,
+    "segs": [ {
+      "utf8": "很有年代感的一個故事"
+    } ]
+  }, {
+    "tStartMs": 1956133,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "就是他給我塑造的一種畫面"
+    } ]
+  }, {
+    "tStartMs": 1958400,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "就是那種"
+    } ]
+  }, {
+    "tStartMs": 1959600,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "可能是80年代或者70年代的那種商場"
+    } ]
+  }, {
+    "tStartMs": 1962900,
+    "dDurationMs": 1833,
+    "segs": [ {
+      "utf8": "要用糧票的那種商場"
+    } ]
+  }, {
+    "tStartMs": 1965233,
+    "dDurationMs": 3500,
+    "segs": [ {
+      "utf8": "他主要，他的文筆給我很有畫面感"
+    } ]
+  }, {
+    "tStartMs": 1968733,
+    "dDurationMs": 3933,
+    "segs": [ {
+      "utf8": "對對！幾個女人在田野裡面啊。對對對"
+    } ]
+  }, {
+    "tStartMs": 1972666,
+    "dDurationMs": 3834,
+    "segs": [ {
+      "utf8": "或者在房門外面就是讓他出來之類的"
+    } ]
+  }, {
+    "tStartMs": 1976500,
+    "dDurationMs": 1733,
+    "segs": [ {
+      "utf8": "是的，畫面感很強"
+    } ]
+  }, {
+    "tStartMs": 1978233,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "是的是。壓迫感也很強"
+    } ]
+  }, {
+    "tStartMs": 1979933,
+    "dDurationMs": 967,
+    "segs": [ {
+      "utf8": "我靠這個對"
+    } ]
+  }, {
+    "tStartMs": 1980900,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "而且他投過來了"
+    } ]
+  }, {
+    "tStartMs": 1983133,
+    "dDurationMs": 1133,
+    "segs": [ {
+      "utf8": "基本上都是書面語言"
+    } ]
+  }, {
+    "tStartMs": 1984266,
+    "dDurationMs": 534,
+    "segs": [ {
+      "utf8": "他不像我"
+    } ]
+  }, {
+    "tStartMs": 1984800,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "很多時候"
+    } ]
+  }, {
+    "tStartMs": 1985600,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "大家投稿是那種口語化的東西"
+    } ]
+  }, {
+    "tStartMs": 1987800,
+    "dDurationMs": 2266,
+    "segs": [ {
+      "utf8": "我要去整理然後把邏輯理順"
+    } ]
+  }, {
+    "tStartMs": 1990066,
+    "dDurationMs": 3267,
+    "segs": [ {
+      "utf8": "理的過程中如果遇到如果遇到一些"
+    } ]
+  }, {
+    "tStartMs": 1993633,
+    "dDurationMs": 767,
+    "segs": [ {
+      "utf8": "邏輯不通的地方"
+    } ]
+  }, {
+    "tStartMs": 1994400,
+    "dDurationMs": 2633,
+    "segs": [ {
+      "utf8": "我要去跟投稿的魚友來問說"
+    } ]
+  }, {
+    "tStartMs": 1997033,
+    "dDurationMs": 1167,
+    "segs": [ {
+      "utf8": "你這邊大概是什麼情況"
+    } ]
+  }, {
+    "tStartMs": 1998200,
+    "dDurationMs": 900,
+    "segs": [ {
+      "utf8": "大概什麼情況"
+    } ]
+  }, {
+    "tStartMs": 1999466,
+    "dDurationMs": 1034,
+    "segs": [ {
+      "utf8": "你停止攻擊"
+    } ]
+  }, {
+    "tStartMs": 2000600,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "攻擊其他粉絲好不好"
+    } ]
+  }, {
+    "tStartMs": 2002500,
+    "dDurationMs": 3000,
+    "segs": [ {
+      "utf8": "沒有沒有就是我都我覺得都挺好的"
+    } ]
+  }, {
+    "tStartMs": 2005500,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "對但是他這個投稿呢"
+    } ]
+  }, {
+    "tStartMs": 2006933,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "就是給我營造的這種年代的畫面感"
+    } ]
+  }, {
+    "tStartMs": 2009900,
+    "dDurationMs": 1033,
+    "segs": [ {
+      "utf8": "太深刻了"
+    } ]
+  }, {
+    "tStartMs": 2010933,
+    "dDurationMs": 267,
+    "segs": [ {
+      "utf8": "是的"
+    } ]
+  }, {
+    "tStartMs": 2011200,
+    "dDurationMs": 3533,
+    "segs": [ {
+      "utf8": "我就想到了那個那種不能說的年代"
+    } ]
+  }, {
+    "tStartMs": 2014833,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "然後出的這種事情"
+    } ]
+  }, {
+    "tStartMs": 2016333,
+    "dDurationMs": 2667,
+    "segs": [ {
+      "utf8": "哎小孩子碰小孩子碰到這種"
+    } ]
+  }, {
+    "tStartMs": 2019733,
+    "dDurationMs": 2333,
+    "segs": [ {
+      "utf8": "給人一種就是像拐賣的感覺"
+    } ]
+  }, {
+    "tStartMs": 2022066,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "就更恐怖了"
+    } ]
+  }, {
+    "tStartMs": 2023533,
+    "dDurationMs": 867,
+    "segs": [ {
+      "utf8": "我覺得對"
+    } ]
+  }, {
+    "tStartMs": 2024700,
+    "dDurationMs": 1766,
+    "segs": [ {
+      "utf8": "而且那個時候我記得小時候啊"
+    } ]
+  }, {
+    "tStartMs": 2026466,
+    "dDurationMs": 1967,
+    "segs": [ {
+      "utf8": "就是我那個小時候"
+    } ]
+  }, {
+    "tStartMs": 2028433,
+    "dDurationMs": 2233,
+    "segs": [ {
+      "utf8": "大概 2,000年之前吧"
+    } ]
+  }, {
+    "tStartMs": 2030666,
+    "dDurationMs": 3067,
+    "segs": [ {
+      "utf8": "不經常說外面有人拐賣人"
+    } ]
+  }, {
+    "tStartMs": 2033733,
+    "dDurationMs": 2500,
+    "segs": [ {
+      "utf8": "然後他往裡頭頂一拍，拍個什麼粉"
+    } ]
+  }, {
+    "tStartMs": 2036266,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "你就什麼都不知道了"
+    } ]
+  }, {
+    "tStartMs": 2037466,
+    "dDurationMs": 2567,
+    "segs": [ {
+      "utf8": "對他中間不有一段正好就是"
+    } ]
+  }, {
+    "tStartMs": 2040433,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "呃他小姨抱着他"
+    } ]
+  }, {
+    "tStartMs": 2041900,
+    "dDurationMs": 2433,
+    "segs": [ {
+      "utf8": "嗯然後他就說那邊有還有一個小姨"
+    } ]
+  }, {
+    "tStartMs": 2044933,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "就一一方面是可能是孩子他年幼"
+    } ]
+  }, {
+    "tStartMs": 2047033,
+    "dDurationMs": 3300,
+    "segs": [ {
+      "utf8": "他對人的五官的分分辨程度對"
+    } ]
+  }, {
+    "tStartMs": 2050333,
+    "dDurationMs": 1700,
+    "segs": [ {
+      "utf8": "這個還行確實"
+    } ]
+  }, {
+    "tStartMs": 2052666,
+    "dDurationMs": 2534,
+    "segs": [ {
+      "utf8": "主要好像我們經歷過這個年代"
+    } ]
+  }, {
+    "tStartMs": 2055200,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "對"
+    } ]
+  }, {
+    "tStartMs": 2055833,
+    "dDurationMs": 4867,
+    "segs": [ {
+      "utf8": "好像現在可能我們住的城市比較稍微"
+    } ]
+  }, {
+    "tStartMs": 2061433,
+    "dDurationMs": 667,
+    "segs": [ {
+      "utf8": "安全一點"
+    } ]
+  }, {
+    "tStartMs": 2062100,
+    "dDurationMs": 1433,
+    "segs": [ {
+      "utf8": "對稍微安全一點"
+    } ]
+  }, {
+    "tStartMs": 2063533,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "可能"
+    } ]
+  }, {
+    "tStartMs": 2064533,
+    "dDurationMs": 2867,
+    "segs": [ {
+      "utf8": "近幾年沒有碰到過這種事情很少了"
+    } ]
+  }, {
+    "tStartMs": 2067400,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "其實我們小時候這種事情還挺多的"
+    } ]
+  }, {
+    "tStartMs": 2069500,
+    "dDurationMs": 1200,
+    "segs": [ {
+      "utf8": "對對，就是拐賣"
+    } ]
+  }, {
+    "tStartMs": 2070700,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "我甚至記得我小時候我奶奶"
+    } ]
+  }, {
+    "tStartMs": 2073333,
+    "dDurationMs": 1333,
+    "segs": [ {
+      "utf8": "他想讓我安靜下來啊"
+    } ]
+  }, {
+    "tStartMs": 2074666,
+    "dDurationMs": 834,
+    "segs": [ {
+      "utf8": "他想嚇唬我"
+    } ]
+  }, {
+    "tStartMs": 2075500,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "都是用說什麼有人要來把你拐走了"
+    } ]
+  }, {
+    "tStartMs": 2078233,
+    "dDurationMs": 633,
+    "segs": [ {
+      "utf8": "這種東西"
+    } ]
+  }, {
+    "tStartMs": 2078866,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": "對對"
+    } ]
+  }, {
+    "tStartMs": 2080500,
+    "dDurationMs": 3133,
+    "segs": [ {
+      "utf8": "是這個故事可以啊很是的是的"
+    } ]
+  }, {
+    "tStartMs": 2083933,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "OK那今天第三個故事到這邊"
+    } ]
+  }, {
+    "tStartMs": 2088833,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "好的那本期鯰魚夜話全部的故事"
+    } ]
+  }, {
+    "tStartMs": 2091800,
+    "dDurationMs": 2000,
+    "segs": [ {
+      "utf8": "到這邊就結束了啊"
+    } ]
+  }, {
+    "tStartMs": 2093800,
+    "dDurationMs": 1266,
+    "segs": [ {
+      "utf8": "我們在最後呢"
+    } ]
+  }, {
+    "tStartMs": 2095066,
+    "dDurationMs": 3267,
+    "segs": [ {
+      "utf8": "老於想說一句叫做啊我一直覺得啊"
+    } ]
+  }, {
+    "tStartMs": 2098500,
+    "dDurationMs": 4033,
+    "segs": [ {
+      "utf8": "被誤解，是講述者的一個宿命啊"
+    } ]
+  }, {
+    "tStartMs": 2102533,
+    "dDurationMs": 1467,
+    "segs": [ {
+      "utf8": "我其實也能理解"
+    } ]
+  }, {
+    "tStartMs": 2104000,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "因為畢竟是每個人心中都有他自己的"
+    } ]
+  }, {
+    "tStartMs": 2107466,
+    "dDurationMs": 834,
+    "segs": [ {
+      "utf8": "鯰魚夜話"
+    } ]
+  }, {
+    "tStartMs": 2108333,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "我希望鯰魚呢"
+    } ]
+  }, {
+    "tStartMs": 2109333,
+    "dDurationMs": 1667,
+    "segs": [ {
+      "utf8": "最終能做到的是"
+    } ]
+  }, {
+    "tStartMs": 2111000,
+    "dDurationMs": 2533,
+    "segs": [ {
+      "utf8": "陪伴大家度過一段歲月"
+    } ]
+  }, {
+    "tStartMs": 2113533,
+    "dDurationMs": 933,
+    "segs": [ {
+      "utf8": "一段時光"
+    } ]
+  }, {
+    "tStartMs": 2114466,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "可能在"
+    } ]
+  }, {
+    "tStartMs": 2115666,
+    "dDurationMs": 3400,
+    "segs": [ {
+      "utf8": "這個五年、十年甚至更長的時間啊"
+    } ]
+  }, {
+    "tStartMs": 2119066,
+    "dDurationMs": 1934,
+    "segs": [ {
+      "utf8": "你跟你的孩子啊說啊"
+    } ]
+  }, {
+    "tStartMs": 2121000,
+    "dDurationMs": 2133,
+    "segs": [ {
+      "utf8": "之前我聽鯰魚夜話啊"
+    } ]
+  }, {
+    "tStartMs": 2123133,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "跟這個"
+    } ]
+  }, {
+    "tStartMs": 2125733,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "老於叔叔"
+    } ]
+  }, {
+    "tStartMs": 2128100,
+    "dDurationMs": 1500,
+    "segs": [ {
+      "utf8": "小妙哥哥"
+    } ]
+  }, {
+    "tStartMs": 2129900,
+    "dDurationMs": 1900,
+    "segs": [ {
+      "utf8": "然後，輩分好像立馬就上來了"
+    } ]
+  }, {
+    "tStartMs": 2132200,
+    "dDurationMs": 2100,
+    "segs": [ {
+      "utf8": "度過了一段解壓的歲月"
+    } ]
+  }, {
+    "tStartMs": 2135066,
+    "dDurationMs": 2200,
+    "segs": [ {
+      "utf8": "升華了。OK OK不鬧了啊"
+    } ]
+  }, {
+    "tStartMs": 2137266,
+    "dDurationMs": 800,
+    "segs": [ {
+      "utf8": " "
+    } ]
+  }, {
+    "tStartMs": 2138066,
+    "dDurationMs": 2967,
+    "segs": [ {
+      "utf8": "歡迎大家繼續對我們的關注和支持"
+    } ]
+  }, {
+    "tStartMs": 2141100,
+    "dDurationMs": 2900,
+    "segs": [ {
+      "utf8": "也歡迎您隨時把您身邊發生的"
+    } ]
+  }, {
+    "tStartMs": 2144033,
+    "dDurationMs": 2600,
+    "segs": [ {
+      "utf8": "適合在夜裡說的奇事、怪事和邪事"
+    } ]
+  }, {
+    "tStartMs": 2146666,
+    "dDurationMs": 1000,
+    "segs": [ {
+      "utf8": "給我們投稿"
+    } ]
+  }, {
+    "tStartMs": 2147666,
+    "dDurationMs": 2267,
+    "segs": [ {
+      "utf8": "任何一個可以聯繫到鯰魚的平台"
+    } ]
+  }, {
+    "tStartMs": 2150000,
+    "dDurationMs": 2300,
+    "segs": [ {
+      "utf8": "都可以向我們私信投稿"
+    } ]
+  }, {
+    "tStartMs": 2152633,
+    "dDurationMs": 2467,
+    "segs": [ {
+      "utf8": "那今天的夜話到這邊，拜拜！拜拜！"
+    } ]
+  } ]
+}
