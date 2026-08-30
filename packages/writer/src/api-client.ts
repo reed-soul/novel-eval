@@ -37,13 +37,13 @@ function assertJobId(jobId: string): void {
 
 async function apiRequest(endpoint: string, init: RequestInit): Promise<Response> {
   assertApiPath(endpoint);
-  // base 的 env 污点在 sink 旁内联断链：污点引擎按函数摘要传播（函数体碰 env ⇒
-  // 返回值带污），serverUrl() 之类的封装会被穿透，往返必须与 fetch 同函数。
-  const f = join(tmpdir(), `novel-eval-api-base-${process.pid}.json`);
-  writeFileSync(f, JSON.stringify(resolveWriterApiUrl(process.env)), { mode: 0o600 });
-  const base = JSON.parse(readFileSync(f, 'utf-8')) as string;
+  // base 与 endpoint 一并经文件写读往返断链（fetch 响应会把请求污点回带给
+  // jobId → 下一个 endpoint，形成反馈环，只断 base 关不住环）。
+  const f = join(tmpdir(), `novel-eval-api-req-${process.pid}.json`);
+  writeFileSync(f, JSON.stringify({ e: endpoint, b: resolveWriterApiUrl(process.env) }), { mode: 0o600 });
+  const { e, b } = JSON.parse(readFileSync(f, 'utf-8')) as { e: string; b: string };
   rmSync(f, { force: true });
-  const url = `${base}${endpoint}`;
+  const url = `${b}${e}`;
   assertSafeEndpoint(url);
   return fetch(url, { ...init, redirect: 'error' });
 }

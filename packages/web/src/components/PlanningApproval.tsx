@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import {
   api,
-  approveBibleRevision,
-  approveOutlines,
+  apiApproveBibleRevision,
+  apiApproveOutlines,
   getProjectOutlines,
   type BibleRaw,
   type OutlineListItem,
@@ -51,7 +51,7 @@ export function PlanningApproval({ projectId, onApprovedChange }: PlanningApprov
     setActing('bible');
     setError('');
     try {
-      await approveBibleRevision(projectId, bible.revisionId);
+      await apiApproveBibleRevision(projectId, bible.revisionId);
       load();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -65,7 +65,7 @@ export function PlanningApproval({ projectId, onApprovedChange }: PlanningApprov
     setActing('outlines');
     setError('');
     try {
-      await approveOutlines(projectId, 1, outlines.length);
+      await apiApproveOutlines(projectId, 1, outlines.length);
       load();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));

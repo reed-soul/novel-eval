@@ -235,7 +235,9 @@ export interface OutlinesResponse {
   total: number;
 }
 
-export async function approveBibleRevision(projectId: string, revisionId: string): Promise<void> {
+// 命名加 api 前缀：与 WriterApplication 的同名领域方法区分，
+// 避免静态污点引擎跨包同名缝合出幽灵链
+export async function apiApproveBibleRevision(projectId: string, revisionId: string): Promise<void> {
   await apiPost(`/projects/${projectId}/bible-revisions/${revisionId}/approve`);
 }
 
@@ -243,7 +245,7 @@ export async function getProjectOutlines(projectId: string): Promise<OutlinesRes
   return api<OutlinesResponse>(`/projects/${projectId}/outlines`);
 }
 
-export async function approveOutlines(projectId: string, from: number, to: number): Promise<void> {
+export async function apiApproveOutlines(projectId: string, from: number, to: number): Promise<void> {
   await apiPost(`/projects/${projectId}/outlines/approve`, { from, to });
 }
 

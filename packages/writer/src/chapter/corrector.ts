@@ -227,7 +227,7 @@ function resolveCorrectionFeedback(input: {
     parts.push(input.feedback.trim());
   }
   if (typeof input.revisionTaskId === 'string' && input.revisionTaskId.trim() !== '') {
-    const task = new RevisionTaskService(input.db).get(input.projectId, input.revisionTaskId);
+    const task = new RevisionTaskService(input.db).getOwned(input.projectId, input.revisionTaskId);
     if (!task) {
       throw new ValidationError(`revision task not found: ${input.revisionTaskId}`);
     }
