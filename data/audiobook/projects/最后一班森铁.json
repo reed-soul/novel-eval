@@ -1,0 +1,40 @@
+{
+  "$comment": "《最后一班森铁》有声书发音表（per-project pronunciation guide）。条目按需增删：match=正文字面短语，read=朗读替换（同时进字幕，写成听众想看到的读法）。长词优先匹配。所有条目均来自 2026-08-30 全文扫描实据。",
+  "pron": [
+    { "match": "06:30", "read": "六点三十分", "note": "时刻表冒号串，TTS 会念冒号" },
+    { "match": "09:40", "read": "九点四十分", "note": "同上" },
+    { "match": "98.11.20", "read": "九八年十一月二十号", "note": "点分日期" },
+    { "match": "98.12.15", "read": "九八年十二月十五号", "note": "点分日期" },
+    { "match": "98.9", "read": "九八年九月", "note": "只有年月的日期，防念成九八点九" },
+    { "match": "1996-1998", "read": "一九九六至一九九八", "note": "年份区间" },
+    { "match": "2.3km", "read": "二点三公里", "note": "km 单位串" },
+    { "match": "23km", "read": "二十三公里", "note": "km 单位串" },
+    { "match": "QL-96-014", "read": "QL九六零一四", "note": "合同编号，防念'九十六'" },
+    { "match": "QL-97-003", "read": "QL九七零零三", "note": "合同编号" },
+    { "match": "QL-98-021", "read": "QL九八零二一", "note": "合同编号" },
+    { "match": "D-76", "read": "D七六", "note": "显影粉型号" },
+    { "match": "0317", "read": "零三一七", "note": "零开头编号，防念'零三百一十七'" },
+    { "match": "7732", "read": "七七三二", "note": "账号尾号" },
+    { "match": "8217", "read": "八二一七", "note": "内线号" },
+    { "match": "0464", "read": "零四六四", "note": "座机区号段" },
+    { "match": "110", "read": "幺幺零", "note": "报警电话，防念'一百一十'" },
+    { "match": "柈子", "read": "绊子", "note": "东北话柴火，读 bàn zi，'柈'为生僻多音字" },
+    { "match": "Yamaha", "read": "雅马哈", "note": "英文商标" }
+  ],
+  "cast": [
+    "程砚秋", "周德厚", "老周头", "张国富", "苏文远", "王淑芬", "老赵头",
+    "周宇轩", "刘建功", "赵建国", "沈鹤", "赵明", "苏野", "老周"
+  ],
+  "voiceBySpeaker": [
+    { "match": "苏野", "voice": "zh-CN-XiaoyiNeural" },
+    { "match": "程砚秋", "voice": "zh-CN-YunyangNeural" },
+    { "match": "周宇轩", "voice": "zh-CN-YunyangNeural" },
+    { "match": "周德厚", "voice": "zh-CN-YunyangNeural" },
+    { "match": "老周", "voice": "zh-CN-YunyangNeural" },
+    { "match": "老周头", "voice": "zh-CN-YunyangNeural" },
+    { "match": "张国富", "voice": "zh-CN-YunyangNeural" },
+    { "match": "赵明", "voice": "zh-CN-YunyangNeural" },
+    { "match": "沈鹤", "voice": "zh-CN-YunzeNeural" },
+    { "match": "苏文远", "voice": "zh-CN-YunyeNeural" }
+  ]
+}

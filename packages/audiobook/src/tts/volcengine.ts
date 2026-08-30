@@ -11,10 +11,15 @@
  * 环境变量：ARK_API_KEY（仅从 env 读，绝不落盘）
  */
 import { mkdir, writeFile } from 'node:fs/promises';
+import { existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Segment } from '../annotate.ts';
 import type { SynthResult, TtsEngine } from './index.ts';
 import { ffprobeDurationMs } from '../ffmpeg.ts';
+
+const SEGMENT_TIMEOUT_MS = 120_000; // chunked 流也可能停摆，兜底杀请求
+const MAX_ATTEMPTS = 3;
+const MIN_CACHE_BYTES = 512; // 与 edge.ts 同款：过小说明是半截文件，重合成
 
 // SSRF 防护：端点为字面量常量；请求前断言协议+域名白名单；禁跟随重定向
 const ENDPOINT = 'https://openspeech.bytedance.com/api/v3/plan/tts/unidirectional';
@@ -34,6 +39,9 @@ class VolcVoiceMismatchError extends Error {
     this.name = 'VolcVoiceMismatchError';
   }
 }
+
+/** 测试钩子：单测里把退避基数调 0，避免真实等待 */
+export const _test = { retryBaseMs: 3_000 };
 
 // —— 音色映射（与 annotate.ts DEFAULT_VOICE_CONFIG 的 edge 音色对应）——
 // 2026-08-27 全班底逐一经 plan 路线试音放行（此前 55000000 封锁已放宽）；
@@ -99,6 +107,7 @@ async function callPlanTts(
   const res = await fetch(ENDPOINT, {
     method: 'POST',
     redirect: 'error', // 不跟随重定向，杜绝被引导至内网
+    signal: AbortSignal.timeout(SEGMENT_TIMEOUT_MS),
     headers: {
       'X-Api-Key': apiKey,
       'X-Api-Resource-Id': RESOURCE_ID,
@@ -153,31 +162,70 @@ async function callPlanTts(
 export const engine: TtsEngine = {
   name: 'volcengine',
   async synthesize(segments, outDir) {
-    const apiKey = process.env.ARK_API_KEY;
-    if (!apiKey) throw new Error('需要 ARK_API_KEY（火山 Agent Plan key，仅从环境变量读取）');
     await mkdir(outDir, { recursive: true });
+    // key 延迟校验：全缓存命中（重渲/只补段）不需要网络与凭据
+    let apiKey: string | undefined;
+    const needKey = (): string => {
+      apiKey ??= process.env.ARK_API_KEY;
+      if (!apiKey) throw new Error('需要 ARK_API_KEY（火山 Agent Plan key，仅从环境变量读取）');
+      return apiKey;
+    };
     // 音色被 plan 路线拒绝（55000000）时降级到旁白音色并记牢，后续段落不再试错
     const demoted = new Set<string>();
+    const failures: { segmentId: string; speaker: string; text: string; error: string }[] = [];
     const out: SynthResult[] = [];
     for (const seg of segments) {
+      const file = join(outDir, `${seg.id}.mp3`);
+      // 断点续跑：与 edge 同款落盘缓存——重跑/换图重渲不重复烧配额
+      if (existsSync(file) && statSync(file).size > MIN_CACHE_BYTES) {
+        out.push({ segmentId: seg.id, file, durationMs: await ffprobeDurationMs(file) });
+        continue;
+      }
       let speaker = VOICE_MAP[seg.voice] ?? NARRATOR_SPEAKER;
       if (demoted.has(speaker)) speaker = NARRATOR_SPEAKER;
-      let buf: Buffer;
-      try {
-        buf = await callPlanTts(seg.text, speaker, seg.rate, emotionFor(seg), apiKey);
-      } catch (e) {
-        if (e instanceof VolcVoiceMismatchError && e.apiCode === 55000000 && speaker !== NARRATOR_SPEAKER) {
-          demoted.add(speaker);
-          console.warn(`    ⚠ 音色 ${speaker} 在 plan 路线不可用，降级悬疑解说`);
-          speaker = NARRATOR_SPEAKER;
-          buf = await callPlanTts(seg.text, speaker, seg.rate, emotionFor(seg), apiKey);
-        } else {
-          throw e;
+      let buf: Buffer | undefined;
+      let lastErr: unknown;
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        try {
+          buf = await callPlanTts(seg.text, speaker, seg.rate, emotionFor(seg), needKey());
+          break;
+        } catch (e) {
+          lastErr = e;
+          if (e instanceof VolcVoiceMismatchError && e.apiCode === 55000000) {
+            if (speaker !== NARRATOR_SPEAKER && !demoted.has(speaker)) {
+              demoted.add(speaker);
+              console.warn(`    ⚠ 音色 ${speaker} 在 plan 路线不可用，降级悬疑解说`);
+              speaker = NARRATOR_SPEAKER;
+              attempt -= 1; // 音色降级不消耗重试次数
+              continue;
+            }
+            break; // 旁白音色也被拒：重试无意义
+          }
+          if (attempt < MAX_ATTEMPTS) {
+            const wait = _test.retryBaseMs * attempt;
+            console.warn(`  [tts] ${seg.id} 第 ${attempt} 次失败，${wait}ms 后重试：${(e as Error).message.slice(0, 120)}`);
+            await new Promise((r) => setTimeout(r, wait));
+          }
         }
       }
-      const file = join(outDir, `${seg.id}.mp3`);
+      if (!buf) {
+        // 不炸整集长跑：跳过并记录，下游 assemble 按「缺失段」容忍拼接，
+        // 清单供 listen（审听）与重跑补段（缓存保证只补失败段）消费
+        failures.push({
+          segmentId: seg.id, speaker,
+          text: seg.text.slice(0, 80),
+          error: String((lastErr as Error | undefined)?.message ?? lastErr).slice(0, 300),
+        });
+        console.warn(`  ⚠ 段 ${seg.id} 合成失败（重试 ${MAX_ATTEMPTS} 次），跳过并记录`);
+        continue;
+      }
       await writeFile(file, buf);
       out.push({ segmentId: seg.id, file, durationMs: await ffprobeDurationMs(file) });
+    }
+    if (failures.length) {
+      const failFile = join(outDir, 'tts-failures.json');
+      await writeFile(failFile, JSON.stringify(failures, null, 1), 'utf-8');
+      console.warn(`  ⚠ volcengine：${failures.length}/${segments.length} 段失败 → ${failFile}（重跑仅补失败段）`);
     }
     return out;
   },

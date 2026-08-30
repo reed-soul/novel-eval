@@ -16,7 +16,8 @@ import { resolve, sep } from 'node:path';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { existsSync, readdirSync } from 'node:fs';
 import { openWriterDb, resolveProjectId, loadChapters, listProjects } from './db.ts';
-import { annotateChapter, DEFAULT_VOICE_CONFIG, type Segment, type SegmentKind } from './annotate.ts';
+import { annotateChapter, applyPron, DEFAULT_VOICE_CONFIG, type Segment, type SegmentKind, type VoiceConfig } from './annotate.ts';
+import { loadProjectConfig } from './project-config.ts';
 import { createEngine, type TtsEngine, type SynthResult } from './tts/index.ts';
 import { assembleChapter } from './audio.ts';
 import { assembleEpisode, type TrackItem } from './episode.ts';
@@ -60,6 +61,8 @@ interface CleanArgs {
   snow: boolean;
   skipVideo: boolean;
   tagline: string;
+  /** per-project 配置显式路径（默认按项目名/ID 自动发现 data/audiobook/projects/） */
+  config?: string;
   /** 并行渲染用：集号起始偏移（--chapters 4-6 --ep-start 2 → 写入 ep02），
    *  同时保证 TTS 缓存路径（epXX/chNN/tts）与全量串行跑一致，可互相复用。 */
   epStart: number;
@@ -87,6 +90,12 @@ function parseArgs(argv: string[]): { command: string; raw: Record<string, strin
       case '--skip-video': skipVideo = true; break;
       case '--ep-start': raw.epStart = next(); break;
       case '--tagline': raw.tagline = next(); break;
+      case '--config': raw.config = next(); break;
+      case '--ep': raw.ep = next(); break;
+      case '--model': raw.model = next(); break;
+      case '--cer': raw.cer = next(); break;
+      case '--fix': raw.fix = '1'; break;
+      case '--srt': raw.srt = '1'; break;
       default: throw new Error(`未知参数：${a}`);
     }
   }
@@ -120,6 +129,7 @@ function cleanArgs(raw: Record<string, string>, skipVideo: boolean): CleanArgs {
     snow: c.noSnow !== '1',
     skipVideo,
     tagline: c.tagline ? cleanText(c.tagline, 100) : '',
+    config: c.config ? safePath(c.config) : undefined,
     epStart,
   };
 }
@@ -132,6 +142,27 @@ function pickEngine(kind: string): Promise<TtsEngine> {
     case 'volcengine': return createEngine('volcengine');
     default: throw new Error(`未知 TTS 引擎：${kind}`);
   }
+}
+
+/** 审听子命令：argv 白名单校验后交给 listen.ts（行业 proofer 的机器版） */
+async function runListenCommand(raw: Record<string, string>): Promise<void> {
+  const WHISPER_MODELS = ['tiny', 'base', 'small', 'medium', 'large', 'large-v2', 'large-v3', 'turbo'];
+  const outRoot = safePath(raw.out ?? 'dist/audiobook');
+  if (raw.ep !== undefined && !/^\d{1,2}$/.test(raw.ep)) throw new Error('--ep 需为集号数字（如 01）');
+  if (raw.model !== undefined && !WHISPER_MODELS.includes(raw.model)) {
+    throw new Error(`--model 仅允许 ${WHISPER_MODELS.join(' | ')}`);
+  }
+  const cer = raw.cer !== undefined ? Number(raw.cer) : 0.1;
+  if (!Number.isFinite(cer) || cer <= 0 || cer >= 1) throw new Error('--cer 需在 (0,1)，如 0.10');
+  const { runListen } = await import('./listen.ts');
+  await runListen({
+    outRoot,
+    ep: raw.ep !== undefined ? Number(raw.ep) : undefined,
+    model: raw.model ?? 'small',
+    cerThreshold: cer,
+    fix: raw.fix === '1',
+    srt: raw.srt === '1',
+  });
 }
 
 /** 章节配图解析：--cover-dir 里按编号前缀找（01-xxx.jpg / 01.jpg），逐级回退 */
@@ -169,8 +200,13 @@ interface ChapterProduct {
 
 async function main() {
   const { command, raw, skipVideo } = parseArgs(process.argv.slice(2));
+  if (command === 'listen') {
+    await runListenCommand(raw);
+    return;
+  }
   if (command !== 'build') {
-    console.log('用法：pnpm audiobook build --project <名称或id> [--chapters 1|1-15] [--group 3] [--chars 600] [--engine edge|minimax|volcengine] [--cover 图.jpg] [--cover-dir 目录] [--no-cold-open] [--no-snow] [--skip-video] [--ep-start 2] [--tagline 一句话钩子]');
+    console.log('用法：pnpm audiobook build --project <名称或id> [--chapters 1|1-15] [--group 3] [--chars 600] [--engine edge|minimax|volcengine] [--cover 图.jpg] [--cover-dir 目录] [--config 项目配置.json] [--no-cold-open] [--no-snow] [--skip-video] [--ep-start 2] [--tagline 一句话钩子]');
+    console.log('      pnpm audiobook listen --out dist/audiobook [--ep 01] [--model small] [--cer 0.10] [--fix] [--srt]   # 审听：ASR 回验 + 坏段定位');
     process.exit(0);
   }
   const rawArgs = cleanArgs(raw, skipVideo);
@@ -194,7 +230,23 @@ async function main() {
   const engine = await pickEngine(args.engine);
   const bookTitle = (db.prepare('SELECT title FROM project WHERE id = ?').get(projectId) as { title: string }).title;
   const brand = { ...DEFAULT_BRAND, bookTagline: args.tagline };
-  const cfg = DEFAULT_VOICE_CONFIG;
+
+  // per-project 配置：发音表（pronunciation guide）+ 角色音色班底
+  const loaded = loadProjectConfig({
+    explicit: args.config,
+    dataDir: resolve(REPO_ROOT, 'data/audiobook'),
+    projectId,
+    title: bookTitle,
+  });
+  const pronEntries = loaded.config.pron ?? [];
+  const cfg: VoiceConfig = {
+    ...DEFAULT_VOICE_CONFIG,
+    ...(loaded.config.narrator ? { narrator: loaded.config.narrator } : {}),
+    ...(loaded.config.defaultSpeaker ? { defaultSpeaker: loaded.config.defaultSpeaker } : {}),
+    ...(loaded.config.voiceBySpeaker ? { voiceBySpeaker: loaded.config.voiceBySpeaker } : {}),
+    ...(loaded.config.cast ? { cast: loaded.config.cast } : {}),
+  };
+  console.log(`▶ 项目配置：${loaded.source ?? '（无，默认音色班底）'}${pronEntries.length ? `｜发音表 ${pronEntries.length} 条` : ''}`);
 
   console.log(`▶ ${bookTitle}｜${chapters.length} 章｜每集 ${args.group} 章｜引擎 ${engine.name}｜冷开场 ${args.coldOpen ? '开' : '关'}`);
   const products: ChapterProduct[] = [];
@@ -211,7 +263,17 @@ async function main() {
     for (const ch of grp) {
       let content = ch.content;
       if (args.chars && content.length > args.chars) content = content.slice(0, args.chars);
-      const segs = annotateChapter(ch.position, ch.title, content, cfg);
+      // 发音表：正文与朗读标题都过一遍（文件名仍用原标题，避免缓存路径漂移）
+      let speakTitle = ch.title;
+      if (pronEntries.length) {
+        const rc = applyPron(content, pronEntries);
+        const rt = applyPron(ch.title, pronEntries);
+        content = rc.text;
+        speakTitle = rt.text;
+        const hits = [...rc.hits, ...rt.hits];
+        if (hits.length) console.log(`    发音表：${hits.map((h) => `${h.entry.match}×${h.count}`).join('、')}`);
+      }
+      const segs = annotateChapter(ch.position, speakTitle, content, cfg);
       const chDir = resolve(epDir, `ch${String(ch.position).padStart(2, '0')}`);
       const ttsDir = resolve(chDir, 'tts');
       await mkdir(ttsDir, { recursive: true });
@@ -251,7 +313,7 @@ async function main() {
         id, kind: 'narration' as SegmentKind, speaker: undefined, text,
         voice: cfg.narrator, rate, pitch: cfg.narrationPitch, gapAfterMs: gap,
       });
-      const hookText = pickHookSentence(grp[0].content);
+      const hookText = pickHookSentence(applyPron(grp[0].content, pronEntries).text);
       const introText = brand.introLine.replace('{book}', bookTitle);
       const proSegs = [mk(`ep${epN}-hook`, hookText, '-8%', 900), mk(`ep${epN}-intro`, introText, '-10%', 1000)];
       const proSynth = await engine.synthesize(proSegs, proTts);

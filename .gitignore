@@ -31,6 +31,10 @@ data/*
 !data/spike-samples/
 data/spike-samples/*
 !data/spike-samples/sample-novel.txt
+# 例外：有声书 per-project 配置（发音表/角色班底为手工策划产物，不可再生）
+!data/audiobook/
+data/audiobook/*
+!data/audiobook/projects/
 
 # Spike 输出（含真实 LLM 响应、token/费用记录，可能含摘录片段）
 spike/output/
