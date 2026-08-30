@@ -36,16 +36,20 @@ class VolcVoiceMismatchError extends Error {
 }
 
 // —— 音色映射（与 annotate.ts DEFAULT_VOICE_CONFIG 的 edge 音色对应）——
-// Plan 路线实测（2026-08-26）仅以下两个中文音色可用；其余 2.0 音色
-// （如 zh_male_beijingxiaoye_uranus_bigtts 等）一律报 55000000，
-// 官方 2.0 全表见 volcengine.com/docs/6561/1257544，plan 扩充后在此补齐。
-const NARRATOR_SPEAKER = 'zh_male_xuanyijieshuo_uranus_bigtts'; // 悬疑解说：低沉稳重，旁白首选（用户试听认可）
-const DIALOGUE_SPEAKER = 'zh_male_m191_uranus_bigtts';           // 云舟：清爽男声，对白
+// 2026-08-27 全班底逐一经 plan 路线试音放行（此前 55000000 封锁已放宽）；
+// 官方 2.0 全表 volcengine.com/docs/6561/1257544
+const NARRATOR_SPEAKER = 'zh_male_xuanyijieshuo_uranus_bigtts'; // 悬疑解说：旁白（用户选定）
 const VOICE_MAP: Record<string, string> = {
-  'zh-CN-YunjianNeural': NARRATOR_SPEAKER, // 低沉男声旁白 → 悬疑解说
-  'zh-CN-YunxiNeural': DIALOGUE_SPEAKER,   // 清爽男声默认对白 → 云舟
-  'zh-CN-YunyangNeural': DIALOGUE_SPEAKER, // 中年男角 → 云舟（plan 路线暂无中年男声）
-  'zh-CN-XiaoyiNeural': DIALOGUE_SPEAKER,  // 女主 → 云舟（plan 路线暂无可用女声）
+  'zh-CN-YunjianNeural': NARRATOR_SPEAKER,                        // 低沉旁白 → 悬疑解说
+  'zh-CN-YunxiNeural': 'zh_male_gaolengchenwen_uranus_bigtts',    // 默认对白/男主/警察 → 高冷沉稳
+  'zh-CN-YunyangNeural': 'zh_male_baqiqingshu_uranus_bigtts',     // 中年男/领导/长辈 → 霸气青叔
+  'zh-CN-YunyeNeural': 'zh_male_shenyeboke_uranus_bigtts',        // 沉郁老者 → 深夜播客
+  'zh-CN-YunzeNeural': 'zh_male_m191_uranus_bigtts',              // 年轻男配 → 云舟
+  'zh-CN-XiaoyiNeural': 'zh_female_zhixingnv_uranus_bigtts',      // 女主 → 知性女声
+  'zh-CN-XiaomoNeural': 'zh_female_zhishuaiyingzi_uranus_bigtts', // 泼辣/东北女性 → 直率英子
+  'zh-CN-XiaohanNeural': 'zh_female_wenroushunv_uranus_bigtts',   // 温柔女性 → 温柔淑女
+  'zh-CN-YunxiaNeural': 'zh_male_shaonianzixin_uranus_bigtts',    // 少年男 → 少年梓辛
+  'zh-CN-XiaoxiaoNeural': 'zh_male_tiancaitongsheng_uranus_bigtts', // 儿童 → 天才童声
 };
 
 /** Segment.rate（"-12%" 格式）→ speech_rate 数值，接口范围 [-50, 100] */

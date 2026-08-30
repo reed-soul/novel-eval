@@ -4,6 +4,35 @@
 
 export interface Cue { startMs: number; endMs: number; text: string }
 
+/**
+ * 无词级时间戳引擎（豆包 volcengine 无 srtFile）的字幕兜底：
+ * 按句末标点切分（长句再按逗号断），段内时长按字数比例分摊。
+ * 精度足够阅读；换引擎回 edge 则自动回到词级时间戳。
+ */
+export function estimateCues(text: string, startMs: number, durationMs: number): Cue[] {
+  const parts: string[] = [];
+  let cur = '';
+  for (const ch of text) {
+    cur += ch;
+    if (/[。！？；…」"]/.test(ch) && cur.replace(/[^\u4e00-\u9fff\w]/g, '').length >= 4) {
+      parts.push(cur);
+      cur = '';
+    } else if (cur.length >= 42 && /[，、—]/.test(ch)) {
+      parts.push(cur);
+      cur = '';
+    }
+  }
+  if (cur.trim()) parts.push(cur);
+  const totalChars = parts.reduce((a, p) => a + p.length, 0) || 1;
+  let t = startMs;
+  return parts.map((p) => {
+    const d = Math.round((p.length / totalChars) * durationMs);
+    const cue: Cue = { startMs: t, endMs: t + d, text: p.trim() };
+    t += d;
+    return cue;
+  });
+}
+
 function toMs(ts: string): number {
   const m = ts.trim().match(/(\d+):(\d+):(\d+)[,.](\d+)/);
   if (!m) return 0;

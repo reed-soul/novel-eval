@@ -30,13 +30,18 @@ export interface VoiceConfig {
   dialoguePitch: string;
 }
 
-// ── 豆包侧音色对应（volcengine 引擎，tts/volcengine.ts 的 VOICE_MAP 同步维护）──
-//   zh-CN-YunjianNeural（低沉旁白）→ zh_male_xuanyijieshuo_uranus_bigtts（悬疑解说，plan 路线实测可用）
-//   zh-CN-YunxiNeural（清爽对白）  → zh_male_m191_uranus_bigtts（云舟，实测可用）
-//   zh-CN-YunyangNeural（中年男角）→ zh_male_m191_uranus_bigtts（plan 路线暂无中年男声，退云舟）
-//   zh-CN-XiaoyiNeural（女主）      → zh_male_m191_uranus_bigtts（plan 路线暂无可用女声，退云舟）
-//   其余 2.0 音色（官方表 volcengine.com/docs/6561/1257544）在 Agent Plan 路线报 55000000，
-//   plan 扩充后先在 VOICE_MAP 补映射，再回这里更新注释。
+// ── 豆包侧音色班底（volcengine 引擎；tts/volcengine.ts 的 VOICE_MAP 同步维护，
+//    2026-08-27 全班底 plan 路线试音放行）──
+//   zh-CN-YunjianNeural（低沉旁白）  → 悬疑解说（用户选定）
+//   zh-CN-YunxiNeural（默认对白/男主/警察）→ 高冷沉稳
+//   zh-CN-YunyangNeural（中年男/领导）→ 霸气青叔
+//   zh-CN-YunyeNeural（沉郁老者）    → 深夜播客
+//   zh-CN-YunzeNeural（年轻男配）    → 云舟
+//   zh-CN-XiaoyiNeural（女主）       → 知性女声
+//   zh-CN-XiaomoNeural（泼辣/东北女）→ 直率英子
+//   zh-CN-XiaohanNeural（温柔女性）  → 温柔淑女
+//   zh-CN-YunxiaNeural（少年男）     → 少年梓辛
+//   zh-CN-XiaoxiaoNeural（儿童）     → 天才童声
 export const DEFAULT_VOICE_CONFIG: VoiceConfig = {
   // 云健：低沉男声，悬疑旁白首选；云希：清爽男声，默认对白
   narrator: 'zh-CN-YunjianNeural',
@@ -103,10 +108,41 @@ export function annotateChapter(
     });
   };
 
+  // 章节头归一化：markdown 标题行（# 第X章…）去掉 # 与分隔标点再朗读——
+  // 井号绝不能进 TTS（2026-08-26 用户听检 EP02 实锤被念成"井号第四章"）。
+  // 短且不以句读结尾才算标题行，避免误吞正文首句。
+  const headingBody = (p: string): string | null => {
+    const stripped = p.replace(/^#{1,6}\s*/, '');
+    const m = stripped.match(/^(第[一二三四五六七八九十百0-9]{1,4}章)([\s，,、：:]?)(.*)$/);
+    if (!m) return null;
+    const rest = m[3].trim();
+    if (rest.length > 24 || /[。！？…""」]/.test(rest)) return null;
+    return rest ? `${m[1]} ${rest}` : m[1];
+  };
+  const numToCn = (v: number): string => {
+    const d = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+    if (v < 10) return d[v];
+    if (v < 20) return '十' + (v % 10 ? d[v % 10] : '');
+    return d[Math.floor(v / 10)] + '十' + (v % 10 ? d[v % 10] : '');
+  };
+
   const paragraphs = content.split(/\n+/);
+  // 正文本章没有标题行时（如第 2/15 章），用 DB 章节标题补朗读一个
+  if (!paragraphs.some((para) => headingBody(para.trim()) !== null)) {
+    const cleanTitle = title.replace(/^#{1,6}\s*/, '').trim();
+    push('narration', `第${numToCn(position)}章 ${cleanTitle}`.trim());
+    if (segs.length) segs[segs.length - 1].gapAfterMs = 800;
+  }
   for (const para of paragraphs) {
     const p = para.trim();
     if (!p) continue;
+
+    const heading = headingBody(p);
+    if (heading) {
+      push('narration', heading);
+      if (segs.length) segs[segs.length - 1].gapAfterMs = 800;
+      continue;
+    }
 
     // 信件/遗书段（原稿用 **…** 标记）：整段低语速旁白
     if (p.startsWith('**') && p.endsWith('**')) {
