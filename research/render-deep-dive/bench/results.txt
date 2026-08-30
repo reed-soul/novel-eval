@@ -1,0 +1,33 @@
+B1-baseline-current: 30s
+B2-supersample-x264-24fps: 24s
+B3-luma-blend-only: 5s
+B4a-segment-30s: 11s
+B4b-concat-copy: 0s
+----- 产物校验 -----
+b1: h264,12/1,720 aac,0/0,2585 60.000000 
+b2: h264,24/1,1440 60.000000 
+b3: h264,12/1,720 aac,0/0,2585 60.000000 
+b4: h264,24/1,1440 aac,0/0,2585 60.000000 
+out/b1.mp4 29883342
+out/b2.mp4 7100706
+out/b3.mp4 29946136
+out/b4.mp4 11040076
+out/seg0.mp4 5024215
+out/seg1.mp4 5024215
+out/snowish.mp4 35642340
+== B5: 成片层雪花 overlay 通道（VT 8M 重编一遍 60s 成片）==
+B5-snow-overlay-pass: 14s
+== B6: VT 是否尊重 -g 24 -bf 0（IDR 间隔抽查）==
+   1 I,
+  23 P
+   1 I,
+  23 P
+   1 I,
+  23 P
+   1 I,
+  23 P
+== B7: screen 混合抬黑量化（YAVG 对比：有雪 b1 vs 无雪 b2 首秒均值）==
+b1(screen雪) YAVG: 127.687, 127.673 127.698
+b2(无雪)   YAVG: 125.656, 125.656 125.656
+average:36.755717
+average:30.078110

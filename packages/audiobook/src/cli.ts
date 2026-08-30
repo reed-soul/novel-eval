@@ -23,7 +23,7 @@ import { assembleEpisode, type TrackItem } from './episode.ts';
 import { renderChapterVideo } from './video.ts';
 import { ensureSnowAsset } from './assets.ts';
 import { parseSrt, shift, mergeCues, writeSrt, estimateCues, type Cue } from './srt.ts';
-import { buildUploadPlan, writeUploadBundle, DEFAULT_BRAND } from './youtube.ts';
+import { buildUploadPlan, writeUploadBundle, DEFAULT_BRAND, type ChapterMark } from './youtube.ts';
 
 const REPO_ROOT = process.cwd();
 
@@ -164,6 +164,7 @@ interface ChapterProduct {
   videoFile: string;
   durationMs: number;
   srtFile?: string;
+  chapters?: ChapterMark[];
 }
 
 async function main() {
@@ -281,11 +282,21 @@ async function main() {
 
     // 整集字幕：章节 cues 平移到分集时间轴（冷开场之后 + 前章累计）
     const allCues = [...prologueCues];
+    // YouTube 章节规则：首锚点必须 0:00 且每章 ≥10s。
+    // 冷开场不足 10s 时并入首章（锚点取 0），避免整份章节表被平台静默作废
+    const marks: ChapterMark[] = [];
+    const foldPrologue = args.coldOpen && prologueMs < 10_000;
+    if (args.coldOpen && !foldPrologue) marks.push({ startMs: 0, label: '冷开场' });
     let chStart = prologueMs;
     epChapters.forEach((c, i) => {
       allCues.push(...shift(c.cues, chStart));
+      const first = i === 0 && foldPrologue;
+      marks.push({ startMs: first ? 0 : chStart, label: `第${grp[i].position}章 ${grp[i].title}` });
       chStart += c.durMs + (i === grp.length - 1 ? 0 : 1400);
     });
+    if (marks.length > 0 && marks.length < 3) {
+      console.log('    ⚠ 章节导航未生成：YouTube 需 ≥3 个章节锚点（--group ≥2 并章成集即可满足）');
+    }
     const srtOut = audioOut.replace(/\.mp3$/, '.srt');
     await writeFile(srtOut, writeSrt(mergeCues([allCues])), 'utf-8');
 
@@ -301,15 +312,18 @@ async function main() {
       } else {
         const snow = args.snow ? await ensureSnowAsset(args.outRoot) : undefined;
         try {
-          await renderChapterVideo({ covers, audio: audioOut, out: videoOut, snow, subs: srtOut });
-          console.log(`    视频 1080p（软字幕+${snow ? '落雪' : '静'}）← ${covers.length} 张场景图轮换`);
+          await renderChapterVideo({
+            covers, audio: audioOut, out: videoOut, snow, subs: srtOut,
+            cacheRoot: resolve(args.outRoot, '.cache'),
+          });
+          console.log(`    视频 1440p（软字幕+${snow ? '落雪' : '静'}）← ${covers.length} 张场景图轮换（段级缓存）`);
         } catch (e) {
           console.warn(`    ⚠ 视频渲染失败（${(e as Error).message.slice(0, 120)}），仅保留音频`);
           videoOut = audioOut;
         }
       }
     }
-    products.push({ position: epN, title: label, episodeLabel: label, audioFile: audioOut, videoFile: videoOut, durationMs: epDur, srtFile: srtOut });
+    products.push({ position: epN, title: label, episodeLabel: label, audioFile: audioOut, videoFile: videoOut, durationMs: epDur, srtFile: srtOut, chapters: marks });
     console.log(`    ✅ 用时 ${((Date.now() - t0) / 1000).toFixed(0)}s`);
   }
 
