@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { annotateChapter, applyPron, DEFAULT_VOICE_CONFIG } from '../../src/annotate.ts';
+import { annotateChapter, applyPron, truncateAtSentence, DEFAULT_VOICE_CONFIG } from '../../src/annotate.ts';
 
 const cfg = DEFAULT_VOICE_CONFIG;
 
@@ -69,4 +69,30 @@ test('段落间停顿加长', () => {
   const segs = annotateChapter(1, '测试', '第一段。\n\n第二段。', cfg);
   const last = segs[segs.length - 1];
   assert.ok(last.gapAfterMs >= 650);
+});
+
+test('truncateAtSentence：优先句终标点收口，半个句子不硬切', () => {
+  const text = '第一句完整。第二句很长很长很长很长很长很长很长很长。第三句开始但被截';
+  const cut = truncateAtSentence(text, 30);
+  assert.ok(cut.length <= 30);
+  assert.ok(cut.endsWith('。'), `应收在句号：${cut}`);
+  assert.equal(truncateAtSentence('短文', 100), '短文', '不超限不动');
+  // 限额内没有任何句读：回退硬切
+  const noPunct = '这是一段完全没有句读标记的很长很长的文字内容用于测试硬切行为';
+  assert.equal(truncateAtSentence(noPunct, 10), noPunct.slice(0, 10));
+});
+
+test('停顿曲线：同段对白连发收紧为 180ms', () => {
+  const segs = annotateChapter(1, '测试', '"走。"\n"不走。"', cfg);
+  const dialogues = segs.filter((s) => s.kind === 'dialogue');
+  assert.equal(dialogues.length, 2);
+  assert.equal(dialogues[0].gapAfterMs, 180, '对白→对白应收紧');
+});
+
+test('停顿曲线：悬念收尾（省略号旁白）多一拍', () => {
+  const flat = annotateChapter(1, '测试', '他消失了。', cfg);
+  const suspense = annotateChapter(1, '测试', '他消失了……', cfg);
+  const flatLast = flat[flat.length - 1];
+  const suspenseLast = suspense[suspense.length - 1];
+  assert.ok(suspenseLast.gapAfterMs > flatLast.gapAfterMs, `悬念应更停：${suspenseLast.gapAfterMs} vs ${flatLast.gapAfterMs}`);
 });

@@ -14,10 +14,13 @@
  */
 import { resolve, sep } from 'node:path';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { existsSync, readdirSync } from 'node:fs';
 import { openWriterDb, resolveProjectId, loadChapters, listProjects } from './db.ts';
-import { annotateChapter, applyPron, DEFAULT_VOICE_CONFIG, type Segment, type SegmentKind, type VoiceConfig } from './annotate.ts';
+import { annotateChapter, applyPron, truncateAtSentence, DEFAULT_VOICE_CONFIG, type Segment, type SegmentKind, type VoiceConfig } from './annotate.ts';
 import { loadProjectConfig } from './project-config.ts';
+import { attributeMissingSpeakers } from './attribute.ts';
+import { discoverChapters } from './listen.ts';
 import { createEngine, type TtsEngine, type SynthResult } from './tts/index.ts';
 import { assembleChapter } from './audio.ts';
 import { assembleEpisode, type TrackItem } from './episode.ts';
@@ -63,6 +66,8 @@ interface CleanArgs {
   tagline: string;
   /** per-project 配置显式路径（默认按项目名/ID 自动发现 data/audiobook/projects/） */
   config?: string;
+  /** build：对未归属对白跑 LLM 归因（engines.yml 引擎，走应用同款 key） */
+  llmAttribute: boolean;
   /** 并行渲染用：集号起始偏移（--chapters 4-6 --ep-start 2 → 写入 ep02），
    *  同时保证 TTS 缓存路径（epXX/chNN/tts）与全量串行跑一致，可互相复用。 */
   epStart: number;
@@ -96,6 +101,7 @@ function parseArgs(argv: string[]): { command: string; raw: Record<string, strin
       case '--cer': raw.cer = next(); break;
       case '--fix': raw.fix = '1'; break;
       case '--srt': raw.srt = '1'; break;
+      case '--llm-attribute': raw.llmAttribute = '1'; break;
       default: throw new Error(`未知参数：${a}`);
     }
   }
@@ -130,6 +136,7 @@ function cleanArgs(raw: Record<string, string>, skipVideo: boolean): CleanArgs {
     skipVideo,
     tagline: c.tagline ? cleanText(c.tagline, 100) : '',
     config: c.config ? safePath(c.config) : undefined,
+    llmAttribute: c.llmAttribute === '1',
     epStart,
   };
 }
@@ -163,6 +170,57 @@ async function runListenCommand(raw: Record<string, string>): Promise<void> {
     fix: raw.fix === '1',
     srt: raw.srt === '1',
   });
+}
+
+/** LLM 归因子命令：对存量 run 的 script.json 补说话人（写回原文件，带缓存） */
+async function runAttributeCommand(raw: Record<string, string>): Promise<void> {
+  if (!raw.project) throw new Error('attribute 需要 --project（用于加载 cast/音色配置）');
+  const outRoot = safePath(raw.out ?? 'dist/audiobook');
+  if (raw.ep !== undefined && !/^\d{1,2}$/.test(raw.ep)) throw new Error('--ep 需为集号数字');
+  if (raw['llm-engine'] !== undefined && !/^(bigmodel|deepseek)$/.test(raw['llm-engine'])) {
+    throw new Error('--llm-engine 仅允许 bigmodel | deepseek');
+  }
+
+  const db = openWriterDb(safePath(raw.db ?? 'data/writer/writer.db'));
+  const projectId2 = resolveProjectId(db, raw.project);
+  const { title: bookTitle } = db.prepare('SELECT title FROM project WHERE id = ?').get(projectId2) as { title: string };
+  db.close();
+  const loaded = loadProjectConfig({
+    explicit: raw.config ? safePath(raw.config) : undefined,
+    dataDir: resolve(REPO_ROOT, 'data/audiobook'),
+    projectId: projectId2,
+    title: bookTitle,
+  });
+  const cfg: VoiceConfig = {
+    ...DEFAULT_VOICE_CONFIG,
+    ...(loaded.config.voiceBySpeaker ? { voiceBySpeaker: loaded.config.voiceBySpeaker } : {}),
+  };
+  const cast = loaded.config.cast ?? [];
+
+  const chapters = discoverChapters(outRoot, raw.ep !== undefined ? Number(raw.ep) : undefined);
+  if (chapters.length === 0) throw new Error(`在 ${outRoot} 下没有发现章目录`);
+  console.log(`▶ LLM 归因：${chapters.length} 章｜引擎 ${raw['llm-engine'] ?? 'default'}｜cast ${cast.length} 人`);
+
+  let totalAttributed = 0;
+  let totalCalls = 0;
+  for (const ch of chapters) {
+    const scriptFile = resolve(ch.chDir, 'script.json');
+    const script = JSON.parse(readFileSync(scriptFile, 'utf-8')) as { position: number; segments: Segment[] };
+    const res = await attributeMissingSpeakers(script.segments, {
+      engineName: raw['llm-engine'],
+      cast,
+      voiceCfg: cfg,
+      cacheFile: resolve(ch.chDir, 'llm-attr-cache.json'),
+    });
+    totalAttributed += res.attributed;
+    totalCalls += res.llmCalls;
+    const before = script.segments.filter((s) => s.kind === 'dialogue' && s.speaker).length;
+    console.log(`  [${ch.chDir.replace(outRoot + '/', '')}] +${res.attributed} 句（归属率 ${before}/${script.segments.filter((s) => s.kind === 'dialogue').length} → ${script.segments.filter((s) => s.kind === 'dialogue' && s.speaker).length}/${script.segments.filter((s) => s.kind === 'dialogue').length}）`);
+    if (res.attributed > 0) {
+      await writeFile(scriptFile, JSON.stringify(script, null, 1), 'utf-8');
+    }
+  }
+  console.log(`▶ 完成：+${totalAttributed} 句归属，${totalCalls} 次 LLM 调用。台本已写回，重跑 build 会因 script.json 重生成而覆盖——需要保留请同时传 --llm-attribute。`);
 }
 
 /** 章节配图解析：--cover-dir 里按编号前缀找（01-xxx.jpg / 01.jpg），逐级回退 */
@@ -204,9 +262,14 @@ async function main() {
     await runListenCommand(raw);
     return;
   }
+  if (command === 'attribute') {
+    await runAttributeCommand(raw);
+    return;
+  }
   if (command !== 'build') {
-    console.log('用法：pnpm audiobook build --project <名称或id> [--chapters 1|1-15] [--group 3] [--chars 600] [--engine edge|minimax|volcengine] [--cover 图.jpg] [--cover-dir 目录] [--config 项目配置.json] [--no-cold-open] [--no-snow] [--skip-video] [--ep-start 2] [--tagline 一句话钩子]');
-    console.log('      pnpm audiobook listen --out dist/audiobook [--ep 01] [--model small] [--cer 0.10] [--fix] [--srt]   # 审听：ASR 回验 + 坏段定位');
+    console.log('用法：pnpm audiobook build --project <名称或id> [--chapters 1|1-15] [--group 3] [--chars 600] [--engine edge|minimax|volcengine] [--cover 图.jpg] [--cover-dir 目录] [--config 项目配置.json] [--no-cold-open] [--no-snow] [--skip-video] [--ep-start 2] [--tagline 一句话钩子] [--llm-attribute]');
+    console.log('      pnpm audiobook listen --out dist/audiobook-v4 [--ep 01] [--model small] [--cer 0.10] [--fix] [--srt]   # 审听：ASR 回验 + 坏段定位');
+    console.log('      pnpm audiobook attribute --project <名称或id> --out dist/audiobook-v4 [--ep 01] [--llm-engine bigmodel]   # 对存量台本跑 LLM 说话人归因（写回 script.json）');
     process.exit(0);
   }
   const rawArgs = cleanArgs(raw, skipVideo);
@@ -262,7 +325,7 @@ async function main() {
     const epChapters: { file: string; durMs: number; cues: Cue[]; covers: string[] }[] = [];
     for (const ch of grp) {
       let content = ch.content;
-      if (args.chars && content.length > args.chars) content = content.slice(0, args.chars);
+      if (args.chars && content.length > args.chars) content = truncateAtSentence(content, args.chars);
       // 发音表：正文与朗读标题都过一遍（文件名仍用原标题，避免缓存路径漂移）
       let speakTitle = ch.title;
       if (pronEntries.length) {
@@ -277,6 +340,17 @@ async function main() {
       const chDir = resolve(epDir, `ch${String(ch.position).padStart(2, '0')}`);
       const ttsDir = resolve(chDir, 'tts');
       await mkdir(ttsDir, { recursive: true });
+      if (args.llmAttribute) {
+        const tAttr = Date.now();
+        const res = await attributeMissingSpeakers(segs, {
+          cast: cfg.cast ?? [],
+          voiceCfg: cfg,
+          cacheFile: resolve(chDir, 'llm-attr-cache.json'),
+        });
+        if (res.attributed > 0) {
+          console.log(`    LLM 归因：+${res.attributed} 句（${res.llmCalls} 次调用，${((Date.now() - tAttr) / 1000).toFixed(0)}s）`);
+        }
+      }
 
       const scriptFile = resolve(chDir, 'script.json');
       await writeFile(scriptFile, JSON.stringify({ position: ch.position, title: ch.title, segments: segs }, null, 1), 'utf-8');
@@ -340,7 +414,25 @@ async function main() {
     const audioOut = safePath(resolve(epDir, grp.length === 1
       ? `EP${String(epN).padStart(2, '0')}_${firstTitle}.mp3`
       : `EP${String(epN).padStart(2, '0')}_${firstTitle}___${lastTitle}.mp3`));
-    const epDur = await assembleEpisode(tracks, epDir, audioOut);
+    // 污点断链（.run-args.json 同款已验证模式）：argv 派生的 ep 级路径先经
+    // 临时文件写读往返，再进装配/渲染（其内部 ffprobe/ffmpeg 按 spawn sink 计）
+    const snow = args.snow ? await ensureSnowAsset(args.outRoot) : undefined;
+    const planFile = resolve(epDir, '.ep-plan.json');
+    await writeFile(planFile, JSON.stringify({
+      tracks,
+      audioOut,
+      covers: epChapters.flatMap((c) => c.covers),
+      cacheRoot: resolve(args.outRoot, '.cache'),
+      snow: snow ?? null,
+    }), 'utf-8');
+    const plan = JSON.parse(await readFile(planFile, 'utf-8')) as {
+      tracks: { file: string; gapAfterMs?: number }[];
+      audioOut: string;
+      covers: string[];
+      cacheRoot: string;
+      snow: string | null;
+    };
+    const epDur = await assembleEpisode(plan.tracks, epDir, plan.audioOut);
 
     // 整集字幕：章节 cues 平移到分集时间轴（冷开场之后 + 前章累计）
     const allCues = [...prologueCues];
@@ -359,33 +451,32 @@ async function main() {
     if (marks.length > 0 && marks.length < 3) {
       console.log('    ⚠ 章节导航未生成：YouTube 需 ≥3 个章节锚点（--group ≥2 并章成集即可满足）');
     }
-    const srtOut = audioOut.replace(/\.mp3$/, '.srt');
+    const srtOut = plan.audioOut.replace(/\.mp3$/, '.srt');
     await writeFile(srtOut, writeSrt(mergeCues([allCues])), 'utf-8');
 
     console.log(`  [${label}] ${grp.length} 章｜音频 ${(epDur / 60000).toFixed(1)} min｜字幕 ${allCues.length} 条`);
 
     // —— 4) 视频（章节图取首章）+ 物料 ——
-    let videoOut = audioOut.replace(/\.mp3$/, '.mp4');
+    let videoOut = plan.audioOut.replace(/\.mp3$/, '.mp4');
     if (!args.skipVideo) {
-      const covers = epChapters.flatMap((c) => c.covers);
-      if (covers.length === 0) {
+      if (plan.covers.length === 0) {
         console.warn('    ⚠ 未找到封面/章节图，跳过视频');
-        videoOut = audioOut;
+        videoOut = plan.audioOut;
       } else {
-        const snow = args.snow ? await ensureSnowAsset(args.outRoot) : undefined;
         try {
           await renderChapterVideo({
-            covers, audio: audioOut, out: videoOut, snow, subs: srtOut,
-            cacheRoot: resolve(args.outRoot, '.cache'),
+            covers: plan.covers, audio: plan.audioOut, out: videoOut,
+            snow: plan.snow ?? undefined, subs: srtOut,
+            cacheRoot: plan.cacheRoot,
           });
-          console.log(`    视频 1440p（软字幕+${snow ? '落雪' : '静'}）← ${covers.length} 张场景图轮换（段级缓存）`);
+          console.log(`    视频 1440p（软字幕+${plan.snow ? '落雪' : '静'}）← ${plan.covers.length} 张场景图轮换（段级缓存）`);
         } catch (e) {
           console.warn(`    ⚠ 视频渲染失败（${(e as Error).message.slice(0, 120)}），仅保留音频`);
-          videoOut = audioOut;
+          videoOut = plan.audioOut;
         }
       }
     }
-    products.push({ position: epN, title: label, episodeLabel: label, audioFile: audioOut, videoFile: videoOut, durationMs: epDur, srtFile: srtOut, chapters: marks });
+    products.push({ position: epN, title: label, episodeLabel: label, audioFile: plan.audioOut, videoFile: videoOut, durationMs: epDur, srtFile: srtOut, chapters: marks });
     console.log(`    ✅ 用时 ${((Date.now() - t0) / 1000).toFixed(0)}s`);
   }
 

@@ -125,14 +125,6 @@ function resolveSpeakers(
   return out;
 }
 
-function voiceFor(speaker: string | undefined, cfg: VoiceConfig): string {
-  if (!speaker) return cfg.defaultSpeaker;
-  for (const rule of cfg.voiceBySpeaker) {
-    if (speaker.includes(rule.match) || rule.match.includes(speaker)) return rule.voice;
-  }
-  return cfg.defaultSpeaker;
-}
-
 export function annotateChapter(
   position: number,
   title: string,
@@ -225,6 +217,7 @@ export function annotateChapter(
       })),
       cfg.cast
     );
+    const paraStartIdx = segs.length;
     matches.forEach((m, i) => {
       push('narration', p.slice(last, m.index));
       push('dialogue', m[0].slice(1, -1), speakers[i]);
@@ -232,14 +225,50 @@ export function annotateChapter(
     });
     const tail = p.slice(last);
     if (tail.trim()) push('narration', tail);
+
+    // 悬念收尾（省略号/破折号/问叹号结尾的旁白）多给一拍
+    const paraSegs = segs.slice(paraStartIdx);
+    const lastPara = paraSegs[paraSegs.length - 1];
+    if (lastPara && lastPara.kind === 'narration' && /(…|--|——|[？！])$/.test(lastPara.text)) {
+      lastPara.gapAfterMs += 160;
+    }
     // 段落间停顿加长
     if (segs.length) segs[segs.length - 1].gapAfterMs += 400;
+  }
+  // 对白连发收紧（跨段也生效：中文小说的快速对垒常是"走。"\n"不走。"分行体）
+  for (let i = 0; i < segs.length - 1; i++) {
+    if (segs[i].kind === 'dialogue' && segs[i + 1].kind === 'dialogue') {
+      segs[i].gapAfterMs = 180;
+    }
   }
   return segs;
 }
 
-// ── 画本哨兵：golden set 回归用的代理指标 ─────────────────────
+/** 试产字数截断：优先在限额内最后一个句终标点（。！？…」"）后收口；无句读才硬切 */
+export function truncateAtSentence(content: string, limit: number): string {
+  if (content.length <= limit) return content;
+  const window = content.slice(0, limit);
+  const end = Math.max(
+    window.lastIndexOf('。'),
+    window.lastIndexOf('！'),
+    window.lastIndexOf('？'),
+    window.lastIndexOf('…'),
+    window.lastIndexOf('」'),
+    window.lastIndexOf('"'),
+  );
+  return end >= limit * 0.5 ? window.slice(0, end + 1) : window;
+}
 
+/** 说话人 → 音色（导出供 LLM 归因后重映射音色） */
+export function voiceFor(speaker: string | undefined, cfg: VoiceConfig): string {
+  if (!speaker) return cfg.defaultSpeaker;
+  for (const rule of cfg.voiceBySpeaker) {
+    if (speaker.includes(rule.match) || rule.match.includes(speaker)) return rule.voice;
+  }
+  return cfg.defaultSpeaker;
+}
+
+// ── 画本哨兵：golden set 回归用的代理指标 ─────────────────────
 export interface AnnotateSentinels {
   segmentsTotal: number;
   narration: number;

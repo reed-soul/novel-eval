@@ -238,7 +238,7 @@ interface ChapterDir {
 }
 
 /** 发现 outRoot 下 ep 目录内的 ch 章目录与章成品音频 */
-function discoverChapters(outRoot: string, epFilter?: number): ChapterDir[] {
+export function discoverChapters(outRoot: string, epFilter?: number): ChapterDir[] {
   const out: ChapterDir[] = [];
   for (const d of readdirSync(outRoot, { withFileTypes: true })) {
     if (!d.isDirectory() || !/^ep\d{1,2}$/.test(d.name)) continue;

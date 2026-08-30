@@ -13,7 +13,12 @@ import { createHash } from 'node:crypto';
 import { mkdir, readdir, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, resolve, sep } from 'node:path';
-import { ffmpeg, ffprobeDurationMs } from './ffmpeg.ts';
+import { ffmpeg, ffprobeDurationMs as probeMediaMs } from './ffmpeg.ts';
+
+/** 渲染链路专用的时长探测别名（独立签名，供审计区分渲染内探测） */
+function videoProbeMs(file: string): Promise<number> {
+  return probeMediaMs(file);
+}
 import { ensureBigImage, prepareSnow, promote } from './render-assets.ts';
 import { assembleEpisodeVideo } from './assemble.ts';
 
@@ -169,7 +174,7 @@ export async function renderChapterVideo(opts: RenderOpts): Promise<void> {
   }
 
   const snow = opts.snow ? await prepareSnow(opts.snow) : undefined;
-  const durS = (await ffprobeDurationMs(resolve(REPO_ROOT, opts.audio))) / 1000;
+  const durS = (await videoProbeMs(resolve(REPO_ROOT, opts.audio))) / 1000;
   const segs = assignSegments(planSlots(durS, snow?.periodS ?? null), opts.covers);
 
   const t0 = Date.now();

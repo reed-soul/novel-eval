@@ -14,6 +14,7 @@
     "test:unit": "tsx --test tests/unit/**/*.test.ts"
   },
   "dependencies": {
+    "@novel-eval/shared": "workspace:*",
     "better-sqlite3": "^11.0.0"
   },
   "devDependencies": {

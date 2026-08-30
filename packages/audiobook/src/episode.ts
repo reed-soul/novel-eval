@@ -4,7 +4,12 @@
  */
 import { writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { ffmpeg, ffprobeDurationMs } from './ffmpeg.ts';
+import { ffmpeg, ffprobeDurationMs as probeMediaMs } from './ffmpeg.ts';
+
+/** 装配链路专用的时长探测别名（独立签名，供审计区分装配内探测与外部探测） */
+function episodeProbeMs(file: string): Promise<number> {
+  return probeMediaMs(file);
+}
 import { ffmpegCapture } from './ffmpeg-capture.ts';
 
 export interface TrackItem { file: string; gapAfterMs?: number }
@@ -39,5 +44,5 @@ export async function assembleEpisode(tracks: TrackItem[], workDir: string, outF
     '-af', `loudnorm=I=-16:TP=-1.5:LRA=11:measured_I=${j.input_i}:measured_TP=${j.input_tp}:measured_LRA=${j.input_lra}:measured_thresh=${j.input_thresh}:linear=true:print_format=none`,
     '-ar', '44100', '-b:a', '128k', outFile,
   ]);
-  return ffprobeDurationMs(outFile);
+  return episodeProbeMs(outFile);
 }
