@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Audiobook Production Dashboard - Midnight Ink</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&amp;family=JetBrains+Mono:wght@400&amp;family=Literata:wght@600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-container": "#434651",
+                        "error-container": "#93000a",
+                        "secondary-fixed-dim": "#c4c6d3",
+                        "hairline": "rgba(51, 65, 85, 0.5)",
+                        "on-primary-fixed": "#07006c",
+                        "surface-container": "#1d2022",
+                        "on-secondary-container": "#b2b4c1",
+                        "on-surface-variant": "#c7c4d7",
+                        "hairline-glow": "rgba(99, 102, 241, 0.4)",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "on-primary-container": "#0d0096",
+                        "on-surface": "#e0e3e5",
+                        "outline-variant": "#464554",
+                        "surface-tint": "#c0c1ff",
+                        "secondary-fixed": "#e0e2ef",
+                        "inverse-on-surface": "#2d3133",
+                        "outline": "#908fa0",
+                        "error": "#ffb4ab",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "surface": "#101415",
+                        "on-primary": "#1000a9",
+                        "signal-red": "#ef4444",
+                        "amber-signal": "#f59e0b",
+                        "tertiary-fixed-dim": "#c0c5e4",
+                        "surface-container-low": "#191c1e",
+                        "primary": "#c0c1ff",
+                        "surface-container-lowest": "#0b0f10",
+                        "on-background": "#e0e3e5",
+                        "primary-fixed": "#e1e0ff",
+                        "on-secondary-fixed": "#181b25",
+                        "inverse-primary": "#494bd6",
+                        "surface-container-highest": "#323537",
+                        "level-green": "#10b981",
+                        "tertiary": "#c0c5e4",
+                        "on-tertiary-fixed-variant": "#40465f",
+                        "on-tertiary-fixed": "#141a31",
+                        "on-error": "#690005",
+                        "inverse-surface": "#e0e3e5",
+                        "footnote-slate": "#94a3b8",
+                        "primary-container": "#8083ff",
+                        "glass-panel": "rgba(15, 23, 42, 0.65)",
+                        "on-secondary-fixed-variant": "#434651",
+                        "on-tertiary": "#292f47",
+                        "on-secondary": "#2d303a",
+                        "surface-dim": "#101415",
+                        "background": "#101415",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-high": "#272a2c",
+                        "tertiary-fixed": "#dce1ff",
+                        "surface-variant": "#323537",
+                        "surface-bright": "#363a3b",
+                        "secondary": "#c4c6d3",
+                        "on-tertiary-container": "#232940",
+                        "tertiary-container": "#8a8fac"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "max-width": "1240px",
+                        "base": "4px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "40px"
+                    },
+                    "fontFamily": {
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "mono-log": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "page-title": ["Literata"],
+                        "section-title": ["Literata"]
+                    },
+                    "fontSize": {
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "mono-log": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "page-title": ["30px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "section-title": ["21px", { "lineHeight": "28px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            background-image: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 60%);
+            color: theme('colors.on-background');
+        }
+        
+        /* Glassmorphism utility */
+        .glass {
+            background-color: theme('colors.glass-panel');
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid theme('colors.hairline');
+        }
+        
+        .glass-hover:hover {
+            border-color: theme('colors.hairline-glow');
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.1);
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: theme('colors.surface-container-highest');
+            border-radius: 4px;
+        }
+        
+        .glow-pulse {
+            animation: pulse-glow 2s infinite alternate;
+        }
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            100% { box-shadow: 0 0 8px 2px rgba(16, 185, 129, 0.1); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-body-md text-body-md antialiased pt-16 pb-48">
+<!-- TopNavBar -->
+<nav class="bg-glass-panel backdrop-blur-md text-primary font-body-md text-body-md fixed top-0 w-full z-50 border-b border-hairline shadow-sm transition-all duration-300 ease-in-out">
+<div class="flex justify-between items-center h-16 px-gutter max-w-max-width mx-auto">
+<!-- Brand Logo -->
+<div class="font-page-title text-page-title text-primary tracking-tighter">
+                Midnight Ink
+            </div>
+<!-- Navigation Links (Desktop) -->
+<div class="hidden md:flex items-center space-x-6">
+<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#">Project List</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#">Model Config</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#">Quality Eval</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1" href="#">Audiobook</a>
+<a class="text-on-surface-variant hover:text-on-surface transition-colors" href="#">Logic Audit</a>
+</div>
+<!-- Trailing Icons -->
+<div class="flex items-center space-x-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors hover:bg-secondary-container/50 p-2 rounded-full">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors hover:bg-secondary-container/50 p-2 rounded-full">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<img alt="Producer Profile" class="w-8 h-8 rounded-full border border-hairline" data-alt="A small circular avatar of a professional audio producer in a dimly lit studio setting. The lighting is moody with indigo accents. The focus is sharp on the person, evoking a sense of expertise and focus." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl4-g-HrZxEhuYQB8s_8vgO3yWYuxbJUCI6z5TTKMHwwpGSotsjNhZDlz4ZHAyXxPs7GGOuBfvNZ4CGiFNS9UcYDZZsqyYpmB-DxdbUUzRbRxn2954bGPKMvTKvlOURF2MNZgv7GHCJ7UwMiLQIErh20iWNXXTvQY7pgCUk5j37L7pxCdqhu8tUrNqYclgNnP51Vk5Aphrc5YHzh4uu4GWYw7zTW1axiwmvkY4tW-_Ca2hLiTv4wVr-sfEN5dw_AGJjgTpd7lfMbOI"/>
+</div>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-max-width mx-auto px-gutter mt-margin-desktop space-y-8">
+<!-- Page Header -->
+<header class="flex flex-col md:flex-row md:items-end justify-between space-y-4 md:space-y-0">
+<div>
+<h1 class="font-page-title text-page-title text-on-surface mb-2">有声书工作台</h1>
+<p class="text-on-surface-variant">《最后一班森铁》 · 制作版本 v4 · 1 集 · 场景图 75 张</p>
+</div>
+<div class="flex items-center space-x-3">
+<button class="glass px-4 py-2 rounded-lg text-on-surface hover:text-primary hover:border-hairline-glow transition-colors flex items-center space-x-2">
+<span class="material-symbols-outlined text-sm">search</span>
+<span>审听本版本</span>
+</button>
+<button class="bg-primary/20 text-primary border border-primary/50 hover:bg-primary/30 px-4 py-2 rounded-lg font-semibold transition-colors shadow-[0_0_15px_rgba(192,193,255,0.15)]">
+                    + 构建新集
+                </button>
+</div>
+</header>
+<!-- Version Row & Audit Options -->
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0 bg-surface-container-low p-4 rounded-xl border border-hairline">
+<!-- Versions -->
+<div class="flex space-x-2">
+<button class="bg-primary-container/20 text-primary border border-primary px-3 py-1 rounded-full font-label-sm text-label-sm">v4</button>
+<button class="text-on-surface-variant hover:bg-surface-container-highest border border-transparent px-3 py-1 rounded-full font-label-sm text-label-sm transition-colors">v3</button>
+</div>
+<!-- Audit Options Bar -->
+<div class="flex items-center space-x-4 text-sm">
+<span class="text-on-surface-variant">审听选项：</span>
+<input class="bg-surface border border-hairline rounded px-2 py-1 w-24 text-on-surface focus:border-primary focus:ring-1 focus:ring-primary outline-none placeholder:text-surface-variant" placeholder="集号 如 1" type="text"/>
+<label class="flex items-center space-x-2 cursor-pointer group">
+<input class="form-checkbox bg-surface border-hairline text-primary focus:ring-primary rounded" type="checkbox"/>
+<span class="text-on-surface-variant group-hover:text-on-surface transition-colors">fix（删坏段缓存促重合成）</span>
+</label>
+<label class="flex items-center space-x-2 cursor-pointer group">
+<input class="form-checkbox bg-surface border-hairline text-primary focus:ring-primary rounded" type="checkbox"/>
+<span class="text-on-surface-variant group-hover:text-on-surface transition-colors">srt 重对齐</span>
+</label>
+</div>
+</div>
+<!-- Episode Card Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Episode Card -->
+<div class="glass glass-hover rounded-xl overflow-hidden transition-all duration-300 flex flex-col group cursor-pointer">
+<!-- Media Area 16:9 -->
+<div class="relative w-full pt-[56.25%] bg-surface-container-highest">
+<div class="absolute inset-0 bg-cover bg-center" data-alt="A dramatic, highly cinematic digital illustration of an old steam train making its way through a dense, snow-covered forest at night. The color palette is dominated by deep midnight blues and stark blacks, with the train's warm, glowing headlight cutting through the blizzard. The mood is suspenseful, cold, and mysterious, fitting a thriller audiobook cover." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBEDgHSX0LyqFn_7ami7JgFkKwVia4N2E0HGyAXwNTGbFdTmDSoknHVR3-SZZNzNTyctbt5fr2Y73Bm82IQWpvNL6wU-jmZymxD4dTDq-r8uawy8-BwRh7UGJIGqH3enWn4CIUpcIZ0YpBnpbZXvQV_gTuPFueuRLLk6xC-GIRweyT3QyGMeyf6ZvxZHmN1c4Qo9bBzCnFSy33hnWCanH6zJZ4oXcP1FXjxf2rQmPZwIDbj67d9HLlgAnKyI5-lbYOEfCHSOiIMHDv5')"></div>
+<!-- Overlays -->
+<div class="absolute inset-0 bg-gradient-to-t from-background/90 via-background/20 to-transparent"></div>
+<div class="absolute top-3 left-3 bg-glass-panel backdrop-blur-md border border-hairline text-on-surface px-2 py-0.5 rounded-full font-label-sm text-label-sm">
+                        EP01
+                    </div>
+<div class="absolute bottom-3 right-3 bg-surface/80 backdrop-blur text-on-surface px-2 py-0.5 rounded font-mono-log text-mono-log">
+                        56:04
+                    </div>
+</div>
+<!-- Card Content -->
+<div class="p-4 flex-grow flex flex-col justify-between space-y-4">
+<h3 class="font-section-title text-section-title text-on-surface group-hover:text-primary transition-colors line-clamp-2">
+                        墙里的骨头 → 最后一班小火车
+                    </h3>
+<div class="flex items-center space-x-2">
+<span class="bg-surface-variant/50 border border-hairline text-on-surface-variant px-2 py-0.5 rounded-full font-label-sm text-label-sm">
+                            3 章
+                        </span>
+<span class="bg-error/15 border border-error text-error px-2 py-0.5 rounded-full font-label-sm text-label-sm flex items-center space-x-1">
+<span class="material-symbols-outlined text-[12px]">warning</span>
+<span>P0 29｜suspect 143</span>
+</span>
+</div>
+</div>
+</div>
+<!-- Empty Slot for Grid -->
+<div class="glass border-dashed border-hairline rounded-xl flex items-center justify-center min-h-[280px] opacity-50 hover:opacity-100 transition-opacity cursor-pointer">
+<div class="text-center text-on-surface-variant">
+<span class="material-symbols-outlined text-4xl mb-2">add_circle</span>
+<p>等待构建</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Fixed Console -->
+<div class="fixed bottom-0 w-full z-40 bg-surface-container-lowest border-t border-hairline-glow shadow-[0_-4px_20px_rgba(99,102,241,0.1)] transition-transform duration-300 flex flex-col">
+<!-- Console Header -->
+<div class="flex justify-between items-center px-gutter py-2 border-b border-hairline bg-surface-container-low/50">
+<div class="flex items-center space-x-4">
+<div class="flex items-center space-x-2">
+<div class="w-2 h-2 rounded-full bg-level-green glow-pulse"></div>
+<span class="text-level-green font-label-sm text-label-sm">运行中</span>
+</div>
+<code class="font-mono-log text-mono-log text-tertiary bg-surface px-2 py-0.5 rounded border border-hairline">
+                    pnpm audiobook listen --out dist/audiobook-v4
+                </code>
+</div>
+<button class="text-footnote-slate hover:text-signal-red transition-colors text-sm flex items-center space-x-1">
+<span class="material-symbols-outlined text-sm">stop_circle</span>
+<span>Cancel</span>
+</button>
+</div>
+<!-- Terminal Log Area -->
+<div class="px-gutter py-3 h-32 overflow-y-auto custom-scrollbar font-mono-log text-mono-log bg-background">
+<div class="text-on-surface-variant opacity-80">[INFO] Initiating synthesis for EP01 (chunks 1-45)...</div>
+<div class="text-amber-signal mt-1">[WARN] Suspect audio alignment at 12:04. Tagged for review.</div>
+<div class="text-primary mt-1 flex items-center justify-between">
+<span>[PROCESS] Rendering layered soundscapes (Snowfall, Train Engine)...</span>
+<span>45%</span>
+</div>
+<!-- Fake progress bar -->
+<div class="w-full h-1 bg-surface-container-highest mt-2 rounded overflow-hidden">
+<div class="h-full bg-primary w-[45%]"></div>
+</div>
+</div>
+</div>
+</body></html>

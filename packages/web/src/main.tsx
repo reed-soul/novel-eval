@@ -13,6 +13,8 @@ import { Evaluation } from './pages/Evaluation.tsx';
 import { EvaluationReport } from './pages/EvaluationReport.tsx';
 import { Audit } from './pages/Audit.tsx';
 import { Layout } from './components/Layout.tsx';
+import { Audiobook } from './pages/Audiobook.tsx';
+import { AudiobookEpisode } from './pages/AudiobookEpisode.tsx';
 import './styles.css';
 
 createRoot(document.getElementById('root')!).render(
@@ -30,6 +32,8 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/settings" element={<Settings />} />
           <Route path="/eval" element={<Evaluation />} />
           <Route path="/eval/:taskId" element={<EvaluationReport />} />
+          <Route path="/audiobook" element={<Audiobook />} />
+          <Route path="/audiobook/:run/:ep" element={<AudiobookEpisode />} />
           <Route path="/audit" element={<Audit />} />
         </Route>
       </Routes>

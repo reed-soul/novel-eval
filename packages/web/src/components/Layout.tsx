@@ -31,20 +31,23 @@ export function Layout() {
           </Link>
           <nav className="global-nav" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
-              📚 项目列表
+              <span className="msr msr-sm">menu_book</span> 项目列表
             </Link>
             <Link to="/settings" className={`nav-link ${location.pathname === '/settings' ? 'active' : ''}`}>
-              ⚙️ 模型配置
+              <span className="msr msr-sm">tune</span> 模型配置
             </Link>
             <Link to="/eval" className={`nav-link ${location.pathname.startsWith('/eval') ? 'active' : ''}`}>
-              📊 质量评估
+              <span className="msr msr-sm">monitoring</span> 质量评估
+            </Link>
+            <Link to="/audiobook" className={`nav-link ${location.pathname.startsWith('/audiobook') ? 'active' : ''}`}>
+              <span className="msr msr-sm">graphic_eq</span> 有声书
             </Link>
             <Link to="/audit" className={`nav-link ${location.pathname.startsWith('/audit') ? 'active' : ''}`}>
-              🔍 逻辑审计
+              <span className="msr msr-sm">fact_check</span> 逻辑审计
             </Link>
-            <button 
-              className="theme-toggle-btn" 
-              onClick={toggleTheme} 
+            <button
+              className="theme-toggle-btn"
+              onClick={toggleTheme}
               aria-label="Toggle Theme"
               style={{
                 background: 'none',

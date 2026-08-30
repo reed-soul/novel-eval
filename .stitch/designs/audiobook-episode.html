@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>悬疑借阅室 - Episode Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400&amp;family=Literata:wght@600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#8083ff",
+                        "secondary-container": "#434651",
+                        "inverse-primary": "#494bd6",
+                        "amber-signal": "#f59e0b",
+                        "tertiary-fixed": "#dce1ff",
+                        "surface-container-highest": "#323537",
+                        "on-error": "#690005",
+                        "on-secondary-fixed-variant": "#434651",
+                        "surface": "#101415",
+                        "signal-red": "#ef4444",
+                        "primary": "#c0c1ff",
+                        "tertiary-fixed-dim": "#c0c5e4",
+                        "inverse-surface": "#e0e3e5",
+                        "surface-dim": "#101415",
+                        "hairline-glow": "rgba(99, 102, 241, 0.4)",
+                        "on-surface-variant": "#c7c4d7",
+                        "hairline": "rgba(51, 65, 85, 0.5)",
+                        "on-secondary-container": "#b2b4c1",
+                        "surface-container-high": "#272a2c",
+                        "on-secondary-fixed": "#181b25",
+                        "outline": "#908fa0",
+                        "surface-container": "#1d2022",
+                        "tertiary-container": "#8a8fac",
+                        "surface-variant": "#323537",
+                        "background": "#101415",
+                        "tertiary": "#c0c5e4",
+                        "glass-panel": "rgba(15, 23, 42, 0.65)",
+                        "on-tertiary": "#292f47",
+                        "secondary-fixed-dim": "#c4c6d3",
+                        "secondary-fixed": "#e0e2ef",
+                        "primary-fixed": "#e1e0ff",
+                        "footnote-slate": "#94a3b8",
+                        "error-container": "#93000a",
+                        "primary-fixed-dim": "#c0c1ff",
+                        "surface-container-low": "#191c1e",
+                        "on-background": "#e0e3e5",
+                        "level-green": "#10b981",
+                        "on-tertiary-fixed": "#141a31",
+                        "on-surface": "#e0e3e5",
+                        "on-tertiary-container": "#232940",
+                        "surface-tint": "#c0c1ff",
+                        "on-primary-container": "#0d0096",
+                        "surface-bright": "#363a3b",
+                        "on-primary-fixed-variant": "#2f2ebe",
+                        "surface-container-lowest": "#0b0f10",
+                        "on-secondary": "#2d303a",
+                        "on-primary": "#1000a9",
+                        "outline-variant": "#464554",
+                        "inverse-on-surface": "#2d3133",
+                        "secondary": "#c4c6d3",
+                        "on-tertiary-fixed-variant": "#40465f",
+                        "error": "#ffb4ab",
+                        "on-primary-fixed": "#07006c",
+                        "on-error-container": "#ffdad6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "margin-desktop": "40px",
+                        "gutter": "24px",
+                        "margin-mobile": "16px",
+                        "max-width": "1240px",
+                        "base": "4px"
+                    },
+                    "fontFamily": {
+                        "section-title": ["Literata"],
+                        "mono-log": ["JetBrains Mono"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "page-title": ["Literata"]
+                    },
+                    "fontSize": {
+                        "section-title": ["21px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "mono-log": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600" }],
+                        "page-title": ["30px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-image: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
+            background-color: theme('colors.background');
+            background-attachment: fixed;
+        }
+        
+        .glass-card {
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid theme('colors.hairline');
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .glass-card:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Custom Scrollbar for dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.3);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(99, 102, 241, 0.6);
+        }
+        
+        .tab-active {
+            background: rgba(192, 193, 255, 0.2);
+            font-weight: 700;
+            color: theme('colors.primary');
+        }
+    </style>
+</head>
+<body class="text-on-surface font-body-md min-h-screen selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation Anchor (Shared Component Semantic Mapping: TopNavBar is NOT used here because it's a detail/sub-page view with a back action, so we suppress the main shell per rules) -->
+<!-- Main Content Container -->
+<div class="max-w-[max-width] mx-auto px-margin-desktop py-8 min-h-screen flex flex-col gap-6 relative">
+<!-- Top Breadcrumb Header -->
+<header class="flex items-center justify-between w-full z-10 sticky top-0 bg-background/80 backdrop-blur-md py-4 -mt-4 mb-4 border-b border-hairline">
+<a class="flex items-center gap-2 text-on-surface-variant hover:text-primary transition-colors group" href="#">
+<span class="material-symbols-outlined text-lg" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+<span class="font-label-sm text-label-sm">有声书工作台</span>
+</a>
+<div class="flex items-center gap-3">
+<span class="font-mono-log text-mono-log text-on-surface-variant bg-surface-container-high px-2 py-1 rounded">v4 · EP01</span>
+<button class="glass-card flex items-center justify-center p-2 rounded-lg hover:text-primary" title="Settings">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">settings</span>
+</button>
+</div>
+</header>
+<!-- Two Column Layout Grid -->
+<div class="flex flex-col md:flex-row gap-gutter relative h-full">
+<!-- Left Column: Sticky Media Player & Metadata (approx 44%) -->
+<aside class="w-full md:w-[44%] md:sticky md:top-[88px] flex flex-col gap-6 h-fit z-0">
+<!-- Media Player Card -->
+<div class="glass-card rounded-xl overflow-hidden shadow-lg relative group">
+<!-- Aspect Ratio Container 16:9 -->
+<div class="relative w-full pb-[56.25%] bg-surface-container-lowest">
+<img class="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-luminosity" data-alt="A moody, high-fidelity placeholder image for an audio-book cover. The scene depicts a dimly lit, atmospheric study room at midnight, featuring deep shadow gradients, an antique radio on a wooden desk, and subtle indigo lamplight piercing the darkness. The aesthetic is cinematic, modern corporate glassmorphism with high contrast." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9QwWLBdggmUWvcC-X-buOKPqWZSxolU2nMz_UUSAdY2a918s82esQzxD7TnCKd3WB0FTvMf6LyXzx4fYIqqMl4Azxj5Df8kLvQb2UW9q0KMVlzOw4a07g49vtPUfKih66L3NXebSkoqNOFomYDpOtIqLACENZcwzEQ6eIIamfiCHFEAmtZ0j2UL4JjiFARfJT9BqMLAY5Ye4RFxICVTKrmY9F8ClfwQtrgNLgczclmsaM8Tq2i_FODmeCZXxFMVg-P-tATEsU7SD9"/>
+<!-- Video Controls Overlay -->
+<div class="absolute inset-0 flex flex-col justify-between p-4 bg-gradient-to-t from-background/90 via-transparent to-background/50">
+<div class="flex justify-between items-start w-full">
+<span class="bg-primary/20 border border-primary/30 text-primary font-mono-log text-mono-log px-2 py-1 rounded backdrop-blur-sm">EP01</span>
+<button class="text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">more_vert</span>
+</button>
+</div>
+<!-- Subtitle Overlay -->
+<div class="w-full text-center mb-12">
+<p class="font-body-lg text-body-lg text-on-surface font-medium drop-shadow-md bg-surface-container-lowest/40 inline-block px-4 py-2 rounded-lg backdrop-blur-md">欢迎光临悬疑借阅室。</p>
+</div>
+<!-- Play Controls -->
+<div class="flex items-center gap-4 w-full bg-surface-container/60 backdrop-blur-md p-3 rounded-lg border border-hairline">
+<button class="text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+</button>
+<div class="flex-1 h-1 bg-surface-variant rounded-full relative cursor-pointer">
+<div class="absolute top-0 left-0 h-full w-[25%] bg-primary rounded-full shadow-[0_0_8px_rgba(192,193,255,0.6)]"></div>
+</div>
+<span class="font-mono-log text-mono-log text-on-surface-variant">14:01 / 56:04</span>
+<button class="text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">fullscreen</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Title and Metadata -->
+<div class="flex flex-col gap-4">
+<h1 class="font-page-title text-page-title text-on-surface tracking-tight">墙里的骨头 → 最后一班小火车</h1>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 rounded-full bg-surface-container text-on-surface-variant border border-hairline font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 0;">schedule</span>
+                            时长 56:04
+                        </span>
+<span class="px-3 py-1 rounded-full bg-surface-container text-on-surface-variant border border-hairline font-label-sm text-label-sm">第1章 墙里的骨头</span>
+<span class="px-3 py-1 rounded-full bg-surface-container text-on-surface-variant border border-hairline font-label-sm text-label-sm">第2章 顺达公司</span>
+<span class="px-3 py-1 rounded-full bg-surface-container text-on-surface-variant border border-hairline font-label-sm text-label-sm">第3章 最后一班小火车</span>
+</div>
+</div>
+</aside>
+<!-- Right Column: Scrolling Content -->
+<main class="w-full md:w-[56%] flex flex-col gap-6">
+<!-- Tab Navigation (Segmented Control Style) -->
+<div class="glass-card p-1 rounded-lg flex items-center w-fit overflow-x-auto whitespace-nowrap">
+<button class="px-4 py-2 rounded-md font-body-md text-body-md tab-active transition-colors flex items-center gap-2">
+                        场景图库 <span class="bg-primary/20 text-primary font-mono-log text-[10px] px-1.5 py-0.5 rounded-full">15</span>
+</button>
+<button class="px-4 py-2 rounded-md font-body-md text-body-md text-on-surface-variant hover:text-primary hover:bg-surface-container-highest/30 transition-colors">
+                        台本
+                    </button>
+<button class="px-4 py-2 rounded-md font-body-md text-body-md text-on-surface-variant hover:text-primary hover:bg-surface-container-highest/30 transition-colors">
+                        审听报告
+                    </button>
+<button class="px-4 py-2 rounded-md font-body-md text-body-md text-on-surface-variant hover:text-primary hover:bg-surface-container-highest/30 transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 0;">upload</span>上传物料
+                    </button>
+</div>
+<!-- Gallery Area -->
+<div class="flex flex-col gap-8">
+<!-- Chapter 1 Group -->
+<section class="flex flex-col gap-4">
+<h2 class="font-section-title text-section-title text-on-surface flex items-center gap-3 border-l-2 border-primary pl-3">
+                            第 1 章 · 墙里的骨头
+                            <span class="font-mono-log text-mono-log text-on-surface-variant font-normal">5 张</span>
+</h2>
+<div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+<!-- Thumbnail Items -->
+<div class="glass-card rounded-lg overflow-hidden group relative cursor-pointer aspect-video" onclick="openLightbox()">
+<div class="absolute inset-0 bg-gradient-to-br from-surface-container-lowest to-secondary-container opacity-80 mix-blend-overlay z-0"></div>
+<div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjZmZmZmZmMDUiPjwvcmVjdD4KPC9zdmc+')] opacity-20"></div>
+<img class="w-full h-full object-cover mix-blend-luminosity opacity-50 group-hover:opacity-80 transition-opacity z-0 absolute" data-alt="A dark, moody, cinematic conceptual image representing a suspenseful scene titled 'Bones in the Wall'. The image features a stylized, dimly lit corner of an old room, with deep indigo shadows and subtle amber rim lighting highlighting cracked plaster. High visual fidelity, sleek corporate glassmorphism aesthetic suitable for an app thumbnail." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcvcf2RaOzeCUA7UnUzKeONmeUw_CJv-5rPFL7gXHKMq-IGkjOFc3qskSwry9AeXUVfK32fmIGF3a9jkk3Yz4BBIY8LDpiyvjwRXPxqkuO1O_MlGRPWX6pMQ1aY7bsMTzAhnik8hTuMx8lO7FFgJr4yeL4eugf8Tz1rWIsUyz9qPyGpEskXA7WMc3AfvOl9QZhRCY6_A7bHmy4RLHh5pT2YoB8tj1CivMRAaph3QBZJ3Afh-2fix1cGwnra9VzabNNp8Wftgljitvp"/>
+<div class="absolute bottom-2 left-2 z-10">
+<span class="bg-surface-container-lowest/80 backdrop-blur-md border border-hairline font-mono-log text-mono-log text-on-surface px-2 py-1 rounded">01-a</span>
+</div>
+</div>
+<div class="glass-card rounded-lg overflow-hidden group relative cursor-pointer aspect-video" onclick="openLightbox()">
+<div class="absolute inset-0 bg-gradient-to-br from-surface-container-lowest to-secondary-container opacity-80 mix-blend-overlay z-0"></div>
+<img class="w-full h-full object-cover mix-blend-luminosity opacity-50 group-hover:opacity-80 transition-opacity z-0 absolute" data-alt="A dark, cinematic conceptual scene showing a close-up of dusty forensic tools under a harsh, focused beam of light. Deep midnight blues and stark shadows dominate, giving a sterile yet suspenseful mood. Professional, high-end production quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCwQP4ljO_sGODUNxdbtpzElSXWj2avsJDtuSxiBzYb-rInlRRfMGcuPiwVJzywBUZ6PofNGERsqoRxgUAy_-S_vP1CBLP-i63KWIouQXDODDEefIANHhnufoLUg006IgnIFYnyBozlsv5B3bEAv7so1cg7ri1sBW3Uy5auMPPNMNDXB_yDjBhovkYk089V7UjnSk4Sza0bpwVCzaH0XvYbf_Yb2R-xTH8kcDaSG6NIxikX-T6SdxObcrii4FNhNMEhCDfyQ4G4hCrJ"/>
+<div class="absolute bottom-2 left-2 z-10">
+<span class="bg-surface-container-lowest/80 backdrop-blur-md border border-hairline font-mono-log text-mono-log text-on-surface px-2 py-1 rounded">01-b</span>
+</div>
+</div>
+<div class="glass-card rounded-lg overflow-hidden group relative cursor-pointer aspect-video border-primary/50 shadow-[0_0_12px_rgba(192,193,255,0.15)]" onclick="openLightbox()">
+<div class="absolute inset-0 bg-gradient-to-br from-surface-container-lowest to-secondary-container opacity-80 mix-blend-overlay z-0"></div>
+<img class="w-full h-full object-cover mix-blend-luminosity opacity-50 group-hover:opacity-80 transition-opacity z-0 absolute" data-alt="A suspenseful, high-contrast image of a dimly lit corridor in an abandoned building. The corridor stretches into darkness, with faint indigo lamplight reflecting off damp floors. Moody, atmospheric, professional concept art style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAVNZ_NA3w19qdxhQDfR9pTbokMqSzLlKvYcXc0CtmAnnk0zyu-pgIzqoDRwQ6mtP9SZ1fgCe_wGTCcmoSkZ4KbP3VS9snVRlo4lkR5K-Yv2pBwo6vpjLoxIVl35Gz-lYgmLXeQhjPE0Sad3eEw8MGVyziXKGg64WKq2t_FuypvdU8Ga5zFJ2mW9T_U5nxhOmjXB8aH3munCUgTu2mnkc_vEZIm0YuLvC8H-ccRJBtWRlnvi3F4FE-rEYQgz-a7i3256b5UfJ6Zs4Iv"/>
+<div class="absolute bottom-2 left-2 z-10">
+<span class="bg-primary/20 border border-primary/50 text-primary font-mono-log text-mono-log px-2 py-1 rounded">01-c (Active)</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Chapter 2 Group -->
+<section class="flex flex-col gap-4">
+<h2 class="font-section-title text-section-title text-on-surface flex items-center gap-3 border-l-2 border-surface-variant pl-3 text-on-surface-variant">
+                            第 2 章 · 顺达公司
+                            <span class="font-mono-log text-mono-log text-outline font-normal">5 张</span>
+</h2>
+<div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+<div class="glass-card rounded-lg overflow-hidden group relative cursor-pointer aspect-video" onclick="openLightbox()">
+<div class="absolute inset-0 bg-gradient-to-br from-surface-container-lowest to-secondary-container opacity-80 mix-blend-overlay z-0"></div>
+<img class="w-full h-full object-cover mix-blend-luminosity opacity-50 group-hover:opacity-80 transition-opacity z-0 absolute" data-alt="A corporate office facade at night, viewed from a low angle. The building is mostly dark, with only a few windows emitting a cold, eerie blue light. Cinematic, suspenseful, dark mode aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBtwOL_7ulpSUgxEWKs3fOxKm6bShyLnFVOIIf0o0T4IwRsD6t0qghZqUbw-Qamp1mKOth5Vj4juDKNc1TdcnFQBors9NJPxWcg9Y60QmTpACqn5L7yfVdNcTrplrVzJuKkFOCB8gOpYNz62H4HhqLcIX0eQTXQDT-RTpk6SyPRr5Mjob49lmC06-4Je8F-pSiynmbjGE6K6VwGfXNgUcva62_FbY1tHeq5OXb4xLfJdC4_VXj-B0NPez75ZIMiO9cVg-yQ-ABpnfLT"/>
+<div class="absolute bottom-2 left-2 z-10">
+<span class="bg-surface-container-lowest/80 backdrop-blur-md border border-hairline font-mono-log text-mono-log text-on-surface px-2 py-1 rounded">02-a</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+</div>
+</div>
+<!-- Lightbox Overlay (Hidden by default) -->
+<div class="fixed inset-0 z-50 bg-background/95 backdrop-blur-xl hidden flex-col items-center justify-center p-4 md:p-12 opacity-0 transition-opacity duration-300" id="lightboxOverlay">
+<!-- Close Button -->
+<button class="absolute top-6 right-6 text-on-surface-variant hover:text-primary bg-surface-container-highest/50 p-2 rounded-full backdrop-blur-md border border-hairline transition-all hover:scale-105" onclick="closeLightbox()">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">close</span>
+</button>
+<!-- Main Image Area -->
+<div class="relative w-full max-w-5xl aspect-video rounded-xl overflow-hidden glass-card shadow-2xl flex items-center justify-center">
+<img class="w-full h-full object-contain mix-blend-luminosity opacity-80 absolute z-0" data-alt="A high-resolution, full-screen cinematic shot of a dark, eerie corridor in an abandoned building. Faint indigo lamplight reflects off the damp floor. Deep shadows, moody atmosphere, highly detailed digital painting style suitable for a suspense thriller storyboard." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAdfaWbXxvHTmKXGkc5hCyZ6QnEC8WsUck5vBsdg7kyZSWrJKEoPV8gyGQm2UuP25kCz7jIITbpNFzzbyKk32fYMJbNusf5txhKvBnKBJuM5kB3LmYFzCAHVcn_32EUj8yar8tN2ck2k2GLyK5XSHobu6XuDzk-npZcST9zo2d-RkVd7_AutPIkHE3snA19ed3abH_xA1OkhRODOh3-2QvlodPTnStkeLQ_r68YFIW-iB7ZS2mRkD_GityWRFC9so_4MbQOktXGI3Y4"/>
+<!-- Navigation Arrows -->
+<div class="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-between px-4 z-10 w-full">
+<button class="bg-surface-container-highest/70 hover:bg-primary/20 text-on-surface p-3 rounded-full backdrop-blur-md border border-hairline hover:border-primary/50 transition-all hover:-translate-x-1 shadow-lg flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">chevron_left</span>
+</button>
+<button class="bg-surface-container-highest/70 hover:bg-primary/20 text-on-surface p-3 rounded-full backdrop-blur-md border border-hairline hover:border-primary/50 transition-all hover:translate-x-1 shadow-lg flex items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">chevron_right</span>
+</button>
+</div>
+</div>
+<!-- Bottom Metadata Pill -->
+<div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10">
+<div class="bg-surface-container-lowest/80 backdrop-blur-xl border border-hairline px-6 py-3 rounded-full flex items-center gap-4 shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
+<span class="font-mono-log text-mono-log text-primary font-bold">3 / 15</span>
+<div class="w-px h-4 bg-surface-variant"></div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">第1章</span>
+<div class="w-px h-4 bg-surface-variant"></div>
+<span class="font-mono-log text-mono-log text-on-surface">01-c.jpg</span>
+</div>
+</div>
+</div>
+<!-- Script for Lightweight Interactions -->
+<script>
+        const lightbox = document.getElementById('lightboxOverlay');
+        
+        function openLightbox() {
+            lightbox.classList.remove('hidden');
+            // Small delay to allow display block to apply before transitioning opacity
+            setTimeout(() => {
+                lightbox.classList.remove('opacity-0');
+                lightbox.classList.add('opacity-100');
+            }, 10);
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeLightbox() {
+            lightbox.classList.remove('opacity-100');
+            lightbox.classList.add('opacity-0');
+            setTimeout(() => {
+                lightbox.classList.add('hidden');
+            }, 300); // match transition duration
+            document.body.style.overflow = 'auto';
+        }
+        
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !lightbox.classList.contains('hidden')) {
+                closeLightbox();
+            }
+        });
+    </script>
+</body></html>

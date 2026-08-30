@@ -19,10 +19,21 @@ export type {
 
 const BASE = '/api';
 
+/** 本地工具无缓存需求；防 SPA 兜底 HTML 被启发式缓存污染 API URL（实测踩坑） */
+function bust(path: string): string {
+  return `${BASE}${path}${path.includes('?') ? '&' : '?'}_=${Date.now()}`;
+}
+
 export async function api<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`);
+  const res = await fetch(bust(path));
   if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
-  return res.json() as Promise<T>;
+  const text = await res.text();
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    // SPA 兜底返回 HTML 时给出可定位的 URL（而不是莫名的 JSON 解析错）
+    throw new Error(`${path} → 非 JSON 响应（${res.headers.get('content-type') ?? '?'}）：${text.slice(0, 80)}`);
+  }
 }
 
 export async function apiPost<T>(path: string, body?: unknown): Promise<T> {

@@ -9,7 +9,7 @@ import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { resolveServicePort } from '@novel-eval/shared';
 import { openDb, closeDb, loadWriterConfig, recoverInterruptedJobs, loadEnv } from '@novel-eval/writer';
-import { dirname, resolve, join } from 'node:path';
+import { dirname, resolve, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -33,6 +33,7 @@ import { rebuildRoutes } from './routes/rebuilds.ts';
 import { revisionRoutes } from './routes/revisions.ts';
 import { revisionTaskRoutes } from './routes/revision-tasks.ts';
 import { finalizeRoutes } from './routes/finalize.ts';
+import { audiobookRouter } from './routes/audiobook.ts';
 import { EngineRegistry } from './engine-registry.ts';
 import { httpErrorJson, toHttpError } from './middleware/error-mapper.ts';
 
@@ -60,6 +61,13 @@ const registry = new EngineRegistry(config.engines, config.engineName);
 
 const app = new Hono();
 
+// API 响应一律不缓存：SPA 兜底的 HTML 曾被启发式缓存污染过 API URL（fetch 拿到
+// HTML 而非 JSON），显式 no-store 一劳永逸
+app.use('/api/*', async (c, next) => {
+  await next();
+  c.header('Cache-Control', 'no-store');
+});
+
 app.onError((err, c) => {
   const mapped = toHttpError(err);
   return c.json(httpErrorJson(mapped), mapped.status as 400 | 402 | 409 | 422 | 500);
@@ -80,7 +88,14 @@ app.route('/api/projects', finalizeRoutes(db, undefined, { registry }));
 app.route('/api/chapters', revisionRoutes(db));
 app.route('/api/eval', evalTasksRouter);
 app.route('/api/audit', auditTasksRouter);
+app.route('/api/audiobook', audiobookRouter);
 app.route('/api/config', configRoutes(registry));
+
+// 有声书媒体（mp4/mp3/图片/srt）：仓库 dist/ 经 serveStatic 静态发布
+// （含 dist/media-thumbs 软链 → ~/Downloads/sentie-thumbnails 缩略图）。
+// root 取相对 cwd 的路径（serveStatic 约定），穿越防护由库承担。
+const MEDIA_ROOT_REL = relative(process.cwd(), resolve(__dirname, '..', '..', '..', 'dist')) || '.';
+app.use('/media/*', serveStatic({ root: MEDIA_ROOT_REL }));
 
 app.get('/api/config', (c) => c.json({
   engine: registry.getActiveName(),
@@ -92,6 +107,8 @@ app.get('/api/config', (c) => c.json({
 app.use('/assets/*', serveStatic({ root: DIST_DIR }));
 app.use('/*', serveStatic({ root: DIST_DIR }));
 app.get('/*', (c) => {
+  // 媒体路径未命中静态服务时直接 404（不落 SPA 兜底，避免误报 200）
+  if (c.req.path.startsWith('/media/')) return c.json({ error: 'media not found' }, 404);
   try {
     const html = readFileSync(resolve(DIST_DIR, 'index.html'), 'utf-8');
     return c.html(html);

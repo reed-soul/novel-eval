@@ -1,0 +1,32 @@
+{
+  "name": "projects/12480338699494086402",
+  "projectId": "12480338699494086402",
+  "title": "悬疑借阅室 · 有声书工作台",
+  "visibility": "PRIVATE",
+  "createTime": "2026-08-30T11:39:54.646386Z",
+  "updateTime": "2026-08-30T11:43:07.104098Z",
+  "projectType": "PROJECT_DESIGN",
+  "origin": "STITCH",
+  "deviceType": "DESKTOP",
+  "designTheme": {
+    "source": "DESIGN.md 上传（深夜书房：午夜墨蓝 #070a13 + 靛蓝夜灯 #6366f1 + 玻璃面板）",
+    "designSystemAssetId": "c089b9eddd32440295a897ad329687e4",
+    "designMdScreenInstance": "5033040698004829090"
+  },
+  "webUrl": "https://stitch.withgoogle.com/projects/12480338699494086402",
+  "screens": {
+    "audiobook-overview": {
+      "id": "1afd34e850a84863bb421a3a809743a4",
+      "title": "有声书工作台 - 最后一班森铁",
+      "model": "GEMINI_3_1_PRO",
+      "local": ["designs/audiobook-overview.html", "designs/audiobook-overview.png"]
+    },
+    "audiobook-episode": {
+      "id": "cc8cddefd8b94e0db7a3a330a8a1ad89",
+      "title": "集详情（生成时未命名）",
+      "model": "GEMINI_3_1_PRO",
+      "local": ["designs/audiobook-episode.html", "designs/audiobook-episode.png"]
+    }
+  },
+  "notes": "MCP 直连端点 https://stitch.googleapis.com/mcp（key 在 ~/.gemini/antigravity/mcp_config.json 的 StitchMCP.args）；调用器 .stitch/mcp-call.sh。生成屏为提案态：htmlCode/screenshot 下载 URL 在 generate 响应里，不在 get_project。"
+}
