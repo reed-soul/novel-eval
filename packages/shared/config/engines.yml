@@ -6,7 +6,7 @@ default: bigmodel
 bigmodel:
   provider: bigmodel
   baseUrl: https://open.bigmodel.cn/api/anthropic
-  model: glm-5.2
+  model: glm-5.3  # 2026-08-30 起默认；回退用 glm-5.3-flash（更快更省，Web 设置页下拉可切）
   maxBudgetRmb: 10
   perChapterMaxBudgetRmb: 0.1
 

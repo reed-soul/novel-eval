@@ -7,7 +7,7 @@
  *   输出：逐条 speaker（限 cast 名单内或 unknown）
  * 归属后按 voiceFor 重映射音色；结果缓存（上下文哈希 → speaker），重跑不重复计费。
  *
- * 引擎复用应用同款：engines.yml（bigmodel glm-5.2 / deepseek），key 走
+ * 引擎复用应用同款：engines.yml（bigmodel glm-5.3 / deepseek），key 走
  * ANTHROPIC_AUTH_TOKEN / ZHIPUAI_API_KEY / DEEPSEEK_API_KEY。
  */
 import { createHash } from 'node:crypto';

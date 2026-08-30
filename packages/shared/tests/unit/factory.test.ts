@@ -10,7 +10,7 @@ describe('createEngine（多引擎工厂）', () => {
   const bigmodelCfg: EngineConfig = {
     provider: 'bigmodel',
     baseUrl: 'https://open.bigmodel.cn/api/anthropic',
-    model: 'glm-5.2',
+    model: 'glm-5.3',
     maxBudgetRmb: 10,
     perChapterMaxBudgetRmb: 0.1,
   };

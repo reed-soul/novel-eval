@@ -10,7 +10,7 @@ describe('loadWriterConfig', () => {
     const config = loadWriterConfig();
     assert.ok(config.engine);
     assert.equal(config.engineName, 'bigmodel');
-    assert.equal(config.engine.model, 'glm-5.2');
+    assert.equal(config.engine.model, 'glm-5.3');
     assert.ok(config.generation);
   });
 
@@ -39,7 +39,7 @@ describe('loadWriterConfig', () => {
     const config = loadWriterConfig({ engine: 'bigmodel' });
     assert.equal(config.engineName, 'bigmodel');
     assert.equal(config.engine.provider, 'bigmodel');
-    assert.equal(config.engine.model, 'glm-5.2');
+    assert.equal(config.engine.model, 'glm-5.3');
   });
 
   it('override.engine 传未知引擎时抛错并列出可用引擎', () => {

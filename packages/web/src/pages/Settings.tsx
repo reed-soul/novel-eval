@@ -9,7 +9,7 @@ const PROVIDER_LABEL: Record<string, string> = {
 
 // 各 provider 推荐的模型列表（供下拉选择）
 const MODELS: Record<string, string[]> = {
-  bigmodel: ['glm-5.2'],
+  bigmodel: ['glm-5.3', 'glm-5.3-flash'],
   deepseek: ['deepseek-v4-pro', 'deepseek-v4-flash'],
 };
 
@@ -172,7 +172,7 @@ export function Settings() {
       <div className="card">
         <h2>说明</h2>
         <ul style={{ lineHeight: 1.8, color: 'var(--muted)', fontSize: 14, paddingLeft: 20 }}>
-          <li><strong>智谱 GLM</strong>（glm-5.2）：默认引擎，中文写作质量稳定，成本约 ¥2.4/本（50 章）。</li>
+          <li><strong>智谱 GLM</strong>（glm-5.3，可回退 glm-5.3-flash）：默认引擎，中文写作质量稳定，成本约 ¥2.4/本（50 章，与 5.2 同价）；flash 更快更省。</li>
           <li><strong>DeepSeek</strong>（deepseek-v4-pro / v4-flash）：中文理解强，pro 为最强模型，flash 更快更省。</li>
           <li>API key 仅保存在服务端内存，重启后需重新输入（或写入 ~/.claude/settings.json 的 env 字段持久化）。</li>
           <li>切换引擎后，已生成的项目内容不受影响，仅影响后续生成调用。</li>

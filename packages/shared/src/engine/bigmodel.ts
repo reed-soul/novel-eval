@@ -1,7 +1,7 @@
 /**
  * BigModelAdapter — 智谱 GLM 引擎（对齐设计文档 v2.2 第四章）
  *
- * 通过智谱 BigModel 的 Anthropic 兼容端点调用 glm-5.2。
+ * 通过智谱 BigModel 的 Anthropic 兼容端点调用 GLM（默认 glm-5.3，engines.yml 可换）。
  * 认证：ANTHROPIC_AUTH_TOKEN（Claude Code 用的同一 token）或 ZHIPUAI_API_KEY。
  * base_url：https://open.bigmodel.cn/api/anthropic
  *
@@ -9,7 +9,7 @@
  */
 import { AnthropicCompatAdapter } from './anthropic-compat.ts';
 
-// glm-5.2 定价估算（元/百万 token，保守估；订阅用户走套餐额度）
+// GLM 定价估算（元/百万 token，保守估；5.2/5.3 官方同价；订阅用户走套餐额度）
 const PRICE_INPUT_PER_M = 10;
 const PRICE_OUTPUT_PER_M = 10;
 
