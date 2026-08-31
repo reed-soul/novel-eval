@@ -31,19 +31,10 @@ export function Layout() {
           </Link>
           <nav className="global-nav" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
-              <span className="msr msr-sm">menu_book</span> 项目列表
+              <span className="msr msr-sm">auto_stories</span> 我的书
             </Link>
             <Link to="/settings" className={`nav-link ${location.pathname === '/settings' ? 'active' : ''}`}>
-              <span className="msr msr-sm">tune</span> 模型配置
-            </Link>
-            <Link to="/eval" className={`nav-link ${location.pathname.startsWith('/eval') ? 'active' : ''}`}>
-              <span className="msr msr-sm">monitoring</span> 质量评估
-            </Link>
-            <Link to="/audiobook" className={`nav-link ${location.pathname.startsWith('/audiobook') ? 'active' : ''}`}>
-              <span className="msr msr-sm">graphic_eq</span> 有声书
-            </Link>
-            <Link to="/audit" className={`nav-link ${location.pathname.startsWith('/audit') ? 'active' : ''}`}>
-              <span className="msr msr-sm">fact_check</span> 逻辑审计
+              <span className="msr msr-sm">tune</span> 设置
             </Link>
             <button
               className="theme-toggle-btn"

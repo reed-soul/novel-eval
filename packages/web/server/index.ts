@@ -88,7 +88,7 @@ app.route('/api/projects', finalizeRoutes(db, undefined, { registry }));
 app.route('/api/chapters', revisionRoutes(db));
 app.route('/api/eval', evalTasksRouter);
 app.route('/api/audit', auditTasksRouter);
-app.route('/api/audiobook', audiobookRouter);
+app.route('/api/audiobook', audiobookRouter(db));
 app.route('/api/config', configRoutes(registry));
 
 // 有声书媒体（mp4/mp3/图片/srt）：仓库 dist/ 经 serveStatic 静态发布

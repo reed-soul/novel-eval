@@ -63,6 +63,9 @@ importers:
       '@hono/node-server':
         specifier: ^1.13.0
         version: 1.19.14(hono@4.12.29)
+      '@novel-eval/audiobook':
+        specifier: workspace:*
+        version: link:../audiobook
       '@novel-eval/eval':
         specifier: workspace:*
         version: link:../eval

@@ -5,12 +5,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../api/client.ts';
-import { fmtDur } from './Audiobook.tsx';
+import { fmtDur } from './BookAudiobook.tsx';
+import { BookTabs } from '../components/BookTabs.tsx';
 
 interface Segment { id: string; kind: string; speaker?: string; text: string; voice: string }
 interface AbDetail {
   ep: number; id: string; title: string; durationMs: number | null;
   videoUrl: string | null; audioUrl: string | null; srtUrl: string | null;
+  uploadJsonUrl: string | null;
   thumbnailUrl: string | null;
   chapters: { pos: number; title: string; segments: number; attributed: number }[];
   chapterStartsMs: { pos: number; startMs: number }[];
@@ -27,7 +29,7 @@ const KIND_LABEL: Record<string, string> = { narration: '旁白', dialogue: '对
 const VERDICT_CLS: Record<string, string> = { bad: 'ab-chip ab-chip-red', suspect: 'ab-chip ab-chip-amber', missing: 'ab-chip ab-chip-red', silent: 'ab-chip ab-chip-red' };
 
 export function AudiobookEpisode() {
-  const { run = '', ep = '' } = useParams();
+  const { id: bookId = '', ep = '' } = useParams();
   const [d, setD] = useState<AbDetail | null>(null);
   const [err, setErr] = useState('');
   const [tab, setTab] = useState<'gallery' | 'script' | 'listen' | 'upload'>('gallery');
@@ -37,10 +39,10 @@ export function AudiobookEpisode() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    void api<AbDetail>(`/audiobook/runs/${run}/episodes/${Number(ep)}`)
+    void api<AbDetail>(`/audiobook/books/${bookId}/ep/${Number(ep)}`)
       .then((x) => { setD(x); setChPos(x.scripts[0]?.pos ?? null); })
       .catch((e) => setErr(String(e)));
-  }, [run, ep]);
+  }, [bookId, ep]);
 
   // srt → vtt（浏览器内转换，播放器 <track> 直接吃 blob URL）
   useEffect(() => {
@@ -85,9 +87,10 @@ export function AudiobookEpisode() {
 
   return (
     <div className="ab-page">
+      <BookTabs active="audiobook" />
       <div className="ab-ep-nav">
-        <Link to="/audiobook" className="ab-back">← 有声书工作台</Link>
-        <span className="ab-ep-crumb">v{run.replace(/^audiobook-?/, '')} · EP{String(d.ep).padStart(2, '0')}</span>
+        <Link to={`/books/${bookId}/audiobook`} className="ab-back">← 有声书集墙</Link>
+        <span className="ab-ep-crumb">EP{String(d.ep).padStart(2, '0')}</span>
       </div>
 
       <div className="ab-detail-grid">
@@ -240,7 +243,7 @@ export function AudiobookEpisode() {
                 <a className="ab-btn" href={d.srtUrl ?? '#'} download><span className="msr msr-sm">closed_caption</span> SRT 字幕</a>
                 <a className="ab-btn" href={d.audioUrl ?? '#'} download><span className="msr msr-sm">graphic_eq</span> MP3</a>
                 <a className="ab-btn" href={d.videoUrl ?? '#'} download><span className="msr msr-sm">movie</span> MP4</a>
-                <a className="ab-btn" href={`/media/${run}/youtube-upload.json`} download><span className="msr msr-sm">download</span> youtube-upload.json</a>
+                {d.uploadJsonUrl && <a className="ab-btn" href={d.uploadJsonUrl} download><span className="msr msr-sm">download</span> youtube-upload.json</a>}
               </div>
             </div>
           )}

@@ -100,6 +100,7 @@ export function ActiveJobsBanner() {
   const location = useLocation();
   const [writerJobs, setWriterJobs] = useState<ActiveJobListItem[]>([]);
   const [evalJobs, setEvalJobs] = useState<ActiveEvalJobListItem[]>([]);
+  const [abJob, setAbJob] = useState<{ jobId: string; action: string; bookId?: string } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -107,10 +108,12 @@ export function ActiveJobsBanner() {
       Promise.all([
         listActiveJobs().catch(() => ({ jobs: [] as ActiveJobListItem[] })),
         listActiveEvalJobs().catch(() => ({ jobs: [] as ActiveEvalJobListItem[] })),
-      ]).then(([writer, evalRes]) => {
+        fetch(`/api/audiobook/jobs/active?_=${Date.now()}`).then((r) => r.json()).catch(() => null),
+      ]).then(([writer, evalRes, ab]) => {
         if (cancelled) return;
         setWriterJobs(writer.jobs);
         setEvalJobs(evalRes.jobs);
+        setAbJob(ab && typeof ab === 'object' ? ab : null);
       });
     };
     tick();
@@ -121,7 +124,7 @@ export function ActiveJobsBanner() {
     };
   }, [location.pathname]);
 
-  const total = writerJobs.length + evalJobs.length;
+  const total = writerJobs.length + evalJobs.length + (abJob ? 1 : 0);
   if (total === 0) return null;
 
   return (
@@ -143,6 +146,14 @@ export function ActiveJobsBanner() {
         {evalJobs.map((job) => (
           <EvalJobProgressLine key={job.taskId} job={job} />
         ))}
+        {abJob && (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', fontSize: 13 }}>
+            <Link to={abJob.bookId ? `/books/${abJob.bookId}/audiobook` : '/'} style={{ fontWeight: 600 }}>
+              有声书{abJob.action === 'build' ? '制作' : '审听'}
+            </Link>
+            <span style={{ color: 'var(--muted)' }}>管线运行中…</span>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1896,3 +1896,46 @@ select.input {
 
 /* 时长角标内的图标对齐 */
 .ab-ep-dur .msr { font-size: 13px; margin-right: 3px; vertical-align: -2px; }
+
+/* ── M0：书工作台 Tab / 建线卡 / 下一集确认卡 / 集卡操作 ── */
+.book-tabs { display: flex; align-items: center; gap: 6px; margin: 4px 0 18px; flex-wrap: wrap; }
+.book-tabs-back { font-size: 13px; color: var(--text-muted); display: inline-flex; align-items: center; gap: 2px; }
+.book-tabs-back:hover { color: var(--primary); }
+.book-tabs-divider { width: 1px; height: 18px; background: var(--border); margin: 0 6px; }
+.book-tab {
+  display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px;
+  border-radius: 999px; border: 1px solid var(--border); color: var(--text-muted);
+  font-size: 13.5px; background: var(--btn-bg); text-decoration: none;
+}
+.book-tab:hover { border-color: var(--border-hover); color: var(--text); }
+.book-tab.active { background: var(--primary-glow); border-color: var(--primary); color: var(--text); font-weight: 600; }
+.book-tab-coming { opacity: 0.4; cursor: default; }
+
+.ab-setup-card {
+  max-width: 560px; margin: 8vh auto 0; text-align: center;
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 44px 40px; backdrop-filter: blur(16px);
+}
+.ab-setup-icon { font-size: 44px; color: var(--primary); }
+.ab-setup-card h2 { font-family: var(--font-serif); font-size: 24px; margin: 14px 0 10px; }
+.ab-setup-sub { color: var(--text-muted); font-size: 14px; line-height: 1.7; }
+.ab-setup-cta { margin-top: 22px; padding: 12px 26px; font-size: 15px; }
+.ab-setup-hint { margin-top: 14px; font-size: 12px; color: var(--text-muted); }
+
+.ab-next-card {
+  display: flex; justify-content: space-between; align-items: center; gap: 16px;
+  background: linear-gradient(135deg, var(--primary-glow), transparent 60%), var(--card);
+  border: 1px solid var(--border-hover); border-radius: 14px;
+  padding: 18px 22px; margin-bottom: 18px; backdrop-filter: blur(16px);
+}
+.ab-next-title { font-size: 18px; font-weight: 700; }
+.ab-next-meta { color: var(--text-muted); font-size: 13.5px; margin-top: 5px; }
+.ab-next-cost { color: var(--amber); font-size: 13px; margin-top: 7px; display: inline-flex; gap: 5px; align-items: center; }
+.ab-next-actions { display: flex; gap: 10px; flex-shrink: 0; }
+.ab-job-plain { font-size: 12px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 40vw; }
+
+.ab-ep-actions {
+  display: flex; gap: 6px; padding: 0 12px 12px; flex-wrap: wrap;
+}
+.ab-ep-actions .ab-btn { font-size: 12px; padding: 5px 10px; }
+.ab-ep-thumb-fallback .msr { font-size: 40px; opacity: 0.5; }

@@ -31,18 +31,18 @@ export function ProjectList() {
   return (
     <div className="container">
       <div className="page-header">
-        <h2>所有写作项目</h2>
-        <Link to="/projects/new"><button className="btn btn-primary">✍️ 新建项目</button></Link>
+        <h2>我的书</h2>
+        <Link to="/projects/new"><button className="btn btn-primary">✍️ 新建作品</button></Link>
       </div>
       {projects.length === 0 ? (
         <div className="empty">
-          暂无项目。
-          <Link to="/projects/new" style={{ marginLeft: 8 }}>新建项目 →</Link>
+          书架空空如也——从第一本书开始。
+          <Link to="/projects/new" style={{ marginLeft: 8 }}>新建作品 →</Link>
         </div>
       ) : (
         <div className="project-list">
           {projects.map((p) => (
-            <Link key={p.id} to={`/projects/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+            <Link key={p.id} to={`/books/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
               <div className="project-card">
                 <h3>{p.title}</h3>
                 <div className="meta">

@@ -9,6 +9,7 @@ import { QualityPanel } from '../components/QualityPanel.tsx';
 import { PlanningApproval } from '../components/PlanningApproval.tsx';
 import { StaleImpactPanel } from '../components/StaleImpactPanel.tsx';
 import { RevisionTaskInbox } from '../components/RevisionTaskInbox.tsx';
+import { BookTabs } from '../components/BookTabs.tsx';
 
 export function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -145,6 +146,7 @@ export function ProjectDetail() {
 
   return (
     <div className="container">
+      <BookTabs active="writing" />
       <div className="page-header">
         <div>
           <h2>{project.title}</h2>
@@ -152,7 +154,6 @@ export function ProjectDetail() {
             {project.genreProfile} · {project.targetAudience} · <span className={`badge badge-${project.status}`}>{project.status}</span>
           </div>
         </div>
-        <Link to="/" className="back-link">← 返回列表</Link>
       </div>
 
       <div className="card">
