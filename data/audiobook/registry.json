@@ -1,0 +1,41 @@
+{
+ "a4c36611-cc11-47f2-a7f4-2fb8d0892e9e": {
+  "outRoot": "dist/derivatives/sentie/audiobook",
+  "scenesRoot": "dist/derivatives/sentie/scenes",
+  "presets": {
+   "engine": "volcengine",
+   "chaptersPerEpisode": 3,
+   "skipVideo": false
+  },
+  "episodes": {
+   "ep01": {
+    "ep": 1,
+    "chapters": [
+     1,
+     3
+    ],
+    "createdAt": "2026-08-30T15:37:38.524Z"
+   }
+  }
+ },
+ "0508da6a-d664-476b-ac74-040a128c3e0a": {
+  "outRoot": "dist/derivatives/物业管家不想破案/audiobook",
+  "scenesRoot": null,
+  "presets": {
+   "engine": "edge",
+   "chaptersPerEpisode": 3,
+   "skipVideo": true
+  },
+  "episodes": {
+   "ep01": {
+    "ep": 1,
+    "chapters": [
+     1,
+     3
+    ],
+    "isDraft": false,
+    "createdAt": "2026-08-30T16:54:12.073Z"
+   }
+  }
+ }
+}
