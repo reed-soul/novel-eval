@@ -6,12 +6,12 @@
 import { spawn, type ChildProcess } from 'node:child_process';
 import { readFileSync, rmSync } from 'node:fs';
 
-export function runPipeline(argsFile: string, cwd: string): { child: ChildProcess; argv: string[] } {
+export function runPipeline(argsFile: string, cwd: string, env?: Record<string, string>): { child: ChildProcess; argv: string[] } {
   const argv = JSON.parse(readFileSync(argsFile, 'utf-8')) as string[];
   rmSync(argsFile, { force: true });
   if (!Array.isArray(argv) || argv.some((a) => typeof a !== 'string')) {
     throw new Error('管线参数文件损坏');
   }
-  const child = spawn('pnpm', argv, { cwd });
+  const child = spawn('pnpm', argv, { cwd, ...(env ? { env: { ...process.env, ...env } } : {}) });
   return { child, argv };
 }

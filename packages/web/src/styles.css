@@ -1939,3 +1939,24 @@ select.input {
 }
 .ab-ep-actions .ab-btn { font-size: 12px; padding: 5px 10px; }
 .ab-ep-thumb-fallback .msr { font-size: 40px; opacity: 0.5; }
+
+/* ── 场景图重跑（hover 浮层） ── */
+.ab-gallery-item-wrap { position: relative; }
+.ab-gallery-regen {
+  position: absolute; top: 6px; right: 6px; z-index: 5;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(0,0,0,0.7); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #e2e8f0; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.2s, transform 0.15s;
+}
+.ab-gallery-item-wrap:hover .ab-gallery-regen { opacity: 1; }
+.ab-gallery-regen:hover { background: var(--primary); transform: scale(1.1); }
+.ab-gallery-regen:disabled { opacity: 0.5; cursor: not-allowed; }
+.ab-regen-banner {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--primary-glow); border: 1px solid var(--primary);
+  border-radius: 10px; padding: 10px 16px; margin-bottom: 14px;
+  font-size: 13.5px; color: var(--text);
+}

@@ -17,11 +17,13 @@
 import { Hono } from 'hono';
 import { streamSSE } from 'hono/streaming';
 import { EventEmitter } from 'node:events';
-import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, extname, join, resolve, sep } from 'node:path';
+import { homedir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
-import { runPipeline } from '../lib/pipeline-spawn.ts';
+import { runPipeline as runAudiobookPipeline } from '../lib/pipeline-spawn.ts';
+import { runSceneRegenJob } from '../lib/scene-regen-runner.ts';
 import { getProject, type DB } from '@novel-eval/writer';
 import {
   loadRegistry, setupBookLine, recordEpisode, nextEpisodeHint, episodeReady, loadChapters,
@@ -205,10 +207,10 @@ function checked(v: unknown, pattern: RegExp, name: string, maxLen = 64): string
   return s;
 }
 
-function startJob(bookId?: string, pendingRecord?: AbJob['pendingRecord']): AbJob {
+function startJob(bookId?: string, pendingRecord?: AbJob['pendingRecord'], jobEnv?: Record<string, string>): AbJob {
   const id = randomUUID().slice(0, 8);
   const pendingArgsFile = join(DATA_DIR, '.job-pending-args.json');
-  const { child, argv } = runPipeline(pendingArgsFile, REPO_ROOT);
+  const { child, argv } = runAudiobookPipeline(pendingArgsFile, REPO_ROOT, jobEnv);
   const job: AbJob = {
     id, action: argv[1] === 'listen' ? 'listen' : 'build',
     bookId, pendingRecord,
@@ -553,6 +555,73 @@ export function audiobookRouter(db: DB) {
     j.emitter.emit('done', { status: 'cancelled' });
     currentJobId = null;
     return c.json({ status: 'cancelled' });
+  });
+
+  // ── 场景图管理 ───────────────────────────────────────────
+
+  /** 场景图列表（含已生成状态与 URL） */
+  app.get('/books/:bookId/scenes', (c) => {
+    const bookId = c.req.param('bookId');
+    if (!bookTitle(db, bookId)) return c.json({ error: '未知书' }, 404);
+    const rec = loadRegistry(DATA_DIR)[bookId];
+    if (!rec?.scenesRoot) return c.json({ error: '该书无场景图' }, 404);
+    const scenesRootAbs = resolve(REPO_ROOT, rec.scenesRoot);
+    const slugDir = dirname(resolve(REPO_ROOT, rec.outRoot));
+    const data = loadJson<Array<{ pos: number; title: string; scenes: Array<{ slot: string; desc: string; prompt: string }> }>>(join(slugDir, 'scenes.json'));
+    if (!Array.isArray(data)) return c.json({ error: 'scenes.json 不存在（先跑场景抽取）' }, 404);
+    const relScenes = rec.scenesRoot.replace(/^dist\//, '');
+    const items: Array<{ id: string; chapter: number; slot: string; desc: string; url: string | null; exists: boolean }> = [];
+    for (const ch of data) {
+      for (const s of ch.scenes) {
+        const f = `${String(ch.pos).padStart(2, '0')}-${s.slot}.jpg`;
+        items.push({
+          id: f.replace('.jpg', ''),
+          chapter: ch.pos,
+          slot: s.slot,
+          desc: s.desc,
+          url: existsSync(join(scenesRootAbs, f)) ? mediaUrl(`${relScenes}/${f}`) : null,
+          exists: existsSync(join(scenesRootAbs, f)),
+        });
+      }
+    }
+    return c.json({ items });
+  });
+
+  /** 重跑指定场景图（删旧图 → spawn gen-scenes-ark.ts 断点补齐） */
+  app.post('/books/:bookId/scenes/regenerate', async (c) => {
+    const bookId = c.req.param('bookId');
+    if (!bookTitle(db, bookId)) return c.json({ error: '未知书' }, 404);
+    const rec = loadRegistry(DATA_DIR)[bookId];
+    if (!rec?.scenesRoot) return c.json({ error: '该书无场景图' }, 404);
+    if (currentJobId && jobs.get(currentJobId)?.status === 'running') {
+      return c.json({ error: '已有任务在跑，请先等完或取消', jobId: currentJobId }, 409);
+    }
+    const body = await c.req.json<{ images?: string[] }>().catch(() => ({}) as { images?: string[] });
+    const images = body.images ?? [];
+    if (images.length === 0) return c.json({ error: 'images 不能为空' }, 422);
+    if (images.length > 10) return c.json({ error: '单次最多重跑 10 张' }, 422);
+    for (const img of images) {
+      if (!/^\d{1,2}-[a-e]$/.test(img)) return c.json({ error: `非法图 ID：${img}（格式 01-a）` }, 422);
+    }
+
+    // 重跑收口在独立模块（key 读取+删图+spawn 全在 scene-regen-runner 内消化）
+    const scenesRootAbs = resolve(REPO_ROOT, rec.scenesRoot);
+    const slugDir = dirname(resolve(REPO_ROOT, rec.outRoot));
+    const regen = runSceneRegenJob(REPO_ROOT, scenesRootAbs, join(slugDir, 'scenes.json'), images);
+    currentJobId = regen.id; // 占串行锁（regen 完成后由 close 回调释放）
+
+    // 转换为标准 AbJob 形状供 SSE 消费
+    const regenJob: AbJob = {
+      id: regen.id, action: 'build', bookId,
+      status: 'running', args: ['audiobook', 'scenes', 'regenerate', ...images],
+      lines: regen.lines,
+      startedAt: Date.now(), emitter: regen.emitter, child: regen.child,
+    };
+    jobs.set(regen.id, regenJob);
+    regen.child.on('close', () => { currentJobId = null; });
+    regen.onDone(() => { currentJobId = null; });
+
+    return c.json({ jobId: regen.id, deleted: regen.deleted, message: `已删 ${regen.deleted} 张，开始重跑` }, 201);
   });
 
   return app;

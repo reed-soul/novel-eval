@@ -2,9 +2,9 @@
  * 集详情 — 播放器（内嵌 VTT 字幕）+ 场景图画廊（灯箱）+ 逐段台本 +
  * 审听报告（CER 打点可跳转）+ 上传物料。
  */
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { api } from '../api/client.ts';
+import { api, apiPost } from '../api/client.ts';
 import { fmtDur } from './BookAudiobook.tsx';
 import { BookTabs } from '../components/BookTabs.tsx';
 
@@ -16,7 +16,7 @@ interface AbDetail {
   thumbnailUrl: string | null;
   chapters: { pos: number; title: string; segments: number; attributed: number }[];
   chapterStartsMs: { pos: number; startMs: number }[];
-  images: { chapter: number; url: string; name: string }[];
+  images: { chapter: number; url: string; name: string; desc?: string }[];
   scripts: { pos: number; title: string; segments: Segment[] }[];
   listen: {
     counts: { ok: number; suspect: number; bad: number; missing: number; silent: number };
@@ -36,13 +36,42 @@ export function AudiobookEpisode() {
   const [chPos, setChPos] = useState<number | null>(null);
   const [vttUrl, setVttUrl] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const [regenJob, setRegenJob] = useState<{ jobId: string; count: number } | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  useEffect(() => {
-    void api<AbDetail>(`/audiobook/books/${bookId}/ep/${Number(ep)}`)
-      .then((x) => { setD(x); setChPos(x.scripts[0]?.pos ?? null); })
-      .catch((e) => setErr(String(e)));
+  const load = useCallback(async () => {
+    try {
+      const x = await api<AbDetail>(`/audiobook/books/${bookId}/ep/${Number(ep)}`);
+      setD(x);
+      setChPos(x.scripts[0]?.pos ?? null);
+    } catch (e) { setErr(String(e)); }
   }, [bookId, ep]);
+
+  useEffect(() => { void load(); }, [load]);
+
+  /** 重跑单张场景图：删旧 + Seedream 重新生成（约 80s）→ 刷新图库 */
+  const regenImage = async (imageId: string) => {
+    try {
+      setRegenJob({ jobId: '', count: 1 });
+      const r = await apiPost<{ jobId: string; deleted: number }>(`/audiobook/books/${bookId}/scenes/regenerate`, { images: [imageId] });
+      setRegenJob({ jobId: r.jobId, count: 1 });
+      // 轮询 job 完成（简化：不接 SSE，30s 间隔查一次）
+      const poll = setInterval(async () => {
+        try {
+          const j = await fetch(`/api/audiobook/jobs/${r.jobId}?_=${Date.now()}`);
+          const job = await j.json();
+          if (job.status !== 'running') {
+            clearInterval(poll);
+            setRegenJob(null);
+            void load();
+          }
+        } catch { /* 继续轮询 */ }
+      }, 10_000);
+    } catch (e) {
+      setErr((e as Error).message);
+      setRegenJob(null);
+    }
+  };
 
   // srt → vtt（浏览器内转换，播放器 <track> 直接吃 blob URL）
   useEffect(() => {
@@ -137,17 +166,34 @@ export function AudiobookEpisode() {
           {tab === 'gallery' && (
             <div className="ab-tab-body">
               {grouped.length === 0 && <div className="ab-empty">本集没有场景图（scenes/ 目录为空）</div>}
+              {regenJob && (
+                <div className="ab-regen-banner">
+                  <span className="ab-pulse-dot" /> 场景图重跑中…（{regenJob.count} 张）
+                  <button className="ab-btn" onClick={() => setRegenJob(null)}>完成</button>
+                </div>
+              )}
               {grouped.map(([chp, imgs]) => (
                 <div key={chp} className="ab-gallery-group">
                   <div className="ab-gallery-head">第 {chp} 章 · {imgs.length} 张</div>
                   <div className="ab-gallery-grid">
                     {imgs.map((img, i) => {
                       const globalIdx = d.images.findIndex((x) => x.url === img.url);
+                      const imgId = img.name.replace(/\.jpe?g$/i, '');
                       return (
-                        <button key={img.url} className="ab-gallery-item" onClick={() => setLightbox(globalIdx)} title={img.name}>
-                          <img src={img.url} alt={img.name} loading="lazy" />
-                          <span className="ab-gallery-tag">{img.name.replace(/\.jpe?g$/i, '')}{i === 0 ? ' · 首发' : ''}</span>
-                        </button>
+                        <div key={img.url} className="ab-gallery-item-wrap">
+                          <button className="ab-gallery-item" onClick={() => setLightbox(globalIdx)} title={img.desc ?? img.name}>
+                            <img src={img.url} alt={img.name} loading="lazy" />
+                            <span className="ab-gallery-tag">{imgId}{i === 0 ? ' · 首发' : ''}</span>
+                          </button>
+                          <button
+                            className="ab-gallery-regen"
+                            title="重跑此图（删旧图 + Seedream 重新生成）"
+                            onClick={() => void regenImage(imgId)}
+                            disabled={!!regenJob}
+                          >
+                            <span className="msr msr-sm">restart_alt</span>
+                          </button>
+                        </div>
                       );
                     })}
                   </div>
