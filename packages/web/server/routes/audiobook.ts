@@ -435,7 +435,7 @@ export function audiobookRouter(db: DB) {
     let job: AbJob;
     try {
       // 登记派生值同过白名单（双保险：registry 由服务端写入，此处防配置文件被手改）
-      const outDir = checked(rec.outRoot, /^dist\/[\w/-]{3,80}$/, 'outRoot');
+      const outDir = checked(rec.outRoot, /^dist\/[\w\u4e00-\u9fff/-]{3,80}$/, 'outRoot');
       const engine = checked(rec.presets.engine, /^(edge|volcengine|minimax)$/, 'engine');
       const groupN = checked(String(rec.presets.chaptersPerEpisode), /^[1-5]$/, 'group');
       if (!outDir || !engine || !groupN) throw new Error('作品预设非法（请检查 registry.json）');
@@ -459,7 +459,7 @@ export function audiobookRouter(db: DB) {
           '--out', outDir,
         ];
         if (rec.scenesRoot && existsSync(resolve(REPO_ROOT, rec.scenesRoot))) {
-          const scenesDir = checked(rec.scenesRoot, /^dist\/[\w/-]{3,80}$/, 'scenesRoot');
+          const scenesDir = checked(rec.scenesRoot, /^dist\/[\w\u4e00-\u9fff/-]{3,80}$/, 'scenesRoot');
           if (scenesDir) childArgs.push('--cover-dir', scenesDir);
         } else {
           childArgs.push('--skip-video');

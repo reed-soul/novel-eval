@@ -19,6 +19,10 @@ export interface ProjectAudiobookConfig {
   voiceBySpeaker?: { match: string; voice: string }[];
   /** 角色名单（含别名，长名在前）：说话人归属校验 + 假名过滤 */
   cast?: string[];
+  /** 场景图视觉风格（英文生图指令；extract-scenes 消费，per-book 定制） */
+  sceneStyle?: string;
+  /** 场景图角色/场景一致性表（英文；extract-scenes 消费） */
+  sceneCharacters?: string;
   /** 旁白音色覆盖（edge 音色名，经引擎 VOICE_MAP 映射） */
   narrator?: string;
   /** 默认对白音色覆盖 */

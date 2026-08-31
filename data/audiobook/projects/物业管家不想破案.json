@@ -1,0 +1,553 @@
+{
+ "$comment": "《物业管家不想破案》有声书配置。cast 服务画本归属；sceneStyle/sceneCharacters 服务场景图抽取（英文生图指令）。2026-08-31 按第 1-3 章正文气质定制。",
+ "cast": [
+  "陈默",
+  "周芸",
+  "赵鹏飞",
+  "林知秋",
+  "王德发",
+  "小满",
+  "陈"
+ ],
+ "voiceBySpeaker": [
+  {
+   "match": "陈默",
+   "voice": "zh-CN-YunxiNeural"
+  },
+  {
+   "match": "周芸",
+   "voice": "zh-CN-XiaoyiNeural"
+  },
+  {
+   "match": "赵鹏飞",
+   "voice": "zh-CN-YunyangNeural"
+  },
+  {
+   "match": "王德发",
+   "voice": "zh-CN-YunyeNeural"
+  },
+  {
+   "match": "小满",
+   "voice": "zh-CN-XiaohanNeural"
+  }
+ ],
+ "pron": [
+  {
+   "match": "17:30",
+   "read": "十七点三十分",
+   "note": "时刻×8"
+  },
+  {
+   "match": "14:24",
+   "read": "十四点二十四分",
+   "note": "时刻×8"
+  },
+  {
+   "match": "17:14",
+   "read": "十七点十四分",
+   "note": "时刻×8"
+  },
+  {
+   "match": "17:42",
+   "read": "十七点四十二分",
+   "note": "时刻×7"
+  },
+  {
+   "match": "18:00",
+   "read": "十八点整",
+   "note": "时刻×7"
+  },
+  {
+   "match": "17:38",
+   "read": "十七点三十八分",
+   "note": "时刻×4"
+  },
+  {
+   "match": "14:20",
+   "read": "十四点二十分",
+   "note": "时刻×4"
+  },
+  {
+   "match": "16:10",
+   "read": "十六点十分",
+   "note": "时刻×3"
+  },
+  {
+   "match": "16:25",
+   "read": "十六点二十五分",
+   "note": "时刻×3"
+  },
+  {
+   "match": "11:55",
+   "read": "十一点五十五分",
+   "note": "时刻×2"
+  },
+  {
+   "match": "12:07",
+   "read": "十二点七分",
+   "note": "时刻×2"
+  },
+  {
+   "match": "12:05",
+   "read": "十二点五分",
+   "note": "时刻×2"
+  },
+  {
+   "match": "17:15",
+   "read": "十七点十五分",
+   "note": "时刻×2"
+  },
+  {
+   "match": "14:30",
+   "read": "十四点三十分",
+   "note": "时刻×2"
+  },
+  {
+   "match": "17:00",
+   "read": "十七点整",
+   "note": "时刻×2"
+  },
+  {
+   "match": "17:08",
+   "read": "十七点八分",
+   "note": "时刻×2"
+  },
+  {
+   "match": "9:00",
+   "read": "九点整",
+   "note": "时刻×1"
+  },
+  {
+   "match": "18:15",
+   "read": "十八点十五分",
+   "note": "时刻×1"
+  },
+  {
+   "match": "16:00",
+   "read": "十六点整",
+   "note": "时刻×1"
+  },
+  {
+   "match": "17:40",
+   "read": "十七点四十分",
+   "note": "时刻×1"
+  },
+  {
+   "match": "14:32",
+   "read": "十四点三十二分",
+   "note": "时刻×1"
+  },
+  {
+   "match": "14:47",
+   "read": "十四点四十七分",
+   "note": "时刻×1"
+  },
+  {
+   "match": "8:12",
+   "read": "八点十二分",
+   "note": "时刻×1"
+  },
+  {
+   "match": "8:13",
+   "read": "八点十三分",
+   "note": "时刻×1"
+  },
+  {
+   "match": "8:14",
+   "read": "八点十四分",
+   "note": "时刻×1"
+  },
+  {
+   "match": "12:06",
+   "read": "十二点六分",
+   "note": "时刻×1"
+  },
+  {
+   "match": "12:38",
+   "read": "十二点三十八分",
+   "note": "时刻×1"
+  },
+  {
+   "match": "12:39",
+   "read": "十二点三十九分",
+   "note": "时刻×1"
+  },
+  {
+   "match": "12:40",
+   "read": "十二点四十分",
+   "note": "时刻×1"
+  },
+  {
+   "match": "14:22",
+   "read": "十四点二十二分",
+   "note": "时刻×1"
+  },
+  {
+   "match": "14:23",
+   "read": "十四点二十三分",
+   "note": "时刻×1"
+  },
+  {
+   "match": "03:47",
+   "read": "三点四十七分",
+   "note": "时刻×1"
+  },
+  {
+   "match": "01:12",
+   "read": "一点十二分",
+   "note": "时刻×1"
+  },
+  {
+   "match": "10:00",
+   "read": "十点整",
+   "note": "时刻×1"
+  },
+  {
+   "match": "2024-07-14",
+   "read": "二零二四年七月十四日",
+   "note": "ISO 日期"
+  },
+  {
+   "match": "2024-07-15",
+   "read": "二零二四年七月十五日",
+   "note": "ISO 日期"
+  },
+  {
+   "match": "2024-08-12",
+   "read": "二零二四年八月十二日",
+   "note": "ISO 日期"
+  },
+  {
+   "match": "2014/06/12",
+   "read": "二零一四年六月十二日",
+   "note": "ISO 日期"
+  },
+  {
+   "match": "HY-2024-0847-C",
+   "read": "H Y 二零二四年零八四七号C",
+   "note": "审批工号"
+  },
+  {
+   "match": "HY-2024-0846-L",
+   "read": "H Y 二零二四年零八四六号L",
+   "note": "审批工号"
+  },
+  {
+   "match": "HY-2024-0846-A",
+   "read": "H Y 二零二四年零八四六号A",
+   "note": "审批工号"
+  },
+  {
+   "match": "HY-2024-0847-R",
+   "read": "H Y 二零二四年零八四七号R",
+   "note": "审批工号"
+  },
+  {
+   "match": "HY-2024-0846-M",
+   "read": "H Y 二零二四年零八四六号M",
+   "note": "审批工号"
+  },
+  {
+   "match": "HY-2024-0846-R",
+   "read": "H Y 二零二四年零八四六号R",
+   "note": "审批工号"
+  },
+  {
+   "match": "HY-2014-0312-L",
+   "read": "H Y 二零一四年零三一二号L",
+   "note": "审批工号"
+  },
+  {
+   "match": "0847-C",
+   "read": "零八四七号C",
+   "note": "短工号"
+  },
+  {
+   "match": "0846-L",
+   "read": "零八四六号L",
+   "note": "短工号"
+  },
+  {
+   "match": "0846-A",
+   "read": "零八四六号A",
+   "note": "短工号"
+  },
+  {
+   "match": "0847-R",
+   "read": "零八四七号R",
+   "note": "短工号"
+  },
+  {
+   "match": "0846-M",
+   "read": "零八四六号M",
+   "note": "短工号"
+  },
+  {
+   "match": "0846-R",
+   "read": "零八四六号R",
+   "note": "短工号"
+  },
+  {
+   "match": "0312-L",
+   "read": "零三一二号L",
+   "note": "短工号"
+  },
+  {
+   "match": "0847",
+   "read": "零八四七",
+   "note": "零开头编号（防念千位）"
+  },
+  {
+   "match": "0846",
+   "read": "零八四六",
+   "note": "零开头编号（防念千位）"
+  },
+  {
+   "match": "0317",
+   "read": "零三一七",
+   "note": "零开头编号（防念千位）"
+  },
+  {
+   "match": "0312",
+   "read": "零三一二",
+   "note": "零开头编号（防念千位）"
+  },
+  {
+   "match": "0812",
+   "read": "零八一二",
+   "note": "零开头编号（防念千位）"
+  },
+  {
+   "match": "0807",
+   "read": "零八零七",
+   "note": "零开头编号（防念千位）"
+  },
+  {
+   "match": "PRD",
+   "read": "P R D",
+   "note": "缩写词"
+  },
+  {
+   "match": "KPI",
+   "read": "K P I",
+   "note": "缩写词"
+  },
+  {
+   "match": "BGM",
+   "read": "B G M",
+   "note": "缩写词"
+  },
+  {
+   "match": "HR",
+   "read": "H R",
+   "note": "缩写词"
+  },
+  {
+   "match": "PR",
+   "read": "P R",
+   "note": "缩写词"
+  },
+  {
+   "match": "PDF",
+   "read": "P D F",
+   "note": "缩写词"
+  },
+  {
+   "match": "URL",
+   "read": "U R L",
+   "note": "缩写词"
+  },
+  {
+   "match": "USB",
+   "read": "U S B",
+   "note": "缩写词"
+  },
+  {
+   "match": "OTG",
+   "read": "O T G",
+   "note": "缩写词"
+  },
+  {
+   "match": "PPT",
+   "read": "P P T",
+   "note": "缩写词"
+  },
+  {
+   "match": "DAU",
+   "read": "D A U",
+   "note": "缩写词"
+  },
+  {
+   "match": "MAU",
+   "read": "M A U",
+   "note": "缩写词"
+  },
+  {
+   "match": "OK",
+   "read": "OK",
+   "note": "缩写词"
+  },
+  {
+   "match": "GM-001",
+   "read": "G M 零零一",
+   "note": "缩写词"
+  },
+  {
+   "match": "SV-02",
+   "read": "S V 零二",
+   "note": "缩写词"
+  },
+  {
+   "match": "BL-5CB",
+   "read": "B L 五 C B",
+   "note": "缩写词"
+  },
+  {
+   "match": "REC_01",
+   "read": "R E C 零一",
+   "note": "缩写词"
+  },
+  {
+   "match": "REC_02",
+   "read": "R E C 零二",
+   "note": "缩写词"
+  },
+  {
+   "match": "REC_03",
+   "read": "R E C 零三",
+   "note": "缩写词"
+  },
+  {
+   "match": "30%",
+   "read": "百分之三十",
+   "note": "百分比"
+  },
+  {
+   "match": "40%",
+   "read": "百分之四十",
+   "note": "百分比"
+  },
+  {
+   "match": "12%",
+   "read": "百分之十二",
+   "note": "百分比"
+  },
+  {
+   "match": "3%",
+   "read": "百分之三",
+   "note": "百分比"
+  },
+  {
+   "match": "7%",
+   "read": "百分之七",
+   "note": "百分比"
+  },
+  {
+   "match": "18%",
+   "read": "百分之十八",
+   "note": "百分比"
+  },
+  {
+   "match": "67%",
+   "read": "百分之六十七",
+   "note": "百分比"
+  },
+  {
+   "match": "72%",
+   "read": "百分之七十二",
+   "note": "百分比"
+  },
+  {
+   "match": "32%",
+   "read": "百分之三十二",
+   "note": "百分比"
+  },
+  {
+   "match": "0KB",
+   "read": "零K B",
+   "note": "文件大小"
+  },
+  {
+   "match": "1401",
+   "read": "一四零一",
+   "note": "多位数字逐位"
+  },
+  {
+   "match": "147",
+   "read": "一四七",
+   "note": "多位数字逐位"
+  },
+  {
+   "match": "2024",
+   "read": "二零二四",
+   "note": "多位数字逐位"
+  },
+  {
+   "match": "2023",
+   "read": "二零二三",
+   "note": "多位数字逐位"
+  },
+  {
+   "match": "2345",
+   "read": "二三四五",
+   "note": "多位数字逐位"
+  },
+  {
+   "match": "985",
+   "read": "九八五",
+   "note": "多位数字逐位"
+  },
+  {
+   "match": "2014",
+   "read": "二零一四",
+   "note": "多位数字逐位"
+  },
+  {
+   "match": "404",
+   "read": "四零四",
+   "note": "多位数字逐位"
+  },
+  {
+   "match": "0715",
+   "read": "零七一五",
+   "note": "多位数字逐位"
+  },
+  {
+   "match": "186",
+   "read": "一八六",
+   "note": "多位数字逐位"
+  },
+  {
+   "match": "2000",
+   "read": "二零零零",
+   "note": "多位数字逐位"
+  },
+  {
+   "match": "2016",
+   "read": "二零一六",
+   "note": "多位数字逐位"
+  },
+  {
+   "match": "2022",
+   "read": "二零二二",
+   "note": "多位数字逐位"
+  },
+  {
+   "match": "217",
+   "read": "二一七",
+   "note": "多位数字逐位"
+  },
+  {
+   "match": "2009",
+   "read": "二零零九",
+   "note": "多位数字逐位"
+  },
+  {
+   "match": "001",
+   "read": "零零一",
+   "note": "多位数字逐位"
+  }
+ ],
+ "sceneStyle": "Unified visual style for all scenes: cinematic photographic realism, a contemporary Chinese metropolis, inside and around a modern glass-curtain-wall office tower at night or pre-dawn. Cold teal-green fluorescent palette, glass reflections and chrome, ONE warm accent light per frame (vending machine glow / lobby uplight / phone screen / green exit sign). Sterile corporate interiors with a subtle surreal unease like the TV series \"Severance\": empty corridors, potted sansevieria and areca palms, mop buckets, buzzing ventilation, faint red standby LEDs in the dark. Slight film grain, muted colors, wide 16:9 cinematic composition, dry deadpan suspense tone. ABSOLUTELY NO text, letters, numbers, captions or watermarks in the image.",
+ "sceneCharacters": "Character and location sheet (keep consistent across scenes when present):\n- CHEN MO (陈默, protagonist): Chinese male early 30s, ex-tech-product-manager turned property manager, lean, short black hair, light blue property-management uniform shirt with lanyard work badge, calm observant expression, often holding a paper coffee cup or phone flashlight.\n- ZHOU YUN (周芸): admin-office woman mid 30s, neat ponytail, white blouse, oat-milk cup, unfazed tired expression.\n- XIAO MAN (小满): front-desk girl mid 20s, pink lipstick, reception counter, sweet but unreadable smile.\n- ZHAO PENGFEI (赵鹏飞): property manager mid 40s, navy suit jacket, walkie-talkie, corporate double-chin.\n- WANG DEFA (王德发): day-shift security guard late 50s, warm grin, old-style guard uniform, guard booth.\n- THE TOWER: glass curtain wall reflecting city lights; three-story atrium with a huge areca palm and black piano; 7th-floor mezzanine corridor with floor-to-ceiling windows; dim annex building with narrow tiled corridors, peeling paint dust; a hidden \"9.5th floor\" equipment level with red indicator LEDs and humming machines; dead potted pothos with dying leaves."
+}

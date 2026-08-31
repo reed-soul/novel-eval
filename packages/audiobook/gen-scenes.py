@@ -6,8 +6,10 @@ import json, subprocess, sys, time, os, glob
 from pathlib import Path
 
 REPO = Path("/Users/reed_soul/code/novel-eval")
-SCENES_JSON = REPO / "dist/audiobook-v3/scenes.json"
-OUT_DIR = REPO / "dist/audiobook-v3/scenes"
+# per-book 覆写（M0 后产物根在 dist/derivatives/<slug>/）：
+#   SCENES_JSON=... OUT_DIR=... python3 gen-scenes.py
+SCENES_JSON = Path(os.environ["SCENES_JSON"]) if os.environ.get("SCENES_JSON") else REPO / "dist/audiobook-v3/scenes.json"
+OUT_DIR = Path(os.environ["OUT_DIR"]) if os.environ.get("OUT_DIR") else REPO / "dist/audiobook-v3/scenes"
 TMP_DIR = OUT_DIR / "_tmp"
 INTERVAL_S = 12
 

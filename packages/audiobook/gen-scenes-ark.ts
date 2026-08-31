@@ -16,8 +16,10 @@ import { setTimeout as sleep } from 'node:timers/promises';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO = resolve(__dirname, '..', '..');
-const SCENES_JSON = resolve(REPO, 'dist/audiobook-v3/scenes.json');
-const OUT_DIR = resolve(REPO, 'dist/audiobook-v3/scenes');
+// per-book 覆写（M0 后产物根迁 dist/derivatives/<slug>/；不设则回退森铁旧路径）：
+//   SCENES_JSON=/path/scenes.json OUT_DIR=/path/scenes tsx gen-scenes-ark.ts
+const SCENES_JSON = process.env.SCENES_JSON ? resolve(process.env.SCENES_JSON) : resolve(REPO, 'dist/audiobook-v3/scenes.json');
+const OUT_DIR = process.env.OUT_DIR ? resolve(process.env.OUT_DIR) : resolve(REPO, 'dist/audiobook-v3/scenes');
 const INTERVAL_MS = 12_000;
 const MODEL = 'doubao-seedream-5.0-lite';
 const SIZE = '2560x1440';
@@ -120,7 +122,7 @@ async function main(): Promise<void> {
         continue;
       }
       const buf = Buffer.from(await dl.arrayBuffer());
-      if (buf.length < 200_000) {
+      if (buf.length < 50_000) { // 50KB：防错误响应/HTML 页；暗色简约场景 JPEG 可低至 120KB
         console.log(`[${i + 1}/${todo.length}] ${label} BAD size ${buf.length}`);
         fails.push(label);
       } else {

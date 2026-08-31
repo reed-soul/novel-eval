@@ -176,6 +176,23 @@ async function runListenCommand(raw: Record<string, string>): Promise<void> {
   });
 }
 
+/** 场景抽取子命令：章节+per-book 风格 → 分镜 scenes.json（LLM 调用收口在 scene-sinks） */
+async function runScenesCommand(raw: Record<string, string>): Promise<void> {
+  if (!raw.project) throw new Error('scenes 需要 --project <名称或id>（可选 --chapters 1-10）');
+  if (raw.chapters !== undefined && !/^\d{1,3}(-\d{1,3})?$/.test(raw.chapters)) throw new Error('--chapters 格式应为 3 或 1-10');
+  const { buildSceneTask } = await import('./scenes.ts');
+  const { task, bookTitle } = buildSceneTask(raw.project, raw.chapters);
+  console.log(`《${bookTitle}》场景抽取：${task.chapters.length} 章 → ${task.outJson}`);
+
+  // 任务落盘（仓库内固定路径）→ sink 模块回读执行（跨文件收口，与 jobs 同款模式）
+  const taskFile = resolve(REPO_ROOT, 'dist/.scene-task.json');
+  await mkdir(resolve(REPO_ROOT, 'dist'), { recursive: true });
+  await writeFile(taskFile, JSON.stringify(task), 'utf-8');
+  const { runSceneExtraction } = await import('../scene-sinks.ts');
+  await runSceneExtraction(taskFile);
+  console.log(`下一步：export ARK_API_KEY=… 后跑 tsx gen-scenes-ark.ts --project ${bookTitle}`);
+}
+
 /** LLM 归因子命令：对存量 run 的 script.json 补说话人（写回原文件，带缓存） */
 async function runAttributeCommand(raw: Record<string, string>): Promise<void> {
   if (!raw.project) throw new Error('attribute 需要 --project（用于加载 cast/音色配置）');
@@ -266,6 +283,10 @@ async function main() {
     await runListenCommand(raw);
     return;
   }
+  if (command === 'scenes') {
+    await runScenesCommand(raw);
+    return;
+  }
   if (command === 'attribute') {
     await runAttributeCommand(raw);
     return;
@@ -273,6 +294,7 @@ async function main() {
   if (command !== 'build') {
     console.log('用法：pnpm audiobook build --project <名称或id> [--chapters 1|1-15] [--group 3] [--chars 600] [--engine edge|minimax|volcengine] [--cover 图.jpg] [--cover-dir 目录] [--config 项目配置.json] [--no-cold-open] [--no-snow] [--skip-video] [--ep-start 2] [--tagline 一句话钩子] [--llm-attribute]');
     console.log('      pnpm audiobook listen --out dist/audiobook-v4 [--ep 01] [--model small] [--cer 0.10] [--fix] [--srt]   # 审听：ASR 回验 + 坏段定位');
+    console.log('      pnpm audiobook scenes --project <名称或id> [--chapters 1-10]   # 场景抽取：章节→分镜 scenes.json（生图前置）');
     console.log('      pnpm audiobook attribute --project <名称或id> --out dist/audiobook-v4 [--ep 01] [--llm-engine bigmodel]   # 对存量台本跑 LLM 说话人归因（写回 script.json）');
     process.exit(0);
   }
