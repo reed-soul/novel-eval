@@ -46,7 +46,7 @@ function run(cmd: string, args: string[], timeoutMs: number): Promise<{ code: nu
   });
 }
 
-async function synthOne(seg: Segment, file: string): Promise<string | undefined> {
+async function synthOne(seg: Segment, file: string): Promise<string | null> {
   const srt = file.replace(/\.mp3$/, '.srt');
   const args = [
     'edge-tts',
@@ -59,12 +59,12 @@ async function synthOne(seg: Segment, file: string): Promise<string | undefined>
   ];
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const r = await run(UVX_CMD, args, SEGMENT_TIMEOUT_MS);
-    if (r.code === 0) return existsSync(srt) ? srt : undefined;
-    if (attempt === MAX_ATTEMPTS) throw new Error(`edge-tts 失败 ${seg.id}（重试 ${MAX_ATTEMPTS} 次）: ${r.stderr.slice(0, 300)}`);
+    if (r.code === 0) return existsSync(srt) ? srt : null;
+    if (attempt === MAX_ATTEMPTS) return null; // 跳过不炸（对齐 volcengine 的失败收集模式）
     console.log(`  [tts] ${seg.id} 第 ${attempt} 次失败，重试：${r.stderr.slice(0, 120).replace(/\n/g, ' ')}`);
     await new Promise((r2) => setTimeout(r2, 3_000 * attempt));
   }
-  throw new Error('unreachable');
+  return null;
 }
 
 export const engine: TtsEngine = {
@@ -72,6 +72,7 @@ export const engine: TtsEngine = {
   async synthesize(segments, outDir) {
     await mkdir(outDir, { recursive: true });
     const out: SynthResult[] = [];
+    const failures: { segmentId: string; text: string; error: string }[] = [];
     // 顺序合成即可：每段 ~几百 ms，串行足够快且不触发限流。
     // 断点续跑：音频+词级 srt 都已存在（>512B）则跳过网络合成——换图重渲时省掉全套 TTS。
     for (const seg of segments) {
@@ -79,8 +80,18 @@ export const engine: TtsEngine = {
       const srt = file.replace(/\.mp3$/, '.srt');
       const cached = existsSync(file) && statSync(file).size > 512
         && existsSync(srt) && statSync(srt).size > 0;
-      const srtFile = cached ? srt : await synthOne(seg, file);
+      const srtFile = (cached ? srt : await synthOne(seg, file)) ?? undefined;
+      if (!srtFile && !cached) {
+        // 合成失败：跳过并收集（对齐 volcengine；重跑 build 断点只补失败段）
+        failures.push({ segmentId: seg.id, text: seg.text.slice(0, 80), error: 'edge-tts 重试 3 次后跳过' });
+        console.warn(`  ⚠ 段 ${seg.id} 合成失败，跳过并记录`);
+        continue;
+      }
       out.push({ segmentId: seg.id, file, durationMs: await ffprobeDurationMs(file), srtFile });
+    }
+    if (failures.length) {
+      await (await import('node:fs/promises')).writeFile(join(outDir, 'tts-failures.json'), JSON.stringify(failures, null, 1), 'utf-8');
+      console.warn(`  ⚠ edge：${failures.length}/${segments.length} 段失败 → tts-failures.json（重跑 build 只补失败段）`);
     }
     return out;
   },
