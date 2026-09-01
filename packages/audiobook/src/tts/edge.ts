@@ -6,12 +6,25 @@ import { spawn } from 'node:child_process';
 import { mkdir } from 'node:fs/promises';
 import { existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { homedir } from 'node:os';
 import { ffprobeDurationMs } from '../ffmpeg.ts';
 import type { Segment, } from '../annotate.ts';
 import type { SynthResult, TtsEngine } from './index.ts';
 
 const SEGMENT_TIMEOUT_MS = 120_000; // 单段上限：正常几百 ms～数秒；实测网络停摆可挂 8h+，必须兜底
 const MAX_ATTEMPTS = 3;
+
+/** uvx 路径探测：PATH 找不到时回退常见安装位（Web 服务的 PATH 可能不含 ~/.local/bin） */
+const UVX_CMD = (() => {
+  for (const p of [
+    join(homedir(), '.local', 'bin', 'uvx'),
+    '/opt/homebrew/bin/uvx',
+    '/usr/local/bin/uvx',
+  ]) {
+    if (existsSync(p)) return p;
+  }
+  return 'uvx'; // 让 spawn 从 PATH 兜底（终端环境通常能找到）
+})();
 
 function run(cmd: string, args: string[], timeoutMs: number): Promise<{ code: number; stderr: string }> {
   return new Promise((res) => {
@@ -45,7 +58,7 @@ async function synthOne(seg: Segment, file: string): Promise<string | undefined>
     '--write-subtitles', srt,   // 词级时间戳
   ];
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-    const r = await run('uvx', args, SEGMENT_TIMEOUT_MS);
+    const r = await run(UVX_CMD, args, SEGMENT_TIMEOUT_MS);
     if (r.code === 0) return existsSync(srt) ? srt : undefined;
     if (attempt === MAX_ATTEMPTS) throw new Error(`edge-tts 失败 ${seg.id}（重试 ${MAX_ATTEMPTS} 次）: ${r.stderr.slice(0, 300)}`);
     console.log(`  [tts] ${seg.id} 第 ${attempt} 次失败，重试：${r.stderr.slice(0, 120).replace(/\n/g, ' ')}`);
