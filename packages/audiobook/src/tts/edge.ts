@@ -3,7 +3,7 @@
  * 依赖：uv（已装）、网络。免费、稳定、速度约 10x 实时。
  */
 import { spawn } from 'node:child_process';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { existsSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
@@ -13,6 +13,9 @@ import type { SynthResult, TtsEngine } from './index.ts';
 
 const SEGMENT_TIMEOUT_MS = 120_000; // 单段上限：正常几百 ms～数秒；实测网络停摆可挂 8h+，必须兜底
 const MAX_ATTEMPTS = 3;
+// 服务端限流窗口为分钟级，秒级退避等于原地三连挂（EP03 首跑 s16-s82 实测 8 段全灭）
+const RETRY_BACKOFF_MS = [15_000, 30_000];
+const FAILURES_FILE = 'tts-failures.json';
 
 /** uvx 路径探测：PATH 找不到时回退常见安装位（Web 服务的 PATH 可能不含 ~/.local/bin） */
 const UVX_CMD = (() => {
@@ -46,7 +49,15 @@ function run(cmd: string, args: string[], timeoutMs: number): Promise<{ code: nu
   });
 }
 
-async function synthOne(seg: Segment, file: string): Promise<string | null> {
+/** python traceback 的真实异常在末尾：截头只能看到 File "…" 行，必须取尾 */
+function errTail(stderr: string, max = 200): string {
+  const t = stderr.replace(/\s+/g, ' ').trim();
+  return t.length <= max ? t : `…${t.slice(-max)}`;
+}
+
+interface OneResult { srt: string | null; error?: string }
+
+async function synthOne(seg: Segment, file: string): Promise<OneResult> {
   const srt = file.replace(/\.mp3$/, '.srt');
   const args = [
     'edge-tts',
@@ -57,14 +68,18 @@ async function synthOne(seg: Segment, file: string): Promise<string | null> {
     '--write-media', file,
     '--write-subtitles', srt,   // 词级时间戳
   ];
+  let lastErr = '未知错误';
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     const r = await run(UVX_CMD, args, SEGMENT_TIMEOUT_MS);
-    if (r.code === 0) return existsSync(srt) ? srt : null;
-    if (attempt === MAX_ATTEMPTS) return null; // 跳过不炸（对齐 volcengine 的失败收集模式）
-    console.log(`  [tts] ${seg.id} 第 ${attempt} 次失败，重试：${r.stderr.slice(0, 120).replace(/\n/g, ' ')}`);
-    await new Promise((r2) => setTimeout(r2, 3_000 * attempt));
+    if (r.code === 0) {
+      return existsSync(srt) ? { srt } : { srt: null, error: 'exit 0 但词级 srt 未生成' };
+    }
+    lastErr = errTail(r.stderr);
+    if (attempt === MAX_ATTEMPTS) return { srt: null, error: lastErr }; // 跳过不炸（对齐 volcengine 的失败收集模式）
+    console.log(`  [tts] ${seg.id} 第 ${attempt} 次失败，${RETRY_BACKOFF_MS[attempt - 1] / 1000}s 后重试｜${lastErr}`);
+    await new Promise((r2) => setTimeout(r2, RETRY_BACKOFF_MS[attempt - 1]));
   }
-  return null;
+  return { srt: null, error: lastErr };
 }
 
 export const engine: TtsEngine = {
@@ -80,18 +95,22 @@ export const engine: TtsEngine = {
       const srt = file.replace(/\.mp3$/, '.srt');
       const cached = existsSync(file) && statSync(file).size > 512
         && existsSync(srt) && statSync(srt).size > 0;
-      const srtFile = (cached ? srt : await synthOne(seg, file)) ?? undefined;
-      if (!srtFile && !cached) {
+      const one: OneResult = cached ? { srt } : await synthOne(seg, file);
+      if (!one.srt) {
         // 合成失败：跳过并收集（对齐 volcengine；重跑 build 断点只补失败段）
-        failures.push({ segmentId: seg.id, text: seg.text.slice(0, 80), error: 'edge-tts 重试 3 次后跳过' });
-        console.warn(`  ⚠ 段 ${seg.id} 合成失败，跳过并记录`);
+        failures.push({ segmentId: seg.id, text: seg.text.slice(0, 80), error: one.error ?? '未知错误' });
+        console.warn(`  ⚠ 段 ${seg.id} 合成失败，跳过并记录：${one.error}`);
         continue;
       }
-      out.push({ segmentId: seg.id, file, durationMs: await ffprobeDurationMs(file), srtFile });
+      out.push({ segmentId: seg.id, file, durationMs: await ffprobeDurationMs(file), srtFile: one.srt });
     }
+    const failuresFile = join(outDir, FAILURES_FILE);
     if (failures.length) {
-      await (await import('node:fs/promises')).writeFile(join(outDir, 'tts-failures.json'), JSON.stringify(failures, null, 1), 'utf-8');
-      console.warn(`  ⚠ edge：${failures.length}/${segments.length} 段失败 → tts-failures.json（重跑 build 只补失败段）`);
+      await writeFile(failuresFile, JSON.stringify(failures, null, 1), 'utf-8');
+      console.warn(`  ⚠ edge：${failures.length}/${segments.length} 段失败 → ${FAILURES_FILE}（重跑 build 只补失败段）`);
+    } else if (existsSync(failuresFile)) {
+      // 补跑全绿后清掉旧清单：文件存在 == 当前有缺段（ep02 曾留 stale 记录误导排查）
+      await rm(failuresFile, { force: true });
     }
     return out;
   },

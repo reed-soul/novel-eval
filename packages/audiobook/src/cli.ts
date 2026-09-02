@@ -155,6 +155,26 @@ function pickEngine(kind: string): Promise<TtsEngine> {
   }
 }
 
+/** TTS 质量门禁：缺段先冷却补跑一轮（edge 服务端限流窗口为分钟级，立返重试大概率还挂），
+ *  补不齐则中止——逐字原文产品不能带缺句装配出片（EP03 首跑曾带 8 句空洞直进渲染）。 */
+async function synthesizeWithGate(
+  engine: TtsEngine, segments: Segment[], ttsDir: string, label: string,
+): Promise<SynthResult[]> {
+  let synth = await engine.synthesize(segments, ttsDir);
+  const missingIds = () => segments.filter((s) => !synth.some((r) => r.segmentId === s.id)).map((s) => s.id);
+  let missing = missingIds();
+  if (missing.length > 0) {
+    console.warn(`    ⚠ [${label}] ${missing.length} 段未合成，冷却 90s 补跑一轮（已成功段缓存命中）…`);
+    await new Promise((r) => setTimeout(r, 90_000));
+    synth = await engine.synthesize(segments, ttsDir);
+    missing = missingIds();
+  }
+  if (missing.length > 0) {
+    throw new Error(`[${label}] ${missing.length} 段 TTS 补跑后仍缺（${missing.join('、')}）——中止出片。稍后重跑同一命令即可续跑：已成功段全部缓存命中，只补缺段`);
+  }
+  return synth;
+}
+
 /** 审听子命令：argv 白名单校验后交给 listen.ts（行业 proofer 的机器版） */
 async function runListenCommand(raw: Record<string, string>): Promise<void> {
   const WHISPER_MODELS = ['tiny', 'base', 'small', 'medium', 'large', 'large-v2', 'large-v3', 'turbo'];
@@ -389,7 +409,7 @@ async function main() {
       const scriptFile = resolve(chDir, 'script.json');
       await writeFile(scriptFile, JSON.stringify({ position: ch.position, title: ch.title, segments: segs }, null, 1), 'utf-8');
       const script = JSON.parse(await readFile(scriptFile, 'utf-8')) as { segments: Segment[] };
-      const synth = await engine.synthesize(script.segments, ttsDir);
+      const synth = await synthesizeWithGate(engine, script.segments, ttsDir, `第${ch.position}章`);
 
       // safePath 复核：DB 标题参与拼出的绝对路径，进 ffmpeg argv 前锁回仓库内
       const chFile = safePath(resolve(chDir, `${String(ch.position).padStart(2, '0')}-${safeName(ch.title)}.mp3`));
@@ -424,7 +444,7 @@ async function main() {
       const hookText = pickHookSentence(applyPron(grp[0].content, pronEntries).text);
       const introText = brand.introLine.replace('{book}', bookTitle);
       const proSegs = [mk(`ep${epN}-hook`, hookText, '-8%', 900), mk(`ep${epN}-intro`, introText, '-10%', 1000)];
-      const proSynth = await engine.synthesize(proSegs, proTts);
+      const proSynth = await synthesizeWithGate(engine, proSegs, proTts, `EP${epN} 冷开场`);
       const proById = new Map(proSynth.map((s) => [s.segmentId, s]));
       for (const seg of proSegs) {
         const s = proById.get(seg.id);
