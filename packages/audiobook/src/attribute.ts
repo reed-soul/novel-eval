@@ -15,7 +15,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createEngine, loadEngineConfig, parseJSONRobust, type AIAgentAdapter } from '@novel-eval/shared';
-import { voiceFor, type Segment, type VoiceConfig } from './annotate.ts';
+import { voiceRuleFor, type Segment, type VoiceConfig } from './annotate.ts';
 
 const SHARED_CONFIG_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'shared', 'config');
 const BATCH = 8;
@@ -171,7 +171,10 @@ export async function attributeMissingSpeakers(
 
 function applySpeaker(seg: Segment, speaker: string, cfg: VoiceConfig): void {
   seg.speaker = speaker;
-  seg.voice = voiceFor(speaker, cfg);
+  const rule = voiceRuleFor(speaker, cfg);
+  seg.voice = rule?.voice ?? cfg.defaultSpeaker;
+  if (rule?.rate) seg.rate = rule.rate;
+  if (rule?.pitch) seg.pitch = rule.pitch;
 }
 
 async function defaultEngine(engineName?: string): Promise<AIAgentAdapter> {

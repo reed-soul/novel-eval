@@ -1,5 +1,5 @@
 {
- "$comment": "《物业管家不想破案》有声书配置。cast 服务画本归属；sceneStyle/sceneCharacters 服务场景图抽取（英文生图指令）。2026-08-31 按第 1-3 章正文气质定制。",
+ "$comment": "《物业管家不想破案》有声书配置。cast 服务画本归属；sceneStyle/sceneCharacters 服务场景图抽取（英文生图指令）。2026-08-31 按第 1-3 章正文气质定制。2026-09-02 edge 免费端点下线 云野/晓涵：王德发改云健压低压慢（-14%/-10Hz）模拟老保安，小满改晓晓；EP01/02 已缓存旧音色不变，自 EP03 起新声（换角不重渲已发物料）。",
  "cast": [
   "陈默",
   "周芸",
@@ -24,11 +24,13 @@
   },
   {
    "match": "王德发",
-   "voice": "zh-CN-YunyeNeural"
+   "voice": "zh-CN-YunjianNeural",
+   "rate": "-14%",
+   "pitch": "-10Hz"
   },
   {
    "match": "小满",
-   "voice": "zh-CN-XiaohanNeural"
+   "voice": "zh-CN-XiaoxiaoNeural"
   }
  ],
  "pron": [

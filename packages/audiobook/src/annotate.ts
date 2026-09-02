@@ -18,11 +18,19 @@ export interface Segment {
   gapAfterMs: number;  // 片段后停顿，控制节奏
 }
 
+/** 说话人 → 音色规则：可选 rate/pitch 微调（如老者压低放慢），未给则用对白默认 */
+export interface VoiceRule {
+  match: string;
+  voice: string;
+  rate?: string;   // e.g. "-14%"
+  pitch?: string;  // e.g. "-10Hz"
+}
+
 export interface VoiceConfig {
   narrator: string;
   defaultSpeaker: string;
   /** 角色名（含）→ 音色；按数组顺序首个命中生效 */
-  voiceBySpeaker: { match: string; voice: string }[];
+  voiceBySpeaker: VoiceRule[];
   /** 角色名单（含别名，长名在前）：说话人归属校验用，防「转过身说」类假名 */
   cast?: string[];
   /** rate/pitch 微调，per kind */
@@ -44,6 +52,9 @@ export interface VoiceConfig {
 //   zh-CN-XiaohanNeural（温柔女性）  → 温柔淑女
 //   zh-CN-YunxiaNeural（少年男）     → 少年梓辛
 //   zh-CN-XiaoxiaoNeural（儿童）     → 天才童声
+// ⚠ 2026-09-02 实测：edge 免费端点音色缩编，普通话只剩 云健/云希/云扬/云夏/晓晓/晓伊
+//   （云野/晓涵/云泽/晓墨 已下线，NoAudioReceived 确定性失败）——edge 引擎选角只可用存活清单；
+//   班底不够分时用 voiceBySpeaker 的 per-speaker rate/pitch 把同音色压出区分度。
 export const DEFAULT_VOICE_CONFIG: VoiceConfig = {
   // 云健：低沉男声，悬疑旁白首选；云希：清爽男声，默认对白
   narrator: 'zh-CN-YunjianNeural',
@@ -142,14 +153,15 @@ export function annotateChapter(
       return;
     }
     n += 1;
+    const rule = kind === 'dialogue' ? voiceRuleFor(speaker, cfg) : undefined;
     segs.push({
       id: `c${position}-s${n}`,
       kind,
       speaker,
       text,
-      voice: kind === 'narration' ? cfg.narrator : voiceFor(speaker, cfg),
-      rate: kind === 'narration' ? cfg.narrationRate : cfg.dialogueRate,
-      pitch: kind === 'narration' ? cfg.narrationPitch : cfg.dialoguePitch,
+      voice: kind === 'narration' ? cfg.narrator : (rule?.voice ?? cfg.defaultSpeaker),
+      rate: kind === 'narration' ? cfg.narrationRate : (rule?.rate ?? cfg.dialogueRate),
+      pitch: kind === 'narration' ? cfg.narrationPitch : (rule?.pitch ?? cfg.dialoguePitch),
       gapAfterMs: kind === 'narration' ? 350 : 250,
     });
   };
@@ -259,13 +271,18 @@ export function truncateAtSentence(content: string, limit: number): string {
   return end >= limit * 0.5 ? window.slice(0, end + 1) : window;
 }
 
+/** 说话人 → 命中的音色规则（含可选 rate/pitch）；未命中返回 undefined */
+export function voiceRuleFor(speaker: string | undefined, cfg: VoiceConfig): VoiceRule | undefined {
+  if (!speaker) return undefined;
+  for (const rule of cfg.voiceBySpeaker) {
+    if (speaker.includes(rule.match) || rule.match.includes(speaker)) return rule;
+  }
+  return undefined;
+}
+
 /** 说话人 → 音色（导出供 LLM 归因后重映射音色） */
 export function voiceFor(speaker: string | undefined, cfg: VoiceConfig): string {
-  if (!speaker) return cfg.defaultSpeaker;
-  for (const rule of cfg.voiceBySpeaker) {
-    if (speaker.includes(rule.match) || rule.match.includes(speaker)) return rule.voice;
-  }
-  return cfg.defaultSpeaker;
+  return voiceRuleFor(speaker, cfg)?.voice ?? cfg.defaultSpeaker;
 }
 
 // ── 画本哨兵：golden set 回归用的代理指标 ─────────────────────

@@ -10,13 +10,15 @@
  */
 import { readFileSync, existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import type { PronEntry } from './annotate.ts';
+import type { PronEntry, VoiceRule } from './annotate.ts';
 
 export interface ProjectAudiobookConfig {
   /** 发音表：字面短语 → 朗读替换，长词优先 */
   pron?: PronEntry[];
-  /** 角色名（含）→ 音色；按数组顺序首个命中生效。缺省回落 DEFAULT_VOICE_CONFIG */
-  voiceBySpeaker?: { match: string; voice: string }[];
+  /** 角色名（含）→ 音色；按数组顺序首个命中生效。缺省回落 DEFAULT_VOICE_CONFIG。
+   *  可选 rate/pitch 微调（per-speaker，如老者压低放慢）——edge 免费班底缩编后
+   *  靠它把同音色压出区分度（2026-09-02 云野/晓涵下线事故） */
+  voiceBySpeaker?: VoiceRule[];
   /** 角色名单（含别名，长名在前）：说话人归属校验 + 假名过滤 */
   cast?: string[];
   /** 场景图视觉风格（英文生图指令；extract-scenes 消费，per-book 定制） */
@@ -53,6 +55,10 @@ export function loadProjectConfig(opts: {
     const raw = JSON.parse(readFileSync(p, 'utf-8')) as ProjectAudiobookConfig;
     if (raw.pron !== undefined && !Array.isArray(raw.pron)) throw new Error(`${p}: pron 需为数组`);
     if (raw.voiceBySpeaker !== undefined && !Array.isArray(raw.voiceBySpeaker)) throw new Error(`${p}: voiceBySpeaker 需为数组`);
+    for (const r of raw.voiceBySpeaker ?? []) {
+      if (r.rate !== undefined && !/^[+-]\d{1,3}%$/.test(r.rate)) throw new Error(`${p}: ${r.match} 的 rate 需形如 "-14%"`);
+      if (r.pitch !== undefined && !/^[+-]\d{1,3}Hz$/.test(r.pitch)) throw new Error(`${p}: ${r.match} 的 pitch 需形如 "-10Hz"`);
+    }
     return { config: raw, source: p };
   }
   return { config: {}, source: undefined };
