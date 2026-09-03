@@ -2,7 +2,12 @@ import { createHash } from 'node:crypto';
 
 import type { DB } from '../db.ts';
 import type { ProjectId, StoryStateRevisionId } from '../domain/ids.ts';
-import type { StoryState } from '../domain/story-state.ts';
+import {
+  formatStoryStateDirectives,
+  type StoryState,
+} from '../domain/story-state.ts';
+
+export { formatStoryStateDirectives };
 import { ChapterRepository } from '../repositories/chapter-repository.ts';
 import {
   PlanningRepository,
@@ -13,6 +18,8 @@ import { ProjectRepository } from '../repositories/project-repository.ts';
 import { StoryStateRepository } from '../repositories/story-state-repository.ts';
 import type { JsonValue } from '../repositories/validation.ts';
 import { getRuntimeConfig } from '../runtime-config.ts';
+
+import type { TargetPlatform } from '../project.ts';
 
 export interface CompileChapterContextInput {
   projectId: ProjectId;
@@ -38,6 +45,7 @@ export interface CompiledChapterContext {
   projectId: ProjectId;
   outlinePosition: number;
   genreProfile: string;
+  targetPlatform: TargetPlatform;
   bible: {
     revisionId: string;
     compiledText: string;
@@ -176,6 +184,7 @@ export class ContextCompiler {
       projectId: input.projectId,
       outlinePosition: input.outlinePosition,
       genreProfile: project.genreProfile,
+      targetPlatform: project.targetPlatform,
       bibleRevisionId: bible.id,
       bibleText: compiledText,
       bibleDocument: sanitizedBible,
@@ -197,6 +206,7 @@ export class ContextCompiler {
       projectId: input.projectId,
       outlinePosition: input.outlinePosition,
       genreProfile: project.genreProfile,
+      targetPlatform: project.targetPlatform,
       bible: {
         revisionId: bible.id,
         compiledText,

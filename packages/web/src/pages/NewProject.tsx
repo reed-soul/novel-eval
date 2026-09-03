@@ -6,7 +6,7 @@ type Mode = 'bible' | 'create' | 'auto';
 
 export function NewProject() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ title: '', genre: '', audience: '', topic: '' });
+  const [form, setForm] = useState({ title: '', genre: '', audience: '', topic: '', targetPlatform: 'general' });
   const [chapters, setChapters] = useState(60);
   const [wordCount, setWordCount] = useState(2800);
   const [useGate, setUseGate] = useState(true);
@@ -103,6 +103,18 @@ export function NewProject() {
           <input className="input" placeholder="书名" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} disabled={!!jobId} />
           <input className="input" placeholder="类型（如 科幻/悬疑/玄幻）" value={form.genre} onChange={(e) => setForm({ ...form, genre: e.target.value })} disabled={!!jobId} />
           <input className="input" placeholder="目标受众（如 青年男性）" value={form.audience} onChange={(e) => setForm({ ...form, audience: e.target.value })} disabled={!!jobId} />
+          <select
+            className="input"
+            value={form.targetPlatform}
+            onChange={(e) => setForm({ ...form, targetPlatform: e.target.value })}
+            disabled={!!jobId}
+            style={{ cursor: 'pointer' }}
+          >
+            <option value="general">目标商业平台：通用畅销网文</option>
+            <option value="fanqie">番茄小说（高留存 / 黄金三章 / 章末强断点生死钩子）</option>
+            <option value="yanxuan">知乎盐选（第一人称主观沉浸 / 知乎体短段落 / 密集反转）</option>
+            <option value="douban">豆瓣阅读（生活流文学质感 / 命运悬念 / 扎实人物弧光）</option>
+          </select>
           <textarea className="input" placeholder="核心创意/主题（一句话描述你想写的故事）" rows={3} value={form.topic} onChange={(e) => setForm({ ...form, topic: e.target.value })} disabled={!!jobId} />
         </div>
 

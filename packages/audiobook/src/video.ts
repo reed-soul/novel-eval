@@ -75,11 +75,48 @@ export function planSlots(
   return slots;
 }
 
-/** 段分配：场景图轮换；相邻同图合并为一段连续缓推（避免切点处 zoom 归零跳变） */
+export interface TimedScene {
+  img: string;
+  startS: number;
+  endS?: number;
+}
+
+/** 段分配：场景图轮换；相邻同图合并为一段连续缓推（避免切点处 zoom 归零跳变）。若给 timedScenes 则按时间点精确对齐分镜 */
 export interface PlannedSegment { img: string; durS: number }
-export function assignSegments(slots: Slot[], covers: string[]): PlannedSegment[] {
+export function assignSegments(
+  slots: Slot[],
+  covers: string[],
+  timedScenes?: TimedScene[],
+): PlannedSegment[] {
   if (covers.length === 0) throw new Error('assignSegments: 需要至少一张场景图');
   const out: PlannedSegment[] = [];
+
+  if (timedScenes && timedScenes.length > 0) {
+    const sortedScenes = [...timedScenes].sort((a, b) => a.startS - b.startS);
+    let currentSlotStart = 0;
+
+    for (const s of slots) {
+      const slotMid = currentSlotStart + s.durS / 2;
+      let activeScene = sortedScenes[0];
+      for (const scene of sortedScenes) {
+        if (scene.startS <= slotMid) {
+          activeScene = scene;
+        } else {
+          break;
+        }
+      }
+      const img = activeScene.img || covers[0];
+      const last = out[out.length - 1];
+      if (last && last.img === img) {
+        last.durS = Number((last.durS + s.durS).toFixed(3));
+      } else {
+        out.push({ img, durS: s.durS });
+      }
+      currentSlotStart = Number((currentSlotStart + s.durS).toFixed(3));
+    }
+    return out;
+  }
+
   slots.forEach((s, i) => {
     const img = covers[i % covers.length];
     const last = out[out.length - 1];
@@ -91,6 +128,7 @@ export function assignSegments(slots: Slot[], covers: string[]): PlannedSegment[
 
 export interface RenderOpts {
   covers: string[];
+  timedScenes?: TimedScene[];
   audio: string;
   out: string;
   /** 段/L1 缓存根目录（建议 <outRoot>/.cache，跨集复用）；由 cli 入口 safePath 净化 */
@@ -175,7 +213,7 @@ export async function renderChapterVideo(opts: RenderOpts): Promise<void> {
 
   const snow = opts.snow ? await prepareSnow(opts.snow) : undefined;
   const durS = (await videoProbeMs(resolve(REPO_ROOT, opts.audio))) / 1000;
-  const segs = assignSegments(planSlots(durS, snow?.periodS ?? null), opts.covers);
+  const segs = assignSegments(planSlots(durS, snow?.periodS ?? null), opts.covers, opts.timedScenes);
 
   const t0 = Date.now();
   let hits = 0;

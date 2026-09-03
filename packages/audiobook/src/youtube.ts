@@ -13,6 +13,7 @@ export interface ChapterMark {
 export interface ChapterUploadPlan {
   position: number;
   title: string;
+  hookTitle?: string;     // 爆款钩子标题（如"墙里的骨头：拆墙拆出一九九八年的旧账"）
   episodeLabel?: string;  // 分集模式下的集标签（如 EP02｜第3-4章）
   audioFile: string;
   videoFile: string;
@@ -34,31 +35,119 @@ export const DEFAULT_BRAND: ChannelBrand = {
   introLine: '欢迎光临悬疑借阅室。今晚借出的这本，叫《{book}》。借阅时间，到天亮为止。',
   bookTagline: '',
   disclosure: '本节目配音由 AI 语音合成生成，故事内容为原创虚构作品。',
-  extraTags: ['悬疑', '有声书', '悬疑小说', '有声小说', '中文有声书', '犯罪悬疑'],
+  extraTags: ['悬疑', '有声书', '悬疑小说', '有声小说', '中文有声书', '犯罪悬疑', '一口气看完', '完结文'],
 };
+
+export const DEFAULT_HASHTAGS = [
+  '#悬疑',
+  '#有声书',
+  '#悬疑小说',
+  '#完结文',
+  '#一口气看完系列',
+  '#犯罪悬疑',
+  '#社会派推理',
+  '#听书',
+];
+
+export interface PlaylistMaterial {
+  platform: 'youtube';
+  title: string;
+  description: string;
+  tags: string[];
+  tagsString: string;
+}
+
+export function buildYouTubePlaylistMaterial(
+  bookTitle: string,
+  bookPremise?: string,
+  brand: ChannelBrand = DEFAULT_BRAND,
+  totalEpisodes?: number,
+): PlaylistMaterial {
+  const epSuffix = totalEpisodes && totalEpisodes > 0 ? `（全${totalEpisodes}集·一口气听完）` : '（全集完结·一口气听完）';
+  const title = `【全集完结】《${bookTitle}》${epSuffix}｜${brand.channel}`;
+
+  const intro = brand.introLine.replace('{book}', bookTitle);
+  const premiseBlock = bookPremise && bookPremise.trim().length > 0
+    ? `📖 故事梗概：\n${bookPremise.trim()}`
+    : `📖 故事梗概：\n《${bookTitle}》精彩连载有声剧，带你走进跌宕起伏的悬疑与真相。`;
+
+  const tags = [...new Set([...brand.extraTags, bookTitle, '一口气听完', '全集完结', '有声书合集', '广播剧'])];
+  const tagsString = tags.join(', ');
+
+  const description = [
+    intro,
+    '',
+    premiseBlock,
+    '',
+    '🎙️ 制作与声优班底：',
+    '- 形式：多角色微广播剧 · 动态场景插画 · 侧链避让氛围配乐',
+    '- 语言与字幕：中文普通话 · 全集配备逐句外挂字幕（可在播放器设置开启）',
+    '- 完播体验：全剧连贯制作，加入播放列表一口气自动连播体验最佳',
+    '',
+    '⚠️ 频道声明与合规披露：',
+    brand.disclosure,
+    '订阅即视为办理借阅证。睡不着，不算我们的责任。',
+    '',
+    DEFAULT_HASHTAGS.join(' ') + ` #${bookTitle.replace(/\s+/g, '')}`,
+  ].join('\n');
+
+  return {
+    platform: 'youtube',
+    title,
+    description,
+    tags,
+    tagsString,
+  };
+}
+
+export function formatYouTubeTitle(
+  bookTitle: string,
+  chapter: ChapterUploadPlan,
+): string {
+  const cleanTitle = chapter.title.replace(/^第[一二三四五六七八九十百\d]+章\s*/, '');
+  const epTag = chapter.episodeLabel || `第${chapter.position}章`;
+
+  if (chapter.hookTitle && chapter.hookTitle.trim().length > 0) {
+    return `【完结有声】${chapter.hookTitle.trim()}｜《${bookTitle}》${epTag}`;
+  }
+
+  return chapter.episodeLabel
+    ? `【完结有声】${cleanTitle}｜《${bookTitle}》${chapter.episodeLabel}`
+    : `【完结有声】${cleanTitle}｜《${bookTitle}》第${chapter.position}章`;
+}
 
 export function buildUploadPlan(
   bookTitle: string,
   chapters: ChapterUploadPlan[],
-  brand: ChannelBrand = DEFAULT_BRAND
+  brand: ChannelBrand = DEFAULT_BRAND,
+  bookPremise?: string,
 ) {
+  const playlistMaterial = buildYouTubePlaylistMaterial(bookTitle, bookPremise, brand, chapters.length);
+
   return chapters.map((c) => {
     const displayTitle = c.title.replace(/^第[一二三四五六七八九十百\d]+章\s*/, '');
+    const title = c.hookTitle
+      ? formatYouTubeTitle(bookTitle, c)
+      : (c.episodeLabel
+        ? `【有声书】${bookTitle} ${c.episodeLabel}`
+        : `【有声书】${bookTitle} 第${c.position}章 ${displayTitle}`);
+
+    const tags = [...brand.extraTags, bookTitle, `第${c.position}章`, ...(c.episodeLabel ? [c.episodeLabel] : [])];
+    const tagsString = tags.join(', ');
+
     return {
       file: c.videoFile,
       srt: c.srtFile,
-      playlist: `${brand.channel}｜${bookTitle}`,
-      title: c.episodeLabel
-        ? `【有声书】${bookTitle} ${c.episodeLabel}`
-        : `【有声书】${bookTitle} 第${c.position}章 ${displayTitle}`,
+      playlist: playlistMaterial.title,
+      title,
       description: [
         brand.introLine.replace('{book}', bookTitle),
         '',
-        `《${bookTitle}》第 ${c.position} 章：${displayTitle}`,
+        `《${bookTitle}》${c.episodeLabel || `第 ${c.position} 章`}：${displayTitle}`,
         brand.bookTagline,
         '',
         `⏱ 全长 ${fmtDur(c.durationMs)}`,
-        `📚 播放列表：${brand.channel}｜${bookTitle}`,
+        `📚 播放列表：${playlistMaterial.title}`,
         ...chapterBlock(c.chapters),
         '',
         `— ${brand.channel} —`,
@@ -66,13 +155,21 @@ export function buildUploadPlan(
         '',
         brand.disclosure,
         '',
-        '#悬疑 #有声书 #悬疑小说',
+        DEFAULT_HASHTAGS.join(' '),
       ].join('\n'),
-      tags: [...brand.extraTags, bookTitle, `第${c.position}章`],
+      tags,
+      tagsString,
       categoryId: '24', // Entertainment；纯朗读可考虑 27 Education 或留空
       // YouTube 完全忽略 MP4 内封字幕轨（mov_text 仅本地播放器可用）：
       // 必须在 Studio「字幕」页或 captions.insert API 单独上传 SRT，语言码 zh-Hans（裸 zh 无效）
       captions: c.srtFile ? { file: c.srtFile, language: 'zh-Hans' } : undefined,
+      settingsChecklist: {
+        madeForKids: false,
+        alteredContent: true,
+        language: 'zh-Hans',
+        category: '24',
+        categoryName: '娱乐 (Entertainment)',
+      },
     };
   });
 }

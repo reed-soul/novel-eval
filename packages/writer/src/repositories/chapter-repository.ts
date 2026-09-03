@@ -250,6 +250,50 @@ export class ChapterRepository {
     }).reverse();
   }
 
+  listPublishedChapters(
+    project: ProjectId,
+    range?: { from?: number; to?: number },
+  ): Array<{
+    position: number;
+    revisionId: ChapterRevisionId;
+    title: string;
+    content: string;
+  }> {
+    let sql = `
+      SELECT
+        o.position AS position,
+        r.id AS revision_id,
+        r.title AS title,
+        r.content AS content
+      FROM chapter c
+      JOIN chapter_outline o ON o.id = c.outline_id
+      JOIN chapter_revision r ON r.id = c.active_revision_id
+      WHERE c.project_id = ?
+    `;
+    const params: unknown[] = [project];
+    if (range?.from !== undefined) {
+      sql += ' AND o.position >= ?';
+      params.push(range.from);
+    }
+    if (range?.to !== undefined) {
+      sql += ' AND o.position <= ?';
+      params.push(range.to);
+    }
+    sql += ' ORDER BY o.position ASC';
+
+    const rows: unknown[] = this.db.prepare(sql).all(...params);
+    return rows.map((value) => {
+      const entity = 'published chapter revision';
+      const row = persistedRecord(value, entity);
+      return {
+        position: numberField(row, 'position', entity),
+        revisionId: chapterRevisionId(stringField(row, 'revision_id', entity)),
+        title: stringField(row, 'title', entity),
+        content: stringField(row, 'content', entity),
+      };
+    });
+  }
+
   nextRevisionNumber(id: ChapterId): number {
     const row: unknown = this.db.prepare(`
       SELECT COALESCE(MAX(revision_number), 0) AS max_revision

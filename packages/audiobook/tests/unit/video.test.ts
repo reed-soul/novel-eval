@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { planSlots, assignSegments, buildSegmentArgs } from '../../src/video.ts';
-import { buildUploadPlan, DEFAULT_BRAND } from '../../src/youtube.ts';
+import { buildUploadPlan, formatYouTubeTitle, DEFAULT_BRAND } from '../../src/youtube.ts';
+import { buildSidechainDuckingFilter } from '../../src/audio.ts';
 
 const FPS = 24;
 
@@ -113,4 +114,39 @@ test('章节时间戳：不足 3 条不生成导航块（YouTube 章节规则）
     chapters: [{ startMs: 0, label: '冷开场' }],
   }], DEFAULT_BRAND);
   assert.doesNotMatch(plan[0].description, /章节导航/);
+});
+
+test('assignSegments：按 timedScenes 时间戳精准对齐分镜切换', () => {
+  const slots = [{ durS: 20 }, { durS: 20 }, { durS: 20 }, { durS: 20 }];
+  const timedScenes = [
+    { img: '/scene1.png', startS: 0 },
+    { img: '/scene2.png', startS: 40 },
+  ];
+  const segs = assignSegments(slots, ['/default.png'], timedScenes);
+  assert.equal(segs.length, 2);
+  assert.equal(segs[0].img, '/scene1.png');
+  assert.equal(segs[0].durS, 40); // 0-40s 归入 scene1
+  assert.equal(segs[1].img, '/scene2.png');
+  assert.equal(segs[1].durS, 40); // 40-80s 归入 scene2
+});
+
+test('buildSidechainDuckingFilter：生成带动态避让的合法 FFmpeg 滤镜链', () => {
+  const filter = buildSidechainDuckingFilter({ bgmVolume: 0.15, duckingRatio: 4.5 });
+  assert.ok(filter.includes('aloop=loop=-1'));
+  assert.ok(filter.includes('volume=0.15'));
+  assert.ok(filter.includes('sidechaincompress=threshold=0.08:ratio=4.5:attack=200:release=1000'));
+  assert.ok(filter.includes('amix=inputs=2:duration=first'));
+});
+
+test('formatYouTubeTitle：生成符合爆款算法的高点击率标题', () => {
+  const title = formatYouTubeTitle('最后一班森铁', {
+    position: 1,
+    title: '第一章 墙里的骨头',
+    hookTitle: '墙里的骨头：拆墙拆出一九九八年的旧账',
+    episodeLabel: 'EP01',
+    audioFile: 'a.mp3',
+    videoFile: 'a.mp4',
+    durationMs: 1000,
+  });
+  assert.equal(title, '【完结有声】墙里的骨头：拆墙拆出一九九八年的旧账｜《最后一班森铁》EP01');
 });

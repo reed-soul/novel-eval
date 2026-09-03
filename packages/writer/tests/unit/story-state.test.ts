@@ -3,6 +3,7 @@ import { it } from 'node:test';
 
 import {
   applyStoryStateDelta,
+  formatStoryStateDirectives,
   type StoryState,
   type StoryStateDelta,
 } from '../../src/domain/story-state.ts';
@@ -176,4 +177,63 @@ it('rejects an empty character update patch', () => {
     () => Reflect.apply(applyStoryStateDelta, undefined, [previous, invalidDelta]),
     InvalidStoryStateDeltaError,
   );
+});
+
+it('formatStoryStateDirectives formats state into readable directives', () => {
+  const emptyOutput = formatStoryStateDirectives(null);
+  assert.ok(emptyOutput.includes('第一章'));
+
+  const state = storyState({
+    summary: '苏野到达红旗林业局',
+    characters: [
+      {
+        id: characterId('char-suye'),
+        name: '苏野',
+        status: 'alive',
+        facts: ['刑警队长', '右手负伤'],
+      },
+      {
+        id: characterId('char-suwenyuan'),
+        name: '苏文远',
+        status: 'dead',
+        facts: ['遇害者'],
+      },
+    ],
+    facts: [
+      {
+        fact: '候车室东墙内起获铁盒',
+        sourceChapterRevisionId: chapterRevisionId('rev-1'),
+      },
+    ],
+    foreshadows: [
+      {
+        id: foreshadowId('fs-schedule'),
+        description: '调度令时间被涂改',
+        openedAtChapterRevisionId: chapterRevisionId('rev-1'),
+        status: 'open',
+      },
+      {
+        id: foreshadowId('fs-old'),
+        description: '已查清的事实',
+        openedAtChapterRevisionId: chapterRevisionId('rev-1'),
+        status: 'resolved',
+        resolvedAtChapterRevisionId: chapterRevisionId('rev-2'),
+      },
+    ],
+    timeline: [
+      {
+        event: '1998年12月15日上午08:07火灾',
+        chapterRevisionId: chapterRevisionId('rev-1'),
+      },
+    ],
+  });
+
+  const output = formatStoryStateDirectives(state);
+  assert.ok(output.includes('苏野到达红旗林业局'));
+  assert.ok(output.includes('苏野 [存活/在世]'));
+  assert.ok(output.includes('苏文远 [已死亡/已故（严禁复活出现）]'));
+  assert.ok(output.includes('候车室东墙内起获铁盒'));
+  assert.ok(output.includes('调度令时间被涂改'));
+  assert.equal(output.includes('已查清的事实'), false); // resolved foreshadows excluded
+  assert.ok(output.includes('1998年12月15日上午08:07火灾'));
 });

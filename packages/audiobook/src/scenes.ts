@@ -3,6 +3,7 @@
  * 引擎调用与产物写入在 scene-sinks.runSceneExtraction（跨文件收口）。
  */
 import { join, resolve, dirname, sep } from 'node:path';
+import { ProjectRepository, projectId as toProjectId, type DB } from '@novel-eval/writer';
 import { openWriterDb, resolveProjectId, loadChapters } from './db.ts';
 import { loadProjectConfig } from './project-config.ts';
 import { loadRegistry, type BookRegistry } from './registry.ts';
@@ -63,7 +64,9 @@ function slugDirOf(rec: BookRegistry): string {
 export function buildSceneTask(projectArg: string, chaptersArg?: string): { task: SceneTask; bookTitle: string } {
   const db = openWriterDb(join(REPO_ROOT, 'data/writer/writer.db'));
   const projectId = resolveProjectId(db, projectArg);
-  const { title: bookTitle } = db.prepare('SELECT title FROM project WHERE id = ?').get(projectId) as { title: string };
+  const project = new ProjectRepository(db as unknown as DB).get(toProjectId(projectId));
+  if (!project) throw new Error(`未找到项目：${projectId}`);
+  const bookTitle = project.title;
   const chapters = loadChapters(db, projectId, chaptersArg);
   db.close();
 

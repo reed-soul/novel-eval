@@ -27,6 +27,7 @@ import {
   ValidationError,
   type CharacterDynamic,
   type PlotArchitecture,
+  type TargetPlatform,
 } from '@novel-eval/writer';
 import {
   createJob,
@@ -78,6 +79,7 @@ export function generateRoutes(
   app.post('/', async (c) => {
     const body = await c.req.json<{
       title: string; genre: string; audience: string; topic: string;
+      targetPlatform?: TargetPlatform;
       generate?: boolean;
       engineName?: string;
       model?: string;
@@ -86,6 +88,7 @@ export function generateRoutes(
       title: body.title,
       genreProfile: body.genre,
       targetAudience: body.audience,
+      targetPlatform: body.targetPlatform,
       premise: body.topic,
     });
 
@@ -154,6 +157,7 @@ export function generateRoutes(
       title?: unknown;
       genre?: unknown;
       audience?: unknown;
+      targetPlatform?: unknown;
       topic?: unknown;
       chapters?: unknown;
       wordCount?: unknown;
@@ -200,10 +204,15 @@ export function generateRoutes(
         : 1)
       : 0;
 
+    const targetPlatform = typeof body.targetPlatform === 'string' && ['general', 'fanqie', 'yanxuan', 'douban'].includes(body.targetPlatform)
+      ? (body.targetPlatform as TargetPlatform)
+      : 'general';
+
     const project = createProject(db, {
       title,
       genreProfile: genre,
       targetAudience: audience,
+      targetPlatform,
       premise: topic,
     });
 

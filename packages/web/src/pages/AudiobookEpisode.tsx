@@ -7,6 +7,7 @@ import { Link, useParams } from 'react-router-dom';
 import { api, apiPost } from '../api/client.ts';
 import { fmtDur } from './BookAudiobook.tsx';
 import { BookTabs } from '../components/BookTabs.tsx';
+import { CopyButton } from '../components/CopyButton.tsx';
 
 interface Segment { id: string; kind: string; speaker?: string; text: string; voice: string }
 interface AbDetail {
@@ -22,7 +23,25 @@ interface AbDetail {
     counts: { ok: number; suspect: number; bad: number; missing: number; silent: number };
     worst: { id: string; verdict: string; cer: number; ref: string; hyp: string; startMs: number }[];
   };
-  upload: { title?: string; description?: string; tags?: string[]; playlist?: string } | null;
+  upload: {
+    platform?: string;
+    title?: string;
+    description?: string;
+    tags?: string[];
+    tagsString?: string;
+    playlist?: string;
+    thumbnailUrl?: string | null;
+    srtUrl?: string | null;
+    videoUrl?: string | null;
+    audioUrl?: string | null;
+    settingsChecklist?: {
+      madeForKids: boolean;
+      alteredContent: boolean;
+      language: string;
+      category: string;
+      categoryName: string;
+    };
+  } | null;
 }
 
 const KIND_LABEL: Record<string, string> = { narration: '旁白', dialogue: '对白', letter: '信' };
@@ -263,33 +282,182 @@ export function AudiobookEpisode() {
 
           {tab === 'upload' && (
             <div className="ab-tab-body">
+              {/* 平台切换栏 */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+                <div className="pub-platform-tabs">
+                  <button type="button" className="pub-platform-tab active">
+                    <span className="msr msr-sm">smart_display</span> YouTube 油管
+                  </button>
+                  <button type="button" className="pub-platform-tab" disabled title="即将上线">
+                    <span>哔哩哔哩</span>
+                    <span className="pub-badge-planned">规划中</span>
+                  </button>
+                  <button type="button" className="pub-platform-tab" disabled title="即将上线">
+                    <span>抖音中视频</span>
+                    <span className="pub-badge-planned">规划中</span>
+                  </button>
+                </div>
+                <span className="pub-field-hint">逐项复制以下内容贴入 YouTube Studio 上传页</span>
+              </div>
+
               {d.upload ? (
                 <>
-                  <div className="ab-upload-row">
-                    <label className="ab-upload-label">标题</label>
-                    <input className="ab-input" readOnly value={d.upload.title ?? ''} />
-                    <button className="ab-btn" onClick={() => void navigator.clipboard.writeText(d.upload?.title ?? '')}>复制</button>
-                  </div>
-                  <div className="ab-upload-row ab-upload-row-col">
-                    <div className="ab-upload-row-head">
-                      <label className="ab-upload-label">描述（含章节导航）</label>
-                      <button className="ab-btn" onClick={() => void navigator.clipboard.writeText(d.upload?.description ?? '')}>复制</button>
+                  {/* 1. 缩略图 / 封面卡片 */}
+                  <div className="pub-field-card">
+                    <div className="pub-field-head">
+                      <div className="pub-field-title">
+                        <span className="msr msr-sm">image</span> 视频缩略图 / 封面 (Thumbnail)
+                      </div>
+                      <span className="pub-field-hint">YouTube 推荐：1280×720 (16:9)，格式 JPG/PNG，小于 2MB</span>
                     </div>
-                    <textarea className="ab-textarea" readOnly value={d.upload.description ?? ''} />
+                    <div className="pub-thumb-section">
+                      <div className="pub-thumb-box">
+                        {d.thumbnailUrl ? (
+                          <img src={d.thumbnailUrl} alt="视频缩略图" />
+                        ) : d.images[0]?.url ? (
+                          <img src={d.images[0].url} alt="场景缩略图" />
+                        ) : (
+                          <span className="msr" style={{ fontSize: 40, opacity: 0.4 }}>movie</span>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, justifyContent: 'center' }}>
+                        <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                          高点击率的封面是 YouTube 算法分发的生命线。建议采用 16:9 宽屏无水印画面，并保持全剧排版风格一致。
+                        </div>
+                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                          {(d.thumbnailUrl || d.images[0]?.url) && (
+                            <a
+                              className="pub-copy-btn"
+                              href={d.thumbnailUrl || d.images[0]?.url}
+                              download={`EP${String(d.ep).padStart(2, '0')}-cover.jpg`}
+                            >
+                              <span className="msr msr-sm">download</span> 下载封面图片 (JPG)
+                            </a>
+                          )}
+                          {(d.thumbnailUrl || d.images[0]?.url) && (
+                            <a
+                              className="pub-copy-btn"
+                              href={d.thumbnailUrl || d.images[0]?.url}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <span className="msr msr-sm">open_in_new</span> 新窗口查看原图
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div className="ab-upload-row">
-                    <label className="ab-upload-label">标签</label>
+
+                  {/* 2. 视频标题 */}
+                  <div className="pub-field-card">
+                    <div className="pub-field-head">
+                      <div className="pub-field-title">
+                        <span className="msr msr-sm">title</span> 视频标题 (Title)
+                      </div>
+                      <CopyButton text={d.upload.title ?? ''} label="复制标题" />
+                    </div>
+                    <input className="input" readOnly value={d.upload.title ?? ''} />
+                  </div>
+
+                  {/* 3. 归属播放列表 */}
+                  {d.upload.playlist && (
+                    <div className="pub-field-card">
+                      <div className="pub-field-head">
+                        <div className="pub-field-title">
+                          <span className="msr msr-sm">playlist_add_check</span> 加入播放列表 (Playlist)
+                        </div>
+                        <CopyButton text={d.upload.playlist} label="复制列表名称" />
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <input className="input" readOnly value={d.upload.playlist} />
+                      </div>
+                      <span className="pub-field-hint">请在上传表单的「播放列表」下拉菜单中勾选此项，便于观众连贯收听全集。</span>
+                    </div>
+                  )}
+
+                  {/* 4. 视频描述（含章节时间轴） */}
+                  <div className="pub-field-card">
+                    <div className="pub-field-head">
+                      <div className="pub-field-title">
+                        <span className="msr msr-sm">description</span> 视频说明与章节导航 (Description & Chapters)
+                      </div>
+                      <CopyButton text={d.upload.description ?? ''} label="复制完整描述" />
+                    </div>
+                    <textarea
+                      className="input"
+                      readOnly
+                      rows={8}
+                      value={d.upload.description ?? ''}
+                      style={{ fontFamily: 'inherit', lineHeight: 1.6 }}
+                    />
+                    <span className="pub-field-hint">首行已包含 0:00 章节标记，YouTube 将自动识别并在视频进度条上生成分段标记。</span>
+                  </div>
+
+                  {/* 5. 视频标签 */}
+                  <div className="pub-field-card">
+                    <div className="pub-field-head">
+                      <div className="pub-field-title">
+                        <span className="msr msr-sm">tag</span> 视频标签 (Tags)
+                      </div>
+                      <CopyButton
+                        text={d.upload.tagsString || (d.upload.tags ?? []).join(', ')}
+                        label="复制标签文本 (可直接粘贴进 Studio)"
+                      />
+                    </div>
                     <div className="ab-tags">
-                      {(d.upload.tags ?? []).map((t) => <span key={t} className="ab-chip ab-chip-muted">#{t}</span>)}
+                      {(d.upload.tags ?? []).map((t) => (
+                        <span key={t} className="ab-chip ab-chip-muted">#{t}</span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 6. YouTube Studio 关键表单选项速查 */}
+                  <div className="pub-field-card">
+                    <div className="pub-field-head">
+                      <div className="pub-field-title">
+                        <span className="msr msr-sm">checklist</span> YouTube 后台设置速查清单 (Settings Cheat-Sheet)
+                      </div>
+                    </div>
+                    <div className="pub-checklist-grid">
+                      <div className="pub-checklist-item">
+                        <span className="pub-checklist-key">面向儿童 (Made for kids)</span>
+                        <span className="pub-checklist-val" style={{ color: 'var(--amber, #f59e0b)' }}>
+                          <span className="msr msr-sm">block</span> 否，这不是专为儿童制作的
+                        </span>
+                      </div>
+                      <div className="pub-checklist-item">
+                        <span className="pub-checklist-key">合成或修改过的内容 (Altered Content)</span>
+                        <span className="pub-checklist-val" style={{ color: 'var(--green, #10b981)' }}>
+                          <span className="msr msr-sm">check_circle</span> 是，包含 AI 生成语音
+                        </span>
+                      </div>
+                      <div className="pub-checklist-item">
+                        <span className="pub-checklist-key">视频语言 (Video Language)</span>
+                        <span className="pub-checklist-val">中文（简体）</span>
+                      </div>
+                      <div className="pub-checklist-item">
+                        <span className="pub-checklist-key">类别推荐 (Category)</span>
+                        <span className="pub-checklist-val">娱乐 (Entertainment)</span>
+                      </div>
                     </div>
                   </div>
                 </>
-              ) : <div className="ab-empty">本集没有 youtube-upload.json 记录（构建未完成或为旧版本产物）。</div>}
-              <div className="ab-upload-downloads">
-                <a className="ab-btn" href={d.srtUrl ?? '#'} download><span className="msr msr-sm">closed_caption</span> SRT 字幕</a>
-                <a className="ab-btn" href={d.audioUrl ?? '#'} download><span className="msr msr-sm">graphic_eq</span> MP3</a>
-                <a className="ab-btn" href={d.videoUrl ?? '#'} download><span className="msr msr-sm">movie</span> MP4</a>
-                {d.uploadJsonUrl && <a className="ab-btn" href={d.uploadJsonUrl} download><span className="msr msr-sm">download</span> youtube-upload.json</a>}
+              ) : (
+                <div className="ab-empty">暂无物料信息。</div>
+              )}
+
+              {/* 7. 字幕与音视频素材快速下载 */}
+              <div style={{ marginTop: 20 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, color: '#f59e0b' }}>
+                  <span className="msr msr-sm">info</span> 字幕说明：YouTube 会忽略 MP4 内置字幕轨，请在后台「字幕」栏单独上传 SRT 文件并选择「中文（简体）」
+                </div>
+                <div className="ab-upload-downloads" style={{ marginTop: 8, paddingTop: 10 }}>
+                  <a className="ab-btn" href={d.srtUrl ?? '#'} download><span className="msr msr-sm">closed_caption</span> 下载 SRT 字幕</a>
+                  <a className="ab-btn" href={d.videoUrl ?? '#'} download><span className="msr msr-sm">movie</span> 下载成片 MP4</a>
+                  <a className="ab-btn" href={d.audioUrl ?? '#'} download><span className="msr msr-sm">graphic_eq</span> 下载 MP3 音频</a>
+                  {d.uploadJsonUrl && <a className="ab-btn" href={d.uploadJsonUrl} download><span className="msr msr-sm">download</span> youtube-upload.json</a>}
+                </div>
               </div>
             </div>
           )}

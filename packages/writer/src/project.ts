@@ -10,11 +10,14 @@ export type ProjectStatus =
   | 'completed'
   | 'archived';
 
+export type TargetPlatform = 'general' | 'fanqie' | 'yanxuan' | 'douban';
+
 export interface Project {
   id: ProjectId;
   title: string;
   genreProfile: string;
   targetAudience: string;
+  targetPlatform: TargetPlatform;
   premise: string;
   status: ProjectStatus;
   activeBibleRevisionId: string | null;
@@ -28,6 +31,7 @@ export function createProject(
     title: string;
     genreProfile: string;
     targetAudience: string;
+    targetPlatform?: TargetPlatform;
     premise: string;
   },
 ): Project {
@@ -38,6 +42,7 @@ export function createProject(
     title: opts.title,
     genreProfile: opts.genreProfile,
     targetAudience: opts.targetAudience,
+    targetPlatform: opts.targetPlatform,
     premise: opts.premise,
     createdAt: now,
   });

@@ -236,3 +236,54 @@ export function applyStoryStateDelta(
     summary: delta.summary,
   };
 }
+
+/**
+ * 格式化故事状态为自然语言强约束时空与事实断言板。
+ * 供大模型提示词直接消费，替代扁平 JSON 倾倒。
+ */
+export function formatStoryStateDirectives(state: StoryState | null): string {
+  if (!state) {
+    return '（第一章：故事开篇，无前情状态约束）';
+  }
+
+  const sections: string[] = [];
+
+  if (state.summary && state.summary.trim().length > 0) {
+    sections.push(`【前情主线梗概】\n${state.summary.trim()}`);
+  }
+
+  if (state.characters && state.characters.length > 0) {
+    const statusMap: Record<CharacterStatus, string> = {
+      alive: '存活/在世',
+      injured: '负伤/行动受限',
+      missing: '失踪/下落不明',
+      dead: '已死亡/已故（严禁复活出现）',
+    };
+    const charLines = state.characters.map((c) => {
+      const st = statusMap[c.status] ?? c.status;
+      const factsStr = c.facts && c.facts.length > 0 ? `；既定特征与状态：${c.facts.join('，')}` : '';
+      return `- ${c.name} [${st}]${factsStr}`;
+    });
+    sections.push(`【角色状态看板（严禁违反生存状态与既有身份）】\n${charLines.join('\n')}`);
+  }
+
+  if (state.facts && state.facts.length > 0) {
+    const factLines = state.facts.map((f, i) => `${i + 1}. ${f.fact}`);
+    sections.push(`【既成不可违背事实与物证（严禁发生物理矛盾或重复发现）】\n${factLines.join('\n')}`);
+  }
+
+  const openForeshadows = (state.foreshadows || []).filter((f) => f.status === 'open');
+  if (openForeshadows.length > 0) {
+    const fsLines = openForeshadows.map((f, i) => `${i + 1}. [待回收] ${f.description}`);
+    sections.push(`【未回收的伏笔与悬念（本章适度推进或回收）】\n${fsLines.join('\n')}`);
+  }
+
+  if (state.timeline && state.timeline.length > 0) {
+    // 保留最近 5 条时间线事件，避免 token 爆炸同时保证最近时空锚点连续
+    const recentTimeline = state.timeline.slice(-5);
+    const tlLines = recentTimeline.map((t) => `- ${t.event}`);
+    sections.push(`【近期物理时间线（严格承接时间锚点，严禁昼夜与时序颠倒）】\n${tlLines.join('\n')}`);
+  }
+
+  return sections.length > 0 ? sections.join('\n\n') : '（暂无前情具体状态变化）';
+}

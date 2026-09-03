@@ -36,6 +36,7 @@ export interface ChapterReviewResult {
 
 export interface ChapterReviewInput {
   engine: AIAgentAdapter;
+  evaluatorEngine?: AIAgentAdapter;
   db: DB;
   projectId: string;
   chapter: ChapterContent;
@@ -60,6 +61,7 @@ export class ChapterReviewerService {
     const assess = input.assess ?? assessChapterQuality;
     const gate = await assess({
       engine: input.engine,
+      evaluatorEngine: input.evaluatorEngine,
       db: input.db ?? this.db,
       projectId: input.projectId,
       chapter: input.chapter,

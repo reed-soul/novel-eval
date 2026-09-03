@@ -11,13 +11,20 @@
  */
 import type { AIAgentAdapter, NovelMetadata, TokenUsage } from '@novel-eval/shared';
 import { addUsage, zeroUsage } from '@novel-eval/shared';
-import { assessChapters, DIMENSION_LABELS } from '@novel-eval/eval';
-import type { DimensionKey } from '@novel-eval/eval';
+import {
+  assessChapters,
+  DIMENSION_LABELS,
+  loadPlatform,
+  computePlatformGate,
+  type DimensionKey,
+} from '@novel-eval/eval';
 import type { DB } from '../db.ts';
 import type { ChapterContent } from './legacy-types.ts';
 import { detectRepetition } from './repetition.ts';
 import { getRecentChapters, saveEvalHistory } from './store.ts';
 import { getRuntimeConfig } from '../runtime-config.ts';
+import { ProjectRepository } from '../repositories/project-repository.ts';
+import { projectId } from '../domain/ids.ts';
 
 const RECENT_WINDOW = 5;
 
@@ -60,6 +67,7 @@ export interface QualityGateResult {
 
 export interface QualityGateOptions {
   engine: AIAgentAdapter;
+  evaluatorEngine?: AIAgentAdapter;
   db: DB;
   projectId: string;
   /** Active / candidate chapter; `chapter.id` must be the chapter revision id. */
@@ -72,12 +80,22 @@ export interface QualityGateOptions {
 }
 
 export async function assessChapterQuality(opts: QualityGateOptions): Promise<QualityGateResult & { usage: TokenUsage }> {
-  const { engine, db, projectId, chapter, metadata, profile, attempt: _attempt, onProgress } = opts;
+  const { engine, evaluatorEngine, db, projectId: rawProjectId, chapter, metadata, profile, attempt: _attempt, onProgress } = opts;
   const attempt = _attempt ?? 1;
+  const evalEngine = evaluatorEngine ?? engine;
+  const evaluatorModel = evaluatorEngine ? evaluatorEngine.name : null;
   const model = engine.name;  // 引擎标识（供 eval_history 追溯）
   const totalUsage: TokenUsage = { ...zeroUsage };
   // chapter.id is the published/candidate revision id (see getChapter / getRecentChapters).
   const chapterRevisionId = chapter.id;
+
+  const projects = new ProjectRepository(db);
+  const project = projects.get(projectId(rawProjectId));
+  const targetPlatform = metadata.platform || project?.targetPlatform || 'general';
+  const effectiveMetadata: NovelMetadata = {
+    ...metadata,
+    platform: targetPlatform,
+  };
 
   // ─── 0. 内部辅助：持久化评估记录 ──────────────────────────────────
   const persistEval = (result: {
@@ -89,19 +107,19 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
     assessRaw?: unknown | null;
   }) => {
     saveEvalHistory(db, {
-      projectId, chapterNumber: chapter.number, attempt,
+      projectId: rawProjectId, chapterNumber: chapter.number, attempt,
       verdict: result.verdict, totalScore: result.score ?? null, grade: result.grade ?? null,
       dimensions: result.dimensions ?? null, suggestions: result.suggestions ?? null,
       repetition: result.repetition ? {
         within: result.repetition.within, cross: result.repetition.cross, hotspots: result.repetition.hotspots,
       } : null,
       assessRaw: result.assessRaw ?? null,
-      model, evaluatorModel: null,  // 自评
+      model, evaluatorModel,
     });
   };
 
   // ─── 1. 防重复检测 ──────────────────────────────────────────────
-  const recent = getRecentChapters(db, projectId, chapter.number, RECENT_WINDOW);
+  const recent = getRecentChapters(db, rawProjectId, chapter.number, RECENT_WINDOW);
   const recentTexts = recent.map((c) => c.content);
   const rep = detectRepetition(chapter.content, recentTexts);
 
@@ -126,7 +144,7 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
   onProgress?.(`质量门槛：评估第 ${chapter.number} 章...`);
   const chapterInput = [{ id: chapterRevisionId, title: chapter.title, content: chapter.content }];
   const assessResult = await assessChapters({
-    engine, chapters: chapterInput, profile, metadata,
+    engine: evalEngine, chapters: chapterInput, profile, metadata: effectiveMetadata,
     onProgress: (msg) => onProgress?.(`  ${msg}`),
   });
   addUsage(totalUsage, assessResult.usage);
@@ -172,6 +190,21 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
     within: rep.withinChapter, cross: rep.crossChapter, hotspots: rep.hotspots,
   };
 
+  // 平台投稿红线检查
+  let platformGateReasons: string[] = [];
+  if (targetPlatform !== 'general') {
+    try {
+      const platformConfig = loadPlatform(targetPlatform);
+      const gate = computePlatformGate(platformConfig, dimensions);
+      if (gate.verdict === 'block') {
+        platformGateReasons = gate.reasons;
+      }
+    } catch {
+      // 平台未配置时忽略红线
+    }
+  }
+  const platformPass = platformGateReasons.length === 0;
+
   // Soft block：grade ≥ BLOCK_GRADE（可消耗 maxRevise；仅 severe 复读 hardBlock）
   const blockOrder = gradeOrder.indexOf(gc.BLOCK_GRADE);
   if (gradeOrder.indexOf(grade) >= blockOrder) {
@@ -186,19 +219,24 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
       reason,
       reasons: [reason],
       score: totalScore, grade,
-      feedback: buildFeedback(suggestions.map((s) => s.content), lowDims, dimensions, rep.hotspots),
+      feedback: buildFeedback(
+        [...platformGateReasons, ...suggestions.map((s) => s.content)],
+        lowDims,
+        dimensions,
+        rep.hotspots,
+      ),
       evidence,
       repetition: { within: rep.withinChapter, cross: rep.crossChapter, verdict: rep.verdict },
       usage: totalUsage,
     };
   }
 
-  if (gradeOk && scoreOk && lowDims.length === 0 && !hasRepetition) {
+  if (gradeOk && scoreOk && lowDims.length === 0 && !hasRepetition && platformPass) {
     persistEval({
       verdict: 'pass', score: totalScore, grade, dimensions, suggestions,
       repetition: repPersist, assessRaw,
     });
-    const reason = `等级 ${grade}（${totalScore} 分），各维度达标`;
+    const reason = `等级 ${grade}（${totalScore} 分），各维度达标且平台红线全过`;
     return {
       verdict: 'pass',
       reason,
@@ -216,6 +254,7 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
   if (!scoreOk) reasons.push(`总分 ${totalScore} 低于 ${gc.PASS_MIN_SCORE}`);
   if (lowDims.length) reasons.push(`低分维度：${lowDims.join('、')}`);
   if (hasRepetition) reasons.push(`重复率偏高：章内 ${(rep.withinChapter * 100).toFixed(1)}%`);
+  if (!platformPass) reasons.push(`平台投稿红线未过：${platformGateReasons.join('；')}`);
 
   persistEval({
     verdict: 'revise', score: totalScore, grade, dimensions, suggestions,
@@ -226,7 +265,12 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
     reason: reasons.join('；'),
     reasons,
     score: totalScore, grade,
-    feedback: buildFeedback(suggestions.map((s) => s.content), lowDims, dimensions, rep.hotspots),
+    feedback: buildFeedback(
+      [...platformGateReasons, ...suggestions.map((s) => s.content)],
+      lowDims,
+      dimensions,
+      rep.hotspots,
+    ),
     evidence,
     repetition: { within: rep.withinChapter, cross: rep.crossChapter, verdict: rep.verdict },
     usage: totalUsage,

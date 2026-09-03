@@ -8,7 +8,7 @@ export { loadEnv } from './load-env.ts';
 export { openDb, closeDb, type DB } from './db.ts';
 export {
   createProject, getProject, listProjects, updateProjectStatus,
-  type Project, type ProjectStatus,
+  type Project, type ProjectStatus, type TargetPlatform,
 } from './project.ts';
 export {
   chapterId,
@@ -37,7 +37,7 @@ export {
   BudgetExceededError,
   ChapterQualityRejectedError,
 } from './domain/errors.ts';
-export { applyStoryStateDelta } from './domain/story-state.ts';
+export { applyStoryStateDelta, formatStoryStateDirectives } from './domain/story-state.ts';
 export type {
   Chapter,
   ChapterCandidate,
@@ -130,6 +130,7 @@ export type {
   GenerateChapterOutcome,
 } from './services/chapter-generation-service.ts';
 export { ChapterRepository } from './repositories/chapter-repository.ts';
+export { ProjectRepository, type CreateProjectInput } from './repositories/project-repository.ts';
 export { PlanningRepository } from './repositories/planning-repository.ts';
 export { StoryStateRepository } from './repositories/story-state-repository.ts';
 export type { JsonValue } from './repositories/validation.ts';

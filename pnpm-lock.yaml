@@ -23,6 +23,9 @@ importers:
       '@novel-eval/shared':
         specifier: workspace:*
         version: link:../shared
+      '@novel-eval/writer':
+        specifier: workspace:*
+        version: link:../writer
       better-sqlite3:
         specifier: ^11.0.0
         version: 11.10.0

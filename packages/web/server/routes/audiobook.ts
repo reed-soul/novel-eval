@@ -27,7 +27,8 @@ import { runSceneRegenJob } from '../lib/scene-regen-runner.ts';
 import { getProject, type DB } from '@novel-eval/writer';
 import {
   loadRegistry, setupBookLine, recordEpisode, nextEpisodeHint, episodeReady, loadChapters,
-  type BookRegistry,
+  buildYouTubePlaylistMaterial, formatYouTubeTitle,
+  type BookRegistry, type PlaylistMaterial,
 } from '@novel-eval/audiobook';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
@@ -286,6 +287,9 @@ export function audiobookRouter(db: DB) {
       const chs = loadChapters(db, bookId, `${hint.chapters[0]}-${hint.chapters[1]}`);
       chars = chs.reduce((a, c) => a + c.content.length, 0);
     } catch { /* 章节不足或范围越界时置 0（如已全书制作完） */ }
+    const project = getProject(db, bookId);
+    const playlistMaterial = buildYouTubePlaylistMaterial(title, project?.premise, undefined, episodes.length);
+
     return c.json({
       registered: true,
       bookId,
@@ -295,6 +299,7 @@ export function audiobookRouter(db: DB) {
       scenesPresent,
       episodes,
       next: { ...hint, chars },
+      playlistMaterial,
     });
   });
 
@@ -405,9 +410,70 @@ export function audiobookRouter(db: DB) {
       }
     }
 
+    const project = getProject(db, bookId);
+    const playlistMaterial = buildYouTubePlaylistMaterial(bookTitle(db, bookId) ?? '', project?.premise, undefined, cards.length);
+
+    const effectiveTitle = plan?.title ?? formatYouTubeTitle(bookTitle(db, bookId) ?? '', {
+      position: epNum,
+      title: card.title,
+      episodeLabel: `EP${String(epNum).padStart(2, '0')}`,
+      audioFile: card.audioUrl ?? '',
+      videoFile: card.videoUrl ?? '',
+      durationMs: card.durationMs ?? 0,
+    });
+
+    const effectiveTags = plan?.tags && plan.tags.length > 0
+      ? plan.tags
+      : ['悬疑', '有声书', '悬疑小说', '完结文', '一口气看完系列', bookTitle(db, bookId) ?? '', `第${epNum}章`, `EP${String(epNum).padStart(2, '0')}`];
+
+    // 格式化章节时间轴导航
+    const chapterNavLines: string[] = [];
+    if (chapterStartsMs.length >= 2) {
+      chapterNavLines.push('⏱ 章节时间轴：');
+      for (const cs of chapterStartsMs) {
+        const s = Math.floor(cs.startMs / 1000);
+        const m = Math.floor(s / 60);
+        const sec = String(s % 60).padStart(2, '0');
+        chapterNavLines.push(`${m}:${sec} 第${cs.pos}章`);
+      }
+    }
+
+    const defaultDesc = [
+      `欢迎收听《${bookTitle(db, bookId)}》${card.title}。`,
+      '',
+      project?.premise ? `【故事梗概】\n${project.premise}` : '',
+      '',
+      chapterNavLines.length > 0 ? chapterNavLines.join('\n') + '\n' : '',
+      `📚 播放列表：${playlistMaterial.title}`,
+      '🎙️ 配音与制作：多角色沉浸式广播剧 · AI语音合成',
+      '⚠️ 频道免责：本节目为虚构文学作品，请勿与现实对号入座。',
+      '',
+      '#悬疑 #有声书 #悬疑小说 #完结文 #一口气看完系列',
+    ].filter(Boolean).join('\n');
+
+    const uploadPayload = {
+      platform: 'youtube',
+      title: effectiveTitle,
+      description: plan?.description ?? defaultDesc,
+      tags: effectiveTags,
+      tagsString: effectiveTags.join(', '),
+      playlist: plan?.playlist ?? playlistMaterial.title,
+      thumbnailUrl: card.thumbnailUrl,
+      srtUrl: card.srtUrl,
+      videoUrl: card.videoUrl,
+      audioUrl: card.audioUrl,
+      settingsChecklist: {
+        madeForKids: false,
+        alteredContent: true,
+        language: 'zh-Hans',
+        category: '24',
+        categoryName: '娱乐 (Entertainment)',
+      },
+    };
+
     return c.json({
       ...card,
-      title: plan?.title ?? card.title,
+      title: effectiveTitle,
       uploadJsonUrl: existsSync(join(root, 'youtube-upload.json'))
         ? mediaUrl(`${relOut}/youtube-upload.json`)
         : null,
@@ -415,7 +481,7 @@ export function audiobookRouter(db: DB) {
       scripts,
       listen,
       chapterStartsMs,
-      upload: plan ? { title: plan.title, description: plan.description, tags: plan.tags, playlist: plan.playlist } : null,
+      upload: uploadPayload,
     });
   });
 

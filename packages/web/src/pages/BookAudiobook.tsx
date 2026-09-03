@@ -10,6 +10,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, apiPost } from '../api/client.ts';
 import { BookTabs } from '../components/BookTabs.tsx';
+import { CopyButton } from '../components/CopyButton.tsx';
 
 interface EpisodeCard {
   ep: number; id: string;
@@ -31,6 +32,13 @@ interface BookStatus {
   scenesPresent?: boolean;
   episodes?: EpisodeCard[];
   next?: { ep: number; chapters: [number, number]; chars: number };
+  playlistMaterial?: {
+    platform: string;
+    title: string;
+    description: string;
+    tags: string[];
+    tagsString: string;
+  };
 }
 
 interface AbJobInfo { jobId: string; args: string[] }
@@ -218,6 +226,78 @@ export function BookAudiobook() {
           <span className="msr msr-sm">hearing</span> 审听全部
         </button>
       </header>
+
+      {/* 📺 播放列表与分发物料套件 (Publishing Kit) */}
+      {st.playlistMaterial && (
+        <div className="pub-kit-card">
+          <div className="pub-kit-head">
+            <div className="pub-kit-title-group">
+              <span className="msr" style={{ color: '#ef4444', fontSize: 26 }}>video_library</span>
+              <div>
+                <h2 className="pub-kit-title">播放列表与平台发布物料 (Publishing Kit)</h2>
+                <span className="pub-field-hint">上传视频前，先在 YouTube Studio 创建播放列表，一键复制以下专属标题与说明</span>
+              </div>
+            </div>
+            <div className="pub-platform-tabs">
+              <button type="button" className="pub-platform-tab active">
+                <span className="msr msr-sm">smart_display</span> YouTube 油管
+              </button>
+              <button type="button" className="pub-platform-tab" disabled title="即将上线">
+                <span>哔哩哔哩</span>
+                <span className="pub-badge-planned">规划中</span>
+              </button>
+              <button type="button" className="pub-platform-tab" disabled title="即将上线">
+                <span>抖音中视频</span>
+                <span className="pub-badge-planned">规划中</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 播放列表标题 */}
+          <div className="pub-field-card">
+            <div className="pub-field-head">
+              <div className="pub-field-title">
+                <span className="msr msr-sm">title</span> 播放列表标题 (Playlist Title)
+              </div>
+              <CopyButton text={st.playlistMaterial.title} label="复制标题" />
+            </div>
+            <input className="input" readOnly value={st.playlistMaterial.title} />
+          </div>
+
+          {/* 播放列表说明 */}
+          <div className="pub-field-card">
+            <div className="pub-field-head">
+              <div className="pub-field-title">
+                <span className="msr msr-sm">description</span> 播放列表说明 (Playlist Description)
+              </div>
+              <CopyButton text={st.playlistMaterial.description} label="复制说明" />
+            </div>
+            <textarea
+              className="input"
+              readOnly
+              rows={6}
+              value={st.playlistMaterial.description}
+              style={{ fontFamily: 'inherit', lineHeight: 1.6 }}
+            />
+          </div>
+
+          {/* 播放列表标签 */}
+          <div className="pub-field-card" style={{ marginBottom: 0 }}>
+            <div className="pub-field-head">
+              <div className="pub-field-title">
+                <span className="msr msr-sm">tag</span> 建议标签 (Tags)
+              </div>
+              <CopyButton text={st.playlistMaterial.tagsString} label="复制全部标签 (粘贴进 Studio 标签框)" />
+            </div>
+            <div className="ab-tags">
+              {st.playlistMaterial.tags.map((t) => (
+                <span key={t} className="ab-chip ab-chip-muted">#{t}</span>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="ab-listen-bar">
         <span className="ab-listen-label">审听选项：</span>
         <label className="ab-check"><input type="checkbox" checked={listenFix} onChange={(e) => setListenFix(e.target.checked)} />fix（删坏段缓存促重合成）</label>

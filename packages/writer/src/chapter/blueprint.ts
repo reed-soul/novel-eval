@@ -21,6 +21,8 @@ import {
   type BeatRecord,
   type BibleDocument,
 } from '../repositories/planning-repository.ts';
+import { ProjectRepository } from '../repositories/project-repository.ts';
+import type { TargetPlatform } from '../project.ts';
 import { getRuntimeConfig } from '../runtime-config.ts';
 import type { Beat, ChapterOutline } from './legacy-types.ts';
 
@@ -45,6 +47,20 @@ const BEAT_SCHEMA: SchemaSpec = {
   },
 };
 
+export function getPlatformGuidelines(platform: TargetPlatform): string {
+  switch (platform) {
+    case 'fanqie':
+      return '番茄小说标准：快节奏强刺激。第1章主角必须在开场500字内出场并面临初始事件；每章末尾必须有高强度的“断点钩子（ending_hook）”以拉升连读率与留存率；拒绝拖沓与长段铺垫。';
+    case 'yanxuan':
+      return '知乎盐选标准：强反转、第一人称代入感。开篇前三段必须抛出核心异常或冲突，快速建立“我和当事人”的谜题框架；结尾强调反转或心理压迫感。';
+    case 'douban':
+      return '豆瓣阅读标准：生活流文学质感与扎实人物弧光，慢热友好；情节推进自然，重生活细节与命运悬念。';
+    case 'general':
+    default:
+      return '通用畅销网文标准：注重起承转合，每章具备明确叙事目的与章末钩子，伏笔回收清晰。';
+  }
+}
+
 const CHAPTER_ITEM_SCHEMA = {
   type: 'object' as const,
   fields: {
@@ -57,6 +73,7 @@ const CHAPTER_ITEM_SCHEMA = {
     foreshadowing: { type: 'string' as const, required: true },
     twist_level: { type: 'number' as const, min: 0, max: 10, integer: true, required: true },
     summary: { type: 'string' as const, min: 30, max: 400, required: true },
+    ending_hook: { type: 'string' as const },
   },
 };
 
@@ -67,6 +84,7 @@ export interface GenerateBlueprintOptions {
   plot: PlotArchitecture;
   characters: CharacterDynamic[];
   totalChapters: number;
+  targetPlatform?: TargetPlatform;
   onProgress?: (step: string, msg: string) => void;
 }
 
@@ -129,6 +147,9 @@ export async function generateBlueprint(opts: GenerateBlueprintOptions): Promise
   const { engine, db, plot, characters, totalChapters, onProgress } = opts;
   const id = projectId(opts.projectId);
   const planning = new PlanningRepository(db);
+  const project = new ProjectRepository(db).get(id);
+  const platform = opts.targetPlatform ?? project?.targetPlatform ?? 'general';
+  const platformGuidelines = getPlatformGuidelines(platform);
   const totalUsage = { ...zeroUsage };
 
   const bible = planning.getActiveBibleForProject(id);
@@ -280,6 +301,7 @@ export async function generateBlueprint(opts: GenerateBlueprintOptions): Promise
           .replaceAll('{CHAPTER_BUDGET}', String(runBudget))
           .replaceAll('{START_NUMBER}', String(run.start))
           .replaceAll('{END_NUMBER}', String(run.end))
+          .replace('{PLATFORM_GUIDELINES}', platformGuidelines)
           .replace('{BEATS}', beatsBlock)
           .replace('{CHARACTERS}', charList)
           .replace('{ACT_FORESHADOWS}', actForeshadows);
@@ -295,6 +317,7 @@ export async function generateBlueprint(opts: GenerateBlueprintOptions): Promise
             foreshadowing: string;
             twist_level: number;
             summary: string;
+            ending_hook?: string;
           }>;
         }>(engine, prompt, {
           systemPrompt: '你是资深小说编辑。只输出 JSON。',
@@ -344,6 +367,7 @@ export async function generateBlueprint(opts: GenerateBlueprintOptions): Promise
                 foreshadowing: chapter.foreshadowing,
                 twistLevel: chapter.twist_level,
                 beatLabel: chapter.beat,
+                endingHook: chapter.ending_hook || '',
               },
               createdAt: now,
             },

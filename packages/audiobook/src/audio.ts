@@ -65,4 +65,58 @@ async function ffmpegMeasure(file: string): Promise<{ I: string; TP: string; LRA
   return { I: j.input_i, TP: j.input_tp, LRA: j.input_lra, thresh: j.input_thresh };
 }
 
+export interface MixBgmOptions {
+  /** BGM 基准音量缩放（0.05-0.5，缺省 0.18，约 -15dB） */
+  bgmVolume?: number;
+  /** 语音触发闪避阈值（0.01-0.2，缺省 0.08） */
+  duckingThreshold?: number;
+  /** 压缩比（缺省 4，即压低约 8-12dB） */
+  duckingRatio?: number;
+  /** 压低起音时间 ms（缺省 200ms） */
+  attackMs?: number;
+  /** 浮起释音时间 ms（缺省 1000ms） */
+  releaseMs?: number;
+}
+
+/**
+ * 构造 FFmpeg 侧链压缩滤镜链：
+ * 语音为主轨，BGM 为循环背景轨。语音出现时 BGM 自动压低（ducking），停顿时 BGM 优雅浮起烘托气氛。
+ */
+export function buildSidechainDuckingFilter(opts: MixBgmOptions = {}): string {
+  const bgmVol = opts.bgmVolume ?? 0.18;
+  const threshold = opts.duckingThreshold ?? 0.08;
+  const ratio = opts.duckingRatio ?? 4;
+  const attack = opts.attackMs ?? 200;
+  const release = opts.releaseMs ?? 1000;
+
+  return [
+    `[1:a]aloop=loop=-1:size=2e+09,volume=${bgmVol.toFixed(2)}[bgm_loop]`,
+    `[bgm_loop][0:a]sidechaincompress=threshold=${threshold.toFixed(2)}:ratio=${ratio.toFixed(1)}:attack=${attack}:release=${release}[bgm_ducked]`,
+    `[0:a][bgm_ducked]amix=inputs=2:duration=first:dropout_transition=2[aout]`,
+  ].join(';');
+}
+
+/**
+ * 将人声音频与背景音乐做动态避让混音（Sidechain Ducking）
+ * 输出为主轨长度相同的成品音频。
+ */
+export async function mixBgmWithSidechainDucking(
+  speechFile: string,
+  bgmFile: string,
+  outFile: string,
+  opts: MixBgmOptions = {},
+): Promise<number> {
+  const filter = buildSidechainDuckingFilter(opts);
+  await ffmpeg([
+    '-i', speechFile,
+    '-i', bgmFile,
+    '-filter_complex', filter,
+    '-map', '[aout]',
+    '-c:a', 'libmp3lame',
+    '-b:a', '192k',
+    outFile,
+  ]);
+  return ffprobeDurationMs(outFile);
+}
+
 export { SILENCE_FILE };

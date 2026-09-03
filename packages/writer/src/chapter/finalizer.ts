@@ -1,6 +1,7 @@
 /**
  * 章节状态提取器 — 从正文推导 story state / delta，不写数据库。
  */
+import { randomUUID } from 'node:crypto';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -75,15 +76,31 @@ function emptyState(): StoryState {
 }
 
 function parseStringArray(value: unknown, entity: string): string[] {
-  if (!Array.isArray(value) || !value.every((item) => typeof item === 'string')) {
-    throw new InvalidPersistenceDataError(entity, 'expected an array of strings');
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => (typeof item === 'string' ? item.trim() : JSON.stringify(item)))
+      .filter((s) => s.length > 0);
   }
-  return value;
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return [value.trim()];
+  }
+  return [];
 }
 
-function parseDelta(
+function normalizeStatus(raw: unknown): 'alive' | 'injured' | 'missing' | 'dead' {
+  if (typeof raw !== 'string') return 'alive';
+  const s = raw.trim().toLowerCase();
+  if (s === 'alive' || s === '正常' || s === '健康' || s === '在世' || s === '存活') return 'alive';
+  if (s === 'injured' || s === '受伤' || s === '负伤' || s === '重伤' || s === '轻伤' || s === '残疾') return 'injured';
+  if (s === 'missing' || s === '失踪' || s === '失联' || s === '下落不明') return 'missing';
+  if (s === 'dead' || s === '死亡' || s === '遇害' || s === '牺牲' || s === '身亡' || s === '毙命') return 'dead';
+  return 'alive';
+}
+
+export function parseDelta(
   value: unknown,
   chapterRevision: ChapterRevisionId,
+  baseline?: StoryState | null,
 ): StoryStateDelta {
   const entity = 'story state delta extraction';
   const record = persistedRecord(value, entity);
@@ -110,21 +127,28 @@ function parseDelta(
     switch (kind) {
       case 'add': {
         const character = persistedRecord(change.character, `${entity} character`);
+        const rawName = stringField(character, 'name', `${entity} character`);
+        const rawId = typeof character.id === 'string' && character.id.trim().length > 0
+          ? character.id.trim()
+          : `char-${rawName.trim().replace(/[\s\W]+/g, '-') || randomUUID().slice(0, 8)}`;
         return {
           kind,
           character: {
-            id: characterId(stringField(character, 'id', `${entity} character`)),
-            name: stringField(character, 'name', `${entity} character`),
-            status: oneOf(
-              stringField(character, 'status', `${entity} character`),
-              ['alive', 'injured', 'missing', 'dead'] as const,
-              `${entity} character`,
-            ),
+            id: characterId(rawId),
+            name: rawName,
+            status: normalizeStatus(character.status),
             facts: parseStringArray(character.facts, `${entity} character facts`),
           },
         };
       }
       case 'update': {
+        const rawCharId = stringField(change, 'characterId', `${entity} character change`);
+        let resolvedCharId = rawCharId;
+        if (baseline?.characters) {
+          const match = baseline.characters.find(c => c.id === rawCharId || c.name === rawCharId);
+          if (match) resolvedCharId = match.id;
+        }
+
         const patch = persistedRecord(change.patch, `${entity} character patch`);
         const patchKind = oneOf(
           stringField(patch, 'kind', `${entity} character patch`),
@@ -135,26 +159,22 @@ function parseDelta(
           case 'set-name':
             return {
               kind,
-              characterId: characterId(stringField(change, 'characterId', `${entity} character change`)),
+              characterId: characterId(resolvedCharId),
               patch: { kind: patchKind, name: stringField(patch, 'name', `${entity} character patch`) },
             };
           case 'set-status':
             return {
               kind,
-              characterId: characterId(stringField(change, 'characterId', `${entity} character change`)),
+              characterId: characterId(resolvedCharId),
               patch: {
                 kind: patchKind,
-                status: oneOf(
-                  stringField(patch, 'status', `${entity} character patch`),
-                  ['alive', 'injured', 'missing', 'dead'] as const,
-                  `${entity} character patch`,
-                ),
+                status: normalizeStatus(patch.status),
               },
             };
           case 'replace-facts':
             return {
               kind,
-              characterId: characterId(stringField(change, 'characterId', `${entity} character change`)),
+              characterId: characterId(resolvedCharId),
               patch: {
                 kind: patchKind,
                 facts: parseStringArray(patch.facts, `${entity} character patch facts`),
@@ -166,12 +186,19 @@ function parseDelta(
           }
         }
       }
-      case 'remove':
+      case 'remove': {
+        const rawCharId = stringField(change, 'characterId', `${entity} character change`);
+        let resolvedCharId = rawCharId;
+        if (baseline?.characters) {
+          const match = baseline.characters.find(c => c.id === rawCharId || c.name === rawCharId);
+          if (match) resolvedCharId = match.id;
+        }
         return {
           kind,
-          characterId: characterId(stringField(change, 'characterId', `${entity} character change`)),
+          characterId: characterId(resolvedCharId),
           reason: stringField(change, 'reason', `${entity} character change`),
         };
+      }
       default: {
         const exhaustive: never = kind;
         return exhaustive;
@@ -210,7 +237,7 @@ function parseDelta(
     }
   });
 
-  const foreshadowChanges = foreshadowChangesValue.map((changeValue) => {
+  const foreshadowChanges = foreshadowChangesValue.map((changeValue, idx) => {
     const change = persistedRecord(changeValue, `${entity} foreshadow change`);
     const kind = oneOf(
       stringField(change, 'kind', `${entity} foreshadow change`),
@@ -220,10 +247,13 @@ function parseDelta(
     switch (kind) {
       case 'open': {
         const foreshadow = persistedRecord(change.foreshadow, `${entity} foreshadow`);
+        const rawFsId = typeof foreshadow.id === 'string' && foreshadow.id.trim().length > 0
+          ? foreshadow.id.trim()
+          : `fs-${idx + 1}-${randomUUID().slice(0, 6)}`;
         return {
           kind,
           foreshadow: {
-            id: foreshadowId(stringField(foreshadow, 'id', `${entity} foreshadow`)),
+            id: foreshadowId(rawFsId),
             description: stringField(foreshadow, 'description', `${entity} foreshadow`),
             openedAtChapterRevisionId: chapterRevisionId(
               typeof foreshadow.openedAtChapterRevisionId === 'string'
@@ -234,18 +264,23 @@ function parseDelta(
           },
         };
       }
-      case 'resolve':
+      case 'resolve': {
+        const rawFsId = stringField(change, 'foreshadowId', `${entity} foreshadow change`);
+        let resolvedFsId = rawFsId;
+        if (baseline?.foreshadows) {
+          const match = baseline.foreshadows.find(f => f.id === rawFsId || f.description.includes(rawFsId));
+          if (match) resolvedFsId = match.id;
+        }
         return {
           kind,
-          foreshadowId: foreshadowId(
-            stringField(change, 'foreshadowId', `${entity} foreshadow change`),
-          ),
+          foreshadowId: foreshadowId(resolvedFsId),
           chapterRevisionId: chapterRevisionId(
             typeof change.chapterRevisionId === 'string'
               ? change.chapterRevisionId
               : chapterRevision,
           ),
         };
+      }
       default: {
         const exhaustive: never = kind;
         return exhaustive;
@@ -325,7 +360,7 @@ export async function extractStoryState(
     foreshadowChanges: Array.isArray(result.data.foreshadowChanges) ? result.data.foreshadowChanges : [],
     timelineEvents: Array.isArray(result.data.timelineEvents) ? result.data.timelineEvents : [],
   };
-  const delta = parseDelta(normalized, chapterRevisionId);
+  const delta = parseDelta(normalized, chapterRevisionId, baseline);
   const state = applyStoryStateDelta(baseline, delta);
   return {
     state,

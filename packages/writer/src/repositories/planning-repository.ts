@@ -48,6 +48,7 @@ export interface OutlineContent {
   foreshadowing?: string;
   twistLevel?: number;
   beatLabel?: string;
+  endingHook?: string;
 }
 
 export interface ApprovedOutline {
@@ -147,6 +148,8 @@ function parseOutlineContent(text: string): OutlineContent {
   if (twistLevel !== undefined) content.twistLevel = twistLevel;
   const beatLabel = optionalString(value.beatLabel, 'beatLabel', entity);
   if (beatLabel !== undefined) content.beatLabel = beatLabel;
+  const endingHook = optionalString(value.endingHook, 'endingHook', entity);
+  if (endingHook !== undefined) content.endingHook = endingHook;
   return content;
 }
 
