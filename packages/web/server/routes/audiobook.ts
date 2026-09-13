@@ -29,7 +29,8 @@ import {
   loadRegistry, setupBookLine, recordEpisode, nextEpisodeHint, episodeReady, loadChapters,
   buildYouTubePlaylistMaterial, formatYouTubeTitle,
   loadProjectConfig, saveProjectConfig, VOICE_CATALOG,
-  type BookRegistry, type PlaylistMaterial, type ProjectAudiobookConfig,
+  loadCostLedger, bookCostSummary,
+  type BookRegistry, type PlaylistMaterial, type ProjectAudiobookConfig, type CostEntry,
 } from '@novel-eval/audiobook';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
@@ -347,6 +348,54 @@ export function audiobookRouter(db: DB) {
       lines[id] = { episodeCount: Object.keys(rec.episodes ?? {}).length };
     }
     return c.json({ lines });
+  });
+
+  // ── M2 发布检查单：按集持久化勾选（发布前的最后一道人工确认）──
+  const CHECKLIST_KEYS = [
+    'title-copied', 'description-copied', 'tags-copied', 'thumbnail-ready',
+    'srt-uploaded', 'playlist-added', 'ai-disclosure', 'not-for-kids', 'language-set', 'scheduled',
+  ] as const;
+
+  app.get('/books/:bookId/ep/:ep/checklist', (c) => {
+    const bookId = c.req.param('bookId');
+    const epNum = Number(c.req.param('ep'));
+    const rec = loadRegistry(DATA_DIR)[bookId];
+    if (!rec) return c.json({ error: '该书尚未建线' }, 404);
+    const file = join(registryRoot(rec), `ep${String(epNum).padStart(2, '0')}`, 'publish-checklist.json');
+    let state: Record<string, boolean> = {};
+    try { state = JSON.parse(readFileSync(file, 'utf-8')) as Record<string, boolean>; } catch { /* 未开始 */ }
+    return c.json({ state: Object.fromEntries(CHECKLIST_KEYS.map((k) => [k, !!state[k]])) });
+  });
+
+  app.put('/books/:bookId/ep/:ep/checklist', async (c) => {
+    const bookId = c.req.param('bookId');
+    const epNum = Number(c.req.param('ep'));
+    const rec = loadRegistry(DATA_DIR)[bookId];
+    if (!rec) return c.json({ error: '该书尚未建线' }, 404);
+    const body = await c.req.json<Record<string, unknown>>().catch(() => ({}) as Record<string, unknown>);
+    const state: Record<string, boolean> = {};
+    for (const k of CHECKLIST_KEYS) {
+      if (body[k] !== undefined) {
+        if (typeof body[k] !== 'boolean') return c.json({ error: `${k} 需为布尔` }, 422);
+        state[k] = body[k] as boolean;
+      }
+    }
+    const epDir = join(registryRoot(rec), `ep${String(epNum).padStart(2, '0')}`);
+    writeFileSync(join(epDir, 'publish-checklist.json'), JSON.stringify(state, null, 1), 'utf-8');
+    return c.json({ ok: true, state });
+  });
+
+  // ── M2 成本台账：书层聚合 + 按集明细 ──
+  app.get('/books/:bookId/cost', (c) => {
+    const bookId = c.req.param('bookId');
+    if (!bookTitle(db, bookId)) return c.json({ error: '未知书' }, 404);
+    const mine = loadCostLedger(join(REPO_ROOT, 'data')).filter((e) => e.projectId === bookId);
+    const formal = mine.filter((e) => !e.isDraft);
+    return c.json({
+      summary: bookCostSummary(formal),
+      drafts: mine.filter((e) => e.isDraft).length,
+      recent: mine.slice(0, 30) as CostEntry[],
+    });
   });
 
   // ── M1 书级配置中心（分工铁律 PLAN §3：presets 归 registry，音色/发音归 projects/<书名>.json）──

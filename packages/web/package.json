@@ -15,6 +15,7 @@
   "dependencies": {
     "@hono/node-server": "^1.13.0",
     "@novel-eval/audiobook": "workspace:*",
+    "@novel-eval/digest": "workspace:*",
     "@novel-eval/eval": "workspace:*",
     "@novel-eval/shared": "workspace:*",
     "@novel-eval/writer": "workspace:*",

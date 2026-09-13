@@ -2182,3 +2182,20 @@ select.input {
   color: var(--primary);
   background: var(--primary-glow);
 }
+
+/* ── M2 短篇（digest）阅读视图 ── */
+.dg-reader {
+  position: relative; margin: auto; max-width: 720px; width: 92%; max-height: 86vh;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.dg-reader-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 18px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+}
+.dg-reader-head h2 { font-size: 18px; font-family: var(--font-serif); }
+.dg-reader-body {
+  margin: 0; padding: 20px 26px 32px; overflow-y: auto;
+  white-space: pre-wrap; word-break: break-word; line-height: 1.9;
+  font-family: var(--font-serif); font-size: 15.5px; color: var(--text);
+}

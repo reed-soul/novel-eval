@@ -44,6 +44,7 @@ interface BookStatus {
 
 interface AbJobInfo { jobId: string; args: string[] }
 interface JobLine { seq: number; text: string }
+interface CostInfo { summary: { entries: number; episodes: number; totalChars: number; totalEstCostYuan: number }; drafts: number }
 
 export function fmtDur(ms: number | null): string {
   if (!ms) return '--:--';
@@ -143,6 +144,7 @@ export function BookAudiobook() {
   const [listenFix, setListenFix] = useState(false);
   const [listenSrt, setListenSrt] = useState(false);
   const [showConfig, setShowConfig] = useState(false);
+  const [cost, setCost] = useState<CostInfo | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -151,6 +153,8 @@ export function BookAudiobook() {
     } catch (e) {
       setErr((e as Error).message);
     }
+    // 成本台账（M2）：聚合展示，失败静默（不阻塞主界面）
+    api<CostInfo>(`/audiobook/books/${bookId}/cost`).then(setCost).catch(() => undefined);
   }, [bookId]);
 
   useEffect(() => { void load(); }, [load]);
@@ -222,6 +226,9 @@ export function BookAudiobook() {
           <h1 className="ab-hero-title">《{st.title}》· 有声书</h1>
           <p className="ab-hero-sub">
             {episodes.length} 集 · {ENGINE_LABEL[presets.engine] ?? presets.engine} · 每 {presets.chaptersPerEpisode} 章一集 · {presets.skipVideo ? '纯音频' : '含视频'}
+            {cost && cost.summary.entries > 0 && (
+              <> · 累计 {cost.summary.totalEstCostYuan === 0 ? '免费' : `约 ¥${cost.summary.totalEstCostYuan}`}（{cost.summary.episodes} 集 / {(cost.summary.totalChars / 10000).toFixed(1)} 万字{cost.drafts ? `，另有试产 ${cost.drafts} 次未计` : ''}）</>
+            )}
           </p>
         </div>
         <div className="ab-hero-actions">

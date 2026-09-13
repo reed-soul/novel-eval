@@ -34,6 +34,7 @@ import { revisionRoutes } from './routes/revisions.ts';
 import { revisionTaskRoutes } from './routes/revision-tasks.ts';
 import { finalizeRoutes } from './routes/finalize.ts';
 import { audiobookRouter } from './routes/audiobook.ts';
+import { digestRoutes } from './routes/digest.ts';
 import { EngineRegistry } from './engine-registry.ts';
 import { httpErrorJson, toHttpError } from './middleware/error-mapper.ts';
 
@@ -93,6 +94,7 @@ app.route('/api/chapters', revisionRoutes(db));
 app.route('/api/eval', evalTasksRouter);
 app.route('/api/audit', auditTasksRouter);
 app.route('/api/audiobook', audiobookRouter(db));
+app.route('/api/digest', digestRoutes(db));
 app.route('/api/config', configRoutes(registry));
 
 // 有声书媒体（mp4/mp3/图片/srt）：仓库 dist/ 经 serveStatic 静态发布

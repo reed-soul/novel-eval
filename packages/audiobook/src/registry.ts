@@ -9,6 +9,7 @@
  */
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { nextUnitNumber, type DerivativeLine, type DerivativeUnit } from '@novel-eval/shared';
 
 export interface EpisodeRecord {
   /** 本集覆盖的章节号（含端点） */
@@ -96,10 +97,16 @@ export function recordEpisode(dataDir: string, bookId: string, ep: number, chapt
 /** 推断下一集（终审 P0-1/P0-9）：非 draft 的最大集 +1；章节=已消费最大章 +1 顺延 */
 export function nextEpisodeHint(rec: BookRegistry): { ep: number; chapters: [number, number] } {
   const eps = Object.values(rec.episodes).filter((e) => !e.isDraft);
-  const maxEp = eps.reduce((a, e) => Math.max(a, e.ep), 0);
   const maxCh = eps.reduce((a, e) => Math.max(a, e.chapters[1]), 0);
   const g = rec.presets.chaptersPerEpisode;
-  return { ep: maxEp + 1, chapters: [maxCh + 1, maxCh + g] };
+  // 编号走 DerivativeWork 共用规则（excludeDraft）
+  const ep = nextUnitNumber(rec.episodes, { excludeDraft: true });
+  return { ep, chapters: [maxCh + 1, maxCh + g] };
+}
+
+/** 契约适配（DerivativeWork，M2 双真形态后抽取）：本包 registry 结构化满足衍生线形状 */
+export function toDerivativeLine(rec: BookRegistry): DerivativeLine<BookRegistry['presets'], EpisodeRecord & DerivativeUnit> {
+  return { outRoot: rec.outRoot, presets: rec.presets, units: rec.episodes };
 }
 
 /** 就绪判定（从文件派生，PLAN §3 公式）：skipVideo 时看 mp3，否则看 mp4 */

@@ -28,6 +28,7 @@ import { renderChapterVideo } from './video.ts';
 import { ensureSnowAsset } from './assets.ts';
 import { parseSrt, shift, mergeCues, writeSrt, estimateCues, type Cue } from './srt.ts';
 import { buildUploadPlan, writeUploadBundle, DEFAULT_BRAND, type ChapterMark } from './youtube.ts';
+import { appendCostEntry, estimateCostYuan } from './cost-ledger.ts';
 
 const REPO_ROOT = process.cwd();
 
@@ -369,9 +370,11 @@ async function main() {
 
     // —— 1) 逐章：标注 → 台本工件 → 合成 → 章音频 + 章内字幕（带章内偏移）——
     const epChapters: { file: string; durMs: number; cues: Cue[]; covers: string[] }[] = [];
+    let epBuiltChars = 0;
     for (const ch of grp) {
       let content = ch.content;
       if (args.chars && content.length > args.chars) content = truncateAtSentence(content, args.chars);
+      epBuiltChars += content.length;
       // 发音表：正文与朗读标题都过一遍（文件名仍用原标题，避免缓存路径漂移）
       let speakTitle = ch.title;
       if (pronEntries.length) {
@@ -532,6 +535,13 @@ async function main() {
       }
     }
     products.push({ position: epN, title: label, episodeLabel: label, audioFile: plan.audioOut, videoFile: videoOut, durationMs: epDur, srtFile: srtOut, chapters: marks });
+    // 成本台账（M2）：按集落账，Web 书/集层聚合展示（口径=截断后实配字数）
+    appendCostEntry(resolve(REPO_ROOT, 'data'), {
+      ts: new Date().toISOString(), projectId, bookTitle, ep: epN,
+      engine: engine.name, chars: epBuiltChars, durationMs: epDur,
+      estCostYuan: estimateCostYuan(engine.name, epBuiltChars),
+      isDraft: !!args.chars,
+    });
     console.log(`    ✅ 用时 ${((Date.now() - t0) / 1000).toFixed(0)}s`);
   }
 

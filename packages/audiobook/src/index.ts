@@ -23,3 +23,4 @@ export { loadProjectConfig, saveProjectConfig } from './project-config.ts';
 export type { ProjectAudiobookConfig } from './project-config.ts';
 export { VOICE_CATALOG } from './voices.ts';
 export { segmentFingerprint, cacheHit } from './tts/cache.ts';
+export { loadCostLedger, appendCostEntry, bookCostSummary, estimateCostYuan, costLedgerPath, type CostEntry, type BookCostSummary } from './cost-ledger.ts';

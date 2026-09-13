@@ -5,7 +5,7 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import * as Tabs from '@radix-ui/react-tabs';
-import { api, apiPost } from '../api/client.ts';
+import { api, apiPost, apiPut } from '../api/client.ts';
 import { fmtDur, JobConsole } from './BookAudiobook.tsx';
 import { BookTabs } from '../components/BookTabs.tsx';
 import { CopyButton } from '../components/CopyButton.tsx';
@@ -48,6 +48,20 @@ interface AbDetail {
 const KIND_LABEL: Record<string, string> = { narration: '旁白', dialogue: '对白', letter: '信' };
 const VERDICT_CLS: Record<string, string> = { bad: 'ab-chip ab-chip-red', suspect: 'ab-chip ab-chip-amber', missing: 'ab-chip ab-chip-red', silent: 'ab-chip ab-chip-red' };
 
+/** M2 发布检查单项（与服务端 CHECKLIST_KEYS 一一对应） */
+const CHECKLIST_ITEMS: [string, string][] = [
+  ['title-copied', '标题已复制到后台'],
+  ['description-copied', '说明（含章节时间轴）已粘贴'],
+  ['tags-copied', '标签已粘贴'],
+  ['thumbnail-ready', '缩略图已就绪'],
+  ['srt-uploaded', 'SRT 字幕已在后台上传'],
+  ['playlist-added', '已加入播放列表'],
+  ['ai-disclosure', 'AI 披露（altered content）已勾选'],
+  ['not-for-kids', '非儿童内容已确认'],
+  ['language-set', '语言已设中文（简体）'],
+  ['scheduled', '发布时间已定'],
+];
+
 export function AudiobookEpisode() {
   const { id: bookId = '', ep = '' } = useParams();
   const [d, setD] = useState<AbDetail | null>(null);
@@ -59,6 +73,7 @@ export function AudiobookEpisode() {
   const [regenJob, setRegenJob] = useState<{ jobId: string; count: number } | null>(null);
   const [segJob, setSegJob] = useState<{ jobId: string; args: string[] } | null>(null);
   const [segBusy, setSegBusy] = useState<string | null>(null);
+  const [checklist, setChecklist] = useState<Record<string, boolean> | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const load = useCallback(async () => {
@@ -70,6 +85,22 @@ export function AudiobookEpisode() {
   }, [bookId, ep]);
 
   useEffect(() => { void load(); }, [load]);
+
+  // M2 发布检查单：读 + 勾选即存
+  useEffect(() => {
+    api<{ state: Record<string, boolean> }>(`/audiobook/books/${bookId}/ep/${Number(ep)}/checklist`)
+      .then((r) => setChecklist(r.state))
+      .catch(() => setChecklist(null));
+  }, [bookId, ep]);
+
+  const toggleChecklist = async (key: string, val: boolean) => {
+    setChecklist((prev) => (prev ? { ...prev, [key]: val } : prev));
+    try {
+      await apiPut(`/audiobook/books/${bookId}/ep/${Number(ep)}/checklist`, { [key]: val });
+    } catch (e) {
+      setErr(String(e));
+    }
+  };
 
   /** M1 单段重制：删该段缓存 → 拉起本集重制（段级缓存保其余段不动，只重做这一段） */
   const redoSegment = async (segId: string) => {
@@ -447,11 +478,36 @@ export function AudiobookEpisode() {
                     </div>
                   </div>
 
-                  {/* 6. YouTube Studio 关键表单选项速查 */}
+                  {/* 6. 发布检查单（M2：可勾选，按集持久化）+ 后台设置速查 */}
                   <div className="pub-field-card">
                     <div className="pub-field-head">
                       <div className="pub-field-title">
-                        <span className="msr msr-sm">checklist</span> YouTube 后台设置速查清单 (Settings Cheat-Sheet)
+                        <span className="msr msr-sm">checklist</span> 发布检查单（勾选自动保存）
+                      </div>
+                      {checklist && (
+                        <span className="ab-chip ab-chip-muted">{Object.values(checklist).filter(Boolean).length}/{CHECKLIST_ITEMS.length} 已确认</span>
+                      )}
+                    </div>
+                    <div className="pub-checklist-grid">
+                      {CHECKLIST_ITEMS.map(([key, label]) => (
+                        <label key={key} className="ab-check" style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                          <input
+                            type="checkbox"
+                            checked={!!checklist?.[key]}
+                            disabled={!checklist}
+                            onChange={(e) => void toggleChecklist(key, e.target.checked)}
+                          />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 6b. YouTube Studio 关键表单选项速查 */}
+                  <div className="pub-field-card">
+                    <div className="pub-field-head">
+                      <div className="pub-field-title">
+                        <span className="msr msr-sm">fact_check</span> YouTube 后台设置速查（正确选项一览）
                       </div>
                     </div>
                     <div className="pub-checklist-grid">
