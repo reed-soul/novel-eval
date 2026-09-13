@@ -162,6 +162,13 @@ export function linesInWindow(lines: AsrLine[], winStart: number, winEnd: number
   });
 }
 
+/** 报告按集 merge（M0 阻断2）：fresh 所含章替换旧报告同名章，其余章沿用旧值；旧报告空/损坏由调用方容错为 {} */
+export function mergeListenReports(old: { chapters?: ChapterAudit[] }, freshChapters: ChapterAudit[]): ChapterAudit[] {
+  const audited = new Set(freshChapters.map((c) => c.dir));
+  return [...(old.chapters ?? []).filter((c) => !audited.has(c.dir)), ...freshChapters]
+    .sort((a, b) => a.dir.localeCompare(b.dir));
+}
+
 /**
  * 段内字幕真实对齐：把 seg.text 按 estimateCues 切句，但时长摊到
  * ASR 实测语音跨度（首行 start → 末行 end）而非名义时长。
@@ -397,18 +404,14 @@ export async function runListen(opts: ListenOptions): Promise<void> {
   // 报告按集 merge：单集重审只更新本次审的章，其余章沿用旧报告
   // （M0 阻断2：整文件覆盖会把他集 QA 结果写丢）
   const reportFile = join(opts.outRoot, 'listen-report.json');
-  interface OldReport { generatedAt?: string; model?: string; cerThreshold?: number; chapters?: ChapterAudit[]; fixDeleted?: string[] }
   const old = (() => {
     try {
-      return JSON.parse(readFileSync(reportFile, 'utf-8')) as OldReport;
+      return JSON.parse(readFileSync(reportFile, 'utf-8')) as { chapters?: ChapterAudit[] };
     } catch {
-      return {} as OldReport;
+      return {} as { chapters?: ChapterAudit[] };
     }
   })();
-  const audited = new Set(report.chapters.map((c) => c.dir));
-  const merged = [...(old.chapters ?? []).filter((c) => !audited.has(c.dir)), ...report.chapters]
-    .sort((a, b) => a.dir.localeCompare(b.dir));
-  const finalReport = { ...report, chapters: merged };
+  const finalReport = { ...report, chapters: mergeListenReports(old, report.chapters) };
   await writeFile(reportFile, JSON.stringify(finalReport, null, 1), 'utf-8');
   const totalBad = finalReport.chapters.reduce((a, c) => a + c.counts.bad + c.counts.missing + c.counts.silent, 0);
   const totalSuspect = finalReport.chapters.reduce((a, c) => a + c.counts.suspect, 0);

@@ -3,7 +3,27 @@
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normForCer, levenshtein, cerOf, cerInHaystack, linesInWindow, realignSegmentCues, type AsrLine } from '../../src/listen.ts';
+import { normForCer, levenshtein, cerOf, cerInHaystack, linesInWindow, realignSegmentCues, mergeListenReports, type AsrLine, type ChapterAudit } from '../../src/listen.ts';
+
+function chapterAudit(dir: string, bad: number): ChapterAudit {
+  return { dir, audioMs: 1000, segmentsTotal: 2, counts: { ok: 2, suspect: 0, bad, missing: 0, silent: 0, short: 0 }, worst: [] };
+}
+
+test('mergeListenReports：单集重审只替换所审章，他集 QA 沿用旧报告（M0 验收8）', () => {
+  const oldReport = { chapters: [chapterAudit('ep01/ch01', 1), chapterAudit('ep01/ch02', 0), chapterAudit('ep02/ch04', 2)] };
+  // 重审 ep01/ch02：只有它更新，ep01/ch01 与 ep02/ch04 的历史结论必须保留
+  const merged = mergeListenReports(oldReport, [chapterAudit('ep01/ch02', 0)]);
+  assert.equal(merged.length, 3);
+  assert.deepEqual(merged.map((c) => c.dir), ['ep01/ch01', 'ep01/ch02', 'ep02/ch04']);
+  assert.equal(merged[0].counts.bad, 1);
+  assert.equal(merged[2].counts.bad, 2);
+});
+
+test('mergeListenReports：旧报告空/损坏（容错为 {}）时结果只含新章', () => {
+  const merged = mergeListenReports({}, [chapterAudit('ep03/ch07', 0)]);
+  assert.equal(merged.length, 1);
+  assert.equal(merged[0].dir, 'ep03/ch07');
+});
 
 test('normForCer：只留汉字字母数字，小写，去标点空白', () => {
   assert.equal(normForCer('「六点三十分。」汽笛响了。'), '6点30分汽笛响了');
