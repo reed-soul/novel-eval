@@ -8,7 +8,7 @@ import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { resolveServicePort } from '@novel-eval/shared';
-import { openDb, closeDb, loadWriterConfig, recoverInterruptedJobs, loadEnv } from '@novel-eval/writer';
+import { openDb, closeDb, loadWriterConfig, recoverInterruptedJobs, healFullyWrittenProjectStatuses, loadEnv } from '@novel-eval/writer';
 import { dirname, resolve, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFileSync, writeFileSync, rmSync } from 'node:fs';
@@ -55,6 +55,10 @@ const db = openDb({ path: databasePath });
 const recovered = recoverInterruptedJobs(db);
 if (recovered > 0) {
   console.log(`[startup] 检测到 ${recovered} 个上次未完成的任务，已标记为已暂停（可点继续恢复）。`);
+}
+const healed = healFullyWrittenProjectStatuses(db);
+if (healed > 0) {
+  console.log(`[startup] 检测到 ${healed} 个已写完全部章节但仍为 writing/planning 的项目，已更新为 completed。`);
 }
 const config = loadWriterConfig();
 const registry = new EngineRegistry(config.engines, config.engineName);

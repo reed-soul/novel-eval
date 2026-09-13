@@ -16,6 +16,9 @@
 ### 人物列表
 {CHARACTERS}
 
+### 平台细则（建议必须遵守；有细则时覆盖默认的「加强章末钩子」口径）
+{PLATFORM_RUBRIC}
+
 ## 输出契约
 
 只输出一个 JSON 对象：
@@ -40,4 +43,4 @@
 - dimension 用八维之一（storyStructure/characterization/writingQuality/emotionalResonance/marketPotential/thematicDepth/originality/pacingRetention），或小说特有检查项（worldbuilding/pov/padding/hook）
 - excerptRef 指向上面的 excerpts 清单（chapterId + excerptIndex）；若无合适引用可为 null
 - 最多 20 条建议，按重要性排序
-- 包含小说特有检查：世界观一致性、视角一致性、信息密度/注水、章末钩子
+- 包含小说特有检查：世界观一致性、视角一致性、信息密度/注水、章末收束是否符合平台（文学向不要建议加强生死钩子）

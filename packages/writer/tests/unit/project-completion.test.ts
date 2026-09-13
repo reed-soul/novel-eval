@@ -10,7 +10,9 @@ import {
   updateJobStatus,
 } from '../../src/job-store.ts';
 import {
+  completeProjectIfFullyWritten,
   finalizeExhaustedResumeJob,
+  healFullyWrittenProjectStatuses,
   isProjectFullyWritten,
 } from '../../src/project-completion.ts';
 import { getProject, updateProjectStatus } from '../../src/project.ts';
@@ -147,4 +149,31 @@ it('marks project completed only when chapters cover all outlines', (t) => {
 
   assert.equal(result.projectCompleted, true);
   assert.equal(getProject(testDb.db, fixtureProjectId)?.status, 'completed');
+});
+
+it('does not rewrite updatedAt when project is already completed', (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+
+  seedProjectWithOutlines(testDb.db, 2);
+  markChaptersWritten(testDb.db, [1, 2]);
+  updateProjectStatus(testDb.db, fixtureProjectId, 'completed');
+  const before = getProject(testDb.db, fixtureProjectId);
+  assert.ok(before);
+
+  assert.equal(completeProjectIfFullyWritten(testDb.db, fixtureProjectId), true);
+  assert.equal(getProject(testDb.db, fixtureProjectId)?.updatedAt, before.updatedAt);
+});
+
+it('heals writing projects whose chapters already cover every outline', (t) => {
+  const testDb = createTestDb();
+  t.after(() => testDb.cleanup());
+
+  seedProjectWithOutlines(testDb.db, 2);
+  markChaptersWritten(testDb.db, [1, 2]);
+  assert.equal(getProject(testDb.db, fixtureProjectId)?.status, 'writing');
+
+  assert.equal(healFullyWrittenProjectStatuses(testDb.db), 1);
+  assert.equal(getProject(testDb.db, fixtureProjectId)?.status, 'completed');
+  assert.equal(healFullyWrittenProjectStatuses(testDb.db), 0);
 });

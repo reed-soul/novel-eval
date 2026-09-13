@@ -15,7 +15,7 @@ import { join } from 'node:path';
 import { loadWriterConfig } from './config.ts';
 import { loadEnv } from './load-env.ts';
 import { openDb, closeDb, type DB } from './db.ts';
-import { createProject, getProject, listProjects, updateProjectStatus, type Project } from './project.ts';
+import { createProject, getProject, listProjects, updateProjectStatus, parseTargetPlatform, type Project, type TargetPlatform } from './project.ts';
 import type { ImportBibleInput } from './bible/importer.ts';
 import type { CharacterDynamic } from './bible/types.ts';
 import { getBibleForChapter } from './chapter/store.ts';
@@ -95,6 +95,7 @@ interface InitArgs {
   genre: string;
   audience: string;
   topic: string;
+  platform?: TargetPlatform;
   yes?: boolean;
   approvePlanning?: boolean;
   engine?: string;          // 覆盖 engines.yml 默认引擎
@@ -106,6 +107,7 @@ interface ImportBibleArgs {
   genre: string;
   audience: string;
   topic: string;
+  platform?: TargetPlatform;
   bibleFile: string;        // 结构化 bible JSON 文件路径
   yes?: boolean;
 }
@@ -139,6 +141,7 @@ interface AutoArgs {
   audience: string;
   topic: string;
   chapters: number;
+  platform?: TargetPlatform;
   maxRevise?: number;
   passGrade?: string;
   yes?: boolean;
@@ -317,6 +320,7 @@ export function parseArgs(argv: string[]): CliArgs {
       else if (rest[i] === '--pass-grade') args.passGrade = rest[++i];
       else if (rest[i] === '--engine') args.engine = rest[++i];
       else if (rest[i] === '--word-count') args.wordCount = parseInt(rest[++i], 10);
+      else if (rest[i] === '--platform') args.platform = parseTargetPlatform(rest[++i] ?? '');
       else if (rest[i] === '-y' || rest[i] === '--yes') args.yes = true;
       else if (rest[i] === '--approve-planning') args.approvePlanning = true;
     }
@@ -332,6 +336,7 @@ export function parseArgs(argv: string[]): CliArgs {
       else if (a === '--audience') args.audience = rest[++i];
       else if (a === '--topic') args.topic = rest[++i];
       else if (a === '--bible-file') args.bibleFile = rest[++i];
+      else if (a === '--platform') args.platform = parseTargetPlatform(rest[++i] ?? '');
       else if (a === '-y' || a === '--yes') args.yes = true;
     }
     return args;
@@ -345,6 +350,7 @@ export function parseArgs(argv: string[]): CliArgs {
       else if (a === '--genre') args.genre = rest[++i];
       else if (a === '--audience') args.audience = rest[++i];
       else if (a === '--topic') args.topic = rest[++i];
+      else if (a === '--platform') args.platform = parseTargetPlatform(rest[++i] ?? '');
       else if (a === '--engine') args.engine = rest[++i];
       else if (a === '-y' || a === '--yes') args.yes = true;
       else if (a === '--approve-planning') args.approvePlanning = true;
@@ -507,12 +513,15 @@ function printHelp(): void {
 
 init（创建项目 + 生成 bible 设定集）：
   --title/--genre/--audience/--topic   必填
+  --platform general|fanqie|yanxuan|douban
+                      默认 general（网文引擎）。douban 换文学写法，不按番茄钩子写章
   -y, --yes           跳过确认屏
   --approve-planning  生成后显式批准 bible draft（自动化用）
 
 import-bible（导入结构化 bible，规格模式）：
   --title/--genre/--audience/--topic   必填（topic 作为梗概拼入设定全文）
   --bible-file <path> 必填，结构化 JSON（含 coreSeed/characterDynamics/worldBuilding/plotArchitecture）
+  --platform general|fanqie|yanxuan|douban
   -y, --yes           跳过确认屏
 
 outline（把 bible 拆成章节蓝图）：
@@ -541,6 +550,8 @@ resume（断点续写 — 中断/暂停后继续）：
 
 auto（全自动：bible → 蓝图 → 章节）：
   --title/--genre/--audience/--topic   必填
+  --platform general|fanqie|yanxuan|douban
+                      默认 general。想写耐读/生活流选 douban
   --chapters <N>      目标章数（默认 30）
   --word-count <N>    覆盖每章字数（默认读 writer.yml 的 chapterWordCount）
   --max-revise <N>    启用质量门槛，最大重写次数（默认不启用）
@@ -605,6 +616,7 @@ async function runInit(args: InitArgs): Promise<void> {
         genre: args.genre,
         audience: args.audience,
         topic: args.topic,
+        targetPlatform: args.platform,
         generate: true,
         engineName: args.engine,
       });
@@ -638,7 +650,8 @@ async function runInit(args: InitArgs): Promise<void> {
   const db = openConfiguredDb();
   try {
     const project = createProject(db, {
-      title: args.title, genreProfile: args.genre, targetAudience: args.audience, premise: args.topic,
+      title: args.title, genreProfile: args.genre, targetAudience: args.audience,
+      targetPlatform: args.platform, premise: args.topic,
     });
     const engine: AIAgentAdapter = createEngine(config.engine);
     const app = createApp(db);
@@ -710,7 +723,8 @@ async function runImportBible(args: ImportBibleArgs): Promise<void> {
   const db = openConfiguredDb();
   try {
     const project = createProject(db, {
-      title: args.title, genreProfile: args.genre, targetAudience: args.audience, premise: args.topic,
+      title: args.title, genreProfile: args.genre, targetAudience: args.audience,
+      targetPlatform: args.platform, premise: args.topic,
     });
     const app = createApp(db);
 
@@ -1404,6 +1418,7 @@ async function runAuto(args: AutoArgs): Promise<void> {
   console.log('Novel Writer — 全自动生成\n');
   console.log(`  书名：${args.title} · ${args.genre} · ${args.audience}`);
   console.log(`  主题：${args.topic}`);
+  console.log(`  写作平台：${args.platform ?? 'general'}`);
   console.log(`  目标：${args.chapters} 章 · 每章约 ${wordCount} 字`);
   if (args.maxRevise !== undefined) {
     console.log(`  质量门槛：已启用（最多重写 ${args.maxRevise} 次）`);
@@ -1425,7 +1440,10 @@ async function runAuto(args: AutoArgs): Promise<void> {
     const log = (step: string, msg: string) => console.log(`  [${step}] ${msg}`);
 
     console.log('\n── 阶段 1：bible 生成 ──');
-    const project = createProject(db, { title: args.title, genreProfile: args.genre, targetAudience: args.audience, premise: args.topic });
+    const project = createProject(db, {
+      title: args.title, genreProfile: args.genre, targetAudience: args.audience,
+      targetPlatform: args.platform, premise: args.topic,
+    });
     const { bible, bibleRevisionId, usage: bibleUsage } = await app.generateBible({
       engine, projectId: project.id, topic: args.topic, genre: args.genre, audience: args.audience, onProgress: log,
     });

@@ -409,4 +409,53 @@ describe('generateBlueprint', () => {
       assert.ok(planning.hasOutlineAtPosition(p.id, i), `position ${i} 应存在`);
     }
   });
+
+  it('豆瓣蓝图 prompt 换底座，番茄仍要生死钩子', async (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const literary = createProject(testDb.db, {
+      title: 'L', genreProfile: 'g', targetAudience: 'a', premise: 't', targetPlatform: 'douban',
+    });
+    seedActiveBible(testDb.db, literary.id);
+    const literaryEngine = mockEngine({
+      beats: beatResp,
+      chapters: chapResp,
+      actStart: { 1: 1, 2: 5, 3: 9 },
+    });
+    await generateBlueprint({
+      engine: literaryEngine,
+      db: testDb.db,
+      projectId: literary.id,
+      plot: PLOT,
+      characters: CHARS,
+      totalChapters: 6,
+    });
+    const literaryPrompt = literaryEngine.prompts.find((p) => p.includes('章节预算')) ?? '';
+    assert.match(literaryPrompt, /ending_hook，可空/);
+    assert.match(literaryPrompt, /可空，允许安静落地/);
+    assert.equal(literaryPrompt.includes('必须设计生死留存钩子'), false);
+    assert.equal(literaryPrompt.includes('章末强断点钩子'), false);
+    assert.equal(literaryPrompt.includes('章末强悬念钩子'), false);
+
+    const retention = createProject(testDb.db, {
+      title: 'R', genreProfile: 'g', targetAudience: 'a', premise: 't', targetPlatform: 'fanqie',
+    });
+    seedActiveBible(testDb.db, retention.id);
+    const retentionEngine = mockEngine({
+      beats: beatResp,
+      chapters: chapResp,
+      actStart: { 1: 1, 2: 5, 3: 9 },
+    });
+    await generateBlueprint({
+      engine: retentionEngine,
+      db: testDb.db,
+      projectId: retention.id,
+      plot: PLOT,
+      characters: CHARS,
+      totalChapters: 6,
+    });
+    const retentionPrompt = retentionEngine.prompts.find((p) => p.includes('章节预算')) ?? '';
+    assert.match(retentionPrompt, /生死留存钩子/);
+    assert.match(retentionPrompt, /章末强悬念钩子/);
+  });
 });

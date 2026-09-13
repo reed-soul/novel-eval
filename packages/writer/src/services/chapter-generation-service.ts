@@ -26,7 +26,10 @@ import {
   ChapterPublicationService,
   type PublishResult,
 } from './chapter-publication-service.ts';
-import type { TargetPlatform } from '../project.ts';
+import {
+  chapterWritingDirectives,
+  formatEndingInstruction,
+} from '../chapter/writing-grammar.ts';
 import {
   ContextCompiler,
   formatStoryStateDirectives,
@@ -116,42 +119,6 @@ function readPartialContent(error: unknown): string | null {
   return typeof value === 'string' && value.trim().length > 0 ? value : null;
 }
 
-function buildPlatformWritingDirectives(platform: TargetPlatform, position: number): string[] {
-  switch (platform) {
-    case 'yanxuan':
-      return [
-        '【知乎盐选平台体裁与排版规范（严格执行）】',
-        '- 【第一人称亲历感（POV）】：必须以第一人称「我」的视角进行高代入感、强主观沉浸叙事，严禁第三人称客观全知俯视。',
-        '- 【知乎体短段落】：严格采用知乎体排版，单段绝对不超过 3 行，多用短句，拒绝任何大段沉闷文字。',
-        position === 1
-          ? '- 【黄金开局】：开篇前三段必须立刻抛出核心异常、不可思议的冲突或悬疑事件，禁止任何慢热铺垫。'
-          : '- 【反转与节奏】：节奏“短、快、反转多”，对话针锋相对、信息密集，多处制造心理施压与信息差欺骗。',
-        '- 【结局正义感】：正义必须得到实质伸张，罪罚严密对等，禁止反派软着陆。',
-      ];
-    case 'fanqie':
-      return [
-        '【番茄小说平台体裁与爽点规范（严格执行）】',
-        '- 【高留存快节奏】：读者耐心极低，语言通俗精炼，禁止大段心理描写或静态景物描写。',
-        position === 1
-          ? '- 【黄金三章/极速出场】：主角必须在前500字内出场，且第一场戏必须遭遇危机、冲突或强动机事件。'
-          : '- 【持续推背感】：每 500 字至少一个小转折或线索推进，全程高能。',
-        '- 【章末生死断点钩子】：章节最后 150 字必须卡在最紧张、最意想不到的突发悬念断点上，让读者欲罢不能必须点击下一章！',
-      ];
-    case 'douban':
-      return [
-        '【豆瓣阅读文学与生活流规范（严格执行）】',
-        '- 【生活流文学质感】：注重人物心理动机与命运悲凉感，追求真实社会生活质感与细腻感官细节。',
-        '- 【扎实人物弧光】：角色言行内敛克制，拒绝浮夸爽文套路，突出时代背景与人性的复杂性。',
-      ];
-    case 'general':
-    default:
-      return [
-        '【畅销网文通用规范】',
-        '- 场景化推进，以人物对话与动作为主轴，节奏明快，每章末尾保留悬念钩子。',
-      ];
-  }
-}
-
 function buildPrompts(
   context: CompiledChapterContext,
   wordCount: number,
@@ -166,7 +133,7 @@ function buildPrompts(
 
   const outline = context.outline.revision;
   const platform = context.targetPlatform || 'general';
-  const platformDirectives = buildPlatformWritingDirectives(platform, context.outlinePosition);
+  const platformDirectives = chapterWritingDirectives(platform, context.outlinePosition);
 
   const lines = [
     `题材：${context.genreProfile}`,
@@ -175,7 +142,7 @@ function buildPrompts(
     outline.content.role ? `蓝图定位：${outline.content.role}（${outline.content.purpose || '推进剧情'}）` : '',
     `蓝图摘要：${outline.content.summary}`,
     `节拍：${outline.content.beats.join('、') || '（无）'}`,
-    outline.content.endingHook ? `【本章必须达成的章末断点钩子】：${outline.content.endingHook}` : '',
+    formatEndingInstruction(platform, outline.content.endingHook),
     `目标字数：${wordCount}`,
     '',
     ...platformDirectives,

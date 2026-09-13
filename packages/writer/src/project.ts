@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { DB } from './db.ts';
 import { projectId, type ProjectId } from './domain/ids.ts';
 import { ProjectRepository } from './repositories/project-repository.ts';
+import type { TargetPlatform } from './target-platform.ts';
 
 export type ProjectStatus =
   | 'draft'
@@ -10,7 +11,11 @@ export type ProjectStatus =
   | 'completed'
   | 'archived';
 
-export type TargetPlatform = 'general' | 'fanqie' | 'yanxuan' | 'douban';
+export {
+  TARGET_PLATFORMS,
+  parseTargetPlatform,
+  type TargetPlatform,
+} from './target-platform.ts';
 
 export interface Project {
   id: ProjectId;

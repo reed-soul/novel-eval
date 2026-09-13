@@ -30,6 +30,7 @@ import { PlanningRepository } from '../../src/repositories/planning-repository.t
 import { ProjectRepository } from '../../src/repositories/project-repository.ts';
 import { StoryStateRepository } from '../../src/repositories/story-state-repository.ts';
 import { ContextCompiler } from '../../src/services/context-compiler.ts';
+import type { TargetPlatform } from '../../src/project.ts';
 import { createTestDb } from '../helpers/test-db.ts';
 import type { DB } from '../../src/db.ts';
 
@@ -80,7 +81,7 @@ function seedJob(db: DB, project: ProjectId): void {
   `).run(jobId, project, fixtureTime, fixtureTime);
 }
 
-function seedProject(db: DB, chapterCount: number): {
+function seedProject(db: DB, chapterCount: number, platform: TargetPlatform = 'general'): {
   projectId: ProjectId;
   lease: ProjectWriteLease;
 } {
@@ -92,6 +93,7 @@ function seedProject(db: DB, chapterCount: number): {
     title: '测试',
     genreProfile: '悬疑',
     targetAudience: '成人',
+    targetPlatform: platform,
     premise: 'premise',
     createdAt: fixtureTime,
   });
@@ -260,6 +262,36 @@ describe('generateChapter', () => {
 
     assert.ok(capturedSystem.includes('设定全文稳定内容'), 'systemPrompt 应含 bible');
     assert.equal(capturedUser.includes('设定全文稳定内容'), false);
+  });
+
+  it('豆瓣正文 prompt 换文学底座，不含番茄钩子指令', async (t) => {
+    const testDb = createTestDb();
+    t.after(() => testDb.cleanup());
+    const { projectId: pid, lease } = seedProject(testDb.db, 1, 'douban');
+    let capturedUser = '';
+
+    await generateChapter({
+      engine: contentEngine('正文内容。'.repeat(20)),
+      db: testDb.db,
+      projectId: pid,
+      number: 1,
+      wordCount: 500,
+      lease,
+      extractState: passthroughExtract,
+      generateContent: async (context) => {
+        capturedUser = buildChapterPrompts(context, 500).userPrompt;
+        return {
+          title: context.outline.revision.title,
+          content: '正文内容。'.repeat(20),
+          usage: { inputTokens: 1, outputTokens: 1, costRmb: 0, model: 'mock', durationMs: 1 },
+          model: 'mock',
+        };
+      },
+    });
+
+    assert.match(capturedUser, /替换网文留存语法/);
+    assert.equal(capturedUser.includes('章末生死断点钩子'), false);
+    assert.equal(capturedUser.includes('每 500 字至少一个小转折'), false);
   });
 
   it('后续章 prompt 含最近章节原文', async (t) => {

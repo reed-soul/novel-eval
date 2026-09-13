@@ -7,7 +7,7 @@
 import type { DB } from './db.ts';
 import { countChapters, countOutlines } from './chapter/store.ts';
 import { updateJobStatus } from './job-store.ts';
-import { updateProjectStatus } from './project.ts';
+import { getProject, listProjects, updateProjectStatus } from './project.ts';
 
 export function isProjectFullyWritten(db: DB, projectId: string): boolean {
   const outlines = countOutlines(db, projectId);
@@ -18,8 +18,25 @@ export function isProjectFullyWritten(db: DB, projectId: string): boolean {
 /** Mark project completed only when every outline has a written chapter. */
 export function completeProjectIfFullyWritten(db: DB, projectId: string): boolean {
   if (!isProjectFullyWritten(db, projectId)) return false;
+  const project = getProject(db, projectId);
+  if (!project || project.status === 'archived' || project.status === 'completed') {
+    return project?.status === 'completed';
+  }
   updateProjectStatus(db, projectId, 'completed');
   return true;
+}
+
+/**
+ * Heal denormalized project.status left behind by pre-job writes or wrappers
+ * that never called completeProjectIfFullyWritten.
+ */
+export function healFullyWrittenProjectStatuses(db: DB): number {
+  let healed = 0;
+  for (const project of listProjects(db)) {
+    if (project.status !== 'writing' && project.status !== 'planning') continue;
+    if (completeProjectIfFullyWritten(db, project.id)) healed += 1;
+  }
+  return healed;
 }
 
 /**

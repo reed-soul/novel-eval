@@ -25,6 +25,13 @@ import { ProjectRepository } from '../repositories/project-repository.ts';
 import type { TargetPlatform } from '../project.ts';
 import { getRuntimeConfig } from '../runtime-config.ts';
 import type { Beat, ChapterOutline } from './legacy-types.ts';
+import {
+  blueprintChapterRules,
+  blueprintEndingHookJsonField,
+  getPlatformGuidelines,
+} from './writing-grammar.ts';
+
+export { getPlatformGuidelines };
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROMPTS_DIR = resolve(__dirname, 'prompts');
@@ -46,20 +53,6 @@ const BEAT_SCHEMA: SchemaSpec = {
     },
   },
 };
-
-export function getPlatformGuidelines(platform: TargetPlatform): string {
-  switch (platform) {
-    case 'fanqie':
-      return '番茄小说标准：快节奏强刺激。第1章主角必须在开场500字内出场并面临初始事件；每章末尾必须有高强度的“断点钩子（ending_hook）”以拉升连读率与留存率；拒绝拖沓与长段铺垫。';
-    case 'yanxuan':
-      return '知乎盐选标准：强反转、第一人称代入感。开篇前三段必须抛出核心异常或冲突，快速建立“我和当事人”的谜题框架；结尾强调反转或心理压迫感。';
-    case 'douban':
-      return '豆瓣阅读标准：生活流文学质感与扎实人物弧光，慢热友好；情节推进自然，重生活细节与命运悬念。';
-    case 'general':
-    default:
-      return '通用畅销网文标准：注重起承转合，每章具备明确叙事目的与章末钩子，伏笔回收清晰。';
-  }
-}
 
 const CHAPTER_ITEM_SCHEMA = {
   type: 'object' as const,
@@ -302,6 +295,8 @@ export async function generateBlueprint(opts: GenerateBlueprintOptions): Promise
           .replaceAll('{START_NUMBER}', String(run.start))
           .replaceAll('{END_NUMBER}', String(run.end))
           .replace('{PLATFORM_GUIDELINES}', platformGuidelines)
+          .replace('{CHAPTER_BLUEPRINT_RULES}', blueprintChapterRules(platform))
+          .replace('{ENDING_HOOK_JSON_FIELD}', blueprintEndingHookJsonField(platform))
           .replace('{BEATS}', beatsBlock)
           .replace('{CHARACTERS}', charList)
           .replace('{ACT_FORESHADOWS}', actForeshadows);

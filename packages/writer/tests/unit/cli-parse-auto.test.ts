@@ -40,4 +40,35 @@ describe('parseArgs write auto', () => {
     if (args.command !== 'auto') return;
     assert.equal(args.wordCount, undefined);
   });
+
+  it('parses --platform douban for auto', () => {
+    const args = parseArgs([
+      'node',
+      'cli.ts',
+      'write',
+      'auto',
+      '--title', '烟测',
+      '--genre', '都市',
+      '--audience', '青年',
+      '--topic', '暴雨',
+      '--platform', 'douban',
+      '--chapters', '3',
+      '--approve-planning',
+      '-y',
+    ]);
+    assert.equal(args.command, 'auto');
+    if (args.command !== 'auto') return;
+    assert.equal(args.platform, 'douban');
+  });
+
+  it('rejects unknown --platform', () => {
+    assert.throws(
+      () => parseArgs([
+        'node', 'cli.ts', 'init',
+        '--title', '烟测', '--genre', '都市', '--audience', '青年', '--topic', '暴雨',
+        '--platform', 'zhihu',
+      ]),
+      /未知平台/,
+    );
+  });
 });

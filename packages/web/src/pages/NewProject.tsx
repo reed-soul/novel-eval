@@ -113,7 +113,7 @@ export function NewProject() {
             <option value="general">目标商业平台：通用畅销网文</option>
             <option value="fanqie">番茄小说（高留存 / 黄金三章 / 章末强断点生死钩子）</option>
             <option value="yanxuan">知乎盐选（第一人称主观沉浸 / 知乎体短段落 / 密集反转）</option>
-            <option value="douban">豆瓣阅读（生活流文学质感 / 命运悬念 / 扎实人物弧光）</option>
+            <option value="douban">豆瓣阅读（文学引擎：长镜头/可慢热，不按番茄钩子写章）</option>
           </select>
           <textarea className="input" placeholder="核心创意/主题（一句话描述你想写的故事）" rows={3} value={form.topic} onChange={(e) => setForm({ ...form, topic: e.target.value })} disabled={!!jobId} />
         </div>

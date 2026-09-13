@@ -207,7 +207,8 @@ export async function runReducePhase(
     .replace('{DIMENSIONS}', dimensionsBlock)
     .replace('{CHAPTERS}', chaptersBlock)
     .replace('{EXCERPTS}', excerptsBlock)
-    .replace('{CHARACTERS}', charactersBlock);
+    .replace('{CHARACTERS}', charactersBlock)
+    .replace('{PLATFORM_RUBRIC}', platformRubricBlock || '（无平台细则，按通用标尺）');
   const r4Schema: SchemaSpec = {
     suggestions: {
       type: 'array', required: true,

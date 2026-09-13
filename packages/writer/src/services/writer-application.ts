@@ -43,6 +43,7 @@ import {
 } from '../domain/ids.ts';
 import { BudgetExceededError, StateExtractionError, ValidationError } from '../domain/errors.ts';
 import type { StoryState, StoryStateDelta } from '../domain/story-state.ts';
+import { completeProjectIfFullyWritten } from '../project-completion.ts';
 import { getProject } from '../project.ts';
 import {
   createJobRow,
@@ -1122,6 +1123,7 @@ export class WriterApplication {
               metadata: {
                 genre: project?.genreProfile ?? '未指定',
                 targetAudience: project?.targetAudience ?? '未指定',
+                platform: project?.targetPlatform,
               },
               profile: qualityProfile,
               onProgress: (msg) => onProgress(`chapter:${position}:review`, msg),
@@ -1165,6 +1167,7 @@ export class WriterApplication {
         updateJobStatus(this.db, jobId, 'completed', {
           result: { generated: outcomes.length },
         });
+        completeProjectIfFullyWritten(this.db, input.projectId);
       }
       return { jobId, outcomes };
     } catch (error: unknown) {

@@ -73,6 +73,13 @@ describe('computePlatformGate', () => {
     assert.equal(gate.lowestDimension?.dimension, 'marketPotential');
   });
 
+  it('豆瓣 rubric 覆盖网文节奏口径', () => {
+    const rubric = loadPlatform('douban').rubric;
+    assert.match(rubric, /覆盖/);
+    assert.match(rubric, /pacingRetention 改口径/);
+    assert.match(rubric, /不要因缺少章末生死钩子扣分/);
+  });
+
   it('PLATFORM_NAMES 与 yml 一致', () => {
     for (const name of PLATFORM_NAMES) {
       assert.doesNotThrow(() => loadPlatform(name));

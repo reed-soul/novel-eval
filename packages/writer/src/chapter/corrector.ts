@@ -31,7 +31,13 @@ import { classifyChapter } from './lesson-aggregator.ts';
 import { aggregateLessons } from './lesson-aggregator.ts';
 import { detectRepetition } from './repetition.ts';
 import { getRuntimeConfig } from '../runtime-config.ts';
+import { getProject } from '../project.ts';
 import { chapterRevisionId, projectId } from '../domain/ids.ts';
+import {
+  rewriteIntro,
+  rewriteKeepCore,
+  rewritePaceRules,
+} from './writing-grammar.ts';
 import type { StoryState, StoryStateDelta } from '../domain/story-state.ts';
 import { ChapterRepository } from '../repositories/chapter-repository.ts';
 import type { ProjectWriteLease } from '../repositories/lease-repository.ts';
@@ -381,6 +387,7 @@ async function generateRevision(args: GenerateRevisionArgs): Promise<{ revisedCo
     const recent = getRecentChapters(db, projectId, args.chapterNumber, getRuntimeConfig().generation.recentWindow);
     const narrative = getNarrativeState(db, projectId);
     const macroSummary = narrative?.macroSummary ?? '（尚无前情摘要）';
+    const platform = getProject(db, projectId)?.targetPlatform ?? 'general';
     const recentText = recent.length
       ? recent.map((c) => `第${c.number}章《${c.title}》\n${c.content}`).join('\n\n---\n\n')
       : '（无前序章节）';
@@ -393,6 +400,7 @@ async function generateRevision(args: GenerateRevisionArgs): Promise<{ revisedCo
     );
 
     userPrompt = loadPrompt('correct-rewrite', PROMPTS_DIR)
+      .replace('{REWRITE_INTRO}', rewriteIntro(platform))
       .replace('{MACRO_SUMMARY}', macroSummary)
       .replace('{CHARACTER_STATE}', stateText)
       .replace('{RECENT_CHAPTERS}', recentText)
@@ -406,7 +414,9 @@ async function generateRevision(args: GenerateRevisionArgs): Promise<{ revisedCo
       .replace('{SUMMARY}', outline.summary)
       .replace('{CURRENT_CONTENT}', originalContent)
       .replace('{FEEDBACK}', feedback)
-      .replace('{WORD_COUNT}', String(args.wordCount));
+      .replace('{WORD_COUNT}', String(args.wordCount))
+      .replace('{REWRITE_KEEP_CORE}', rewriteKeepCore(platform))
+      .replace('{REWRITE_PACE_RULES}', rewritePaceRules(platform));
   }
 
   // 引擎调用（复用 generator 的重试/温度/超时模式）

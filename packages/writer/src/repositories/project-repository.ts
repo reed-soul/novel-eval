@@ -3,7 +3,8 @@ import {
   projectId,
   type ProjectId,
 } from '../domain/ids.ts';
-import type { Project, ProjectStatus, TargetPlatform } from '../project.ts';
+import type { Project, ProjectStatus } from '../project.ts';
+import { TARGET_PLATFORMS, type TargetPlatform } from '../target-platform.ts';
 import {
   nullableStringField,
   oneOf,
@@ -22,7 +23,7 @@ export interface CreateProjectInput {
 }
 
 const statuses = ['draft', 'planning', 'writing', 'completed', 'archived'] as const;
-const platforms = ['general', 'fanqie', 'yanxuan', 'douban'] as const;
+const platforms = TARGET_PLATFORMS;
 
 function readProject(value: unknown): Project {
   const entity = 'project';

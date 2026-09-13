@@ -18,8 +18,7 @@
 要求：
 - 严格生成 {CHAPTER_BUDGET} 章，章号连续从 {START_NUMBER} 到 {END_NUMBER}
 - 每章属于某个段落（beat 字段填该章归属的段落定位）
-- 每章要有：标题、定位（role）、核心作用（purpose）、悬念密度(0-10)、伏笔操作、转折程度(0-10)、梗概（summary）、章末强断点钩子（ending_hook）
-- 【章末强断点钩子（ending_hook）】：每章结尾必须设计生死留存钩子（危机、身份败露、意想不到的发现、反转），促使读者忍不住点击下一章
+{CHAPTER_BLUEPRINT_RULES}
 - 章节之间要有递进关系，环环相扣，不能每章都割裂
 - 伏笔的「埋设」和「回收」要明确分配到具体章节
 - 节奏曲线：段落内张力要符合 beat 的 tension 设定
@@ -28,5 +27,5 @@
 {"chapters": [
   {"number": {START_NUMBER}, "title": "...", "beat": "铺垫", "role": "本章定位", "purpose": "核心作用",
    "suspense_level": 5, "foreshadowing": "埋设：伏笔X", "twist_level": 2, "summary": "本章梗概（50-150字）",
-   "ending_hook": "章末强悬念钩子（20-60字）"}
+   {ENDING_HOOK_JSON_FIELD}}
 ]}

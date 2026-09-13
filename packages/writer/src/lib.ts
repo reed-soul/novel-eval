@@ -182,6 +182,7 @@ export {
 export {
   completeProjectIfFullyWritten,
   finalizeExhaustedResumeJob,
+  healFullyWrittenProjectStatuses,
   isProjectFullyWritten,
 } from './project-completion.ts';
 export {
