@@ -387,10 +387,11 @@ async function main() {
       const ttsDir = resolve(chDir, 'tts');
       await mkdir(ttsDir, { recursive: true });
       if (args.clean) {
-        // 强制重制：清空本章段级缓存（含 mp3/srt/tts-failures），
-        // 正文或发音修订后普通重跑会被旧缓存原样复读（M0 阻断5）
+        // 强制重制：清空本章段级缓存（含 mp3/srt/tts-failures/内容哈希索引），
+        // 正文或发音修订后普通重跑会被旧缓存原样复读（M0 阻断5）；
+        // M1 起常规路径由内容指纹自动失配，本开关仅作显式兜底
         for (const f of readdirSync(ttsDir)) {
-          if (/\.(mp3|srt)$/.test(f) || f === 'tts-failures.json') await rm(resolve(ttsDir, f), { force: true });
+          if (/\.(mp3|srt)$/.test(f) || f === 'tts-failures.json' || f === '.cache-index.json') await rm(resolve(ttsDir, f), { force: true });
         }
         console.log(`    --clean：已清 ${ch.position} 章段级缓存`);
       }

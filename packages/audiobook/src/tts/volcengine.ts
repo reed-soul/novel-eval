@@ -16,6 +16,7 @@ import { join } from 'node:path';
 import type { Segment } from '../annotate.ts';
 import type { SynthResult, TtsEngine } from './index.ts';
 import { ffprobeDurationMs } from '../ffmpeg.ts';
+import { segmentFingerprint, loadCacheIndex, saveCacheIndex, cacheHit } from './cache.ts';
 
 const SEGMENT_TIMEOUT_MS = 120_000; // chunked 流也可能停摆，兜底杀请求
 const MAX_ATTEMPTS = 3;
@@ -174,10 +175,13 @@ export const engine: TtsEngine = {
     const demoted = new Set<string>();
     const failures: { segmentId: string; speaker: string; text: string; error: string }[] = [];
     const out: SynthResult[] = [];
+    const cacheIdx = loadCacheIndex(outDir);
     for (const seg of segments) {
       const file = join(outDir, `${seg.id}.mp3`);
       // 断点续跑：与 edge 同款落盘缓存——重跑/换图重渲不重复烧配额
-      if (existsSync(file) && statSync(file).size > MIN_CACHE_BYTES) {
+      // M1 键控：指纹失配（改字/换音色/换引擎）视为未命中，自动重合成
+      const fp = segmentFingerprint('volcengine', seg);
+      if (cacheHit(existsSync(file) && statSync(file).size > MIN_CACHE_BYTES, cacheIdx[seg.id], fp)) {
         out.push({ segmentId: seg.id, file, durationMs: await ffprobeDurationMs(file) });
         continue;
       }
@@ -220,6 +224,8 @@ export const engine: TtsEngine = {
         continue;
       }
       await writeFile(file, buf);
+      cacheIdx[seg.id] = fp;
+      await saveCacheIndex(outDir, cacheIdx);
       out.push({ segmentId: seg.id, file, durationMs: await ffprobeDurationMs(file) });
     }
     if (failures.length) {

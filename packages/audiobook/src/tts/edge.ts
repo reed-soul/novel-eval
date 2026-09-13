@@ -10,6 +10,7 @@ import { homedir } from 'node:os';
 import { ffprobeDurationMs } from '../ffmpeg.ts';
 import type { Segment, } from '../annotate.ts';
 import type { SynthResult, TtsEngine } from './index.ts';
+import { segmentFingerprint, loadCacheIndex, saveCacheIndex, cacheHit } from './cache.ts';
 
 const SEGMENT_TIMEOUT_MS = 120_000; // 单段上限：正常几百 ms～数秒；实测网络停摆可挂 8h+，必须兜底
 const MAX_ATTEMPTS = 3;
@@ -90,17 +91,25 @@ export const engine: TtsEngine = {
     const failures: { segmentId: string; text: string; error: string }[] = [];
     // 顺序合成即可：每段 ~几百 ms，串行足够快且不触发限流。
     // 断点续跑：音频+词级 srt 都已存在（>512B）则跳过网络合成——换图重渲时省掉全套 TTS。
+    // M1 键控：指纹失配（改字/换音色/换引擎）视为未命中，自动重合成。
+    const cacheIdx = loadCacheIndex(outDir);
     for (const seg of segments) {
       const file = join(outDir, `${seg.id}.mp3`);
       const srt = file.replace(/\.mp3$/, '.srt');
-      const cached = existsSync(file) && statSync(file).size > 512
+      const fileOk = existsSync(file) && statSync(file).size > 512
         && existsSync(srt) && statSync(srt).size > 0;
+      const fp = segmentFingerprint('edge', seg);
+      const cached = cacheHit(fileOk, cacheIdx[seg.id], fp);
       const one: OneResult = cached ? { srt } : await synthOne(seg, file);
       if (!one.srt) {
         // 合成失败：跳过并收集（对齐 volcengine；重跑 build 断点只补失败段）
         failures.push({ segmentId: seg.id, text: seg.text.slice(0, 80), error: one.error ?? '未知错误' });
         console.warn(`  ⚠ 段 ${seg.id} 合成失败，跳过并记录：${one.error}`);
         continue;
+      }
+      if (!cached) {
+        cacheIdx[seg.id] = fp;
+        await saveCacheIndex(outDir, cacheIdx);
       }
       out.push({ segmentId: seg.id, file, durationMs: await ffprobeDurationMs(file), srtFile: one.srt });
     }
