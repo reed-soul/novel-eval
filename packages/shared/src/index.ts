@@ -110,3 +110,4 @@ export {
   toEvaluationReportResponse,
   unwrapEvaluationPayload,
 } from './dto/index.ts';
+export { nextUnitNumber, type DerivativeKind, type DerivativeLine, type DerivativeUnit } from './derivative-work.ts';

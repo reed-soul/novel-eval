@@ -1,0 +1,24 @@
+{
+ "0508da6a-d664-476b-ac74-040a128c3e0a": {
+  "outRoot": "dist/derivatives/物业管家不想破案/digest",
+  "presets": {
+   "style": "hook",
+   "targetWords": 600
+  },
+  "pieces": {
+   "p1": {
+    "id": "p1",
+    "title": "茶水间的耳语",
+    "chapters": [
+     1,
+     1
+    ],
+    "targetWords": 600,
+    "style": "hook",
+    "file": "dist/derivatives/物业管家不想破案/digest/p1-茶水间的耳语.md",
+    "words": 803,
+    "createdAt": "2026-09-13T14:06:35.673Z"
+   }
+  }
+ }
+}

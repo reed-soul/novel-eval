@@ -17,6 +17,7 @@
     "write": "tsx packages/writer/src/index.ts write",
     "web": "tsx packages/web/server/index.ts",
     "audiobook": "tsx packages/audiobook/src/cli.ts",
+    "digest": "tsx packages/digest/src/cli.ts",
     "web:dev": "pnpm --filter @novel-eval/web dev",
     "web:build": "pnpm --filter @novel-eval/web build",
     "typecheck": "pnpm -r typecheck",
