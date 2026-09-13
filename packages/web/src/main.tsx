@@ -15,6 +15,7 @@ import { Audit } from './pages/Audit.tsx';
 import { Layout } from './components/Layout.tsx';
 import { BookAudiobook } from './pages/BookAudiobook.tsx';
 import { AudiobookEpisode } from './pages/AudiobookEpisode.tsx';
+import { BookQuality } from './pages/BookQuality.tsx';
 import './styles.css';
 
 createRoot(document.getElementById('root')!).render(
@@ -37,6 +38,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/books/:id/dashboard" element={<Dashboard />} />
           <Route path="/books/:id/audiobook" element={<BookAudiobook />} />
           <Route path="/books/:id/audiobook/ep/:ep" element={<AudiobookEpisode />} />
+          <Route path="/books/:id/quality" element={<BookQuality />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/eval" element={<Evaluation />} />
           <Route path="/eval/:taskId" element={<EvaluationReport />} />

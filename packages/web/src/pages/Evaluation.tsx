@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import type { Project } from '../api/client.ts';
 
-export function Evaluation() {
+/** M1 质检 tab 内嵌时传 bookId：预绑定本书并隐藏选源区（工作台外独立使用时走 URL projectId） */
+export function Evaluation({ bookId }: { bookId?: string }) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [file, setFile] = useState<File | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjectId, setSelectedProjectId] = useState<string>(
-    searchParams.get('projectId') ?? '',
+    bookId ?? searchParams.get('projectId') ?? '',
   );
   
   // New input states
@@ -30,11 +31,16 @@ export function Evaluation() {
   }, []);
 
   useEffect(() => {
+    if (bookId) {
+      setSelectedProjectId(bookId);
+      setFile(null);
+      return;
+    }
     const fromQuery = searchParams.get('projectId') ?? '';
     if (!fromQuery) return;
     setSelectedProjectId(fromQuery);
     setFile(null);
-  }, [searchParams]);
+  }, [bookId, searchParams]);
 
   const bindProjectId = (projectId: string) => {
     setSelectedProjectId(projectId);
@@ -201,7 +207,7 @@ export function Evaluation() {
                 <option value="general">通用（不注入平台细则）</option>
                 <option value="yanxuan">知乎盐选（第一人称/黄金三章/女频盘）</option>
                 <option value="fanqie">番茄小说（第三人称友好/强节奏/完结爽感）</option>
-                <option value="douban">豆瓣阅读（文学向/慢热友好/影视通道）</option>
+                <option value="douban">豆瓣阅读（文学向/慢热友好；节奏不按钩子密度打分）</option>
               </select>
               {platform !== 'general' && (
                 <p style={{ marginTop: 6, fontSize: 12, color: 'var(--text-muted)' }}>
@@ -210,6 +216,14 @@ export function Evaluation() {
               )}
             </div>
 
+            {bookId ? (
+              <div className="eval-form-group">
+                <div style={{ padding: '10px 14px', border: '1px solid var(--border)', borderRadius: 10, background: 'var(--panel)', fontSize: 13.5, color: 'var(--text-muted)' }}>
+                  <span className="msr msr-sm">menu_book</span> 评估对象：本书工作台绑定的书
+                </div>
+              </div>
+            ) : (
+              <>
             <div className="eval-divider">选择小说来源</div>
 
             <div className="eval-form-group">
@@ -283,6 +297,8 @@ export function Evaluation() {
                 </p>
               )}
             </div>
+              </>
+            )}
 
             <button 
               onClick={handleUpload} 

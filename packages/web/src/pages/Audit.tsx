@@ -51,11 +51,12 @@ const TYPE_LABELS: Record<string, string> = {
   'hub-dependence': '单点依赖',
 };
 
-export function Audit() {
+/** M1 质检 tab 内嵌时传 bookId：预绑定本书并隐藏选源区 */
+export function Audit({ bookId }: { bookId?: string }) {
   const [searchParams] = useSearchParams();
   const [file, setFile] = useState<File | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(searchParams.get('projectId') ?? '');
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(bookId ?? searchParams.get('projectId') ?? '');
   const [genre, setGenre] = useState<string>('悬疑');
   const [climaxChapter, setClimaxChapter] = useState<string>('');
   const [taskId, setTaskId] = useState<string | null>(null);
@@ -193,6 +194,14 @@ export function Audit() {
               </div>
             </div>
 
+            {bookId ? (
+              <div className="eval-form-group">
+                <div style={{ padding: '10px 14px', border: '1px solid var(--border)', borderRadius: 10, background: 'var(--panel)', fontSize: 13.5, color: 'var(--text-muted)' }}>
+                  <span className="msr msr-sm">menu_book</span> 审计对象：本书工作台绑定的书
+                </div>
+              </div>
+            ) : (
+              <>
             <div className="eval-form-group">
               <label>方式 A：上传全本 TXT / MD</label>
               <input
@@ -223,6 +232,8 @@ export function Audit() {
                 ))}
               </select>
             </div>
+              </>
+            )}
 
             <button
               onClick={handleUpload}

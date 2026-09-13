@@ -4,6 +4,7 @@ import { api, type Project } from '../api/client.ts';
 
 export function ProjectList() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [abLines, setAbLines] = useState<Record<string, { episodeCount: number }>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -13,6 +14,10 @@ export function ProjectList() {
       .then(setProjects)
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
+    // M1 阶段感知：已建线书卡片直达有声书 tab（旅程② 2 击）
+    api<{ lines: Record<string, { episodeCount: number }> }>('/audiobook/lines')
+      .then((r) => setAbLines(r.lines))
+      .catch(() => undefined);
   };
 
   useEffect(() => {
@@ -41,8 +46,10 @@ export function ProjectList() {
         </div>
       ) : (
         <div className="project-list">
-          {projects.map((p) => (
-            <Link key={p.id} to={`/books/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          {projects.map((p) => {
+            const line = abLines[p.id];
+            return (
+            <Link key={p.id} to={line ? `/books/${p.id}/audiobook` : `/books/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
               <div className="project-card">
                 <h3>{p.title}</h3>
                 <div className="meta">
@@ -52,10 +59,12 @@ export function ProjectList() {
                 </div>
                 <div className="meta" style={{ marginTop: 6, fontSize: 12 }}>
                   <span>主题：{p.premise.slice(0, 60)}{p.premise.length > 60 ? '…' : ''}</span>
+                  {line && <span className="badge" style={{ marginLeft: 6 }} title="点击直达有声书工作台">🎧 有声书 {line.episodeCount} 集</span>}
                 </div>
               </div>
             </Link>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
