@@ -11,6 +11,7 @@ import { Link, useParams } from 'react-router-dom';
 import { api, apiPost } from '../api/client.ts';
 import { BookTabs } from '../components/BookTabs.tsx';
 import { CopyButton } from '../components/CopyButton.tsx';
+import { BookAudiobookConfig } from './BookAudiobookConfig.tsx';
 
 interface EpisodeCard {
   ep: number; id: string;
@@ -62,8 +63,8 @@ function costLine(chars: number, engine: string): string {
   return `约 ${(chars / 10000).toFixed(1)} 万字 · 预计 ${minutes} 分钟成片 · ${yuan}`;
 }
 
-/** Job 控制台（M0 修复：终态用事件数据而非闭包旧值） */
-function JobConsole({ job, onDone, onClose }: { job: AbJobInfo; onDone?: () => void; onClose: () => void }) {
+/** Job 控制台（M0 修复：终态用事件数据而非闭包旧值）；导出供集详情页单段重制复用 */
+export function JobConsole({ job, onDone, onClose }: { job: AbJobInfo; onDone?: () => void; onClose: () => void }) {
   const [lines, setLines] = useState<JobLine[]>([]);
   const [status, setStatus] = useState<'running' | 'completed' | 'failed' | 'cancelled'>('running');
   const boxRef = useRef<HTMLDivElement>(null);
@@ -141,6 +142,7 @@ export function BookAudiobook() {
   const [advClean, setAdvClean] = useState(false);
   const [listenFix, setListenFix] = useState(false);
   const [listenSrt, setListenSrt] = useState(false);
+  const [showConfig, setShowConfig] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -222,10 +224,17 @@ export function BookAudiobook() {
             {episodes.length} 集 · {ENGINE_LABEL[presets.engine] ?? presets.engine} · 每 {presets.chaptersPerEpisode} 章一集 · {presets.skipVideo ? '纯音频' : '含视频'}
           </p>
         </div>
-        <button className="ab-btn" onClick={() => void startJob({ action: 'listen', bookId, ...(listenFix ? { fix: true } : {}), ...(listenSrt ? { srt: true } : {}) })} title="whisper 逐段回验全部集">
-          <span className="msr msr-sm">hearing</span> 审听全部
-        </button>
+        <div className="ab-hero-actions">
+          <button className="ab-btn" onClick={() => setShowConfig((v) => !v)}>
+            <span className="msr msr-sm">tune</span> 配置
+          </button>
+          <button className="ab-btn" onClick={() => void startJob({ action: 'listen', bookId, ...(listenFix ? { fix: true } : {}), ...(listenSrt ? { srt: true } : {}) })} title="whisper 逐段回验全部集">
+            <span className="msr msr-sm">hearing</span> 审听全部
+          </button>
+        </div>
       </header>
+
+      {showConfig && <BookAudiobookConfig bookId={bookId} onClose={() => setShowConfig(false)} onSaved={() => void load()} />}
 
       {/* 📺 播放列表与分发物料套件 (Publishing Kit) */}
       {st.playlistMaterial && (
