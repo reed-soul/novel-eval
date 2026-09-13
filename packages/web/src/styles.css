@@ -2144,3 +2144,41 @@ select.input {
   border-radius: 10px; padding: 10px 16px; margin-bottom: 14px;
   font-size: 13.5px; color: var(--text);
 }
+
+/* ── M1 书级配置中心 ── */
+.ab-config-card {
+  background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+  padding: 18px 20px; margin-bottom: 18px;
+}
+.ab-config-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.ab-config-title { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.ab-config-section { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border); }
+.ab-config-h { font-size: 14.5px; font-weight: 600; margin-bottom: 10px; display: flex; align-items: baseline; gap: 10px; }
+.ab-config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: end; }
+.ab-config-grid label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--text-muted); }
+.ab-config-check { flex-direction: row !important; align-items: center; gap: 7px !important; color: var(--text) !important; padding-bottom: 8px; }
+.ab-config-save { display: flex; justify-content: flex-end; margin-top: 10px; }
+.ab-config-sub { font-size: 13px; color: var(--text-muted); margin: 14px 0 8px; font-weight: 600; }
+.ab-config-rows { display: flex; flex-direction: column; gap: 7px; margin-bottom: 4px; }
+.ab-config-row { display: flex; gap: 7px; align-items: center; }
+.ab-config-row .ab-input { flex: 0 0 auto; }
+.ab-config-row .ab-input:nth-child(2) { flex: 1; }
+.ab-config-arrow { color: var(--text-muted); }
+.ab-config-advanced summary { cursor: pointer; list-style: none; }
+.ab-config-advanced label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--text-muted); margin-top: 10px; }
+.ab-ok-msg {
+  display: flex; align-items: center; gap: 8px; margin-top: 12px;
+  color: #10b981; font-size: 13.5px;
+}
+
+/* ── M1 审听单段重制 ── */
+.ab-worst-item { display: flex; gap: 8px; align-items: stretch; }
+.ab-worst-jump { flex: 1; display: flex; gap: 8px; align-items: center; text-align: left; min-width: 0; }
+.ab-worst-redo { flex-shrink: 0; align-self: center; }
+
+/* ── M1 Radix 高频页签：激活态走 data-state（键盘可达） ── */
+.ab-radix-tab[data-state='active'] {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-glow);
+}

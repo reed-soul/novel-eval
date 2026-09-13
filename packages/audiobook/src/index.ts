@@ -19,3 +19,7 @@ export {
   loadRegistry, saveRegistry, setupBookLine, recordEpisode, nextEpisodeHint, episodeReady,
 } from './registry.ts';
 export type { BookRegistry, EpisodeRecord, Registry } from './registry.ts';
+export { loadProjectConfig, saveProjectConfig } from './project-config.ts';
+export type { ProjectAudiobookConfig } from './project-config.ts';
+export { VOICE_CATALOG } from './voices.ts';
+export { segmentFingerprint, cacheHit } from './tts/cache.ts';

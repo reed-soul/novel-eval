@@ -4,8 +4,9 @@
  */
 import React, { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import * as Tabs from '@radix-ui/react-tabs';
 import { api, apiPost } from '../api/client.ts';
-import { fmtDur } from './BookAudiobook.tsx';
+import { fmtDur, JobConsole } from './BookAudiobook.tsx';
 import { BookTabs } from '../components/BookTabs.tsx';
 import { CopyButton } from '../components/CopyButton.tsx';
 
@@ -56,6 +57,8 @@ export function AudiobookEpisode() {
   const [vttUrl, setVttUrl] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [regenJob, setRegenJob] = useState<{ jobId: string; count: number } | null>(null);
+  const [segJob, setSegJob] = useState<{ jobId: string; args: string[] } | null>(null);
+  const [segBusy, setSegBusy] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const load = useCallback(async () => {
@@ -67,6 +70,27 @@ export function AudiobookEpisode() {
   }, [bookId, ep]);
 
   useEffect(() => { void load(); }, [load]);
+
+  /** M1 单段重制：删该段缓存 → 拉起本集重制（段级缓存保其余段不动，只重做这一段） */
+  const redoSegment = async (segId: string) => {
+    if (!d || d.chapters.length === 0) return;
+    setSegBusy(segId);
+    setErr('');
+    try {
+      await apiPost(`/audiobook/books/${bookId}/ep/${d.ep}/resegment`, { seg: segId });
+      const r = await apiPost<{ jobId: string; args: string[] }>('/audiobook/jobs', {
+        action: 'build',
+        bookId,
+        epStart: String(d.ep),
+        chapters: `${d.chapters[0].pos}-${d.chapters[d.chapters.length - 1].pos}`,
+      });
+      setSegJob(r);
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setSegBusy(null);
+    }
+  };
 
   /** 重跑单张场景图：删旧 + Seedream 重新生成（约 80s）→ 刷新图库 */
   const regenImage = async (imageId: string) => {
@@ -175,12 +199,12 @@ export function AudiobookEpisode() {
           </div>
         </div>
 
-        <div className="ab-panel-col">
-          <div className="ab-tabs">
+        <Tabs.Root value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="ab-panel-col">
+          <Tabs.List className="ab-tabs" aria-label="集详情面板">
             {([['gallery', `场景图库 ${d.images.length}`], ['script', '台本'], ['listen', '审听报告'], ['upload', '上传物料']] as const).map(([k, label]) => (
-              <button key={k} className={`ab-tab ${tab === k ? 'active' : ''}`} onClick={() => setTab(k)}>{label}</button>
+              <Tabs.Trigger key={k} value={k} className="ab-tab ab-radix-tab">{label}</Tabs.Trigger>
             ))}
-          </div>
+          </Tabs.List>
 
           {tab === 'gallery' && (
             <div className="ab-tab-body">
@@ -265,16 +289,27 @@ export function AudiobookEpisode() {
                   <div className="ab-hint">报告是给人耳排优先级的雷达：suspect/bad 多为 whisper 近音听岔（如「皱眉→咒梅」），点时间戳跳到对应位置人工复听。</div>
                   <div className="ab-worst-list">
                     {worstWithJump.map((w) => (
-                      <button key={w.id} className="ab-worst-item" onClick={() => seek(w.jumpMs)}>
-                        <span className={VERDICT_CLS[w.verdict] ?? 'ab-chip ab-chip-muted'}>{w.verdict}</span>
-                        <span className="ab-worst-cer">CER {w.cer.toFixed(2)}</span>
-                        <span className="ab-worst-time">{Math.floor(w.jumpMs / 60000)}:{String(Math.floor((w.jumpMs % 60000) / 1000)).padStart(2, '0')}</span>
-                        <span className="ab-worst-text">
-                          「{w.ref.slice(0, 26)}」⇢ ASR「{w.hyp.replace(/\s/g, '').slice(0, 26)}」
-                        </span>
-                      </button>
+                      <div key={w.id} className="ab-worst-item">
+                        <button className="ab-worst-jump" onClick={() => seek(w.jumpMs)} title="跳到该段位置复听">
+                          <span className={VERDICT_CLS[w.verdict] ?? 'ab-chip ab-chip-muted'}>{w.verdict}</span>
+                          <span className="ab-worst-cer">CER {w.cer.toFixed(2)}</span>
+                          <span className="ab-worst-time">{Math.floor(w.jumpMs / 60000)}:{String(Math.floor((w.jumpMs % 60000) / 1000)).padStart(2, '0')}</span>
+                          <span className="ab-worst-text">
+                            「{w.ref.slice(0, 26)}」⇢ ASR「{w.hyp.replace(/\s/g, '').slice(0, 26)}」
+                          </span>
+                        </button>
+                        <button
+                          className="ab-btn ab-worst-redo"
+                          disabled={!!segBusy || !!segJob}
+                          title="删该段缓存并重制本集：其余段走缓存，只重做这一段"
+                          onClick={() => void redoSegment(w.id)}
+                        >
+                          {segBusy === w.id ? '处理中…' : <><span className="msr msr-sm">restart_alt</span> 重做此段</>}
+                        </button>
+                      </div>
                     ))}
                   </div>
+                  {segJob && <JobConsole job={segJob} onDone={() => void load()} onClose={() => setSegJob(null)} />}
                 </>
               )}
             </div>
@@ -461,7 +496,7 @@ export function AudiobookEpisode() {
               </div>
             </div>
           )}
-        </div>
+        </Tabs.Root>
       </div>
 
       {lightbox !== null && d.images[lightbox] && (

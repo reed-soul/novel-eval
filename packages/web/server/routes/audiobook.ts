@@ -28,7 +28,8 @@ import { getProject, type DB } from '@novel-eval/writer';
 import {
   loadRegistry, setupBookLine, recordEpisode, nextEpisodeHint, episodeReady, loadChapters,
   buildYouTubePlaylistMaterial, formatYouTubeTitle,
-  type BookRegistry, type PlaylistMaterial,
+  loadProjectConfig, saveProjectConfig, VOICE_CATALOG,
+  type BookRegistry, type PlaylistMaterial, type ProjectAudiobookConfig,
 } from '@novel-eval/audiobook';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..');
@@ -338,6 +339,59 @@ export function audiobookRouter(db: DB) {
     return c.json({ ok: true, bookId, presets: rec.presets, outRoot: rec.outRoot }, 201);
   });
 
+  // ── M1 阶段感知：书架用——已建线书直达有声书 tab ──
+  app.get('/lines', (c) => {
+    const reg = loadRegistry(DATA_DIR);
+    const lines: Record<string, { episodeCount: number }> = {};
+    for (const [id, rec] of Object.entries(reg)) {
+      lines[id] = { episodeCount: Object.keys(rec.episodes ?? {}).length };
+    }
+    return c.json({ lines });
+  });
+
+  // ── M1 书级配置中心（分工铁律 PLAN §3：presets 归 registry，音色/发音归 projects/<书名>.json）──
+
+  app.get('/books/:bookId/config', (c) => {
+    const bookId = c.req.param('bookId');
+    const title = bookTitle(db, bookId);
+    if (!title) return c.json({ error: '未知书' }, 404);
+    const rec = loadRegistry(DATA_DIR)[bookId];
+    const { config, source } = loadProjectConfig({ dataDir: DATA_DIR, projectId: bookId, title });
+    return c.json({ presets: rec?.presets ?? null, project: config, source: source ?? null, voices: VOICE_CATALOG });
+  });
+
+  app.put('/books/:bookId/config/presets', async (c) => {
+    const bookId = c.req.param('bookId');
+    const title = bookTitle(db, bookId);
+    if (!title) return c.json({ error: '未知书' }, 404);
+    if (!loadRegistry(DATA_DIR)[bookId]) return c.json({ error: '该书尚未建线' }, 404);
+    const body = await c.req.json<Record<string, unknown>>().catch(() => ({}) as Record<string, unknown>);
+    const engine = body.engine === undefined ? undefined : checked(body.engine, /^(edge|volcengine|minimax)$/, 'engine');
+    const group = body.chaptersPerEpisode === undefined ? undefined : checked(body.chaptersPerEpisode, /^[1-5]$/, 'chaptersPerEpisode');
+    if (body.skipVideo !== undefined && typeof body.skipVideo !== 'boolean') return c.json({ error: 'skipVideo 需为布尔' }, 422);
+    const rec = setupBookLine(DATA_DIR, bookId, {
+      slug: slugify(title),
+      engine: engine ? (engine as BookRegistry['presets']['engine']) : undefined,
+      chaptersPerEpisode: group ? Number(group) : undefined,
+      skipVideo: typeof body.skipVideo === 'boolean' ? body.skipVideo : undefined,
+    });
+    return c.json({ ok: true, presets: rec.presets });
+  });
+
+  app.put('/books/:bookId/config/project', async (c) => {
+    const bookId = c.req.param('bookId');
+    const title = bookTitle(db, bookId);
+    if (!title) return c.json({ error: '未知书' }, 404);
+    const body = await c.req.json<ProjectAudiobookConfig>().catch(() => null);
+    if (!body || typeof body !== 'object') return c.json({ error: '请求体需为配置对象' }, 422);
+    try {
+      const file = saveProjectConfig({ dataDir: DATA_DIR, projectId: bookId, title, config: body });
+      return c.json({ ok: true, source: file });
+    } catch (e) {
+      return c.json({ error: (e as Error).message }, 422);
+    }
+  });
+
   app.get('/books/:bookId/ep/:ep', (c) => {
     const bookId = c.req.param('bookId');
     if (!bookTitle(db, bookId)) return c.json({ error: '未知书' }, 404);
@@ -483,6 +537,31 @@ export function audiobookRouter(db: DB) {
       chapterStartsMs,
       upload: uploadPayload,
     });
+  });
+
+  // ── M1 审听单段重制：删该段缓存（前端随后拉起本集重制；段级缓存保其余段不动）──
+  app.post('/books/:bookId/ep/:ep/resegment', async (c) => {
+    const bookId = c.req.param('bookId');
+    const epNum = Number(c.req.param('ep'));
+    if (!Number.isInteger(epNum) || epNum < 1 || epNum > 99) return c.json({ error: '非法集号' }, 422);
+    const title = bookTitle(db, bookId);
+    if (!title) return c.json({ error: '未知书' }, 404);
+    const rec = loadRegistry(DATA_DIR)[bookId];
+    if (!rec) return c.json({ error: '该书尚未建线' }, 404);
+    const body = await c.req.json<{ seg?: unknown }>().catch(() => ({}) as { seg?: unknown });
+    // 段标识 = 审听报告 worst id 形如 "ch01/c1-s5"；目录前缀与段 id 章节号必须一致
+    const m = String(body.seg ?? '').match(/^(ch(\d{1,2}))\/(c(\d{1,2})-s\d{1,3})$/);
+    if (!m || Number(m[2]) !== Number(m[4])) return c.json({ error: '段标识不合法' }, 422);
+    const epId = `ep${String(epNum).padStart(2, '0')}`;
+    const root = registryRoot(rec);
+    const ttsFile = resolve(root, epId, m[1], 'tts', `${m[3]}.mp3`);
+    if (!ttsFile.startsWith(root + sep)) return c.json({ error: '路径越界' }, 422);
+    if (!existsSync(ttsFile)) {
+      return c.json({ error: '该段无缓存音频（missing 段直接重制即可，会自动补合成）' }, 404);
+    }
+    rmSync(ttsFile, { force: true });
+    rmSync(ttsFile.replace(/\.mp3$/, '.srt'), { force: true });
+    return c.json({ ok: true, deleted: m[3], hint: '已删该段缓存，请重制本集（其余段走缓存，只重做这一段）' });
   });
 
   app.post('/jobs', async (c) => {

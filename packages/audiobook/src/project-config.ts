@@ -8,8 +8,8 @@
  *   3. data/audiobook/projects/<projectId>.json
  * 均为可选：无配置 = 空表，管线行为与从前一致。
  */
-import { readFileSync, existsSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { readFileSync, existsSync, writeFileSync, mkdirSync } from 'node:fs';
+import { join, resolve, dirname } from 'node:path';
 import type { PronEntry, VoiceRule } from './annotate.ts';
 
 export interface ProjectAudiobookConfig {
@@ -62,4 +62,42 @@ export function loadProjectConfig(opts: {
     return { config: raw, source: p };
   }
   return { config: {}, source: undefined };
+}
+
+/** 保存 per-project 配置（M1 配置中心写路径）：固定写推荐位置 projects/<safeName(title)>.json。
+ *  与 load 同款校验，坏数据在写入前拦截。 */
+export function saveProjectConfig(opts: {
+  dataDir: string;
+  projectId: string;
+  title: string;
+  config: ProjectAudiobookConfig;
+}): string {
+  const c = opts.config;
+  if (c.pron !== undefined) {
+    if (!Array.isArray(c.pron)) throw new Error('pron 需为数组');
+    for (const p of c.pron) {
+      if (!p.match || !p.read || typeof p.match !== 'string' || typeof p.read !== 'string') throw new Error('pron 条目需 { match, read }');
+      if (p.match.length > 60 || p.read.length > 120) throw new Error('pron 条目过长');
+    }
+  }
+  if (c.voiceBySpeaker !== undefined) {
+    if (!Array.isArray(c.voiceBySpeaker)) throw new Error('voiceBySpeaker 需为数组');
+    for (const r of c.voiceBySpeaker) {
+      if (!r.match || typeof r.match !== 'string' || r.match.length > 60) throw new Error('voiceBySpeaker 条目需含 match');
+      if (r.rate !== undefined && !/^[+-]\d{1,3}%$/.test(r.rate)) throw new Error(`${r.match} 的 rate 需形如 "-14%"`);
+      if (r.pitch !== undefined && !/^[+-]\d{1,3}Hz$/.test(r.pitch)) throw new Error(`${r.match} 的 pitch 需形如 "-10Hz"`);
+    }
+  }
+  if (c.cast !== undefined && (!Array.isArray(c.cast) || c.cast.some((s) => typeof s !== 'string' || !s || s.length > 60))) {
+    throw new Error('cast 需为非空字符串数组');
+  }
+  if (c.narrator !== undefined && !/^[A-Za-z0-9-]{1,64}$/.test(c.narrator)) throw new Error('narrator 需为音色名');
+  if (c.defaultSpeaker !== undefined && !/^[A-Za-z0-9-]{1,64}$/.test(c.defaultSpeaker)) throw new Error('defaultSpeaker 需为音色名');
+  if (c.sceneStyle !== undefined && c.sceneStyle.length > 4000) throw new Error('sceneStyle 过长');
+  if (c.sceneCharacters !== undefined && c.sceneCharacters.length > 8000) throw new Error('sceneCharacters 过长');
+  // 先校验后写：写坏文件会毒化后续每次 build 的 load
+  const file = join(opts.dataDir, 'projects', `${safeName(opts.title)}.json`);
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, JSON.stringify(c, null, 2), 'utf-8');
+  return file;
 }
