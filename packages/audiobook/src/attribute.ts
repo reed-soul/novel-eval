@@ -17,7 +17,9 @@ import { fileURLToPath } from 'node:url';
 import { createEngine, loadEngineConfig, parseJSONRobust, type AIAgentAdapter } from '@novel-eval/shared';
 import { voiceRuleFor, type Segment, type VoiceConfig } from './annotate.ts';
 
-const SHARED_CONFIG_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'shared', 'config');
+// engines.yml 实际位置：packages/shared/config（原 '..'×3 指向仓库根 shared/ 不存在，
+// 默认引擎路径一直潜伏 ENOENT——测试都注入引擎所以从未暴露）
+const SHARED_CONFIG_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', 'shared', 'config');
 const BATCH = 8;
 const BEFORE_CHARS = 180;
 const AFTER_CHARS = 60;
