@@ -111,38 +111,38 @@ function applyCharacterChanges(
   for (const change of changes) {
     switch (change.kind) {
       case 'add': {
-        if (characters.some((character) => character.id === change.character.id)) {
-          invalid(`character ${change.character.id} already exists`);
+        // 幂等：LLM 抽取常跨章重复 add 同一角色——后到者更新既有实体而非报错
+        // （2026-09-16 夜跑实锤：严格拒绝让 write auto 三连败死锁）
+        const index = characters.findIndex((character) => character.id === change.character.id);
+        if (index >= 0) {
+          characters[index] = { ...cloneCharacter(change.character) };
+          break;
         }
         characters.push(cloneCharacter(change.character));
         break;
       }
       case 'update': {
+        // 自愈：正文提及但此前从未建档的角色（配角常如此）——从 patch 自动建档，
+        // 不再让整章抽取失败。set-name 提供名字，replace-facts 提供事实，缺省给占位。
         const index = characters.findIndex((character) => character.id === change.characterId);
-        if (index < 0) invalid(`character ${change.characterId} does not exist`);
-        const current = characters[index];
-        if (!current) invalid(`character ${change.characterId} does not exist`);
-        switch (change.patch.kind) {
-          case 'set-name':
-            characters[index] = { ...current, name: change.patch.name };
-            break;
-          case 'set-status':
-            characters[index] = { ...current, status: change.patch.status };
-            break;
-          case 'replace-facts':
-            characters[index] = { ...current, facts: [...change.patch.facts] };
-            break;
-          default: {
-            const exhaustive: never = change.patch;
-            invalid(`unsupported character patch: ${String(exhaustive)}`);
-          }
+        if (index < 0) {
+          const skeleton: CharacterState = {
+            id: change.characterId,
+            name: change.patch.kind === 'set-name' ? change.patch.name : change.characterId,
+            status: 'alive',
+            facts: [],
+          };
+          characters.push(skeleton);
+          applyCharacterPatch(characters, characters.length - 1, change.patch);
+          break;
         }
+        applyCharacterPatch(characters, index, change.patch);
         break;
       }
       case 'remove': {
         requireNonEmpty(change.reason, 'character removal reason');
         const index = characters.findIndex((character) => character.id === change.characterId);
-        if (index < 0) invalid(`character ${change.characterId} does not exist`);
+        if (index < 0) break;   // 幂等：移除不存在的角色 = 已移除
         characters.splice(index, 1);
         break;
       }
@@ -153,6 +153,26 @@ function applyCharacterChanges(
     }
   }
   return characters;
+}
+
+function applyCharacterPatch(characters: CharacterState[], index: number, patch: CharacterPatch): void {
+  const current = characters[index];
+  if (!current) invalid('character patch target missing');
+  switch (patch.kind) {
+    case 'set-name':
+      characters[index] = { ...current, name: patch.name };
+      break;
+    case 'set-status':
+      characters[index] = { ...current, status: patch.status };
+      break;
+    case 'replace-facts':
+      characters[index] = { ...current, facts: [...patch.facts] };
+      break;
+    default: {
+      const exhaustive: never = patch;
+      invalid(`unsupported character patch: ${String(exhaustive)}`);
+    }
+  }
 }
 
 function applyFactChanges(previous: StoryFact[], changes: FactChange[]): StoryFact[] {
@@ -169,7 +189,7 @@ function applyFactChanges(previous: StoryFact[], changes: FactChange[]): StoryFa
       case 'remove': {
         requireNonEmpty(change.reason, 'fact removal reason');
         const index = facts.findIndex((fact) => fact.fact === change.fact);
-        if (index < 0) invalid(`fact does not exist: ${change.fact}`);
+        if (index < 0) break;   // 幂等：移除不存在的事实 = 已移除（夜跑实锤的 v1 死锁类）
         facts.splice(index, 1);
         break;
       }
@@ -191,7 +211,7 @@ function applyForeshadowChanges(
     switch (change.kind) {
       case 'open':
         if (foreshadows.some((foreshadow) => foreshadow.id === change.foreshadow.id)) {
-          invalid(`foreshadow ${change.foreshadow.id} already exists`);
+          break;   // 幂等：重复 open = 已开着
         }
         foreshadows.push({ ...change.foreshadow });
         break;
@@ -199,10 +219,23 @@ function applyForeshadowChanges(
         const index = foreshadows.findIndex(
           (foreshadow) => foreshadow.id === change.foreshadowId,
         );
+        if (index < 0) {
+          // 自愈：回收一个从未建档的伏笔（跨章 cliffhanger 常见）——补一条已解决记录
+          foreshadows.push({
+            id: change.foreshadowId,
+            description: '（抽取恢复：原文回收时未建档）',
+            openedAtChapterRevisionId: change.chapterRevisionId,
+            status: 'resolved',
+            resolvedAtChapterRevisionId: change.chapterRevisionId,
+          } as ResolvedForeshadow);
+          break;
+        }
         const current = foreshadows[index];
         if (!current) invalid(`foreshadow ${change.foreshadowId} does not exist`);
         if (current.status !== 'open') {
-          invalid(`foreshadow ${change.foreshadowId} is already resolved`);
+          // 幂等：前章抽取可能提前 resolve——蓝图在后章真正回收时不再判非法
+          // （2026-09-16 夜跑实锤：该严格性让第 7 章三连败死锁，只能手改状态账解锁）
+          break;
         }
         foreshadows[index] = {
           ...current,

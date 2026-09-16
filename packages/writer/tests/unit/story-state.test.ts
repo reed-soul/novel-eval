@@ -237,3 +237,93 @@ it('formatStoryStateDirectives formats state into readable directives', () => {
   assert.equal(output.includes('已查清的事实'), false); // resolved foreshadows excluded
   assert.ok(output.includes('1998年12月15日上午08:07火灾'));
 });
+
+// ── 抽取自愈语义（2026-09-16 夜跑死锁类：write auto 三连败的根因）──
+
+it('double-resolve of a foreshadow is idempotent, not fatal', () => {
+  const clue = foreshadowId('clue');
+  const rev1 = chapterRevisionId('rev-1');
+  const rev2 = chapterRevisionId('rev-2');
+  const previous = storyState({
+    foreshadows: [{
+      id: clue,
+      description: '失踪的车票',
+      openedAtChapterRevisionId: rev1,
+      status: 'resolved',
+      resolvedAtChapterRevisionId: rev1,
+    } as StoryState['foreshadows'][number]],
+  });
+
+  const next = applyStoryStateDelta(previous, {
+    characterChanges: [],
+    factChanges: [],
+    foreshadowChanges: [{ kind: 'resolve', foreshadowId: clue, chapterRevisionId: rev2 }],
+    timelineEvents: [],
+    summary: '后章再次回收（蓝图拍点与前章抽取重叠）。',
+  });
+
+  const again = next.foreshadows[0]!;
+  assert.equal(again.status, 'resolved');
+  assert.equal((again as { resolvedAtChapterRevisionId: string }).resolvedAtChapterRevisionId, rev1);
+});
+
+it('resolving an unregistered foreshadow self-heals a resolved entry', () => {
+  const ghost = foreshadowId('ghost');
+  const next = applyStoryStateDelta(storyState(), {
+    characterChanges: [],
+    factChanges: [],
+    foreshadowChanges: [{ kind: 'resolve', foreshadowId: ghost, chapterRevisionId: chapterRevisionId('rev-9') }],
+    timelineEvents: [],
+    summary: '跨章 cliffhanger 直接回收未建档伏笔。',
+  });
+  assert.equal(next.foreshadows.length, 1);
+  assert.equal(next.foreshadows[0]!.status, 'resolved');
+});
+
+it('updating an unregistered character auto-creates the entity from the patch', () => {
+  const villain = characterId('char-hemingzhang');
+  const next = applyStoryStateDelta(storyState(), {
+    characterChanges: [
+      { kind: 'update', characterId: villain, patch: { kind: 'set-name', name: '贺明章' } },
+      { kind: 'update', characterId: villain, patch: { kind: 'replace-facts', facts: ['副校长', '调包案嫌疑人'] } },
+    ],
+    factChanges: [],
+    foreshadowChanges: [],
+    timelineEvents: [],
+    summary: '正文提及但从未建档的反派登场。',
+  });
+  assert.equal(next.characters.length, 1);
+  assert.equal(next.characters[0]!.name, '贺明章');
+  assert.deepEqual(next.characters[0]!.facts, ['副校长', '调包案嫌疑人']);
+});
+
+it('re-adding an existing character merges instead of failing', () => {
+  const lin = characterId('lin');
+  const previous = storyState({
+    characters: [{ id: lin, name: '林晚', status: 'alive', facts: ['旧事实'] }],
+  });
+  const next = applyStoryStateDelta(previous, {
+    characterChanges: [{
+      kind: 'add',
+      character: { id: lin, name: '林晚', status: 'injured', facts: ['新事实'] },
+    }],
+    factChanges: [],
+    foreshadowChanges: [],
+    timelineEvents: [],
+    summary: '跨章重复 add 同一角色。',
+  });
+  assert.equal(next.characters.length, 1);
+  assert.equal(next.characters[0]!.status, 'injured');
+  assert.deepEqual(next.characters[0]!.facts, ['新事实']);
+});
+
+it('removing an absent fact is idempotent', () => {
+  const next = applyStoryStateDelta(storyState(), {
+    characterChanges: [],
+    factChanges: [{ kind: 'remove', fact: '从未存在的事实', reason: '已被推翻' }],
+    foreshadowChanges: [],
+    timelineEvents: [],
+    summary: '移除不存在的事实。',
+  });
+  assert.equal(next.facts.length, 0);
+});

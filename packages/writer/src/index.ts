@@ -85,6 +85,14 @@ function openConfiguredDb(): DB {
   return openDb({ path: configuredDatabasePath() });
 }
 
+/** 项目号解析：全 UUID 直用；唯一前缀（如 write list 展示的 8 位短码）自动补全
+ *  （2026-09-16 夜跑实锤：resume 传短码报"未找到项目"，必须全 UUID） */
+function resolveProjectArg(db: DB, raw: string): string {
+  if (getProject(db, raw)) return raw;
+  const hits = db.prepare('SELECT id FROM project WHERE id LIKE ?').all(`${raw}%`) as { id: string }[];
+  return hits.length === 1 ? hits[0].id : raw;   // 0 或多个命中都交回原值，由调用侧报"未找到"
+}
+
 function createApp(db: DB): WriterApplication {
   return new WriterApplication(db, { defaultOwnerId: 'cli' });
 }
@@ -749,7 +757,7 @@ async function runImportBible(args: ImportBibleArgs): Promise<void> {
 function runStatus(args: StatusArgs): void {
   const db = openConfiguredDb();
   try {
-    const project = getProject(db, args.projectId);
+    const project = getProject(db, (args.projectId = resolveProjectArg(db, args.projectId)));
     if (!project) {
       console.error(`未找到项目：${args.projectId}`);
       process.exit(1);
@@ -908,7 +916,7 @@ async function runFinalizeDraft(args: FinalizeDraftArgs): Promise<void> {
 function runApprovePlanning(args: ApprovePlanningArgs): void {
   const db = openConfiguredDb();
   try {
-    const project = getProject(db, args.projectId);
+    const project = getProject(db, (args.projectId = resolveProjectArg(db, args.projectId)));
     if (!project) {
       console.error(`未找到项目：${args.projectId}`);
       process.exit(1);
@@ -1008,7 +1016,7 @@ async function runOutline(args: OutlineArgs): Promise<void> {
   const config = loadWriterConfig(args.engine ? { engine: args.engine } : undefined);
   const db = openConfiguredDb();
   try {
-    const project = getProject(db, args.projectId);
+    const project = getProject(db, (args.projectId = resolveProjectArg(db, args.projectId)));
     if (!project) { console.error(`未找到项目：${args.projectId}`); process.exit(1); }
 
     const { plotArchitecture, characterState: _ } = getBibleForChapter(db, args.projectId);
@@ -1100,7 +1108,7 @@ async function runChapter(args: ChapterArgs): Promise<void> {
   const config = loadWriterConfig(args.engine ? { engine: args.engine } : undefined);
   const db = openConfiguredDb();
   try {
-    const project = getProject(db, args.projectId);
+    const project = getProject(db, (args.projectId = resolveProjectArg(db, args.projectId)));
     if (!project) { console.error(`未找到项目：${args.projectId}`); process.exit(1); }
 
     const outlineCount = countOutlines(db, args.projectId);
@@ -1210,7 +1218,7 @@ async function runResume(args: ResumeArgs): Promise<void> {
   const config = loadWriterConfig(args.engine ? { engine: args.engine } : undefined);
   const db = openConfiguredDb();
   try {
-    const project = getProject(db, args.projectId);
+    const project = getProject(db, (args.projectId = resolveProjectArg(db, args.projectId)));
     if (!project) { console.error(`未找到项目：${args.projectId}`); process.exit(1); }
 
     if (countOutlines(db, args.projectId) === 0) {
