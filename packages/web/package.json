@@ -17,6 +17,7 @@
     "@novel-eval/audiobook": "workspace:*",
     "@novel-eval/digest": "workspace:*",
     "@novel-eval/eval": "workspace:*",
+    "@novel-eval/narration": "workspace:*",
     "@novel-eval/shared": "workspace:*",
     "@novel-eval/writer": "workspace:*",
     "@radix-ui/react-tabs": "^1.1.21",

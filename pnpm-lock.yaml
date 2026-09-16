@@ -65,6 +65,25 @@ importers:
         specifier: ^5.2.1
         version: 5.2.1
 
+  packages/narration:
+    dependencies:
+      '@novel-eval/audiobook':
+        specifier: workspace:*
+        version: link:../audiobook
+      '@novel-eval/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@novel-eval/writer':
+        specifier: workspace:*
+        version: link:../writer
+      better-sqlite3:
+        specifier: ^11.0.0
+        version: 11.10.0
+    devDependencies:
+      '@types/better-sqlite3':
+        specifier: ^7.6.0
+        version: 7.6.13
+
   packages/shared:
     dependencies:
       chardet:
@@ -91,6 +110,9 @@ importers:
       '@novel-eval/eval':
         specifier: workspace:*
         version: link:../eval
+      '@novel-eval/narration':
+        specifier: workspace:*
+        version: link:../narration
       '@novel-eval/shared':
         specifier: workspace:*
         version: link:../shared

@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { EventEmitter } from 'node:events';
+import { trackChild } from './child-registry.ts';
 
 export interface RegenJobResult {
   id: string;
@@ -35,15 +36,16 @@ export function runSceneRegenJob(
   const arkKey = readFileSync(arkKeyFile, 'utf-8').trim();
   if (!arkKey) throw new Error('~/.zcode/ark-key.txt 为空');
 
-  const child = spawn('pnpm', ['tsx', 'gen-scenes-ark.ts'], {
+  const child = trackChild(spawn('pnpm', ['tsx', 'gen-scenes-ark.ts'], {
     cwd: join(repoRoot, 'packages', 'audiobook'),
+    detached: true,           // 独立进程组：服务退出时按组收掉（见 child-registry）
     env: {
       ...process.env,
       ARK_API_KEY: arkKey,
       SCENES_JSON: scenesJson,
       OUT_DIR: scenesRoot,
     },
-  });
+  }));
 
   const lines: { seq: number; text: string }[] = [];
   const emitter = new EventEmitter();

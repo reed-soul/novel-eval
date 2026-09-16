@@ -42,7 +42,7 @@ interface BookStatus {
   };
 }
 
-interface AbJobInfo { jobId: string; args: string[] }
+export interface AbJobInfo { jobId: string; args: string[] }
 interface JobLine { seq: number; text: string }
 interface CostInfo { summary: { entries: number; episodes: number; totalChars: number; totalEstCostYuan: number }; drafts: number }
 
@@ -64,15 +64,16 @@ function costLine(chars: number, engine: string): string {
   return `约 ${(chars / 10000).toFixed(1)} 万字 · 预计 ${minutes} 分钟成片 · ${yuan}`;
 }
 
-/** Job 控制台（M0 修复：终态用事件数据而非闭包旧值）；导出供集详情页单段重制复用 */
-export function JobConsole({ job, onDone, onClose }: { job: AbJobInfo; onDone?: () => void; onClose: () => void }) {
+/** Job 控制台（M0 修复：终态用事件数据而非闭包旧值）；导出供集详情页/解说 tab 复用。
+ *  basePath 默认有声书；解说传 '/api/narration'（SSE 流与取消端点同构）。 */
+export function JobConsole({ job, onDone, onClose, basePath = '/api/audiobook' }: { job: AbJobInfo; onDone?: () => void; onClose: () => void; basePath?: string }) {
   const [lines, setLines] = useState<JobLine[]>([]);
   const [status, setStatus] = useState<'running' | 'completed' | 'failed' | 'cancelled'>('running');
   const boxRef = useRef<HTMLDivElement>(null);
   const doneRef = useRef(false);
 
   useEffect(() => {
-    const es = new EventSource(`/api/audiobook/jobs/${job.jobId}/stream`);
+    const es = new EventSource(`${basePath}/jobs/${job.jobId}/stream`);
     es.onmessage = (ev) => {
       try { setLines((prev) => [...prev.slice(-400), JSON.parse(ev.data) as JobLine]); } catch { /* 心跳等 */ }
     };
@@ -111,7 +112,7 @@ export function JobConsole({ job, onDone, onClose }: { job: AbJobInfo; onDone?: 
         <span className="ab-job-plain">{job.args.filter((a) => !a.startsWith('--')).slice(0, 4).join(' · ')}</span>
         <span className="ab-job-sp" />
         {status === 'running' && (
-          <button className="ab-btn ab-btn-danger" onClick={() => void apiPost(`/audiobook/jobs/${job.jobId}/cancel`).catch(() => undefined)}>
+          <button className="ab-btn ab-btn-danger" onClick={() => void apiPost(`${basePath}/jobs/${job.jobId}/cancel`).catch(() => undefined)}>
             <span className="msr msr-sm">stop_circle</span> 取消
           </button>
         )}

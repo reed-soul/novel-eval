@@ -17,6 +17,7 @@ import { BookAudiobook } from './pages/BookAudiobook.tsx';
 import { AudiobookEpisode } from './pages/AudiobookEpisode.tsx';
 import { BookQuality } from './pages/BookQuality.tsx';
 import { BookDigest } from './pages/BookDigest.tsx';
+import { BookNarration } from './pages/BookNarration.tsx';
 import './styles.css';
 
 createRoot(document.getElementById('root')!).render(
@@ -39,6 +40,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/books/:id/dashboard" element={<Dashboard />} />
           <Route path="/books/:id/audiobook" element={<BookAudiobook />} />
           <Route path="/books/:id/audiobook/ep/:ep" element={<AudiobookEpisode />} />
+          <Route path="/books/:id/narration" element={<BookNarration />} />
           <Route path="/books/:id/quality" element={<BookQuality />} />
           <Route path="/books/:id/digest" element={<BookDigest />} />
           <Route path="/settings" element={<Settings />} />

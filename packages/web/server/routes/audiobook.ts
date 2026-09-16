@@ -24,6 +24,7 @@ import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
 import { runPipeline as runAudiobookPipeline } from '../lib/pipeline-spawn.ts';
 import { runSceneRegenJob } from '../lib/scene-regen-runner.ts';
+import { acquireRenderLock, releaseRenderLock, renderLockActive, RENDER_KIND_LABEL } from '../lib/render-lock.ts';
 import { getProject, type DB } from '@novel-eval/writer';
 import {
   loadRegistry, setupBookLine, recordEpisode, nextEpisodeHint, episodeReady, loadChapters,
@@ -93,9 +94,11 @@ function probeDurationMs(file: string): number | null {
   if (hit && hit.mtime === mtime) return hit.ms;
   try {
     const { execFileSync } = require('node:child_process') as typeof import('node:child_process');
-    const out = execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', file], { encoding: 'utf-8' });
+    // timeout 必备：半成品 mp4（moov 未落盘）可让 ffprobe 挂起，无超时会卡死整个单线程服务
+    const out = execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', file], { encoding: 'utf-8', timeout: 2000 });
     const ms = Math.round(Number(out.trim()) * 1000);
     durCache.set(file, { mtime, ms });
+    if (durCache.size > 200) durCache.delete(durCache.keys().next().value as string);   // 简单容量上限
     return ms;
   } catch {
     return null;
@@ -191,6 +194,8 @@ interface AbJob {
   /** 构建成功后才写登记（取消/失败不留幽灵集——红队盲区9 同类） */
   pendingRecord?: { ep: number; chapters: [number, number]; isDraft: boolean };
   status: 'running' | 'completed' | 'failed' | 'cancelled';
+  /** cancel 已请求：close 到来时保持 cancelled 终态、不写登记（P0：cancel 只杀不放锁） */
+  cancelRequested?: boolean;
   args: string[];
   lines: { seq: number; text: string }[];
   startedAt: number;
@@ -200,7 +205,30 @@ interface AbJob {
 }
 
 const jobs = new Map<string, AbJob>();
-let currentJobId: string | null = null;
+/** 已结束任务保留上限（Map 按插入序淘汰最旧的非运行任务；持锁任务永不淘汰） */
+const MAX_FINISHED_JOBS = 60;
+function pruneJobs(): void {
+  if (jobs.size <= MAX_FINISHED_JOBS) return;
+  const holderId = renderLockActive()?.jobId;
+  for (const [id, j] of jobs) {
+    if (jobs.size <= MAX_FINISHED_JOBS) break;
+    if (j.status === 'running' || id === holderId) continue;
+    jobs.delete(id);
+  }
+}
+
+/** 本路由的活跃任务 = 全局渲染锁当前由有声书持有（跨路由互斥，M3 解说共享同一把锁） */
+function activeAudiobookJob(): AbJob | null {
+  const h = renderLockActive();
+  return h && h.kind === 'audiobook' ? (jobs.get(h.jobId) ?? null) : null;
+}
+
+/** 锁被占时的 409 载荷（区分本路由/解说路由，供前端提示） */
+function busyPayload(): { error: string; jobId?: string } | null {
+  const h = renderLockActive();
+  if (!h) return null;
+  return { error: `${RENDER_KIND_LABEL[h.kind]}任务在跑（渲染必须串行），请稍候或先取消`, jobId: h.jobId };
+}
 
 /** 逐项校验：白名单 + 禁前导'-'（杜绝把动态值当选项注入） */
 function checked(v: unknown, pattern: RegExp, name: string, maxLen = 64): string | undefined {
@@ -213,7 +241,16 @@ function checked(v: unknown, pattern: RegExp, name: string, maxLen = 64): string
 function startJob(bookId?: string, pendingRecord?: AbJob['pendingRecord'], jobEnv?: Record<string, string>): AbJob {
   const id = randomUUID().slice(0, 8);
   const pendingArgsFile = join(DATA_DIR, '.job-pending-args.json');
-  const { child, argv } = runAudiobookPipeline(pendingArgsFile, REPO_ROOT, jobEnv);
+  // 先占锁再 spawn：与 narration 路由同协议（占锁与子进程诞生之间不留无锁窗口）
+  acquireRenderLock(id, 'audiobook');
+  let child: import('node:child_process').ChildProcess;
+  let argv: string[];
+  try {
+    ({ child, argv } = runAudiobookPipeline(pendingArgsFile, REPO_ROOT, jobEnv));
+  } catch (e) {
+    releaseRenderLock(id);
+    throw e;
+  }
   const job: AbJob = {
     id, action: argv[1] === 'listen' ? 'listen' : 'build',
     bookId, pendingRecord,
@@ -221,7 +258,7 @@ function startJob(bookId?: string, pendingRecord?: AbJob['pendingRecord'], jobEn
     startedAt: Date.now(), emitter: new EventEmitter(), child: null,
   };
   jobs.set(id, job);
-  currentJobId = id;
+  pruneJobs();
   job.child = child;
   let seq = 0;
   const feed = (chunk: Buffer | string) => {
@@ -240,9 +277,16 @@ function startJob(bookId?: string, pendingRecord?: AbJob['pendingRecord'], jobEn
     job.status = 'failed';
     job.error = String(err);
     job.emitter.emit('done', { status: 'failed', error: job.error });
-    currentJobId = null;
+    releaseRenderLock(job.id);
   });
   child.on('close', (code) => {
+    // 终态已定（取消已请求/失败）：只放锁——不覆盖终态、不写登记（评审 P0：
+    // cancel 后子进程可存活至多 4s，此间锁必须保持占用防双渲染）
+    if (job.status === 'cancelled' || job.status === 'failed') {
+      job.emitter.emit('done', { status: job.status, code });
+      releaseRenderLock(job.id);
+      return;
+    }
     job.status = code === 0 ? 'completed' : 'cancelled';
     job.error = code === 0 ? undefined : `退出码 ${code}`;
     // 构建成功才登记（取消/失败不留幽灵集）
@@ -252,7 +296,7 @@ function startJob(bookId?: string, pendingRecord?: AbJob['pendingRecord'], jobEn
       } catch { /* 登记失败不影响任务终态 */ }
     }
     job.emitter.emit('done', { status: job.status, code });
-    currentJobId = null;
+    releaseRenderLock(job.id);
   });
   return job;
 }
@@ -373,15 +417,18 @@ export function audiobookRouter(db: DB) {
     const rec = loadRegistry(DATA_DIR)[bookId];
     if (!rec) return c.json({ error: '该书尚未建线' }, 404);
     const body = await c.req.json<Record<string, unknown>>().catch(() => ({}) as Record<string, unknown>);
-    const state: Record<string, boolean> = {};
+    // 合并写：先读已勾选项，只 patch 本次出现的 key（单键提交不得抹掉其余勾选）
+    const file = join(registryRoot(rec), `ep${String(epNum).padStart(2, '0')}`, 'publish-checklist.json');
+    let prev: Record<string, boolean> = {};
+    try { prev = JSON.parse(readFileSync(file, 'utf-8')) as Record<string, boolean>; } catch { /* 未开始 */ }
+    const state: Record<string, boolean> = { ...prev };
     for (const k of CHECKLIST_KEYS) {
       if (body[k] !== undefined) {
         if (typeof body[k] !== 'boolean') return c.json({ error: `${k} 需为布尔` }, 422);
         state[k] = body[k] as boolean;
       }
     }
-    const epDir = join(registryRoot(rec), `ep${String(epNum).padStart(2, '0')}`);
-    writeFileSync(join(epDir, 'publish-checklist.json'), JSON.stringify(state, null, 1), 'utf-8');
+    writeFileSync(file, JSON.stringify(state, null, 1), 'utf-8');
     return c.json({ ok: true, state });
   });
 
@@ -615,9 +662,8 @@ export function audiobookRouter(db: DB) {
 
   app.post('/jobs', async (c) => {
     const body = await c.req.json<Record<string, unknown>>().catch(() => ({}) as Record<string, unknown>);
-    if (currentJobId && jobs.get(currentJobId)?.status === 'running') {
-      return c.json({ error: '已有任务在跑（渲染必须串行），请稍候或先取消', jobId: currentJobId }, 409);
-    }
+    const busy = busyPayload();
+    if (busy) return c.json(busy, 409);
     const bookIdRaw = checked(body.bookId, /^[\w-]{1,64}$/, 'bookId');
     if (!bookIdRaw) return c.json({ error: 'bookId 必填（按书制作）' }, 422);
     const bookId = bookIdRaw;
@@ -630,8 +676,9 @@ export function audiobookRouter(db: DB) {
 
     let job: AbJob;
     try {
-      // 登记派生值同过白名单（双保险：registry 由服务端写入，此处防配置文件被手改）
-      const outDir = checked(rec.outRoot, /^dist\/[\w\u4e00-\u9fff/-]{3,80}$/, 'outRoot');
+      // 登记派生值同过白名单（双保险：registry 由服务端写入，此处防配置文件被手改）；
+      // maxLen 给足：路径最长 18+40+10=68，默认 64 会卡死长书名（评审 P1-5）
+      const outDir = checked(rec.outRoot, /^dist\/[\w\u4e00-\u9fff/-]{3,80}$/, 'outRoot', 96);
       const engine = checked(rec.presets.engine, /^(edge|volcengine|minimax)$/, 'engine');
       const groupN = checked(String(rec.presets.chaptersPerEpisode), /^[1-5]$/, 'group');
       if (!outDir || !engine || !groupN) throw new Error('作品预设非法（请检查 registry.json）');
@@ -686,10 +733,8 @@ export function audiobookRouter(db: DB) {
   });
 
   app.get('/jobs/active', (c) => {
-    if (currentJobId) {
-      const j = jobs.get(currentJobId);
-      if (j?.status === 'running') return c.json({ jobId: j.id, action: j.action, bookId: j.bookId, args: j.args, startedAt: j.startedAt });
-    }
+    const j = activeAudiobookJob();
+    if (j?.status === 'running') return c.json({ jobId: j.id, action: j.action, bookId: j.bookId, args: j.args, startedAt: j.startedAt });
     return c.json(null);
   });
 
@@ -743,11 +788,12 @@ export function audiobookRouter(db: DB) {
     const j = jobs.get(c.req.param('id'));
     if (!j) return c.json({ error: '未知任务' }, 404);
     if (j.status !== 'running') return c.json({ status: j.status });
+    // 只杀不放锁：放锁只发生在 close（与 narration 路由同协议）
+    j.cancelRequested = true;
     j.child?.kill('SIGTERM');
     setTimeout(() => j.child?.kill('SIGKILL'), 4000);
     j.status = 'cancelled';
     j.emitter.emit('done', { status: 'cancelled' });
-    currentJobId = null;
     return c.json({ status: 'cancelled' });
   });
 
@@ -787,9 +833,9 @@ export function audiobookRouter(db: DB) {
     if (!bookTitle(db, bookId)) return c.json({ error: '未知书' }, 404);
     const rec = loadRegistry(DATA_DIR)[bookId];
     if (!rec?.scenesRoot) return c.json({ error: '该书无场景图' }, 404);
-    if (currentJobId && jobs.get(currentJobId)?.status === 'running') {
-      return c.json({ error: '已有任务在跑，请先等完或取消', jobId: currentJobId }, 409);
-    }
+    // 顺序协议（评审 P1-6）：先解析校验入参 → 再查/占全局锁 → 最后才删图+spawn。
+    // runSceneRegenJob 内部会 rmSync+spawn，必须发生在持锁之后，否则跨路由可在
+    // await 间隙插入占锁，导致本侧 acquire 抛错而图已删、子进程无锁在跑。
     const body = await c.req.json<{ images?: string[] }>().catch(() => ({}) as { images?: string[] });
     const images = body.images ?? [];
     if (images.length === 0) return c.json({ error: 'images 不能为空' }, 422);
@@ -797,25 +843,40 @@ export function audiobookRouter(db: DB) {
     for (const img of images) {
       if (!/^\d{1,2}-[a-e]$/.test(img)) return c.json({ error: `非法图 ID：${img}（格式 01-a）` }, 422);
     }
+    const busy = busyPayload();
+    if (busy) return c.json(busy, 409);
+    const lockId = randomUUID().slice(0, 8);
+    try {
+      acquireRenderLock(lockId, 'audiobook');
+    } catch {
+      return c.json({ error: '锁刚被占用，请重试', jobId: lockId }, 409);
+    }
 
     // 重跑收口在独立模块（key 读取+删图+spawn 全在 scene-regen-runner 内消化）
     const scenesRootAbs = resolve(REPO_ROOT, rec.scenesRoot);
     const slugDir = dirname(resolve(REPO_ROOT, rec.outRoot));
-    const regen = runSceneRegenJob(REPO_ROOT, scenesRootAbs, join(slugDir, 'scenes.json'), images);
-    currentJobId = regen.id; // 占串行锁（regen 完成后由 close 回调释放）
+    let regen: ReturnType<typeof runSceneRegenJob>;
+    try {
+      regen = runSceneRegenJob(REPO_ROOT, scenesRootAbs, join(slugDir, 'scenes.json'), images);
+    } catch (e) {
+      releaseRenderLock(lockId);
+      return c.json({ error: (e as Error).message }, 500);
+    }
 
-    // 转换为标准 AbJob 形状供 SSE 消费
+    // 对外 jobId = lockId（jobs 键与锁持有者一致，active 查询/取消/SSE 才能对上）
     const regenJob: AbJob = {
-      id: regen.id, action: 'build', bookId,
+      id: lockId, action: 'build', bookId,
       status: 'running', args: ['audiobook', 'scenes', 'regenerate', ...images],
       lines: regen.lines,
       startedAt: Date.now(), emitter: regen.emitter, child: regen.child,
     };
-    jobs.set(regen.id, regenJob);
-    regen.child.on('close', () => { currentJobId = null; });
-    regen.onDone(() => { currentJobId = null; });
+    jobs.set(lockId, regenJob);
+    pruneJobs();
+    regen.child.on('close', () => { releaseRenderLock(lockId); });
+    regen.child.on('error', () => { releaseRenderLock(lockId); });   // 派生失败也要放锁（评审补漏）
+    regen.onDone(() => { releaseRenderLock(lockId); });
 
-    return c.json({ jobId: regen.id, deleted: regen.deleted, message: `已删 ${regen.deleted} 张，开始重跑` }, 201);
+    return c.json({ jobId: lockId, deleted: regen.deleted, message: `已删 ${regen.deleted} 张，开始重跑` }, 201);
   });
 
   return app;

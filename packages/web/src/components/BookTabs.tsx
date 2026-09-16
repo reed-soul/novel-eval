@@ -1,17 +1,18 @@
 /**
- * 书工作台 Tab 条：写作 | 有声书 | 短篇（M2）| 质检——书内唯一层级导航。
+ * 书工作台 Tab 条：写作 | 有声书 | 解说（M3）| 短篇（M2）| 质检——书内唯一层级导航。
  * 从 /books/:id 下任意子页都能一步切形态。
  */
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 
-export type BookTabKey = 'writing' | 'audiobook' | 'digest' | 'quality';
+export type BookTabKey = 'writing' | 'audiobook' | 'narration' | 'digest' | 'quality';
 
 export function BookTabs({ active }: { active: BookTabKey }) {
   const { id = '' } = useParams();
   const tabs: { key: BookTabKey; to: string; label: string; icon: string }[] = [
     { key: 'writing', to: `/books/${id}`, label: '写作', icon: 'edit_note' },
     { key: 'audiobook', to: `/books/${id}/audiobook`, label: '有声书', icon: 'graphic_eq' },
+    { key: 'narration', to: `/books/${id}/narration`, label: '解说', icon: 'smart_display' },
     { key: 'digest', to: `/books/${id}/digest`, label: '短篇', icon: 'short_text' },
     { key: 'quality', to: `/books/${id}/quality`, label: '质检', icon: 'verified' },
   ];

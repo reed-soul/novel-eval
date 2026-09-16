@@ -18,6 +18,7 @@
     "web": "tsx packages/web/server/index.ts",
     "audiobook": "tsx packages/audiobook/src/cli.ts",
     "digest": "tsx packages/digest/src/cli.ts",
+    "narration": "tsx packages/narration/src/cli.ts",
     "web:dev": "pnpm --filter @novel-eval/web dev",
     "web:build": "pnpm --filter @novel-eval/web build",
     "typecheck": "pnpm -r typecheck",

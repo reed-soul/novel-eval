@@ -6,7 +6,13 @@
   "main": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./cli": "./src/cli.ts"
+    "./cli": "./src/cli.ts",
+    "./tts": "./src/tts/index.ts",
+    "./tts/cache": "./src/tts/cache.ts",
+    "./annotate": "./src/annotate.ts",
+    "./srt": "./src/srt.ts",
+    "./ffmpeg": "./src/ffmpeg.ts",
+    "./audio": "./src/audio.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

@@ -111,3 +111,9 @@ export {
   unwrapEvaluationPayload,
 } from './dto/index.ts';
 export { nextUnitNumber, type DerivativeKind, type DerivativeLine, type DerivativeUnit } from './derivative-work.ts';
+export type {
+  BeatKind, ShotKind, NarrationQuote, NarrationSentence, BeatVisual, NarrationBeat,
+  NarrationSequence, NarrationAct, CharacterRef, NarrationScript,
+  StructureGateReport, CausalGateReport,
+} from './dto/narration.ts';
+export { flattenSentences, flattenBeats, scriptTotalChars } from './dto/narration.ts';

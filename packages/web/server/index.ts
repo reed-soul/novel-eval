@@ -9,6 +9,7 @@ import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { resolveServicePort } from '@novel-eval/shared';
 import { openDb, closeDb, loadWriterConfig, recoverInterruptedJobs, healFullyWrittenProjectStatuses, loadEnv } from '@novel-eval/writer';
+import { killTrackedChildren, trackedCount } from './lib/child-registry.ts';
 import { dirname, resolve, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { readFileSync, writeFileSync, rmSync } from 'node:fs';
@@ -35,6 +36,7 @@ import { revisionTaskRoutes } from './routes/revision-tasks.ts';
 import { finalizeRoutes } from './routes/finalize.ts';
 import { audiobookRouter } from './routes/audiobook.ts';
 import { digestRoutes } from './routes/digest.ts';
+import { narrationRouter } from './routes/narration.ts';
 import { EngineRegistry } from './engine-registry.ts';
 import { httpErrorJson, toHttpError } from './middleware/error-mapper.ts';
 
@@ -94,14 +96,20 @@ app.route('/api/chapters', revisionRoutes(db));
 app.route('/api/eval', evalTasksRouter);
 app.route('/api/audit', auditTasksRouter);
 app.route('/api/audiobook', audiobookRouter(db));
+app.route('/api/narration', narrationRouter(db));
 app.route('/api/digest', digestRoutes(db));
 app.route('/api/config', configRoutes(registry));
 
-// 有声书媒体（mp4/mp3/图片/srt）：仓库 dist/ 经 serveStatic 静态发布
+// 有声书/解说媒体（mp4/mp3/图片/srt）：仓库 dist/ 经 serveStatic 静态发布
 // （含 dist/media-thumbs 软链 → ~/Downloads/sentie-thumbnails 缩略图）。
 // root 取相对 cwd 的路径（serveStatic 约定），穿越防护由库承担。
+// rewriteRequestPath 剥 /media 前缀（Hono serveStatic 按完整 req.path 拼路径，
+// 不剥则永远 join 出 dist/media/… 而未命中——2026-09-16 实测修复，此前两态均 404）。
 const MEDIA_ROOT_REL = relative(process.cwd(), resolve(__dirname, '..', '..', '..', 'dist')) || '.';
-app.use('/media/*', serveStatic({ root: MEDIA_ROOT_REL }));
+app.use('/media/*', serveStatic({
+  root: MEDIA_ROOT_REL,
+  rewriteRequestPath: (p) => p.replace(/^\/media/, ''),
+}));
 
 app.get('/api/config', (c) => c.json({
   engine: registry.getActiveName(),
@@ -129,5 +137,17 @@ serve({ fetch: app.fetch, port }, (info) => {
   console.log(`服务已启动：http://127.0.0.1:${info.port}`);
 });
 
-process.on('SIGINT', () => { closeDb(db); process.exit(0); });
-process.on('SIGTERM', () => { closeDb(db); process.exit(0); });
+// 退出协议（评审遗留项收口）：先按进程组收掉所有管线子进程（pnpm→tsx→ffmpeg
+// 整棵树），再关库退出——否则重启后渲染锁已空而旧 ffmpeg 还在后台跑。
+let shuttingDown = false;
+async function shutdown(signal: string): Promise<void> {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  const n = trackedCount();
+  if (n > 0) console.log(`[shutdown] ${signal}：清理 ${n} 个管线子进程…`);
+  await killTrackedChildren(1500);
+  closeDb(db);
+  process.exit(0);
+}
+process.on('SIGINT', () => { void shutdown('SIGINT'); });
+process.on('SIGTERM', () => { void shutdown('SIGTERM'); });

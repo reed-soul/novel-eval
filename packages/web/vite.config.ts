@@ -18,6 +18,8 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': apiTarget,
+      // 媒体（dist/ 产物）也走后端静态服务——此前漏配，dev 模式媒体恒 404
+      '/media': apiTarget,
     },
   },
   build: {

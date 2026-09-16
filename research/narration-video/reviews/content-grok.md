@@ -1,0 +1,2 @@
+Internal error: "reqwest error stream: error sending request for url (https://cli-chat-proxy.grok.com/v1/responses)"
+Error: Internal error: "reqwest error stream: error sending request for url (https://cli-chat-proxy.grok.com/v1/responses)"

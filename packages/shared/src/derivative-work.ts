@@ -12,7 +12,13 @@
  */
 
 /** 衍生形态种类（M3 项为预留，未实现前不得写入各自 registry 之外的位置） */
-export type DerivativeKind = 'audiobook' | 'digest' | 'screenplay' | 'comic_drama' | 'ai_short';
+export type DerivativeKind =
+  | 'audiobook'
+  | 'digest'
+  | 'narration_video'
+  | 'screenplay'
+  | 'comic_drama'
+  | 'ai_short';
 
 /** 衍生单元（一集 / 一篇）的最小公共形状；单元 id 即 registry 键名（ep01 / p1），不在记录内重复 */
 export interface DerivativeUnit {

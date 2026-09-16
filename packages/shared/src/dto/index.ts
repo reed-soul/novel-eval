@@ -45,3 +45,19 @@ export {
   toEvaluationReportResponse,
   unwrapEvaluationPayload,
 } from './evaluation.ts';
+
+export type {
+  BeatKind,
+  ShotKind,
+  NarrationQuote,
+  NarrationSentence,
+  BeatVisual,
+  NarrationBeat,
+  NarrationSequence,
+  NarrationAct,
+  CharacterRef,
+  NarrationScript,
+  StructureGateReport,
+  CausalGateReport,
+} from './narration.ts';
+export { flattenSentences, flattenBeats, scriptTotalChars } from './narration.ts';
