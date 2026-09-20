@@ -5,7 +5,8 @@
  *       → 探针(公平清单 ‖ 世情探针) → 红队(对抗) → 聚合去重 → audit.json
  */
 import { randomUUID } from 'node:crypto';
-import { createEngine, type AIAgentAdapter } from '@novel-eval/shared';
+import { resolve } from 'node:path';
+import { createEngine, loadEngineConfig, type AIAgentAdapter, type EngineConfig } from '@novel-eval/shared';
 import { splitChaptersWithMeta, parseTxt, countChars } from '@novel-eval/shared';
 import type { ChapterInput } from '@novel-eval/shared';
 import { zeroUsage } from '@novel-eval/shared';
@@ -64,18 +65,36 @@ function dropFragments(chapters: ChapterInput[]): {
   return { chapters: renumbered, droppedTitles };
 }
 
+/**
+ * 红队引擎解析：AUDIT_REDTEAM_MODEL 支持两种取值——
+ * ① engines.yml 里的引擎名（如 deepseek）→ 整引擎切换（provider+baseUrl+key 全换，跨模型家族红队）；
+ * ② 模型 id（如 glm-5.3-flash）→ 同 provider 只换模型（原行为）。
+ */
+export function resolveRedteamEngineSpec(
+  spec: string,
+  mainEngine: EngineConfig,
+  engines: Record<string, EngineConfig>,
+): EngineConfig {
+  return engines[spec] ?? { ...mainEngine, model: spec };
+}
+
 export async function auditPlot(opts: AuditOptions): Promise<AuditOutcome> {
   const config = loadConfig('default');
   const engine = opts.engine ?? createEngine(config.engine);
 
-  // 红队引擎：AUDIT_REDTEAM_MODEL 指定时构造不同模型实例（多模型交叉位，暂默认同引擎换角色）
+  // 红队引擎：AUDIT_REDTEAM_MODEL 指定时构造不同引擎（引擎名=跨家族切换 / 模型 id=同 provider 换模型）
   let redteamEngine = opts.redteamEngine ?? engine;
-  const redteamModel = process.env.AUDIT_REDTEAM_MODEL?.trim();
-  if (!opts.redteamEngine && redteamModel) {
+  const redteamSpec = process.env.AUDIT_REDTEAM_MODEL?.trim();
+  if (!opts.redteamEngine && redteamSpec) {
     try {
-      redteamEngine = createEngine({ ...config.engine, model: redteamModel });
+      const { engines } = loadEngineConfig(resolve(import.meta.dirname, '..', '..', '..', 'shared', 'config'));
+      const cfg = resolveRedteamEngineSpec(redteamSpec, config.engine, engines);
+      redteamEngine = createEngine(cfg);
+      if (cfg !== config.engine) {
+        opts.onProgress?.(`红队引擎切换：${redteamSpec}（${cfg.provider}/${cfg.model}）`);
+      }
     } catch {
-      opts.onProgress?.(`红队模型 ${redteamModel} 不可用，回退主引擎`);
+      opts.onProgress?.(`红队模型 ${redteamSpec} 不可用，回退主引擎`);
     }
   }
 

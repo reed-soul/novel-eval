@@ -171,7 +171,7 @@ audit 选项（剧情逻辑审计/推敲器）：
   --title <书名>           报告书名
   --climax-chapter <N>     高潮章号（1-based，缺省=最后一章）
   -y, --yes                跳过确认屏
-  环境变量 AUDIT_REDTEAM_MODEL 可指定红队用不同模型（缺省同主引擎换角色）
+  环境变量 AUDIT_REDTEAM_MODEL 可指定红队用不同模型（engines.yml 引擎名如 deepseek=跨模型家族切换；或同 provider 的模型 id；缺省同主引擎换角色）
 
 compare 选项：
   --html               生成 compare.html
