@@ -114,6 +114,7 @@ const chapResp = (start: number, act: number, budget: number = 2) => {
       foreshadowing: i === 0 ? '埋设：神秘项链' : '回收：神秘项链',
       twist_level: Math.min(10, 1 + i),
       summary: `这是第${n}章的详细梗概，本章主角将发现关键线索，推进主线情节，同时埋下重要伏笔引发后续悬念。`,
+      emotional_anchor: `主角与守村人对视递碗，从他颤抖的指尖发现账册残页线索。`,
     });
   }
   return JSON.stringify({ chapters });

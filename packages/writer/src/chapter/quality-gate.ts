@@ -227,6 +227,16 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
     if (!lowDims.includes(label)) lowDims.push(label);
   }
 
+  // 情感共鸣硬下限（v3 P0-4：情感冷漠稿拦在门外；阈值校准前为 null=关闭）
+  const gcEmo = getRuntimeConfig().qualityGate.minEmotionalResonance;
+  const emoScore = dimensions.emotionalResonance?.score;
+  const emoBelowFloor = gcEmo !== null && Number.isFinite(gcEmo)
+    && typeof emoScore === 'number' && emoScore < gcEmo;
+  if (emoBelowFloor) {
+    const label = `${DIMENSION_LABELS.emotionalResonance ?? '情感共鸣'}（${emoScore}）`;
+    if (!lowDims.includes(label)) lowDims.push(label);
+  }
+
   const hasRepetition = rep.verdict === 'mild';
   const repPersist = {
     within: rep.withinChapter, cross: rep.crossChapter, hotspots: rep.hotspots,
@@ -335,6 +345,11 @@ export function buildFeedback(
       if (dimKey && dimensions[dimKey]) {
         parts.push(`  ${dimLabel}：${dimensions[dimKey].analysis.slice(0, 200)}`);
       }
+    }
+    // v3 P0-4：行为级纠偏指引——只给分数不给动作会导致 revise 震荡耗尽重试（agy 评审警告）
+    const lowDimText = lowDims.join('、');
+    if (lowDimText.includes('情感') || lowDimText.includes('人物')) {
+      parts.push('  【纠偏动作】严禁纯物证说明文与抽象抒情：关键线索必须从与活人的对话、照护、对视或物件传递中产出；情感用具体动作落地（递碗/扶人/翻遗物），不许写"心中酸楚/眼眶发热"类情绪标签');
     }
   }
 

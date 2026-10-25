@@ -144,10 +144,19 @@ function buildPrompts(
     `节拍：${outline.content.beats.join('、') || '（无）'}`,
     formatEndingInstruction(platform, outline.content.endingHook),
     `目标字数：${wordCount}`,
-    '专业细节真实感：涉及物证、刑侦、医学、机械、地理等行业细节时，写出严密扎实的生活与专业细节，使其成为可信的情节依托',
+    // v3 P0-3：物证指令与人性并轨——纯"专业细节真实感"会驱动模型死抠物证产出解谜机器（battle3 双盲评根因）
+    '专业细节与人性依托：物证与推理细节必须服务于人际关系和道德真相；每次关键取证都要通过与当事人的语言交锋、微表情博弈或生活照护完成，严禁脱离人物的纯机械物料验看',
     '',
     ...platformDirectives,
   ].filter(Boolean);
+
+  // v3 P0-2：情感锚点独立注入（与蓝图定位平级），分派篇幅预算——防 summary 挤压导致正文薄写
+  if (outline.content.emotionalAnchor && outline.content.emotionalAnchor.trim().length > 0) {
+    lines.push(
+      `情感锚点（本场须写实写热，篇幅 300-500 字）：${outline.content.emotionalAnchor.trim()}`,
+      '本场互动是情感场景也是线索场景：至少一条关键线索从这场人际互动（对话/照护/对视/物件传递）中产出；情感用动作与物件传递落地，严禁抽象抒情',
+    );
+  }
 
   if (context.previousState) {
     lines.push('', '【前章状态看板】', formatStoryStateDirectives(context.previousState));

@@ -66,6 +66,8 @@ const CHAPTER_ITEM_SCHEMA = {
     foreshadowing: { type: 'string' as const, required: true },
     twist_level: { type: 'number' as const, min: 0, max: 10, integer: true, required: true },
     summary: { type: 'string' as const, min: 30, max: 400, required: true },
+    // v3 处方 P0-2：情感锚点独立字段——主角与情感联结最重者的互动设计，防"解谜机器"
+    emotional_anchor: { type: 'string' as const, min: 15, max: 80, required: true },
     ending_hook: { type: 'string' as const },
   },
 };
@@ -312,6 +314,7 @@ export async function generateBlueprint(opts: GenerateBlueprintOptions): Promise
             foreshadowing: string;
             twist_level: number;
             summary: string;
+            emotional_anchor: string;
             ending_hook?: string;
           }>;
         }>(engine, prompt, {
@@ -327,7 +330,7 @@ export async function generateBlueprint(opts: GenerateBlueprintOptions): Promise
               itemSpec: CHAPTER_ITEM_SCHEMA,
             },
           },
-          maxAttempts: 3,
+          maxAttempts: 5,
         });
         if (!res.ok || !res.data) {
           throw new Error(`第${actNum}幕章节生成失败（批次 ${batchIdx + 1}）：${res.errors.join('; ')}`);
@@ -363,6 +366,7 @@ export async function generateBlueprint(opts: GenerateBlueprintOptions): Promise
                 twistLevel: chapter.twist_level,
                 beatLabel: chapter.beat,
                 endingHook: chapter.ending_hook || '',
+                emotionalAnchor: chapter.emotional_anchor || '',
               },
               createdAt: now,
             },

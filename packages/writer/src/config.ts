@@ -40,6 +40,8 @@ export interface QualityGateConfig {
   minWordRatio: number;
   /** 人物塑造硬下限：characterization 低于此值 → revise（双盲评 2026-10-25）*/
   minCharacterization: number | null;
+  /** 情感共鸣硬下限：emotionalResonance 低于此值 → revise（v3 处方 P0-4，阈值待校准）*/
+  minEmotionalResonance: number | null;
 }
 
 export interface RevisionConfig {
@@ -122,6 +124,7 @@ export function loadWriterConfig(override?: { engine?: string }): WriterConfig {
     blockGrade: qg.blockGrade ?? 'C',
     minWordRatio: qg.minWordRatio ?? 0.75,
     minCharacterization: qg.minCharacterization ?? null,
+    minEmotionalResonance: qg.minEmotionalResonance ?? null,
   };
 
   const rev = raw.revision ?? {};

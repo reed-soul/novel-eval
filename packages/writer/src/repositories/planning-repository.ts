@@ -49,6 +49,8 @@ export interface OutlineContent {
   twistLevel?: number;
   beatLabel?: string;
   endingHook?: string;
+  /** v3 处方：本章情感锚点（主角与情感联结最重者的互动设计，15-80 字）*/
+  emotionalAnchor?: string;
 }
 
 export interface ApprovedOutline {
@@ -150,6 +152,8 @@ function parseOutlineContent(text: string): OutlineContent {
   if (beatLabel !== undefined) content.beatLabel = beatLabel;
   const endingHook = optionalString(value.endingHook, 'endingHook', entity);
   if (endingHook !== undefined) content.endingHook = endingHook;
+  const emotionalAnchor = optionalString(value.emotionalAnchor, 'emotionalAnchor', entity);
+  if (emotionalAnchor !== undefined) content.emotionalAnchor = emotionalAnchor;
   return content;
 }
 
