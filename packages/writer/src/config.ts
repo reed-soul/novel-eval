@@ -38,6 +38,8 @@ export interface QualityGateConfig {
   blockGrade: string;
   /** 确定性字数闸门：实际字数 < 目标 × 此比例 → revise */
   minWordRatio: number;
+  /** 人物塑造硬下限：characterization 低于此值 → revise（双盲评 2026-10-25）*/
+  minCharacterization: number | null;
 }
 
 export interface RevisionConfig {
@@ -119,6 +121,7 @@ export function loadWriterConfig(override?: { engine?: string }): WriterConfig {
     minDimScore: qg.minDimScore ?? 65,
     blockGrade: qg.blockGrade ?? 'C',
     minWordRatio: qg.minWordRatio ?? 0.75,
+    minCharacterization: qg.minCharacterization ?? null,
   };
 
   const rev = raw.revision ?? {};

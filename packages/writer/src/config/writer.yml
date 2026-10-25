@@ -25,6 +25,7 @@ qualityGate:                   # 质量门槛判定阈值
   minDimScore: 65              # 任一维度低于此值 → revise
   blockGrade: D                # 等级 ≥ blockGrade 的（D）直接 block
   minWordRatio: 0.75           # 实际字数 < 目标×此比例 → revise（确定性字数闸门）
+  minCharacterization: 75      # 人物塑造硬下限（2026-10-25 双盲评：人物薄的结构伤一章都不能过闸）
 
 revision:                      # 修订重写参数
   # 重写时的防注水诊断指引（凝练版，来自 chinese-novelist-skill 扩充方法论）

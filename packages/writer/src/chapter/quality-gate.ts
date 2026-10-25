@@ -217,6 +217,16 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
     .filter(([, d]) => d.score < gc.MIN_DIM_SCORE)
     .map(([k, d]) => `${DIMENSION_LABELS[k as DimensionKey] ?? k}（${d.score}）`);
 
+  // 人物塑造硬下限（2026-10-25 双盲评处方：人物薄是结构伤，总分再高也不能过闸）
+  const gcChar = getRuntimeConfig().qualityGate.minCharacterization;
+  const charScore = dimensions.characterization?.score;
+  const charBelowFloor = gcChar !== null && Number.isFinite(gcChar)
+    && typeof charScore === 'number' && charScore < gcChar;
+  if (charBelowFloor) {
+    const label = `${DIMENSION_LABELS.characterization ?? '人物塑造'}（${charScore}）`;
+    if (!lowDims.includes(label)) lowDims.push(label);
+  }
+
   const hasRepetition = rep.verdict === 'mild';
   const repPersist = {
     within: rep.withinChapter, cross: rep.crossChapter, hotspots: rep.hotspots,
