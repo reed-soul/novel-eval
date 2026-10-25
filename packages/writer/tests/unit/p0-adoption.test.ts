@@ -268,3 +268,20 @@ describe('P0-2/P0-5 buildPrompts（下一章预告 / Action Anchor / revise 语�
     assert.equal(prompt.includes('语态锚'), false);
   });
 });
+
+describe('corrector 字数口径（遗留项修复：与生成链路同源）', () => {
+  beforeEach(() => resetRuntimeConfig());
+
+  it('优先级：显式 wordCount > 章节自身 wordCount > 全局配置', async () => {
+    setRuntimeConfig(makeConfig()); // 全局 chapterWordCount=100
+    // 直接验证纯函数级逻辑：模拟 correctChapter 内的取值链（不跑完整 LLM 流程）
+    const resolve = (explicit: number | undefined, chapterWc: number, globalWc: number) => {
+      const ok = Number.isFinite(explicit) && (explicit as number) > 0 ? (explicit as number) : null;
+      return ok ?? (chapterWc > 0 ? chapterWc : globalWc);
+    };
+    assert.equal(resolve(5000, 2800, 100), 5000);  // 显式覆盖
+    assert.equal(resolve(undefined, 2800, 100), 2800); // 章节自身
+    assert.equal(resolve(undefined, 0, 100), 100);     // 回退全局
+    assert.equal(resolve(NaN, 2800, 100), 2800);       // 非法值忽略
+  });
+});

@@ -197,6 +197,8 @@ export interface CorrectChapterOptions {
   feedback?: string;
   /** Load revision-task.content as feedback (must match chapterNumber). */
   revisionTaskId?: string;
+  /** 目标字数：显式覆盖 > 被修正章节自身字数 > 全局配置（与生成链路同源口径）*/
+  wordCount?: number;
   onProgress?: (step: string, msg: string) => void;
 }
 
@@ -279,7 +281,13 @@ export async function correctChapter(opts: CorrectChapterOptions): Promise<Corre
   if (!outline) throw new Error(`第 ${chapterNumber} 章蓝图不存在`);
 
   // 2. 组装 prompt 并生成
-  const wordCount = getRuntimeConfig().generation.chapterWordCount;
+  // 目标字数口径（与生成链路同源）：显式覆盖 > 被修正章节自身字数（它按项目目标生成）> 全局配置。
+  // 旧实现直接读全局配置，CLI --word-count / 项目级自定义会被忽略，闸门两处口径打架。
+  const explicitWordCount = Number.isFinite(opts.wordCount) && (opts.wordCount as number) > 0
+    ? (opts.wordCount as number)
+    : null;
+  const wordCount = explicitWordCount
+    ?? (chapter.wordCount > 0 ? chapter.wordCount : getRuntimeConfig().generation.chapterWordCount);
   onProgress?.('generate', `生成修正稿（${strategy}）...`);
   const { revisedContent, rawOutput } = await generateRevision({
     engine, db, projectId, chapterNumber, strategy, wordCount, diag,
