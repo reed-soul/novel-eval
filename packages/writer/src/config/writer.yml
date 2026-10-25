@@ -24,6 +24,15 @@ qualityGate:                   # 质量门槛判定阈值
   passMinScore: 75             # 总分 ≥ 此值才 pass
   minDimScore: 65              # 任一维度低于此值 → revise
   blockGrade: D                # 等级 ≥ blockGrade 的（D）直接 block
+  minWordRatio: 0.75           # 实际字数 < 目标×此比例 → revise（确定性字数闸门）
+
+revision:                      # 修订重写参数
+  # 重写时的防注水诊断指引（凝练版，来自 chinese-novelist-skill 扩充方法论）
+  # 先诊断不足原因，再对症扩充；判据：删掉该段扩充，故事是否变差？
+  expansionGuide: |            # null 关闭；替换文案请同步 correct-rewrite.md 的占位符语义
+    字数不足时先诊断再扩充，严禁注水（无意义风景、凑字回忆、重复已知信息、冗长过渡、无信息量对话）。
+    对症扩充四路：场景太薄→补感官肌理（视听触嗅至少两种+空间感+情绪映射）；跳跃太快→关键时刻放慢（动作分解成微步骤+思维展开）；情感平面→内心世界展开（判断/回忆/预判/情绪波动）；对话干瘪→加潜台词与信息差。
+    判据：删掉该段扩充，故事是否变差？不变差即注水，删。
 
 repetition:                    # 防重复检测参数
   shingleSize: 8               # k-shingle 粒度（字符数）

@@ -36,6 +36,13 @@ export interface QualityGateConfig {
   passMinScore: number;
   minDimScore: number;
   blockGrade: string;
+  /** 确定性字数闸门：实际字数 < 目标 × 此比例 → revise */
+  minWordRatio: number;
+}
+
+export interface RevisionConfig {
+  /** 重写时的防注水诊断指引；null = 关闭 */
+  expansionGuide: string | null;
 }
 
 export interface RepetitionConfig {
@@ -54,6 +61,7 @@ export interface WriterConfig {
   generation: GenerationConfig;
   qualityGate: QualityGateConfig;
   repetition: RepetitionConfig;
+  revision: RevisionConfig;
 }
 
 export function loadWriterConfig(override?: { engine?: string }): WriterConfig {
@@ -81,6 +89,7 @@ export function loadWriterConfig(override?: { engine?: string }): WriterConfig {
     }>;
     qualityGate?: Partial<QualityGateConfig>;
     repetition?: Partial<RepetitionConfig>;
+    revision?: Partial<RevisionConfig>;
   }>(resolve(WRITER_CONFIG_DIR, 'writer.yml'));
 
   const g = raw.generation ?? {};
@@ -109,6 +118,12 @@ export function loadWriterConfig(override?: { engine?: string }): WriterConfig {
     passMinScore: qg.passMinScore ?? 75,
     minDimScore: qg.minDimScore ?? 65,
     blockGrade: qg.blockGrade ?? 'C',
+    minWordRatio: qg.minWordRatio ?? 0.75,
+  };
+
+  const rev = raw.revision ?? {};
+  const revision: RevisionConfig = {
+    expansionGuide: rev.expansionGuide ?? null,
   };
 
   const rep = raw.repetition ?? {};
@@ -120,5 +135,5 @@ export function loadWriterConfig(override?: { engine?: string }): WriterConfig {
     crossSevere: rep.crossSevere ?? 0.50,
   };
 
-  return { engine, engineName, engines, generation, qualityGate, repetition };
+  return { engine, engineName, engines, generation, qualityGate, repetition, revision };
 }

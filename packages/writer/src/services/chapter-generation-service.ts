@@ -144,12 +144,20 @@ function buildPrompts(
     `节拍：${outline.content.beats.join('、') || '（无）'}`,
     formatEndingInstruction(platform, outline.content.endingHook),
     `目标字数：${wordCount}`,
+    '专业细节真实感：涉及物证、刑侦、医学、机械、地理等行业细节时，写出严密扎实的生活与专业细节，使其成为可信的情节依托',
     '',
     ...platformDirectives,
   ].filter(Boolean);
 
   if (context.previousState) {
     lines.push('', '【前章状态看板】', formatStoryStateDirectives(context.previousState));
+  }
+  if (context.nextOutline) {
+    lines.push(
+      '',
+      '【下一章蓝图预告】（本章结尾要为下章做好铺垫，保证衔接）',
+      `第${context.nextOutline.position}章《${context.nextOutline.title}》：${context.nextOutline.summary}`,
+    );
   }
   if (context.arcSummaries.length > 0) {
     lines.push(
@@ -169,9 +177,25 @@ function buildPrompts(
       ),
     );
   }
+
+  // revise 轮：反馈之后附上一章结尾作语态锚（近因效应——动笔前最后读到的应是正文语态）
   if (revisionFeedback && revisionFeedback.trim().length > 0) {
     lines.push('', '【质量审阅反馈——请按此修订重写本章】', revisionFeedback.trim());
+    const prevChapter = context.recentChapters[context.recentChapters.length - 1];
+    if (prevChapter) {
+      lines.push(
+        '',
+        '【上一章结尾（语态锚——保持语感连贯，自然承接）】',
+        prevChapter.content.slice(-200),
+      );
+    }
   }
+
+  // 末端 Action Anchor：闭合指令段，防"续写幻觉"（上下文末尾裸露正文时模型误续写）
+  lines.push(
+    '',
+    `现在开始创作：写出第 ${context.outlinePosition} 章《${outline.title}》完整正文（约 ${wordCount} 字），完成上述蓝图目标，直接输出正文。`,
+  );
 
   return { systemPrompt, userPrompt: lines.join('\n') };
 }
@@ -294,6 +318,7 @@ export class ChapterGenerationService {
             metadata: quality.metadata,
             profile: quality.profile,
             attempt,
+            targetWordCount: input.wordCount,
             onProgress: quality.onProgress,
           });
       addUsage(totalUsage, review.usage);

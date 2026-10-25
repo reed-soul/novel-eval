@@ -43,6 +43,8 @@ export interface ChapterReviewInput {
   metadata: NovelMetadata;
   profile?: string;
   attempt?: number;
+  /** 目标字数（透传给质量门槛的字数闸门）*/
+  targetWordCount?: number;
   onProgress?: (msg: string) => void;
   /** Test seam — bypass live assessChapterQuality. */
   assess?: (opts: QualityGateOptions) => Promise<QualityGateResult & { usage: TokenUsage }>;
@@ -68,6 +70,7 @@ export class ChapterReviewerService {
       metadata: input.metadata,
       profile: input.profile,
       attempt: input.attempt,
+      targetWordCount: input.targetWordCount,
       onProgress: input.onProgress,
     });
 

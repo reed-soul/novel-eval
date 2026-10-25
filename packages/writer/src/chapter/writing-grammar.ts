@@ -8,6 +8,21 @@ import type { TargetPlatform } from '../target-platform.ts';
 
 export type WritingEngine = 'retention' | 'literary';
 
+/**
+ * 去 AI 味通用负面清单 — 所有平台共用，追加在平台指令尾部。
+ * 来自 chinese-novelist-skill 的去 AI 味方法论（MIT），规则化凝练。
+ */
+const ANTI_AI_FLAVOR_DIRECTIVES: string[] = [
+  '【去AI味（所有平台通用）】',
+  '- 【忌堆砌形容词】禁用"璀璨/瑰丽/宛如/不由得/心中涌起"类陈词堆砌，一个名词前最多一个形容词',
+  '- 【忌抽象情绪陈述】不写"心中涌起复杂的情感"这类空泛陈述——改成具体的动作、表情或对话来呈现情绪',
+  '- 【忌四字格律连用】"心潮澎湃、热血沸腾"式成语排比最多出现 1 次/章，高潮处用具体感官细节替代',
+  '- 【长短句交替】紧张处短句连击，铺陈处长句舒展，禁止通篇等长句造成的机械节奏',
+  '- 【细节具象化】笼统描述（"房间很乱"）换成可看见的具体细节（"桌上三个空罐，烟灰缸满出来"）',
+];
+
+/** 通用平台（general）默认也吃 AI 味清单。*/
+
 export function writingEngineFor(platform: TargetPlatform): WritingEngine {
   return platform === 'douban' ? 'literary' : 'retention';
 }
@@ -22,6 +37,7 @@ export function chapterWritingDirectives(platform: TargetPlatform, position: num
       '- 【章末】允许安静收束、画面停住或人物决定。禁止每章都用危机/身份败露/惊人发现/反转来吊下一章。',
       '- 【对话】仍要有潜台词或信息量，禁止寒暄废话。',
       '- 【推进】有信息增量，但增量可以是人物关系、生活质感或命运压力，不必每段都是线索爆点。',
+      ...ANTI_AI_FLAVOR_DIRECTIVES,
     ];
   }
   return retentionChapterDirectives(platform, position);
@@ -38,6 +54,7 @@ function retentionChapterDirectives(platform: TargetPlatform, position: number):
           ? '- 【黄金开局】：开篇前三段必须立刻抛出核心异常、不可思议的冲突或悬疑事件，禁止任何慢热铺垫。'
           : '- 【反转与节奏】：节奏“短、快、反转多”，对话针锋相对、信息密集，多处制造心理施压与信息差欺骗。',
         '- 【结局正义感】：正义必须得到实质伸张，罪罚严密对等，禁止反派软着陆。',
+        ...ANTI_AI_FLAVOR_DIRECTIVES,
       ];
     case 'fanqie':
       return [
@@ -47,12 +64,14 @@ function retentionChapterDirectives(platform: TargetPlatform, position: number):
           ? '- 【黄金三章/极速出场】：主角必须在前500字内出场，且第一场戏必须遭遇危机、冲突或强动机事件。'
           : '- 【持续推背感】：每 500 字至少一个小转折或线索推进，全程高能。',
         '- 【章末生死断点钩子】：章节最后 150 字必须卡在最紧张、最意想不到的突发悬念断点上，让读者欲罢不能必须点击下一章！',
+        ...ANTI_AI_FLAVOR_DIRECTIVES,
       ];
     case 'general':
     default:
       return [
         '【畅销网文通用规范】',
         '- 场景化推进，以人物对话与动作为主轴，节奏明快，每章末尾保留悬念钩子。',
+        ...ANTI_AI_FLAVOR_DIRECTIVES,
       ];
   }
 }

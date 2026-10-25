@@ -10,7 +10,7 @@
  *      - 其余未达标 → revise
  */
 import type { AIAgentAdapter, NovelMetadata, TokenUsage } from '@novel-eval/shared';
-import { addUsage, zeroUsage } from '@novel-eval/shared';
+import { addUsage, zeroUsage, countChars } from '@novel-eval/shared';
 import {
   assessChapters,
   DIMENSION_LABELS,
@@ -35,6 +35,7 @@ function gateConfig() {
     PASS_MIN_SCORE: cfg.passMinScore,
     MIN_DIM_SCORE: cfg.minDimScore,
     BLOCK_GRADE: cfg.blockGrade,
+    MIN_WORD_RATIO: cfg.minWordRatio,
   };
 }
 
@@ -76,6 +77,8 @@ export interface QualityGateOptions {
   profile?: string;
   /** 当前重写轮次（1=初稿，2+=重写）*/
   attempt?: number;
+  /** 目标字数（确定性字数闸门依据；缺省回退 generation.chapterWordCount）*/
+  targetWordCount?: number;
   onProgress?: (msg: string) => void;
 }
 
@@ -117,6 +120,31 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
       model, evaluatorModel,
     });
   };
+
+  // ─── 0.5 确定性字数闸门（零 LLM 成本）────────────────────────
+  // 实际字数 < 目标 × minWordRatio → 直接 revise（跳过昂贵评估），
+  // 反馈带防注水诊断指引，杜绝短章/残卷过闸落盘。
+  const wordRatio = gateConfig().MIN_WORD_RATIO;
+  const targetWords = opts.targetWordCount
+    ?? getRuntimeConfig().generation.chapterWordCount;
+  const actualWords = countChars(chapter.content);
+  if (actualWords < targetWords * wordRatio) {
+    const reason = `字数不足：${actualWords} 字 < 目标 ${targetWords}×${Math.round(wordRatio * 100)}%（${Math.round(targetWords * wordRatio)} 字）`;
+    const expandGuide = getRuntimeConfig().revision.expansionGuide;
+    const feedback = [
+      `【字数不达标——按防注水诊断扩充】`,
+      `当前 ${actualWords} 字，目标 ${targetWords} 字。${expandGuide ?? '先诊断场景/节奏/情感/对话哪里薄，再对症扩充，严禁注水。'}`,
+    ].join('\n');
+    persistEval({ verdict: 'revise' });
+    return {
+      verdict: 'revise',
+      reason,
+      reasons: [reason],
+      feedback,
+      evidence: [],
+      usage: totalUsage,
+    };
+  }
 
   // ─── 1. 防重复检测 ──────────────────────────────────────────────
   const recent = getRecentChapters(db, rawProjectId, chapter.number, RECENT_WINDOW);

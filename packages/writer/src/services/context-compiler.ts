@@ -51,6 +51,12 @@ export interface CompiledChapterContext {
     compiledText: string;
   };
   outline: ApprovedOutline;
+  /** 下一章蓝图预告（末章为 null）— 正文生成的衔接参照 */
+  nextOutline: {
+    position: number;
+    title: string;
+    summary: string;
+  } | null;
   previousStateRevisionId: StoryStateRevisionId | null;
   previousState: StoryState | null;
   recentChapters: CompiledRecentChapter[];
@@ -177,6 +183,19 @@ export class ContextCompiler {
       arcInterval,
     );
 
+    // 下一章蓝图预告（末章为 null）— 供正文生成时预告走向、保证衔接
+    const nextOutlineRaw = this.planning.getApprovedOutlineAtPosition(
+      input.projectId,
+      input.outlinePosition + 1,
+    );
+    const nextOutline = nextOutlineRaw
+      ? {
+          position: input.outlinePosition + 1,
+          title: nextOutlineRaw.revision.title,
+          summary: nextOutlineRaw.revision.content.summary,
+        }
+      : null;
+
     const sanitizedBible = stripMutableBibleFields(bible.bible);
     const compiledText = sanitizeCompiledText(bible.compiledText, bible.bible);
 
@@ -195,6 +214,7 @@ export class ContextCompiler {
       previousState: previousState?.state ?? null,
       recentChapters,
       arcSummaries,
+      nextOutline,
       promptTemplateVersion: input.promptTemplateVersion,
     };
 
@@ -216,6 +236,7 @@ export class ContextCompiler {
       previousState: previousState?.state ?? null,
       recentChapters,
       arcSummaries,
+      nextOutline,
       promptTemplateVersion: input.promptTemplateVersion,
       contextHash,
     };
