@@ -35,7 +35,8 @@ function gateConfig() {
     PASS_MIN_SCORE: cfg.passMinScore,
     MIN_DIM_SCORE: cfg.minDimScore,
     BLOCK_GRADE: cfg.blockGrade,
-    MIN_WORD_RATIO: cfg.minWordRatio,
+    // 防御误配（负数/NaN/>1 会导致闸门永久失效或永不过闸）
+    MIN_WORD_RATIO: Math.max(0.1, Math.min(1.0, cfg.minWordRatio || 0.75)),
   };
 }
 
@@ -124,9 +125,12 @@ export async function assessChapterQuality(opts: QualityGateOptions): Promise<Qu
   // ─── 0.5 确定性字数闸门（零 LLM 成本）────────────────────────
   // 实际字数 < 目标 × minWordRatio → 直接 revise（跳过昂贵评估），
   // 反馈带防注水诊断指引，杜绝短章/残卷过闸落盘。
+  // targetWordCount 非法（0/NaN/负数）时回退全局配置——否则 NaN 比较恒 false，闸门静默失效。
   const wordRatio = gateConfig().MIN_WORD_RATIO;
-  const targetWords = opts.targetWordCount
-    ?? getRuntimeConfig().generation.chapterWordCount;
+  const fallbackWords = getRuntimeConfig().generation.chapterWordCount;
+  const targetWords = Number.isFinite(opts.targetWordCount) && (opts.targetWordCount as number) > 0
+    ? (opts.targetWordCount as number)
+    : fallbackWords;
   const actualWords = countChars(chapter.content);
   if (actualWords < targetWords * wordRatio) {
     const reason = `字数不足：${actualWords} 字 < 目标 ${targetWords}×${Math.round(wordRatio * 100)}%（${Math.round(targetWords * wordRatio)} 字）`;

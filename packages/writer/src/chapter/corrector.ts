@@ -292,6 +292,16 @@ export async function correctChapter(opts: CorrectChapterOptions): Promise<Corre
     throw new Error(`第 ${chapterNumber} 章修正失败：正文为空`);
   }
 
+  // 2.5 字数闸门（与 quality-gate 同源逻辑）：修正稿残卷/短章禁止入库，
+  // 否则 LLM 截断产出的 300 字残稿会经 correction_draft 污染正文。
+  const minRatio = Math.max(0.1, Math.min(1.0, getRuntimeConfig().qualityGate.minWordRatio || 0.75));
+  const actualWords = countChars(revisedContent);
+  if (actualWords < wordCount * minRatio) {
+    throw new Error(
+      `第 ${chapterNumber} 章修正稿字数不足（${actualWords} 字 < 目标 ${wordCount}×${Math.round(minRatio * 100)}%），疑似截断残卷，已拦截不入库`,
+    );
+  }
+
   // 3. 解析改动点（仅 surgical 有结构化改动说明）
   const changes = strategy === 'surgical' ? parseChangeLog(rawOutput) : [];
 

@@ -14,14 +14,12 @@ export type WritingEngine = 'retention' | 'literary';
  */
 const ANTI_AI_FLAVOR_DIRECTIVES: string[] = [
   '【去AI味（所有平台通用）】',
-  '- 【忌堆砌形容词】禁用"璀璨/瑰丽/宛如/不由得/心中涌起"类陈词堆砌，一个名词前最多一个形容词',
+  '- 【忌堆砌形容词】"璀璨/瑰丽/宛如/不由得/心中涌起"类陈词每章合计最多出现 1 次；一个名词前最多一个形容词',
   '- 【忌抽象情绪陈述】不写"心中涌起复杂的情感"这类空泛陈述——改成具体的动作、表情或对话来呈现情绪',
   '- 【忌四字格律连用】"心潮澎湃、热血沸腾"式成语排比最多出现 1 次/章，高潮处用具体感官细节替代',
   '- 【长短句交替】紧张处短句连击，铺陈处长句舒展，禁止通篇等长句造成的机械节奏',
   '- 【细节具象化】笼统描述（"房间很乱"）换成可看见的具体细节（"桌上三个空罐，烟灰缸满出来"）',
 ];
-
-/** 通用平台（general）默认也吃 AI 味清单。*/
 
 export function writingEngineFor(platform: TargetPlatform): WritingEngine {
   return platform === 'douban' ? 'literary' : 'retention';

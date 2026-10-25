@@ -155,7 +155,7 @@ function buildPrompts(
   if (context.nextOutline) {
     lines.push(
       '',
-      '【下一章蓝图预告】（本章结尾要为下章做好铺垫，保证衔接）',
+      '【下一章蓝图预告】（仅供本章章末收束与过渡铺垫参考，严禁提前推进或解决下一章的事件！）',
       `第${context.nextOutline.position}章《${context.nextOutline.title}》：${context.nextOutline.summary}`,
     );
   }
@@ -194,7 +194,9 @@ function buildPrompts(
   // 末端 Action Anchor：闭合指令段，防"续写幻觉"（上下文末尾裸露正文时模型误续写）
   lines.push(
     '',
-    `现在开始创作：写出第 ${context.outlinePosition} 章《${outline.title}》完整正文（约 ${wordCount} 字），完成上述蓝图目标，直接输出正文。`,
+    revisionFeedback && revisionFeedback.trim().length > 0
+      ? `现在开始重写：结合上述审阅反馈与蓝图目标，写出第 ${context.outlinePosition} 章《${outline.title}》完整正文（约 ${wordCount} 字），直接输出正文。`
+      : `现在开始创作：写出第 ${context.outlinePosition} 章《${outline.title}》完整正文（约 ${wordCount} 字），完成上述蓝图目标，直接输出正文。`,
   );
 
   return { systemPrompt, userPrompt: lines.join('\n') };
