@@ -26,7 +26,7 @@ qualityGate:                   # 质量门槛判定阈值
   blockGrade: D                # 等级 ≥ blockGrade 的（D）直接 block
   minWordRatio: 0.75           # 实际字数 < 目标×此比例 → revise（确定性字数闸门）
   minCharacterization: 75      # 人物塑造硬下限（2026-10-25 双盲评：人物薄的结构伤一章都不能过闸）
-  minEmotionalResonance: 85    # 情感共鸣硬下限（v3 P0-4/P0-5 校准值：v2"解谜机器"在新标尺下得 85 被盲判 74，以 85 卡线拦此水准；null 关闭）
+  minEmotionalResonance: 80    # 情感共鸣硬下限。v3 二次校准：GLM 单章自评分布 76-86 均值 82（n=11，双本实测），85 会卡死在上沿；80=分布中位下方，拦 76-79 的差章放 80+ 的可过章。书级 85 校准值作废（书级分≠章级分）
 
 revision:                      # 修订重写参数
   # 重写时的防注水诊断指引（凝练版，来自 chinese-novelist-skill 扩充方法论）
