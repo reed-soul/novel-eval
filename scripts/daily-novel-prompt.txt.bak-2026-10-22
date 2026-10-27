@@ -1,0 +1,72 @@
+【每日凌晨3点定时任务·独立产出全新中文悬疑小说并过门交付】
+
+工作目录：/Users/reed_soul/code/novel-eval
+执行要求：用项目的正规写作管线独立产出一部全新中文悬疑小说，并过完全部质量门。当天必须完整交付。
+
+背景与定位：
+- 小说将改编为 YouTube 有声书视频、AI 短剧、解说视频，需要达到知乎盐选投稿标准，我会投稿，部分投番茄小说。
+- 频道是「悬疑档案室」——品类铁律：每晚必须是悬疑小说，不得写成言情/甜宠/大女主爽文/其他品类。
+- API 是订阅制不心疼成本——质量优先于速度，宁慢勿烂。
+- 选题哲学：艺术从生活中来——题材主料取自近期真实热门社会新闻（换皮改编），不自创闭门造车。
+
+【第一步·查重（题材簇+人名+反转机制+情绪主轴）】
+查 research/daily-novels/TOPIC-LEDGER.md（选题台账，每晚必更新）与各书 meta.md，四查：
+1. 题材簇与核心诡计不得与近作重复；
+2. 主要人物姓名不得与近 10 部撞名（台账体系知识：全篇禁用「小满」，偏好姓氏「温」禁令，严格落实近作人名黑名单）；
+3. 反转机制类型不得与近 4 部重复；
+4. 情绪主轴不得与近 2 部重复。
+书名起得像爆款标题（参考当日调研的热门命名，每晚出 3 个候选书名，按钩子强度选优，另两个记入 meta.md 备用）。
+
+【第二步·社会新闻信源采集（v3 五层架构，产出≥3个候选，不足3个不得开写；候选必须全部是悬疑题材）】
+UA 统一 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Chrome/122"。
+核心原则：丢掉「热搜≈选题」的假设——热度榜只用来判断案子此刻有没有人关心，不能用来发现案子；案情原料必须来自法治源。
+0. 层1·案情主力（curl 静态抓取，候选池来源）：
+   - 正义网（检察日报系，案情密度最高）：`curl -sL -A "$UA" https://www.jcrb.com/` 解析 `<a>` 标题，重点抽 `a[href*="livenews/2026"]`；
+   - 中国警察网大案要案子频道：`curl -sL -A "$UA" https://daan.cpd.com.cn/` 抽标题。
+   - 关键词白名单过滤（只留命中项进候选池）：`通报|诈骗|电诈|宣判|刑拘|起诉|洗钱|拐卖|偷拍|辟谣|命案|绑架`。
+1. 层2·热度校准（curl JSON）：`curl -s -A "$UA" "https://top.baidu.com/api/board?platform=wise&tab=realtime"`（备用：`https://www.toutiao.com/hot-event/hot-board/?origin=toutiao_pc`）。只与层1候选做交集判断"该不该做"。
+2. 层3·求证深挖（豆包搜索，后置省配额）：只对层1筛出的 3-5 个标题查 "{标题核心词} 警方通报" 拿案情细节/后续：
+   `cd /Users/reed_soul/.zcode/skills/byted-web-search && python3 scripts/web_search.py "核心词" --time-range 近60天区间 --count 10`。
+   搜索词只用 2-4 个核心词（月配额 500 次，每晚 3-5 次即够）。
+3. 层4·兜底链（层1某源 HTTP 非 200 时按序降级）：piyao.org.cn 首页（关键词滤；禁用 /yybgt/ 子频道）→ 中新网社会 → 央视 JSONP → 头条 JSON → 环球网。每日在简报里记录各源 HTTP 状态码。
+4. 层5·增强层（可选，失败即跳过，主链路不依赖）：若 ego lite 浏览器可用（`~/.local/bin/ego-browser`）拿微博官方热榜；澎湃与公安部。浏览器不可用/超时直接跳过。
+5. 简报落盘 research/social-news/YYYY-MM-DD-hotlist.md：候选事件按 S/A/B 分级，每条附原始出处链接、来源层标记、各源 HTTP 状态码、TOPIC-LEDGER 台账适配标注。
+   改编红线：真实案件不得照搬可识别当事人/地名/未决案件细节，须三层换皮（地名全变形、职业与人物关系重构、案情结构改造）。
+6. ≥3 个候选中至少 2 个须源自当日简报的真实事件；五维评分卡选优（写进 meta.md）。
+
+【情绪配方规则（悬疑壳内的情绪内核轮换）】
+1. 全书必须有案件或谜题开局、线索链、悬念推进、解谜闭环。
+2. 主轴从池中选且避开近 2 部：a 夺回型 / b 守护型 / c 人性微光型 / d 布局者型 / e 重建型。
+3. 焦虑与恐惧只做前 1-2 章危机引入；每章至少一个暖点、爽点或掌控感时刻；结局大快人心+正向情感落点实体场景双落点。
+
+【反转设计规则】
+1. 层数弹性 2-4 层，每层必须写明「揭示章节位置+伏笔埋点清单」。
+2. 机制从类型池选且避开近 4 部：A 身份倒置 / B 叙性诡计 / C 时间线诡计 / D 规则/契约反转 / E 动机反转 / F 视角反转 / G 剥洋葱找幕后（轮满前禁用）。
+
+【第三步·全管线生成（正文必须由 writer 引擎写，禁止自己动笔写章节正文）】
+在仓库根目录跑（需 WRITER_DB_PATH=data/writer/writer.db）：
+1. `pnpm write auto --title <书名> --genre 现实社会派悬疑 --audience 通用 --platform fanqie --chapters 18 --word-count 2600 -y --approve-planning --topic <详细梗概>`
+2. --topic（300-500 字）必须包含：悬疑品类要件、反转层数与机制（揭示章号+伏笔清单）、情绪主轴与节奏、双落点、追责闭合禁开放式续集钩、第1章主角主动反将一军、主要人物名单（人名不得漂移+近作人名黑名单）、全文纯中文零英文零翻译腔（技术名词中文替写）、证据链来源与流转、体制内清算用通报引文一笔带过、三层换皮说明。
+3. 内容红线：涉性只暗示留白绝不露骨；无未成年人性化；犯罪手法无可模仿操作细节。
+4. 中断续跑：`pnpm write resume <projectId>`（必须全 UUID）。生成后必查"整章多副本/脚手架泄漏"。
+
+【第四步·质量门（两道都必须过；不过就修，最多两轮修订）】
+1. 拼书成 research/daily-novels/<当天日期-slug>/book.md（保留"第N章 章名"行）。
+2. eval（严格串行）：
+   `npx tsx packages/eval/src/index.ts evaluate <book.md> --genre 现实社会派悬疑 --audience 通用 --platform fanqie --profile submission --title <书名> --author 我家门前有两棵枣树 -y`
+   要求投稿门 pass 且总分 ≥85；市场分若在 78-83 边界带，加跑至三局两胜并记录全部跑分。
+3. audit 双红队（主引擎与异源家族各找茬一遍）：
+   - A 跑（GLM 主引擎）：`npx tsx packages/eval/src/index.ts audit <book.md> --genre 现实社会派悬疑 --title <书名> --climax-chapter <N> -y`
+   - B 跑（DeepSeek 红队）：先 `export DEEPSEEK_API_KEY=$(python3 -c "import json;print(json.load(open('$HOME/.claude/settings.json'))['env']['DEEPSEEK_API_KEY'])")`，再 `AUDIT_REDTEAM_MODEL=deepseek npx tsx ...（同命令）`。
+   - 两跑 P0 名单合并去重后逐条回原文核对，真 P0 外科补丁修（编辑 book.md 并同步 writer.db 该章 revision），修完重跑 A 跑；已核仍报噪声判真实 P0=0 过门。
+4. eval 不过读 suggestions 写进 topic 重跑，最多两轮；生成后字级自检（英文残留扫描、跨书人名扫描）。
+
+【第五步·交付物】
+归档于 research/daily-novels/YYYY-MM-DD-书名slug/：
+- book.md（终稿）
+- adaptation-notes.md（三用改编要点：有声书分集+冷开场；短剧关键场景与人物视觉；解说钩子句与爆点时间轴）
+- meta.md：书名、总字数、writer projectId、题材来源（简报分级条目+链接+换皮说明）、评分卡、机制与情绪代号、反转一句话、人物表、eval 总分+八维+投稿门、audit 双红队 P0/P1 计数与判定、修订轮次、红线自检
+- 更新 research/daily-novels/TOPIC-LEDGER.md：追加一行记录。
+
+【安全边界】
+只允许写 research/daily-novels/ 与 research/social-news/ 目录及 CLI 写入；不得手写章节正文；完成后输出简短总结。
