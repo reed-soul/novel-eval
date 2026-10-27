@@ -70,11 +70,13 @@ UA 统一 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Ch
 4. 中断续跑：`pnpm write resume <projectId>`（必须全 UUID）。生成后必查"整章多副本/脚手架泄漏"。
 
 【第四步·质量门（三道，按顺序；前一道不过不得进下一道）】
-1. 拼书 + 体例转换（只改格式，不改内容。writer 引擎必然输出「# 第N章 章名」，不能直接投）：
+1. 拼书 + 体例转换 + 排版重构（只改格式，不改内容。writer 引擎必然输出「# 第N章 章名」，不能直接投）：
    先把 writer.db 的章导出成临时文件 `<raw>.md`，再跑
    `python3 scripts/spec-gate.py <raw>.md --fix -o research/daily-novels/<当天日期-slug>/book.md`
    它会把 `# 第N章 章名` 转成 `N、章名`，并删除所有「（本章完）」「（全书完）」「（本幕终）」变体。转换后正文"第N章"必须零命中。
-   ⚠ 若仍有超 100 字的段落，**不要用脚本机械切开**——其中 42.8% 是"对话与动作混段"（把引号里的台词单独提出来成段即可），10.7% 是公文腔堆叠（改写成人的话），只有剩下一小部分是真需要删的解释。
+   然后跑排版重构器清 R04 超长段（对话混段按引号拆、跨段台词按出版规范补前引号、长叙述按句读打包；除新增前引号外零字符改动，内置不变量自检，5 本历史书实测超长段 100% 清零）：
+   `python3 scripts/layout-refactor.py research/daily-novels/<目录>/book.md --in-place`
+   exit 1 表示存在机械无解段（无标点怪物句）——仅这类需要人工改写；公文腔"改写成人的话"仍属内容层工作，排版器只管断行不管腔调。
 2. **规格门（确定性检查，零 token，必须先跑）**：
    `python3 scripts/spec-gate.py research/daily-novels/<目录>/book.md --profile salt`
    任何 FAIL 都按 detail 修正后重跑，**不许跳过、不许人工判"这条不重要"**。全通过才进 eval。
