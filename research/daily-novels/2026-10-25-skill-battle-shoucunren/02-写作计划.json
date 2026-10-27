@@ -1,0 +1,175 @@
+{
+  "version": 1,
+  "novelName": "守村人",
+  "projectPath": "/tmp/chinese-novelist/20261025-204000-守村人",
+  "totalChapters": 18,
+  "minWordsPerChapter": 3000,
+  "createdAt": "2026-10-25T20:40:00+08:00",
+  "updatedAt": "2026-10-25T20:40:00+08:00",
+  "status": "in_progress",
+  "writingMode": "serial",
+  "chapters": [
+    {
+      "chapterNumber": 1,
+      "title": "雨夜入殓，一夜白头",
+      "filePath": "第01章-雨夜入殓，一夜白头.md",
+      "status": "completed",
+      "wordCount": 3050,
+      "wordCountPass": true,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 2,
+      "title": "剩饭碗三十年",
+      "filePath": "第02章-剩饭碗三十年.md",
+      "status": "completed",
+      "wordCount": 3040,
+      "wordCountPass": true,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 3,
+      "title": "白幡先挂",
+      "filePath": "第03章-白幡先挂.md",
+      "status": "completed",
+      "wordCount": 3114,
+      "wordCountPass": true,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 4,
+      "title": "替我挨了一下",
+      "filePath": "第04章-替我挨了一下.md",
+      "status": "completed",
+      "wordCount": null,
+      "wordCountPass": true,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 5,
+      "title": "年历纸上的红圈",
+      "filePath": "第05章-年历纸上的红圈.md",
+      "status": "completed",
+      "wordCount": 3086,
+      "wordCountPass": true,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 6,
+      "title": "一碗年饭",
+      "filePath": "第06章-一碗年饭.md",
+      "status": "completed",
+      "wordCount": 3100,
+      "wordCountPass": true,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 7,
+      "title": "灌药的人",
+      "filePath": "第07章-灌药的人.md",
+      "status": "pending",
+      "wordCount": null,
+      "wordCountPass": null,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 8,
+      "title": "七道抓痕",
+      "filePath": "第08章-七道抓痕.md",
+      "status": "pending",
+      "wordCount": null,
+      "wordCountPass": null,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 9,
+      "title": "我溺水那年",
+      "filePath": "第09章-我溺水那年.md",
+      "status": "pending",
+      "wordCount": null,
+      "wordCountPass": null,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 10,
+      "title": "封条之下",
+      "filePath": "第10章-封条之下.md",
+      "status": "pending",
+      "wordCount": null,
+      "wordCountPass": null,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 11,
+      "title": "老支书的账",
+      "filePath": "第11章-老支书的账.md",
+      "status": "pending",
+      "wordCount": null,
+      "wordCountPass": null,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 12,
+      "title": "两半账册",
+      "filePath": "第12章-两半账册.md",
+      "status": "pending",
+      "wordCount": null,
+      "wordCountPass": null,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 13,
+      "title": "矿洞",
+      "filePath": "第13章-矿洞.md",
+      "status": "pending",
+      "wordCount": null,
+      "wordCountPass": null,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 14,
+      "title": "开口是替命",
+      "filePath": "第14章-开口是替命.md",
+      "status": "pending",
+      "wordCount": null,
+      "wordCountPass": null,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 15,
+      "title": "塘吐账",
+      "filePath": "第15章-塘吐账.md",
+      "status": "pending",
+      "wordCount": null,
+      "wordCountPass": null,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 16,
+      "title": "瞒报二十三年",
+      "filePath": "第16章-瞒报二十三年.md",
+      "status": "pending",
+      "wordCount": null,
+      "wordCountPass": null,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 17,
+      "title": "最后一个名字",
+      "filePath": "第17章-最后一个名字.md",
+      "status": "pending",
+      "wordCount": null,
+      "wordCountPass": null,
+      "retryCount": 0
+    },
+    {
+      "chapterNumber": 18,
+      "title": "喜丧",
+      "filePath": "第18章-喜丧.md",
+      "status": "pending",
+      "wordCount": null,
+      "wordCountPass": null,
+      "retryCount": 0
+    }
+  ]
+}
