@@ -9,7 +9,9 @@
 import { evaluate } from './evaluator.ts';
 import { auditPlot } from './audit/run.ts';
 import { formatAuditSummary } from './audit/terminal.ts';
-import { PLATFORM_NAMES } from './config.ts';
+import { PLATFORM_NAMES, loadEngineByName } from './config.ts';
+import { resolveRepeatsConfig, shouldExtend, summarize, isRunPass, type RunOutcome } from './repeats.ts';
+import { createEngine } from '@novel-eval/shared';
 import { generateReport } from './report/html-generator.ts';
 import { generateCompareReport } from './report/compare-html.ts';
 import { runPreflight, formatPreflightSummary } from './preflight.ts';
@@ -41,6 +43,12 @@ interface EvaluateArgs {
   platform?: string;
   yes?: boolean;
   baseline?: string;
+  /** 异源引擎名（engines.yml，如 deepseek）——P1-3 */
+  engine?: string;
+  /** 三局统计：基准局数（>1 或与 --require 同现进入统计模式）——P1-3 */
+  repeats?: number;
+  /** 三局统计：过门所需局数（缺省多数）——P1-3 */
+  require?: number;
 }
 
 interface CompareArgs {
@@ -141,6 +149,9 @@ function parseArgs(argv: string[]): CliArgs {
     else if (a === '--audience') args.audience = rest[++i];
     else if (a === '--platform') args.platform = rest[++i];
     else if (a === '--baseline') args.baseline = rest[++i];
+    else if (a === '--engine') args.engine = rest[++i];
+    else if (a === '--repeats') args.repeats = Number.parseInt(rest[++i], 10);
+    else if (a === '--require') args.require = Number.parseInt(rest[++i], 10);
     else if (a === '-y' || a === '--yes') args.yes = true;
     else if (!a.startsWith('--') && !args.filePath) args.filePath = a;
   }
@@ -164,6 +175,11 @@ evaluate 选项：
   --profile <name>     评估模式：default | revision | submission（投稿审查建议 submission）
   --title / --author   书名与作者
   --baseline <taskId>  关联基线任务 ID（改稿对比用）
+  --engine <name>      异源引擎（engines.yml 引擎名，如 deepseek=跨模型家族）
+  --repeats <N>        三局统计：基准局数（>1 进入统计模式；缺省 3）
+  --require <M>        三局统计：过门所需局数（缺省多数=floor(N/2)+1）。
+                       单局过门=投稿门不 block 且总分≥85 且市场分≥80；
+                       总分/市场极差 >6 自动加跑（上限 5 局）；FAIL 时 exit 1
   -y, --yes            跳过确认屏
 
 audit 选项（剧情逻辑审计/推敲器）：
@@ -187,7 +203,9 @@ golden 选项：
 
 示例：
   novel-eval evaluate ./book.txt --genre 玄幻 --audience 青年男性
-  novel-eval audit ./book.md --genre 犯罪悬疑 --climax-chapter 14
+  novel-eval evaluate ./book.md --genre 现实社会派悬疑 --platform yanxuan --profile submission \
+    --repeats 3 --require 2 -y              # 三局两胜统计（交付门建议口径）
+  novel-eval evaluate ./book.md ... --engine deepseek -y   # 异源引擎单局参照
   novel-eval compare ./reports/a/result.json ./reports/b/result.json --html
   novel-eval golden check
   novel-eval golden run --dry-run
@@ -256,6 +274,13 @@ async function runEvaluate(args: EvaluateArgs): Promise<void> {
     }
   }
 
+  // P1-3 三局统计模式：--repeats >1 或显式 --require 时进入
+  const statsMode = (args.repeats !== undefined && args.repeats > 1) || args.require !== undefined;
+  if (statsMode) {
+    await runEvaluateRepeats(args, metadata);
+    return;
+  }
+
   console.log('Novel Eval — 开始评估\n');
 
   const { task, result } = await evaluate({
@@ -265,6 +290,9 @@ async function runEvaluate(args: EvaluateArgs): Promise<void> {
     author: args.author,
     metadata,
     baselineTaskId: args.baseline,
+    engine: args.engine
+      ? createEngine(loadEngineByName(args.engine).config)
+      : undefined,
     onProgress: (msg) => console.log(`  ${msg}`),
   });
 
@@ -292,6 +320,86 @@ async function runEvaluate(args: EvaluateArgs): Promise<void> {
   console.log(`  结果：${resultPath}`);
   console.log(`  报告：${htmlPath}`);
   console.log(`  打开：open "${htmlPath}"`);
+}
+
+/**
+ * P1-3 三局统计模式：--repeats N --require M，极差超限自动加跑。
+ * 替代"人肉三局两胜"——实测 σ 2.3 下两局之差在噪声内，必须显式统计。
+ */
+async function runEvaluateRepeats(args: EvaluateArgs, metadata: NovelMetadata): Promise<void> {
+  let cfg;
+  try {
+    cfg = resolveRepeatsConfig({ repeats: args.repeats, require: args.require });
+  } catch (e) {
+    console.error(`错误：${(e as Error).message}`);
+    process.exit(1);
+  }
+
+  const adapter = args.engine ? createEngine(loadEngineByName(args.engine).config) : undefined;
+
+  console.log('Novel Eval — 三局统计模式');
+  console.log(`  基准 ${cfg.repeats} 局 / 过门需 ${cfg.require} 局 / 单局线：总分≥${cfg.minOverall} 且 市场≥${cfg.minMarket} 且 投稿门不 block`);
+  console.log(`  总分或市场分极差 >${cfg.rangeThreshold} 自动加跑（上限 ${cfg.maxRuns} 局）`);
+  if (args.engine) console.log(`  异源引擎：${args.engine}`);
+  console.log('');
+
+  const reportsDir = resolve(resolveEvalDataRoot(), 'reports');
+  const outcomes: RunOutcome[] = [];
+
+  while (shouldExtend(outcomes, cfg)) {
+    const i = outcomes.length + 1;
+    const label = `【局 ${i}】`;
+    const { task, result } = await evaluate({
+      filePath: args.filePath,
+      profile: args.profile,
+      title: args.title,
+      author: args.author,
+      metadata,
+      baselineTaskId: args.baseline,
+      engine: adapter,
+      onProgress: (msg) => console.log(`  ${label} ${msg}`),
+    });
+
+    // 每局照常落盘 result.json + 报告（复用单局产物路径）
+    const outDir = resolve(reportsDir, task.id);
+    mkdirSync(outDir, { recursive: true });
+    writeFileSync(resolve(outDir, 'result.json'), JSON.stringify(result, null, 2), 'utf-8');
+    generateReport(result, outDir);
+
+    const outcome: RunOutcome = {
+      runIndex: i,
+      engineName: result.task.engine,
+      totalScore: result.overall.totalScore,
+      marketScore: result.dimensions.marketPotential?.score ?? 0,
+      platformGatePass: result.platformGate?.verdict !== 'block',
+      taskId: task.id,
+      costRmb: task.cost.totalRmb,
+    };
+    outcomes.push(outcome);
+    const pass = isRunPass(outcome, cfg);
+    console.log(`  ${label} 总分 ${outcome.totalScore} · 市场 ${outcome.marketScore} · 门${outcome.platformGatePass ? '过' : 'BLOCK'} → ${pass ? '✓ 过' : '✗ 不过'}（¥${outcome.costRmb.toFixed(2)}）\n`);
+  }
+
+  const s = summarize(outcomes, cfg);
+
+  console.log('──────── 三局统计汇总 ────────');
+  s.runs.forEach((o) => {
+    console.log(
+      `  局${o.runIndex}  ${o.engineName}  总分 ${o.totalScore}  市场 ${o.marketScore}  ${isRunPass(o, cfg) ? '✓' : '✗'}  (${o.taskId.slice(0, 8)})`,
+    );
+  });
+  console.log(`  中位总分 ${s.medianOverall} · 总分极差 ${s.totalRange} · 市场极差 ${s.marketRange}${s.extended ? ' · 已触发加跑' : ''}`);
+  console.log(`  过门 ${s.passCount}/${s.runs.length} 局（需 ${s.require}）→ ${s.verdictPass ? '✓ PASS' : '✗ FAIL'}`);
+  console.log(`  累计费用：¥${s.totalCostRmb.toFixed(4)}`);
+
+  // 汇总落盘（夜跑凭据：哪几局、各自分数、判定依据）
+  const summaryPath = resolve(reportsDir, `repeats-${outcomes[0].taskId.slice(0, 8)}.json`);
+  writeFileSync(summaryPath, JSON.stringify(s, null, 2), 'utf-8');
+  console.log(`  汇总：${summaryPath}`);
+
+  if (!s.verdictPass) {
+    process.exitCode = 1;
+  }
 }
 
 async function runAudit(args: AuditArgs): Promise<void> {

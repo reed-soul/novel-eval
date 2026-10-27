@@ -48,6 +48,16 @@ export function loadConfig(profileName = 'default'): AppConfig {
   };
 }
 
+/** 按名取引擎（P1-3 异源评估：--engine deepseek 等）。 */
+export function loadEngineByName(name: string): { name: string; config: EngineConfig } {
+  const { engines } = loadEngineConfig(SHARED_CONFIG_DIR);
+  const config = engines[name];
+  if (!config) {
+    throw new Error(`engines.yml 无引擎 "${name}"（可用：${Object.keys(engines).join(' / ')}）`);
+  }
+  return { name, config };
+}
+
 /** 总分 → 等级（查表，>= 阈值）*/
 export function lookupGrade(score: number, thresholds: GradeThresholds): string {
   if (score >= thresholds.S) return 'S';

@@ -83,9 +83,13 @@ UA 统一 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 Ch
    门过后跑结局温度计（R07/R08 的逐项定位版，四件套哪件缺、证据句、怎么补都在输出里）：
    `python3 scripts/ending-thermometer.py research/daily-novels/<目录>/book.md`
    exit 1 = 有硬缺失（①罪名/②刑罚/③情感落点/④人话末句任一为 0）——**只按指引修末 900 字，不重写全书**，修完重跑 spec-gate + 温度计至 4/4（②的"有刑罚无量级"是半分警告，也一并补成"判处X年"）。历史 47 本基线：①30% ②24% ③98% ④100%——短板就在罪名与刑罚两件，修法已内置于输出。
-3. eval（严格串行）：
-   `npx tsx packages/eval/src/index.ts evaluate <book.md> --genre 现实社会派悬疑 --audience 通用 --platform yanxuan --profile submission --title <书名> --author 我家门前有两棵枣树 -y`
-   要求投稿门 pass 且总分 ≥85。**市场分 <80 一律不得交付**——历史"78–83 边界带 + 三局两胜"是无效补偿（实测 19 部均值 86.1、σ 2.3，两局之差在噪声内，三局两胜等于任取一次过）。要么改稿把市场分打到 80 以上，要么换题重来。
+3. eval（三局统计 + 异源参照，P1-3）：
+   主引擎三局统计（单局过门=投稿门 pass 且总分≥85 且市场分≥80；总分/市场极差 >6 自动加跑至上限 5 局；FAIL 时 exit 1）：
+   `npx tsx packages/eval/src/index.ts evaluate <book.md> --genre 现实社会派悬疑 --audience 通用 --platform yanxuan --profile submission --title <书名> --author 我家门前有两棵枣树 --repeats 3 --require 2 -y`
+   汇总里的"过门 N/M 局 → PASS/FAIL"就是交付门裁决。**市场分单局 <80 依然一票否决**——统计治的是"评分器方差"（历史 19 部 σ 2.3，两局之差在噪声内），不是"市场线"本身。FAIL 时要么改稿把市场分打到 80 以上，要么换题重来。
+   异源参照局（跨模型家族防单引擎偏置；不做门，只做交叉参照）：
+   `npx tsx packages/eval/src/index.ts evaluate <book.md> --genre 现实社会派悬疑 --audience 通用 --platform yanxuan --profile submission --title <书名> --author 我家门前有两棵枣树 --engine deepseek -y`
+   异源局与主引擎中位总分极差 >6 → 在 meta.md 标注"跨家族分歧"，投稿决策须人工复核后再定。
 4. audit 双红队（主引擎与异源家族各找茬一遍）：
    - A 跑（GLM 主引擎）：`npx tsx packages/eval/src/index.ts audit <book.md> --genre 现实社会派悬疑 --title <书名> --climax-chapter <N> -y`
    - B 跑（DeepSeek 红队）：先 `export DEEPSEEK_API_KEY=$(python3 -c "import json;print(json.load(open('$HOME/.claude/settings.json'))['env']['DEEPSEEK_API_KEY'])")`，再 `AUDIT_REDTEAM_MODEL=deepseek npx tsx ...（同命令）`。
