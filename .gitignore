@@ -69,3 +69,14 @@ research/OpenMontage/
 .v2c/
 .video_agent/
 _audiobook/
+
+# Python 运行时产物
+__pycache__/
+*.pyc
+
+# 本地工具记忆目录
+.workbuddy/
+
+# 研究物料中的生成物：eval 运行日志与内嵌 ECharts 的报告 HTML（可随时重生成，单文件 >1MB）
+research/daily-novels/**/logs/
+research/daily-novels/**/eval-report-*.html

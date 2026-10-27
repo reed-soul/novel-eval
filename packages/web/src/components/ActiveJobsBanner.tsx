@@ -42,22 +42,22 @@ function WriterJobProgressLine({ job }: { job: ActiveJobListItem }) {
       fontSize: 13,
       lineHeight: 1.5,
     }}>
-      <Link to={`/projects/${job.projectId}`} style={{ fontWeight: 600 }}>
+      <Link to={`/books/${job.projectId}`} style={{ fontWeight: 600 }}>
         {job.projectTitle}
       </Link>
-      <span style={{ color: 'var(--muted)' }}>
+      <span style={{ color: 'var(--text-muted)' }}>
         {jobTypeLabel(job.type)}
         {job.status === 'paused' ? '（已暂停）' : ''}
         {chapterHint}
       </span>
       {latest && (
         <span style={{ color: 'var(--text)', flex: '1 1 200px', minWidth: 0 }}>
-          <span style={{ color: 'var(--muted)' }}>[{latest.step}]</span>{' '}
+          <span style={{ color: 'var(--text-muted)' }}>[{latest.step}]</span>{' '}
           {latest.msg}
         </span>
       )}
       {!latest && status === 'running' && (
-        <span style={{ color: 'var(--muted)' }}>等待进度…</span>
+        <span style={{ color: 'var(--text-muted)' }}>等待进度…</span>
       )}
     </div>
   );
@@ -79,17 +79,17 @@ function EvalJobProgressLine({ job }: { job: ActiveEvalJobListItem }) {
       lineHeight: 1.5,
     }}>
       <Link to={href} style={{ fontWeight: 600 }}>{label}</Link>
-      <span style={{ color: 'var(--muted)' }}>全书评估</span>
+      <span style={{ color: 'var(--text-muted)' }}>全书评估</span>
       {job.latestMessage ? (
         <span style={{ color: 'var(--text)', flex: '1 1 200px', minWidth: 0 }}>
           {job.latestMessage}
         </span>
       ) : (
-        <span style={{ color: 'var(--muted)' }}>等待进度…</span>
+        <span style={{ color: 'var(--text-muted)' }}>等待进度…</span>
       )}
       {job.projectId && (
-        <Link to={`/projects/${job.projectId}`} style={{ color: 'var(--muted)', fontSize: 12 }}>
-          项目 →
+        <Link to={`/books/${job.projectId}`} style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+          工坊 →
         </Link>
       )}
     </div>

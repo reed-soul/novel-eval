@@ -29,32 +29,40 @@ export function Layout() {
           <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
             <Logo />
           </Link>
-          <nav className="global-nav" style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Link to="/" className={`nav-link ${location.pathname === '/' ? 'active' : ''}`}>
-              <span className="msr msr-sm">auto_stories</span> 我的书
+          <nav className="global-nav" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Link to="/" className={`nav-link ${location.pathname === '/' || location.pathname.startsWith('/books') ? 'active' : ''}`}>
+              <span className="msr msr-sm">auto_stories</span> 书架工坊
+            </Link>
+            <Link to="/eval" className={`nav-link ${location.pathname.startsWith('/eval') ? 'active' : ''}`}>
+              <span className="msr msr-sm">analytics</span> 全书评估
+            </Link>
+            <Link to="/audit" className={`nav-link ${location.pathname.startsWith('/audit') ? 'active' : ''}`}>
+              <span className="msr msr-sm">troubleshoot</span> 剧情审计
             </Link>
             <Link to="/settings" className={`nav-link ${location.pathname === '/settings' ? 'active' : ''}`}>
-              <span className="msr msr-sm">tune</span> 设置
+              <span className="msr msr-sm">tune</span> 引擎配置
             </Link>
             <button
               className="theme-toggle-btn"
               onClick={toggleTheme}
               aria-label="Toggle Theme"
+              title={theme === 'light' ? '切换到暗色模式' : '切换到亮色模式'}
               style={{
-                background: 'none',
-                border: 'none',
-                fontSize: 18,
+                background: 'var(--btn-bg)',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                fontSize: 14,
                 cursor: 'pointer',
-                padding: 4,
+                padding: '6px 10px',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'transform 0.2s',
+                color: 'var(--text-muted)',
+                marginLeft: 4,
+                transition: 'all 0.2s',
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.15)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
             >
-              {theme === 'light' ? '🌙' : '☀️'}
+              <span className="msr msr-sm">{theme === 'light' ? 'dark_mode' : 'light_mode'}</span>
             </button>
           </nav>
         </div>

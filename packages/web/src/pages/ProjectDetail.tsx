@@ -279,7 +279,7 @@ export function ProjectDetail() {
           <div className="progress-bar"><div className="progress-fill" style={{ width: `${progress}%` }} /></div>
           <div className="chapter-grid">
             {chapters.map((c) => (
-              <Link key={c.number} to={`/projects/${id}/chapters/${c.number}`} style={{ textDecoration: 'none' }}>
+              <Link key={c.number} to={`/books/${id}/chapters/${c.number}`} style={{ textDecoration: 'none' }}>
                 <div className={`chapter-cell ${c.written ? 'written' : 'pending'} act-${c.act}`} title={`${c.title} · ${c.written ? c.wordCount + '字' : '未写'}`}>
                   {c.number}
                 </div>
@@ -292,7 +292,7 @@ export function ProjectDetail() {
       <div className="card">
         <h2>设定与输出</h2>
         <div style={{ display: 'flex', gap: 12 }}>
-          <Link to={`/projects/${id}/state`} className="btn btn-primary">查看 Bible 与叙事状态 →</Link>
+          <Link to={`/books/${id}/state`} className="btn btn-primary">查看 Bible 与叙事状态 →</Link>
           <button className="btn btn-primary" onClick={() => setShowExportModal(true)}>📤 导出小说 →</button>
         </div>
       </div>
@@ -301,7 +301,7 @@ export function ProjectDetail() {
         <div className="card">
           <h2>
             质量分析
-            <Link to={`/projects/${id}/dashboard`} className="btn" style={{ fontSize: 13, marginLeft: 8 }}>
+            <Link to={`/books/${id}/dashboard`} className="btn" style={{ fontSize: 13, marginLeft: 8 }}>
               📊 打开评估仪表盘 →
             </Link>
             <Link
@@ -319,7 +319,7 @@ export function ProjectDetail() {
       {project.lastChapter && (
         <div className="card">
           <h2>最新章节</h2>
-          <Link to={`/projects/${id}/chapters/${project.lastChapter.number}`}>
+          <Link to={`/books/${id}/chapters/${project.lastChapter.number}`}>
             第 {project.lastChapter.number} 章《{project.lastChapter.title}》— {project.lastChapter.wordCount} 字 →
           </Link>
         </div>

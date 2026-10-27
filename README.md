@@ -145,12 +145,22 @@ pnpm web:build    # 构建前端到 packages/web/dist/
 pnpm web          # 启动 → http://127.0.0.1:4000（可用 PORT 覆盖）
 ```
 
-**开发模式**（前端热更新，需开两个终端）：
+**开发模式**（推荐，一条命令同时起后端 + Vite 热更新）：
+
+```bash
+pnpm dev          # 前端 http://127.0.0.1:5173（代理 /api → :4000）
+```
+
+`pnpm dev` 会自动注入默认的 `WRITER_DB_PATH=./data/writer/writer.db` 与 `EVAL_DATA_DIR=./data/evals`（环境中已设置则不覆盖；`PORT` / `WRITER_API_URL` 同样透传）。
+
+也可手动分开跑（等效，需开两个终端）：
 
 ```bash
 pnpm web          # 终端 1：后端 API 在 :4000（PORT / WRITER_API_URL 见 .env.example）
 pnpm web:dev      # 终端 2：Vite 前端在 :5173（自动代理 /api 到 WRITER_API_URL 或 :4000）
 ```
+
+注：单独跑 `pnpm web` 时必须自带 `WRITER_DB_PATH`（如 `WRITER_DB_PATH=./data/writer/writer.db pnpm web`），否则 server 启动即抛错；`pnpm dev` 已代劳。
 
 Web 端能力：新建项目、触发写作、**暂停/继续/取消**任务（章节边界生效）、查看章节网格与进度条、阅读章节正文、查看 bible 与叙事状态、质量趋势图、切换引擎/模型。
 

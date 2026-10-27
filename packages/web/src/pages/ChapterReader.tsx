@@ -57,7 +57,7 @@ export function ChapterReader() {
             {chapter.wordCount} 字 · {chapter.written ? '✓ 已写' : '✗ 未写'}
           </div>
         </div>
-        <Link to={`/projects/${id}`} className="back-link">← 返回项目</Link>
+        <Link to={`/books/${id}`} className="back-link">← 返回工坊</Link>
       </div>
 
       <div className="outline-info">

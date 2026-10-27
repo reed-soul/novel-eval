@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { api } from '../api/client.ts';
 import type { ChapterScore } from '../api/client.ts';
 import { RadarChart } from '../components/RadarChart.tsx';
+import { BookTabs } from '../components/BookTabs.tsx';
 
 interface Foreshadow {
   description: string;
@@ -48,9 +49,10 @@ export function Dashboard() {
 
   return (
     <div className="container">
+      <BookTabs active="dashboard" />
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
         <h2 style={{ margin: 0 }}>📊 评估仪表盘</h2>
-        <Link to={`/projects/${id}`} className="btn" style={{ fontSize: 13 }}>← 返回项目</Link>
+        <Link to={`/books/${id}`} className="btn" style={{ fontSize: 13 }}>← 返回工坊</Link>
       </div>
 
       {/* 概览卡 */}
@@ -83,7 +85,7 @@ export function Dashboard() {
                 {scores.map((s) => (
                   <Link
                     key={s.chapter}
-                    to={`/projects/${id}/chapters/${s.chapter}`}
+                    to={`/books/${id}/chapters/${s.chapter}`}
                     title={`第${s.chapter}章 ${s.grade}(${s.score})`}
                     style={{
                       display: 'inline-block', width: 18, height: 24, borderRadius: 3,

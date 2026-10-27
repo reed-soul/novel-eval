@@ -16,6 +16,7 @@
     "golden": "tsx packages/eval/src/index.ts golden",
     "write": "tsx packages/writer/src/index.ts write",
     "web": "tsx packages/web/server/index.ts",
+    "dev": "node scripts/dev.mjs",
     "audiobook": "tsx packages/audiobook/src/cli.ts",
     "digest": "tsx packages/digest/src/cli.ts",
     "narration": "tsx packages/narration/src/cli.ts",

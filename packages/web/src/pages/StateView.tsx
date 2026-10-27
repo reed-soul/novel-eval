@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, getStoryState, type BibleRaw, type StoryStateResponse } from '../api/client.ts';
+import { BookTabs } from '../components/BookTabs.tsx';
 
 export function StateView() {
   const { id } = useParams<{ id: string }>();
@@ -29,9 +30,10 @@ export function StateView() {
 
   return (
     <div className="container">
+      <BookTabs active="state" />
       <div className="page-header">
         <h2>📖 设定与叙事状态</h2>
-        <Link to={`/projects/${id}`} className="back-link">← 返回项目</Link>
+        <Link to={`/books/${id}`} className="back-link">← 返回工坊</Link>
       </div>
 
       {error && <div className="error">{error}</div>}

@@ -1,0 +1,102 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.zcode/
+
+# Environment
+.env
+.env.local
+
+# Output
+dist/
+*.log
+
+# Runtime data (data/ 是运行时数据目录：writer.db、reports、版权样本等，不入库)
+data/
+# 例外：README 演示用的评估示例样本（项目原创，版权自有）
+!data/
+data/*
+!data/spike-samples/
+data/spike-samples/*
+!data/spike-samples/sample-novel.txt
+# 例外：有声书 per-project 配置（发音表/角色班底为手工策划产物，不可再生）
+!data/audiobook/
+data/audiobook/*
+!data/audiobook/projects/
+!data/audiobook/registry.json
+# 例外：digest 登记（管线拓扑不可再生，与 audiobook 同待遇）
+!data/digest/
+data/digest/*
+!data/digest/registry.json
+
+# Spike 输出（含真实 LLM 响应、token/费用记录，可能含摘录片段）
+spike/output/
+
+# Dependencies (spike 本地安装)
+spike/node_modules/
+
+# Web runtime data
+packages/web/data/
+
+# Writer runtime data (writer.db / writer.db-shm / writer.db-wal，运行时生成，不入库)
+packages/writer/data/
+
+# Golden corpus: generated slices and run summaries (source novels stay under data/)
+tests/golden/slices/
+tests/golden/runs/
+tests/golden/cassettes/
+packages/eval/data/
+
+# Security scanner local state
+.mimosa/
+
+# 外部研究克隆（AGPL 第三方仓库本体，不入库；结论见 research/openmontage-drama/）
+research/OpenMontage/
+
+# 本地工具/运行时目录
+.v2c/
+.video_agent/
+_audiobook/
+
+# ===== ↑ 以上同步自 .gitignore（「从 .gitignore 同步」只重写以上部分）=====
+.git/
+.hg/
+.svn/
+bower_components/
+jspm_packages/
+__pycache__/
+site-packages/
+venv/
+coverage/
+htmlcov/
+lcov-report/
+cmakefiles/
+cmake-build-*/
+bazel-*/
+pods/
+deriveddata/
+storybook-static/
+playwright-report/
+test-results/
+allure-results/
+allure-report/
+cdk.out/
+*.egg-info/
+*.dist-info/
+eggs/
+pip-wheel-metadata/
+wheels/
+# ----- ↑ 以上为 ZCode 默认排除规则（自定义规则请写在本行下方，不会被同步/恢复改动）-----
+# 自定义规则写在下方（本行提示可删除）
