@@ -30,6 +30,7 @@ import {
   chapterWritingDirectives,
   formatEndingInstruction,
 } from '../chapter/writing-grammar.ts';
+import { formatKinshipLocks, detectKinshipDrift } from '../chapter/kinship-lock.ts';
 import {
   ContextCompiler,
   formatStoryStateDirectives,
@@ -160,6 +161,11 @@ function buildPrompts(
 
   if (context.previousState) {
     lines.push('', '【前章状态看板】', formatStoryStateDirectives(context.previousState));
+  }
+  // battle4 v4-待办④：亲缘人名锁——确定性铁律注入（首现即定，不得换名）
+  const kinLockText = formatKinshipLocks(context.kinshipLocks ?? []);
+  if (kinLockText) {
+    lines.push('', kinLockText);
   }
   if (context.nextOutline) {
     lines.push(
@@ -297,6 +303,36 @@ export class ChapterGenerationService {
         status: 'draft',
       });
       candidateRevisionId = candidate.revision.id;
+
+      // battle4 v4-待办④：亲缘人名漂移——确定性检测，先于 LLM 质量审阅（闸门开关无关，零成本必跑）
+      const kinDrifts = detectKinshipDrift(content, context.kinshipLocks ?? []);
+      if (kinDrifts.length > 0) {
+        const driftMsg = kinDrifts
+          .map((d) => `「${d.term}」全书已锁定为「${d.expected}」，本章写成「${d.found}」（…${d.snippet}…）`)
+          .join('\n');
+        if (attempt < maxAttempts) {
+          this.markRevisionRejected(candidate.revision.id);
+          candidateRevisionId = null;
+          lastReview = {
+            verdict: 'revise',
+            reasons: kinDrifts.map((d) => `${d.term}: 锁定 ${d.expected}，本章 ${d.found}`),
+            reason: '亲缘人名漂移',
+            feedback: `【人名一致性硬伤——必须修正后重写】\n${driftMsg}\n`
+              + '请统一使用锁定名，并自查全文其他人名与「角色状态看板」一致。',
+            evidence: [],
+            usage: { ...zeroUsage },
+          };
+          input.onProgress?.(
+            `chapter:${input.outlinePosition}:kinship`,
+            `亲缘人名漂移，要求重写：${driftMsg}`,
+          );
+          continue;
+        }
+        input.onProgress?.(
+          `chapter:${input.outlinePosition}:kinship`,
+          `⚠ 亲缘人名漂移（末次尝试未修正，交付前须人工核对人名）：${driftMsg}`,
+        );
+      }
 
       if (!quality?.enabled) {
         break;

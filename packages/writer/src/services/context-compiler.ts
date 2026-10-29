@@ -9,6 +9,7 @@ import {
 
 export { formatStoryStateDirectives };
 import { ChapterRepository } from '../repositories/chapter-repository.ts';
+import { extractKinshipLocks } from '../chapter/kinship-lock.ts';
 import {
   PlanningRepository,
   type ApprovedOutline,
@@ -57,6 +58,8 @@ export interface CompiledChapterContext {
     title: string;
     summary: string;
   } | null;
+  /** 亲缘人名锁（battle4 v4-待办④）：全部已发布章确定性提取，首现即定 */
+  kinshipLocks?: import('../chapter/kinship-lock.ts').KinshipLock[];
   previousStateRevisionId: StoryStateRevisionId | null;
   previousState: StoryState | null;
   recentChapters: CompiledRecentChapter[];
@@ -177,6 +180,13 @@ export class ContextCompiler {
       input.outlinePosition,
       recentWindow,
     );
+    // 亲缘人名锁：扫描全部已发布章（不限 recentWindow），确定性提取（battle4 v4-待办④）
+    const allPriorChapters = this.chapters.listRecentActiveRevisions(
+      input.projectId,
+      input.outlinePosition,
+      input.outlinePosition,
+    );
+    const kinshipLocks = extractKinshipLocks(allPriorChapters.map((c) => c.content));
     const arcSummaries = this.states.listArcSummaries(
       input.projectId,
       input.outlinePosition,
@@ -215,11 +225,12 @@ export class ContextCompiler {
       recentChapters,
       arcSummaries,
       nextOutline,
+      kinshipLocks,
       promptTemplateVersion: input.promptTemplateVersion,
     };
 
     const contextHash = createHash('sha256')
-      .update(canonicalJson(hashPayload), 'utf8')
+      .update(canonicalJson(hashPayload), 'utf-8')
       .digest('hex');
 
     return {
@@ -237,6 +248,7 @@ export class ContextCompiler {
       recentChapters,
       arcSummaries,
       nextOutline,
+      kinshipLocks,
       promptTemplateVersion: input.promptTemplateVersion,
       contextHash,
     };

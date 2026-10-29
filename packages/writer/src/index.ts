@@ -1356,14 +1356,16 @@ async function runResume(args: ResumeArgs): Promise<void> {
     const resumeCount = resumeTo - resumeFrom + 1;
     console.log(`  续写范围：第 ${resumeFrom}-${resumeTo} 章（${resumeCount} 章待写，已完成章节自动跳过）`);
     console.log(`  每章约 ${wordCount} 字`);
-    if (args.maxRevise !== undefined) {
-      console.log('  提示：续写沿用原 job 预算快照；--max-revise 不会覆盖已保存的 qualityGate');
-    }
-    const resumeBudget = typeof budget === 'object' && budget !== null && !Array.isArray(budget)
-      ? budget as Record<string, unknown>
-      : {};
-    if (resumeBudget.qualityGate === true) {
-      console.log(`  质量门槛：沿用快照（maxRevise=${resumeBudget.maxRevise ?? 0}）`);
+    // battle4 v4-待办③：resume 不再裸奔（三级闸门语义见 services/resume-budget.ts）
+    const { resolveResumeBudget } = await import('./services/resume-budget.ts');
+    const budgetDecision = resolveResumeBudget(budget, args.maxRevise);
+    budget = budgetDecision.budget as import('./repositories/validation.ts').JsonValue;
+    if (budgetDecision.source === 'flag') {
+      console.log(`  质量门槛：--max-revise 覆盖快照（maxRevise=${args.maxRevise}）`);
+    } else if (budgetDecision.source === 'snapshot') {
+      console.log(`  质量门槛：沿用快照（maxRevise=${budgetDecision.budget.maxRevise ?? 0}）`);
+    } else {
+      console.log('  质量门槛：快照未开，续写默认补开（maxRevise=2；--max-revise N 可覆盖）');
     }
     console.log('');
 
