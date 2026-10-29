@@ -152,10 +152,12 @@ function buildPrompts(
   ].filter(Boolean);
 
   // v3 P0-2：情感锚点独立注入（与蓝图定位平级），分派篇幅预算——防 summary 挤压导致正文薄写
+  // v4 处方（battle4）：加第三条——锚点必须落到主角内心视角，否则正文只写道具不写人
   if (outline.content.emotionalAnchor && outline.content.emotionalAnchor.trim().length > 0) {
     lines.push(
       `情感锚点（本场须写实写热，篇幅 300-500 字）：${outline.content.emotionalAnchor.trim()}`,
       '本场互动是情感场景也是线索场景：至少一条关键线索从这场人际互动（对话/照护/对视/物件传递）中产出；情感用动作与物件传递落地，严禁抽象抒情',
+      '锚点必须落到主角内心：本场至少 2 处第一人称身体化感受（手抖/喉咙发紧/听不清声音/一个具体闪回，每处 ≤2 句）——"我"是会疼的人，不是办案机器；互动中"我"的感受与推理交织呈现',
     );
   }
 
