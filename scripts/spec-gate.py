@@ -30,9 +30,20 @@ SCAFFOLD = [
     r'[（(]\s*全[书本]完[^）)]*[）)]',
     r'[（(]\s*本幕终[^）)]*[）)]',
     r'[（(]\s*未完待续[^）)]*[）)]',
+    r'[（(]\s*本[章节][^）)]{0,8}[0-9]{2,6}\s*字[^）)]{0,4}[）)]',   # （本章约2800字）类生产备注（battle4 实抓）
     r'^\s*[*_]{0,2}\s*[（(]?\s*全[书本]完\s*[）)]?\s*[*_]{0,2}\s*$',
     r'^#{1,6}\s*全[书本]完\s*$',
 ]
+
+# 句中夹的孤立英文残渣（battle4 实抓 "比 last 我记忆里"）：
+# 规格要求纯中文零英文（技术名词中文替写）→ CJK 包夹的 2-8 字母 token 一律是生产残渣。
+# 白名单是合法通用缩写。
+ENGLISH_RESIDUE = re.compile(
+    r'(?<=[\u4e00-\u9fa5，。：；、！？])\s*[A-Za-z]{2,8}\s*(?=[\u4e00-\u9fa5，。：；、！？])')
+ENGLISH_WHITELIST = {
+    'APP', 'DNA', 'RNA', 'RMB', 'ID', 'KTV', 'ICU', 'CT', 'PPT', 'USB',
+    'AI', 'VR', 'AR', 'GPS', 'SIM', 'ATM', 'DNA', 'PTSD', 'LED',
+}
 
 OMNISCIENT = [
     r'他心想', r'她心想', r'他心里想', r'她心里想',
@@ -152,6 +163,16 @@ def fix_mechanical(text: str) -> tuple[str, list[str]]:
         cleaned = line
         for p in SCAFFOLD:
             cleaned = re.sub(p, '', cleaned)
+        # 2c. 句中孤立英文残渣：CJK 包夹、非白名单的 2-8 字母 token 抠掉
+        #     （battle4 实抓："比 last 我记忆里" → "比我记忆里"；规格禁英文，包夹即残渣）
+        if ENGLISH_RESIDUE.search(cleaned):
+            dropped = [m.group(0).strip() for m in ENGLISH_RESIDUE.finditer(cleaned)
+                       if m.group(0).strip().upper() not in ENGLISH_WHITELIST]
+            if dropped:
+                def _drop(m):
+                    return m.group(0) if m.group(0).strip().upper() in ENGLISH_WHITELIST else ''
+                cleaned = ENGLISH_RESIDUE.sub(_drop, cleaned)
+                log.append(f'抠英文残渣: {",".join(dropped)[:40]}')
         cleaned = re.sub(r'[ \t]+$', '', cleaned).strip()
         if cleaned != line.strip() and cleaned:
             log.append(f'抠内联脚手架: {raw_line.strip()[:30]}')
@@ -242,6 +263,17 @@ def check(book_path: str, profile_key: str) -> dict:
             hits.append(m.group(0).strip()[:24])
     add('R05', '零章尾脚手架', not hits,
         f'命中 {len(hits)} 处' + (f'：{" / ".join(hits[:5])}' if hits else ''))
+
+    # R05b 节标题/编号不重复（battle4 实抓：章标题重复进交付稿）
+    heads = [h.strip() for h in re.findall(r'^\s*(?:\d+\s*、.+|#\s*\S.*)$', raw, re.M)]
+    dup_h = sorted({h for h in heads if heads.count(h) > 1})
+    nums = re.findall(r'^\s*(\d+)\s*、', raw, re.M)
+    dup_n = sorted({n for n in nums if nums.count(n) > 1})
+    add('R05b', '节标题与编号不重复', not dup_h and not dup_n,
+        ('重复标题：' + ' / '.join(dup_h[:3]) if dup_h else '')
+        + ('；' if dup_h and dup_n else '')
+        + ('重复编号：' + '、'.join(dup_n[:5]) if dup_n else '')
+        or '干净')
 
     # R06 纯中文
     eng = sorted(set(ENGLISH_RUN.findall(body)))
