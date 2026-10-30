@@ -64,6 +64,7 @@ packages/eval/data/
 
 # 外部研究克隆（AGPL 第三方仓库本体，不入库；结论见 research/openmontage-drama/）
 research/OpenMontage/
+research/chinese-novelist-skill/
 
 # 本地工具/运行时目录
 .v2c/
